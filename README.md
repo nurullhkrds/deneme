@@ -1,44 +1,24 @@
-@Override
-	public CoreServiceResultDTO<List<InstitutionIconDTO>> getAllInstitutionIcons() throws HmnServiceException {
-		CoreServiceResultDTO<List<InstitutionIconDTO>> response = new CoreServiceResultDTO<List<InstitutionIconDTO>>();
-
-		List<InstitutionIconDTO> resultList = QuerySupport.query(NQConsts.GET_PYM_INSTITUTION_ICONS.QUERY_NAME, new GetInstitutionIconTransformer());
-		if (resultList == null || resultList.isEmpty()) {
-			response.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
-			response.setResponseMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.GENERIC__NO_RECORD_FOUND_ERROR.getValue(), null));
-		}
-
-		else {
-			response.setStatus(BillPaymentsConsts.RESPONSE_STATUS.SUCCESS);
-			response.setResponseMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.SUCCESS.getValue(), null));
-			response.setResult(resultList);
-		}
-		return response;
-	}
-
-
-
- 	@Override
-	public CoreServiceResultDTO<List<ParamModelDTO>> getMicroPilot(String institution, String product)
-			throws HmnServiceException {
-		ParamSearchDTO paramSearchDTO = new ParamSearchDTO();
-		paramSearchDTO.setParamCode(BillPaymentsConsts.MICRO_BILL_PILOT);
-		paramSearchDTO.setId(product);
-		paramSearchDTO.setText(institution);
-		List<ParamModelDTO> accountTypeList =  ExternalServiceLocator.getParamService().findParamByDynamic(paramSearchDTO);
-		
-		CoreServiceResultDTO<List<ParamModelDTO>> resultDTO = new CoreServiceResultDTO<List<ParamModelDTO>>();
-		if(accountTypeList==null){
-			accountTypeList = new ArrayList<ParamModelDTO>();
-		}
-		resultDTO.setResult( accountTypeList );
-		resultDTO.setStatus( BillPaymentsConsts.RESPONSE_STATUS.SUCCESS );
-		resultDTO.setResponseMessage( PYMResponseUtils.createResponseStatusDTO( EnumResponseCodes.SUCCESS.getValue(), null ) );
-		
-		return resultDTO;
-	}
-
-
-
-
- 
+	... 19 more
+Caused by: java.lang.IllegalArgumentException: No service with name [PAYMENTS.BILL-TST.Redis] was found.
+	at io.pivotal.cfenv.core.CfEnv.findServiceByName(CfEnv.java:104) ~[java-cfenv-2.4.1.jar:?]
+	at com.ykb.payments.bill.adapter.config.RedisConfig.redisConnectionFactory(RedisConfig.java:65) ~[classes/:?]
+	at com.ykb.payments.bill.adapter.config.RedisConfig$$EnhancerBySpringCGLIB$$aa62f998.CGLIB$redisConnectionFactory$2(<generated>) ~[classes/:?]
+	at com.ykb.payments.bill.adapter.config.RedisConfig$$EnhancerBySpringCGLIB$$aa62f998$$FastClassBySpringCGLIB$$c4cf43e6.invoke(<generated>) ~[classes/:?]
+	at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:244) ~[spring-core-5.3.27.jar:5.3.27]
+	at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:331) ~[spring-context-5.3.27.jar:5.3.27]
+	at com.ykb.payments.bill.adapter.config.RedisConfig$$EnhancerBySpringCGLIB$$aa62f998.redisConnectionFactory(<generated>) ~[classes/:?]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
+	at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:568) ~[?:?]
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:486) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring
