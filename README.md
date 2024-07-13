@@ -1,24 +1,132 @@
-	... 19 more
-Caused by: java.lang.IllegalArgumentException: No service with name [PAYMENTS.BILL-TST.Redis] was found.
-	at io.pivotal.cfenv.core.CfEnv.findServiceByName(CfEnv.java:104) ~[java-cfenv-2.4.1.jar:?]
-	at com.ykb.payments.bill.adapter.config.RedisConfig.redisConnectionFactory(RedisConfig.java:65) ~[classes/:?]
-	at com.ykb.payments.bill.adapter.config.RedisConfig$$EnhancerBySpringCGLIB$$aa62f998.CGLIB$redisConnectionFactory$2(<generated>) ~[classes/:?]
-	at com.ykb.payments.bill.adapter.config.RedisConfig$$EnhancerBySpringCGLIB$$aa62f998$$FastClassBySpringCGLIB$$c4cf43e6.invoke(<generated>) ~[classes/:?]
-	at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:244) ~[spring-core-5.3.27.jar:5.3.27]
-	at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:331) ~[spring-context-5.3.27.jar:5.3.27]
-	at com.ykb.payments.bill.adapter.config.RedisConfig$$EnhancerBySpringCGLIB$$aa62f998.redisConnectionFactory(<generated>) ~[classes/:?]
-	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
-	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
-	at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
-	at java.lang.reflect.Method.invoke(Method.java:568) ~[?:?]
-	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:486) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring
+spring:
+  application:
+    name: PAYMENTS.BILL.bill-adapter
+  cloud:
+    services:
+      registrationMethod: direct
+  datasource:
+    username: BILL
+    password: Bolefppe1203
+    url: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oprkbarcdbt.sys.yapikredi.com.tr)(PORT=1818))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=SRVTEST_NYSU)))
+    driverClassName: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 1
+      data-source-properties:
+        oracle.jdbc.ReadTimeout: 30000
+        oracle.net.READ_TIMEOUT: 30000
+        oracle.net.CONNECT_TIMEOUT: 30000
+        "[v$session.program]": ${spring.application.name}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none #none || update || create
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 30000
+        loggerLevel: basic
+  hystrix:
+    enabled: false
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: false
+logging:
+  level:
+    org:
+      slf4j: WARN
+      springframework:
+        security: ERROR
+        web: ERROR
+springdoc:
+  api-docs:
+    path: /actuator/api-docs
+cache:
+  redis:
+    serviceName: PAYMENTS.BILL-TST.Redis
+    institution:
+      ttl: 12
+    institutionAdapter:
+      ttl: 12
+    adapterService:
+      ttl: 12
+    returnMap:
+      ttl: 12
+    tokenDefinition:
+      ttl: 12
+runtime:
+  platform: pcf
+rabbitmq:
+  enabled: true
+  services:
+    bill-rabbitmq:
+      name: PAYMENTS.BILL-TST.RabbitMQ
+      enabled: true
+      consumers:
+        tokenInvalidEvent:
+          minConcurrentConsumers: 2
+          maxConcurrentConsumers: 4
+          prefetchCount: 10
+      producers:
+        remoteLogEvent:
+          exchangeName: bill-direct-exchange
+          routingKey: remote-log-event
+        tokenInvalidEvent:
+          exchangeName: bill-direct-exchange
+          routingKey: token-invalid-event
+      queues:
+        remoteLogEvent:
+          declare: true
+          name: remote-log-queue
+          durable: true
+          routingKey: remote-log-event
+          arguments:
+            x-message-ttl: 300000
+          exchange:
+            name: bill-direct-exchange
+            durable: true
+            type: direct
+        tokenInvalidEvent:
+          declare: true
+          name: token-invalid-queue
+          durable: true
+          routingKey: token-invalid-event
+          arguments:
+            x-message-ttl: 300000
+          exchange:
+            name: bill-direct-exchange
+            durable: true
+            type: direct
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+resilience4j:
+  enabled: true
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+smoke:
+  tests:
+    enabled: false
+junit:
+  institutionTest:
+    enabled: false
+metric:
+  enabled: true
+  environment: test
