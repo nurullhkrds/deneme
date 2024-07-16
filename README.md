@@ -1,130 +1,57 @@
-spring:
-  application:
-    name: PAYMENTS.BILL.bill-transaction
-  cloud:
-    services:
-      registrationMethod: direct
-    discovery:
-      client:
-        simple:
-          instances:
-            -COREBANKING.COMMISSION.calculation[0].uri: url
-            -COREBANKING.ACCOUNT.account[0].uri:url
-            -PAYMENTS.BILL.bill-adapter[0].uri: url
-            -COREBANKING.ACCOUNT.provision-main[0].uri: url
-            -CARDPAYMENTS.SWT.swt-switch-integration[0].uri: url
-            -PAYMENTS.COMMON.limitation-service[0].uri: url
-  datasource:
-    username: BILL
-    password: sssss
-    url: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oprkbarcdbt.sys.yapikredi.com.tr)(PORT=1818))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=SRVTEST_NYSU)))
-    driverClassName: oracle.jdbc.OracleDriver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 1
-      data-source-properties:
-        oracle.jdbc.ReadTimeout: 30000
-        oracle.net.READ_TIMEOUT: 30000
-        oracle.net.CONNECT_TIMEOUT: 30000
-        "[v$session.program]": ${spring.application.name}
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: none #none || update || create
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 30000
-        loggerLevel: basic
-  hystrix:
-    enabled: false
-hystrix:
-  command:
-    default:
-      execution:
-        timeout:
-          enabled: false
-logging:
-  level:
-    com:
-      netflix:
-        discovery: OFF
-    org:
-      springframework:
-        security: ERROR
-        web: ERROR
-springdoc:
-  api-docs:
-    path: /actuator/api-docs
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-cache:
-  redis:
-    serviceName: PAYMENTS.BILL-TST.Redis
-    institutionFeatureValue:
-      ttl: 12
-    institutionFeatureList:
-      ttl: 12
-    getProcessChannelForProcess:
-      ttl: 12
-    getInstitutionForProcess:
-      ttl: 12
-    getInstitutionChannelForProcess:
-      ttl: 12
-    getInstitutionProcess:
-      ttl: 12
-    getInstitutionChannelProcess:
-      ttl: 12
-    getInstitutionDebtTypeForProcess:
-      ttl: 12
-    getInstitutionById:
-      ttl: 12
-    institutionUserInterfaceList:
-      ttl: 12
-    findChannelByChannelCode:
-      ttl: 12
-## pcf env redis configuration
-runtime:
-  platform: local
-## RabbitMQ Configuration
-rabbitmq:
-  enabled: true
-  services:
-    billtransaction-rabbitmq:
-      name: PAYMENTS.BILL-TST.RabbitMQ
-      enabled: false
-      consumers:
-        paymentNotificationEvent:
-          minConcurrentConsumers: 2
-          maxConcurrentConsumers: 4
-          prefetchCount: 10
-      producers:
-        paymentNotificationEvent:
-          exchangeName: billtransaction-direct-exchange
-          routingKey: payment-notification-event
-        creditCardProvisionACKEvent: # Eksik yapılandırma değeri eklendi
-          exchangeName: creditCardProvisionACK-exchange
-          routingKey: creditCardProvisionACK-event
-      queues:
-        paymentNotificationEvent:
-          declare: true
-          name: payment-notification-queue
-          durable: true
-          routingKey: payment-notification-event
-          arguments:
-            x-message-ttl: 300000
-          exchange:
-            name: billtransaction-direct-exchange
-            durable: true
-            type: direct
-external:
-  billPaymentRestFacade:
-    address: url
-    service:
-      readTimeout: 30000
-      connectTimeout: 30000
+main][HikariPool] HikariPool-1 - Exception during pool initialization.
+java.sql.SQLException: ORA-01017: invalid username/password; logon denied
+
+	at oracle.jdbc.driver.T4CTTIoer.processError(T4CTTIoer.java:450) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIoer.processError(T4CTTIoer.java:392) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIoer.processError(T4CTTIoer.java:385) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIfun.processError(T4CTTIfun.java:938) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIoauthenticate.processError(T4CTTIoauthenticate.java:480) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:655) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:249) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIoauthenticate.doOAUTH(T4CTTIoauthenticate.java:416) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CTTIoauthenticate.doOAUTH(T4CTTIoauthenticate.java:825) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CConnection.logon(T4CConnection.java:596) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.PhysicalConnection.<init>(PhysicalConnection.java:715) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CConnection.<init>(T4CConnection.java:385) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.T4CDriverExtension.getConnection(T4CDriverExtension.java:30) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at oracle.jdbc.driver.OracleDriver.connect(OracleDriver.java:564) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-4.0.3.jar:?]
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:364) ~[HikariCP-4.0.3.jar:?]
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:206) ~[HikariCP-4.0.3.jar:?]
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:476) ~[HikariCP-4.0.3.jar:?]
+	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-4.0.3.jar:?]
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115) ~[HikariCP-4.0.3.jar:?]
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:112) ~[HikariCP-4.0.3.jar:?]
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:272) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory.injectServices(DefaultIdentifierGeneratorFactory.java:175) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.injectDependencies(AbstractServiceRegistryImpl.java:295) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:252) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.<init>(InFlightMetadataCollectorImpl.java:173) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:127) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.metadata(EntityManagerFactoryBuilderImpl.java:1460) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1494) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:58) ~[spring-orm-5.3.27.jar:5.3.27]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:365) ~[spring-orm-5.3.27.jar:5.3.27]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:409) ~[spring-orm-5.3.27.jar:5.3.27]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:396) ~[spring-orm-5.3.27.jar:5.3.27]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:341) ~[spring-orm-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1863) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1800) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1156) ~[spring-context-5.3.27.jar:5.3.27]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:910) ~[spring-context-5.3.27.jar:5.3.27]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583) ~[spring-context-5.3.27.jar:5.3.27]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147) ~[spring-b
