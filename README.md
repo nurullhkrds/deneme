@@ -1,137 +1,18 @@
-spring:
-  application:
-    name: PAYMENTS.BILL.bill-adapter
-  cloud:
-    services:
-      registrationMethod: direct
-  datasource:
-    username: BILL
-    password: Bolefppe1203
-    url: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oprkbarcdbt.sys.yapikredi.com.tr)(PORT=1818))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=SRVTEST_NYSU)))
-    driverClassName: oracle.jdbc.OracleDriver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 1
-      data-source-properties:
-        oracle.jdbc.ReadTimeout: 30000
-        oracle.net.READ_TIMEOUT: 30000
-        oracle.net.CONNECT_TIMEOUT: 30000
-        "[v$session.program]": ${spring.application.name}
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: none #none || update || create
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 30000
-        loggerLevel: basic
-  hystrix:
-    enabled: false
-hystrix:
-  command:
-    default:
-      execution:
-        timeout:
-          enabled: false
-logging:
-  level:
-    org:
-      slf4j: WARN
-      springframework:
-        security: ERROR
-        web: ERROR
-springdoc:
-  api-docs:
-    path: /actuator/api-docs
-cache:
-  redis:
-    serviceName: PAYMENTS.BILL-TST.Redis
-    institution:
-      ttl: 12
-    institutionAdapter:
-      ttl: 12
-    adapterService:
-      ttl: 12
-    returnMap:
-      ttl: 12
-    tokenDefinition:
-      ttl: 12
-runtime:
-  platform: pcf
-rabbitmq:
-  enabled: true
-  services:
-    bill-rabbitmq:
-      name: PAYMENTS.BILL-TST.RabbitMQ
-      enabled: true
-      consumers:
-        tokenInvalidEvent:
-          minConcurrentConsumers: 2
-          maxConcurrentConsumers: 4
-          prefetchCount: 10
-      producers:
-        remoteLogEvent:
-          exchangeName: bill-direct-exchange
-          routingKey: remote-log-event
-        tokenInvalidEvent:
-          exchangeName: bill-direct-exchange
-          routingKey: token-invalid-event
-      queues:
-        remoteLogEvent:
-          declare: true
-          name: remote-log-queue
-          durable: true
-          routingKey: remote-log-event
-          arguments:
-            x-message-ttl: 300000
-          exchange:
-            name: bill-direct-exchange
-            durable: true
-            type: direct
-        tokenInvalidEvent:
-          declare: true
-          name: token-invalid-queue
-          durable: true
-          routingKey: token-invalid-event
-          arguments:
-            x-message-ttl: 300000
-          exchange:
-            name: bill-direct-exchange
-            durable: true
-            type: direct
-management:
-  health:
-    circuitbreakers:
-      enabled: true
-    ratelimiters:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-  endpoint:
-    health:
-      show-details: always
-resilience4j:
-  enabled: true
-  circuitbreaker:
-    configs:
-      default:
-        registerHealthIndicator: true
-smoke:
-  tests:
-    enabled: false
-junit:
-  institutionTest:
-    enabled: false
-metric:
-  enabled: true
-  environment: test
-spring:
-  redis:
-    host: localhost  # Redis sunucunuzun adresi
-    port: 6379       # Redis sunucunuzun portu
-    password: password_if_any  # Eğer varsa Redis şifresi
+Error starting ApplicationContext. To display the conditions report re-run your application with 'debug' enabled.
+2024-07-16 09:15:15,308 ERROR [main][SpringApplication] Application run failed
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'cachingServiceImpl' defined in file [C:\Applications\micro_project\workspace\micro_base\bill-adapter\target\classes\com\ykb\payments\bill\adapter\caching\service\CachingServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'cacheManager' defined in class path resource [com/ykb/payments/bill/adapter/config/RedisConfig.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.data.redis.cache.RedisCacheManager]: Factory method 'cacheManager' threw exception; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'redisConnectionFactory' defined in class path resource [com/ykb/payments/bill/adapter/config/RedisConfig.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.springframework.data.redis.connection.RedisConnectionFactory]: Factory method 'redisConnectionFactory' threw exception; nested exception is java.lang.IllegalArgumentException: No service with name [PAYMENTS.BILL-TST.Redis] was found.
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:800) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:229) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1372) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1222) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955) ~[spring-beans-5.3.27.jar:5.3.27]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:920) ~[spring-context-5.3.27.jar:5.3.27]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583) ~[spring-context-5.3.27.jar:5.3.27]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147) ~[spring-boot-2.7.11.jar:2.7.11]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:731) ~[spring-boot-2.7.11.jar:2.7.11]
