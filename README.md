@@ -317,15 +317,15 @@ spring:
       client:
         simple:
           instances:
-            -COREBANKING.COMMISSION.calculation[0].uri: http://calculation-corebanking-tst.cldnp.yapikredi.com.tr
-            -COREBANKING.ACCOUNT.account[0].uri: http://account-corebanking-tst.cldnp.yapikredi.com.tr
-            -PAYMENTS.BILL.bill-adapter[0].uri: http://bill-adapter-payments-tst.cldnp.yapikredi.com.tr
-            -COREBANKING.ACCOUNT.provision-main[0].uri: http://provision-main-corebanking-tst.cldnp.yapikredi.com.tr
-            -CARDPAYMENTS.SWT.swt-switch-integration[0].uri: http://swt-switch-integration-cardpayments-tst.cldnp.yapikredi.com.tr
-            -PAYMENTS.COMMON.limitation-service[0].uri: http://limitation-service-payments-tst.cldnp.yapikredi.com.tr
+            -COREBANKING.COMMISSION.calculation[0].uri: url
+            -COREBANKING.ACCOUNT.account[0].uri:url
+            -PAYMENTS.BILL.bill-adapter[0].uri: url
+            -COREBANKING.ACCOUNT.provision-main[0].uri: url
+            -CARDPAYMENTS.SWT.swt-switch-integration[0].uri: url
+            -PAYMENTS.COMMON.limitation-service[0].uri: url
   datasource:
     username: BILL
-    password: Bolefppe1203
+    password: sssss
     url: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oprkbarcdbt.sys.yapikredi.com.tr)(PORT=1818))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=SRVTEST_NYSU)))
     driverClassName: oracle.jdbc.OracleDriver
     hikari:
@@ -430,7 +430,7 @@ rabbitmq:
             type: direct
 external:
   billPaymentRestFacade:
-    address: http://betest.yapikredi.com.tr/Harmoni/rest/
+    address: url
     service:
       readTimeout: 30000
       connectTimeout: 30000
