@@ -1,4 +1,4 @@
-  @Test
+  @Test getAccountPaymengetMethodDetailDTO
     void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
