@@ -1,4 +1,5 @@
-  @Test
+  @Test          makeProvisionResponse.setContractNo("contract123");
+
     void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
