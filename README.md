@@ -10,15 +10,24 @@ shouldHandleExceptionAndReturnError unitinde "
 org.mockito.exceptions.base.MockitoException: 
 Checked exception is invalid for this method!
 Invalid: com.ykb.architecture.micro.error.exception.ServiceCallException" hatasını verdi
+
+
 private CreateAccountingDTO createSampleDTO() {
     CreateAccountingDTO dto = new CreateAccountingDTO();
     dto.setChannelTransactionId("123");
+
+    // Create ProvisionDTO if it's null
+    if (dto.getProvisionDTO() == null) {
+        dto.setProvisionDTO(new ProvisionDTO());
+    }
+
+    dto.getProvisionDTO().setCustomerNo("1234567890");  // Or set any necessary fields
 
     // Create InstitutionChannelPymMethodDTO if it's null
     if (dto.getInstitutionChannelPymMethodDTO() == null) {
         dto.setInstitutionChannelPymMethodDTO(new InstitutionChannelPymMethodDTO());
     }
-    
+
     dto.getInstitutionChannelPymMethodDTO().setAccountingTemplateCode("template");
     dto.setChannelCode("channel");
     dto.setAgentCode("agent");
@@ -32,3 +41,4 @@ private CreateAccountingDTO createSampleDTO() {
 
     return dto;
 }
+
