@@ -1,3 +1,6 @@
-org.mockito.exceptions.base.MockitoException: 
-Checked exception is invalid for this method!
-Invalid: java.lang.Exception: Test exception
+// Mock nesneyi oluşturun
+ProvisionNextService provisionNextService = mock(ProvisionNextService.class);
+
+// Metot davranışını belirleyin
+when(provisionNextService.makeReverseProvision(any()))
+        .thenThrow(new RuntimeException("Test exception"));
