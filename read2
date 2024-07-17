@@ -1,193 +1,126 @@
-  @Test getAccountPaymengetMethodDetailDTO
-    void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-        
-        // Initialize createAccountingDTO with necessary mock data
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
-
-        // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertTrue(result.isSuccess());
-        assertEquals(123L, result.getContractNo());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+   @Override
+    public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO) {
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        MakeProvisionRequest  makeProvisionRequest = prepareProvisionRequest(createAccountingDTO,createAccountingResultDTO);
+        try {
+            MakeProvisionResponse makeProvisionResponse = provisionNextService.makeProvision(makeProvisionRequest);
+            if(!makeProvisionResponse.isSuccess()){
+                handleException(makeProvisionResponse.getErrorCode(), createAccountingResultDTO);
+                createAccountingResultDTO.setSuccess(false);
+                return createAccountingResultDTO;
+            }
+            if(makeProvisionResponse.getContractNo() == null){
+                createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+                createAccountingResultDTO.setSuccess(false);
+                return createAccountingResultDTO;
+            }
+            createAccountingResultDTO.setContractNo(makeProvisionResponse.getContractNo());
+            createAccountingResultDTO.setPendingDetailList(makeProvisionResponse.getPendingDetailList());
+            createAccountingResultDTO.setSuccess(true);
+        }catch (Exception e){
+            if(e.getCause().getClass().equals(ServiceCallException.class)){
+                Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
+                handleException(errorCode, createAccountingResultDTO);
+                return createAccountingResultDTO;
+            }
+            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+            createAccountingResultDTO.setSuccess(false);
+        }
+        return createAccountingResultDTO;
     }
 
-    @Test
-    void doAccounting_WhenProvisionFails_ShouldHandleException() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
+    private MakeProvisionRequest prepareProvisionRequest(CreateAccountingDTO createAccountingDTO,CreateAccountingResultDTO createAccountingResultDTO )  {
+        MakeProvisionRequest makeProvisionRequest = new MakeProvisionRequest();
+        makeProvisionRequest.setTransactionId(createAccountingDTO.getChannelTransactionId());
+        makeProvisionRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        makeProvisionRequest.setChannelCode(createAccountingDTO.getChannelCode());
+        makeProvisionRequest.setUserCode(createAccountingDTO.getAgentCode());
+        makeProvisionRequest.setOperationalBranchCode(createAccountingDTO.getBranchCode());
 
-        // Initialize createAccountingDTO with necessary mock data
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(false);
-        makeProvisionResponse.setErrorCode(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+        List<MakeProvisionInnerDTO> makeProvisionInnerList = new ArrayList<>();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = (AccountPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
 
-        // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+        /** Debit */
+        MakeProvisionInnerDTO debitProvisionInnerRequest = new MakeProvisionInnerDTO();
+        debitProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
+        debitProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
+        debitProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount().negate());
+        debitProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
+        debitProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        debitProvisionInnerRequest.setClientNo(createAccountingDTO.getProvisionDTO().getCustomerNo().intValue());
+        makeProvisionInnerList.add(debitProvisionInnerRequest);
 
-        // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+        /** Credit */
+        MakeProvisionInnerDTO creditProvisionInnerRequest = new MakeProvisionInnerDTO();
+        creditProvisionInnerRequest.setAccountNo(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo());
+        creditProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
+        creditProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount());
+        creditProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
+        creditProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        creditProvisionInnerRequest.setClientNo(createAccountingDTO.getInstitution().getCustomerNo().intValue());
+        //TODO:LocalAmount dövizlerde
+        LocalDate availableLocalDate ;
+        if(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.NO_VALOR)){
+            availableLocalDate = LocalDate.now();
+        }else {
+            availableLocalDate = accountingDateUtil.getAvailDate(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayType(),
+                    getBlockDayCount(createAccountingDTO.getInstitutionChannelPymMethodDTO(), createAccountingDTO.getInstitutionChnnlPymMthdPscDTO()));
+        }
+        createAccountingResultDTO.setAvailableDate(availableLocalDate);
+        Date availableDate = Date.valueOf(availableLocalDate);
+        Date valueDate = Date.valueOf(availableLocalDate.plusDays(1));
+        creditProvisionInnerRequest.setAvailableDate(availableDate);
+        creditProvisionInnerRequest.setValueDate(valueDate);
+
+        makeProvisionInnerList.add(creditProvisionInnerRequest);
+        /** Commission  **/
+        if (createAccountingDTO.getResponseCommissionInformation()!= null) {
+
+            ResponseCommissionInformation responseCommissionInformation = createAccountingDTO.getResponseCommissionInformation();
+            for (CommissionOutputAccountingApiDTO commissionOutputDTO : responseCommissionInformation.getCommissionOutputAccountingApiDTOList()) {
+                MakeProvisionInnerDTO commissionProvisionInnerRequest = new MakeProvisionInnerDTO();
+                commissionProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
+                commissionProvisionInnerRequest.setAmount(commissionOutputDTO.getAmount());
+                commissionProvisionInnerRequest.setCurrency(commissionOutputDTO.getCurrency());
+                commissionProvisionInnerRequest.setDescription(commissionOutputDTO.getDescription());
+                if (Boolean.TRUE.equals(commissionOutputDTO.getIsCommissionTax())) {
+                    commissionProvisionInnerRequest.setCommissionTax(true);
+                } else {
+                    commissionProvisionInnerRequest.setCommission(true);
+                }
+                commissionProvisionInnerRequest.setProvisionCode(commissionOutputDTO.getProvisionCode());
+                commissionProvisionInnerRequest.setReservationId(commissionOutputDTO.getReservationId());
+                commissionProvisionInnerRequest.setCommissionBalanceType(commissionOutputDTO.getBalanceControlType());
+                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
+                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
+                commissionProvisionInnerRequest.setDelinquencyRequired(commissionOutputDTO.getIsDelinquencyRequired());
+                makeProvisionInnerList.add(commissionProvisionInnerRequest);
+            }
+        }
+
+        makeProvisionRequest.setMakeProvisionInnerList(makeProvisionInnerList);
+
+
+        return makeProvisionRequest;
     }
 
-    @Test
-    void doAccounting_WhenContractNoIsNull_ShouldReturnGenericUnknownError() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Initialize createAccountingDTO with necessary mock data
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo(null);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
-
-        // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+    private void handleException(Long errorCode,CreateAccountingResultDTO createAccountingResultDTO){
+        EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
+        createAccountingResultDTO.setSuccess(false);
+        if(result == null){
+            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+            return;
+        }
+        createAccountingResultDTO.setError(result.getBillCode());
     }
 
-    @Test
-    void doAccounting_WhenServiceCallExceptionOccurs_ShouldHandleException() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Initialize createAccountingDTO with necessary mock data
-        ExceptionData exceptionData = new ExceptionData(123L, "Error Message", "Error Detail");
-        Mockito.when(provisionNextService.makeProvision(Mockito.any()))
-                .thenThrow(new RuntimeException(new ServiceCallException(exceptionData)));
-
-        // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-        Mockito.verifyNoMoreInteractions(provisionNextService);
-    }
-
-    @Test
-    void doAccounting_WhenUnknownExceptionOccurs_ShouldReturnGenericUnknownError() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Initialize createAccountingDTO with necessary mock data
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenThrow(new RuntimeException());
-
-        // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-        Mockito.verifyNoMoreInteractions(provisionNextService);
-    }
-
-    @Test
-    void doAccounting_ShouldCallPrepareProvisionRequest() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Mocking a successful response
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
-
-        // Act
-        accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-    }
-
-    @Test
-    void doAccounting_ShouldCallHandleException() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Mocking a failed response
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(false);
-        makeProvisionResponse.setErrorCode(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
-
-        // Act
-        accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-    }
-
-    @Test
-    void prepareProvisionRequest_ShouldReturnValidRequest() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Set up the mocks to return valid data
-        Mockito.when(accountPaymentMethodDetailDTO.getAccountNo()).thenReturn("12345");
-        Mockito.when(accountingDateUtil.getCurrentDate()).thenReturn(LocalDate.now());
-
-        // Act
-        MakeProvisionRequest request = accountProvisionService.prepareProvisionRequest(createAccountingDTO);
-
-        // Assert
-        assertNotNull(request);
-        assertEquals("12345", request.getAccountNo());
+    private Integer getBlockDayCount(InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO, InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO){
+        if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.DAILY)){
+            return  institutionChnnlPymMthdPscDTO.getBlockDayCount(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
+        }else if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.CHANNEL)){
+            return  institutionChannelPymMethodDTO.getBlockDayCount();
+        }else{
+            return 0;
+        }
     }
