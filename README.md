@@ -1,67 +1,118 @@
-@Test
-    void shouldHandleUnsuccessfulMakeReverseProvision() {
-        // Test verilerini oluştur
-        CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
-        inputDto.setPaymentMethodType(EnumPaymentMethod.CARD);
-        inputDto.setContractNo(123L);
-        inputDto.setChannelTransactionId("123");
-        inputDto.setDummyMerchant(true);
 
-        CreateReverseAccountingResultDTO expectedResult = new CreateReverseAccountingResultDTO();
-        expectedResult.setSuccess(false);
 
-        MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
-        makeReverseProvisionRequest.setContractNo(inputDto.getContractNo());
-        makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
-        makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
+Argument(s) are different! Wanted:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImplTest.shouldHandleUnsuccessfulMakeReverseProvision(CardReverseProvisionServiceImplTest.java:86)
+Actual invocations have different arguments:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImpl.doReverseAccounting(CardReverseProvisionServiceImpl.java:43)
 
-        // Mock MakeReverseProvisionResponse
-        MakeReverseProvisionResponse makeDto = new MakeReverseProvisionResponse();
-        makeDto.setErrorCode(500L);
-        makeDto.setSuccess(false);
+Comparison Failure: 
+<Click to see difference>
 
-        // Mock provisionNextService
-        Mockito.when(provisionNextService.makeReverseProvision(makeReverseProvisionRequest)).thenReturn(makeDto);
+Argument(s) are different! Wanted:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImplTest.shouldHandleUnsuccessfulMakeReverseProvision(CardReverseProvisionServiceImplTest.java:86)
+Actual invocations have different arguments:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImpl.doReverseAccounting(CardReverseProvisionServiceImpl.java:43)
 
-        // Metodu çağır ve sonucu doğrula
-        CreateReverseAccountingResultDTO actualResult = cardReverseProvisionService.doReverseAccounting(inputDto);
+	at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImplTest.shouldHandleUnsuccessfulMakeReverseProvision(CardReverseProvisionServiceImplTest.java:86)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:725)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:214)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:210)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:135)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:66)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:107)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)
+	at org.junit.platform.launcher.core.DefaultLauncherSession$DelegatingLauncher.execute(DefaultLauncherSession.java:86)
+	at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:53)
+	at com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:57)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38)
+	at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35)
+	at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:232)
+	at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:55)
 
-        // Assert and verify
-        assertEquals(expectedResult.isSuccess(), actualResult.isSuccess());
-        verify(provisionNextService).makeReverseProvision(makeReverseProvisionRequest);
-        verify(cardReverseProvisionService).handleException(makeDto.getErrorCode(), actualResult);
-    }
-
-    @Test
-    void shouldHandleSuccessfulMakeReverseProvision() {
-        // Test verilerini oluştur
-        CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
-        inputDto.setPaymentMethodType(EnumPaymentMethod.CARD);
-        inputDto.setContractNo(123L);
-        inputDto.setChannelTransactionId("123");
-        inputDto.setDummyMerchant(true);
-
-        CreateReverseAccountingResultDTO expectedResult = new CreateReverseAccountingResultDTO();
-        expectedResult.setSuccess(true);
-
-        MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
-        makeReverseProvisionRequest.setContractNo(inputDto.getContractNo());
-        makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
-        makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
-
-        // Mock MakeReverseProvisionResponse
-        MakeReverseProvisionResponse makeDto = new MakeReverseProvisionResponse();
-        makeDto.setErrorCode(0L);
-        makeDto.setSuccess(true);
-
-        // Mock provisionNextService
-        Mockito.when(provisionNextService.makeReverseProvision(makeReverseProvisionRequest)).thenReturn(makeDto);
-
-        // Metodu çağır ve sonucu doğrula
-        CreateReverseAccountingResultDTO actualResult = cardReverseProvisionService.doReverseAccounting(inputDto);
-
-        // Assert and verify
-        assertEquals(expectedResult.isSuccess(), actualResult.isSuccess());
-        verify(provisionNextService).makeReverseProvision(makeReverseProvisionRequest);
-        verify(cardReverseProvisionService, never()).handleException(anyLong(), any(CreateReverseAccountingResultDTO.class));
-    }
