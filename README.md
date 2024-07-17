@@ -1,11 +1,15 @@
-shouldHandleFailureIfMakeProvisionFails unitinde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelPymMethodDTO.setAccountingTemplateCode(String)" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitutionChannelPymMethodDTO()" is null
+shouldHandleFailureIfMakeProvisionFails unitinde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO.getCustomerNo()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getProvisionDTO()" is null
+
 " 
 
-shouldHandleErrorIfContractNoIsNull unitinnde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelPymMethodDTO.setAccountingTemplateCode(String)" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitutionChannelPymMethodDTO()" is null
+shouldHandleErrorIfContractNoIsNull unitinnde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO.getCustomerNo()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getProvisionDTO()" is null
+
 " 
 
-shouldHandleExceptionAndReturnError unitinde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelPymMethodDTO.setAccountingTemplateCode(String)" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitutionChannelPymMethodDTO()" is null
-" hatasını verdi
+shouldHandleExceptionAndReturnError unitinde "
+org.mockito.exceptions.base.MockitoException: 
+Checked exception is invalid for this method!
+Invalid: com.ykb.architecture.micro.error.exception.ServiceCallException" hatasını verdi
 private CreateAccountingDTO createSampleDTO() {
     CreateAccountingDTO dto = new CreateAccountingDTO();
     dto.setChannelTransactionId("123");
