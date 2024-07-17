@@ -1,19 +1,29 @@
-  @Test
+import org.junit.Before;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+public class YourTestClass {
+
+    @Mock
+    private ProvisionNextService provisionNextService;
+
+    @InjectMocks
+    private AccountReverseProvisionService accountReverseProvisionService;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
     public void testDoReverseAccounting_GeneralException() throws ServiceCallException {
         // Mock a general exception thrown
         CreateReverseAccountingDTO inputDTO = new CreateReverseAccountingDTO();
         inputDTO.setChannelTransactionId("12345");
         inputDTO.setContractNo(987654L);
 
-        MakeReverseProvisionRequest mockRequest = new MakeReverseProvisionRequest();
-        mockRequest.setTransactionId(inputDTO.getChannelTransactionId());
-        mockRequest.setContractNo(inputDTO.getContractNo());
-        mockRequest.setReverseDescriptionAppendix("İPTAL");
-// Mock nesneyi oluşturun
-        ProvisionNextService provisionNextService = mock(ProvisionNextService.class);
-
-
-
+        // Mock nesne yapılandırması
         when(provisionNextService.makeReverseProvision(any())).thenThrow(new RuntimeException("Test exception"));
 
         // Invoke the method under test
@@ -22,5 +32,6 @@
         // Verify the result
         verify(provisionNextService, times(1)).makeReverseProvision(any());
         assertFalse(resultDTO.isSuccess());
-        assertNotEquals(null, resultDTO.getError());
+        assertNotNull(resultDTO.getError()); // null kontrolü için assertNotNull kullanılabilir
     }
+}
