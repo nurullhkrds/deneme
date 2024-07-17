@@ -20,8 +20,11 @@ void shouldReturnIsDummyMerchantTrueButMakeReverseFalse() {
     makeDto.setErrorCode(500L);
     makeDto.setSuccess(false);
 
-    // Mocking exception
-    Mockito.when(provisionNextService.makeReverseProvision(makeReverseProvisionRequest)).thenThrow(new RuntimeException(new ServiceCallException(500L)));
+    // Mocking exception with cause
+    ServiceCallException serviceCallException = new ServiceCallException(500L);
+    RuntimeException runtimeException = new RuntimeException(serviceCallException);
+
+    Mockito.when(provisionNextService.makeReverseProvision(makeReverseProvisionRequest)).thenThrow(runtimeException);
 
     // Metodu çağır ve sonucu doğrula
     CreateReverseAccountingResultDTO actualResult = cardReverseProvisionService.doReverseAccounting(inputDto);
