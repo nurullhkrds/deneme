@@ -1,12 +1,11 @@
-  @Test          makeProvisionResponse.setContractNo("contract123");
-
+ @Test
     void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
         // Initialize createAccountingDTO with necessary mock data
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo("contract123");
+        makeProvisionResponse.setContractNo(123L);
         Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
 
         // Act
@@ -14,7 +13,7 @@
 
         // Assert
         assertTrue(result.isSuccess());
-        assertEquals("contract123", result.getContractNo());
+        assertEquals(123L, result.getContractNo());
         Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
         Mockito.verifyNoMoreInteractions(provisionNextService);
     }
@@ -102,7 +101,7 @@
         // Mocking a successful response
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo("contract123");
+        makeProvisionResponse.setContractNo(123L);
         Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
 
         // Act
@@ -142,7 +141,7 @@
         // Mocking a successful response
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo("contract123");
+        makeProvisionResponse.setContractNo(123L);
         Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
 
         // Act
