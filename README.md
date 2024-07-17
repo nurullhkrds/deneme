@@ -179,7 +179,33 @@ class AccountProvisionServiceImplTest {
 
 
 
+  private AccountProvisionServiceImpl accountProvisionService;
+    private ProvisionNextService provisionNextService;
+    private AccountingUtil accountingDateUtil;
 
+    @BeforeEach
+    void setUp() {
+        provisionNextService = Mockito.mock(ProvisionNextService.class);
+        accountingDateUtil = Mockito.mock(AccountingUtil.class);
+        accountProvisionService = new AccountProvisionServiceImpl(provisionNextService, accountingDateUtil);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Cleanup resources if necessary
+    }
+
+    @Test
+    void getProvisionType() {
+        // Arrange
+        EnumProvisionType expectedProvisionType = EnumProvisionType.ACCOUNT;
+
+        // Act
+        EnumProvisionType actualProvisionType = accountProvisionService.getProvisionType();
+
+        // Assert
+        assertEquals(expectedProvisionType, actualProvisionType);
+    }
 
 
 
