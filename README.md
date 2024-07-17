@@ -209,3 +209,5 @@ class AccountProvisionServiceImplTest {
 
 Error running AccountProvisionServiceImplTest.getProvisionType. Command line is too long. Shorten the command line and rerun.
 
+
+        verify(accountProvisionService, Mockito.times(1)).getProvisionType();
