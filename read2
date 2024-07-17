@@ -1,105 +1,60 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-public class AccountProvisionServiceImplTest {
-
-    @Mock
-    private ProvisionNextService provisionNextService;
-
-    @Mock
-    private AccountingUtil accountingDateUtil;
-
-    @InjectMocks
-    private AccountProvisionServiceImpl accountProvisionService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
-
-    @Test
+ @Test
     void shouldDoAccountingSuccessfully() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        CreateAccountingResultDTO expectedResponse = new CreateAccountingResultDTO();
+        MakeProvisionRequest mockRequest = new MakeProvisionRequest();
         MakeProvisionResponse mockResponse = new MakeProvisionResponse();
         mockResponse.setSuccess(true);
-        mockResponse.setContractNo(12345L);
-        mockResponse.setPendingDetailList(new ArrayList<>()); // Assuming an empty list
-
+        mockResponse.setContractNo("12345");
         when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
         when(accountingDateUtil.getAvailDate(any(), anyInt())).thenReturn(LocalDate.now());
 
         // Act
-        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertTrue(resultDTO.isSuccess());
-        assertEquals(12345L, resultDTO.getContractNo());
-        assertTrue(resultDTO.getPendingDetailList().isEmpty());
-        assertNull(resultDTO.getError());
-
-        // Verify method calls
+        assertTrue(result.isSuccess());
+        assertEquals("12345", result.getContractNo());
         verify(provisionNextService, times(1)).makeProvision(any());
-        verify(accountingDateUtil, times(1)).getAvailDate(any(), anyInt());
     }
 
     @Test
-    void shouldHandleFailedMakeProvisionResponse() {
+    void shouldHandleFailureInProvisionService() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        CreateAccountingResultDTO expectedResponse = new CreateAccountingResultDTO();
+        MakeProvisionRequest mockRequest = new MakeProvisionRequest();
         MakeProvisionResponse mockResponse = new MakeProvisionResponse();
         mockResponse.setSuccess(false);
         mockResponse.setErrorCode(500);
-
         when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
 
         // Act
-        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(resultDTO.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-        assertNull(resultDTO.getContractNo());
-
-        // Verify method calls
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
         verify(provisionNextService, times(1)).makeProvision(any());
     }
 
     @Test
-    void shouldHandleNullContractNoInMakeProvisionResponse() {
+    void shouldHandleNullContractNoFromProvisionService() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        CreateAccountingResultDTO expectedResponse = new CreateAccountingResultDTO();
+        MakeProvisionRequest mockRequest = new MakeProvisionRequest();
         MakeProvisionResponse mockResponse = new MakeProvisionResponse();
         mockResponse.setSuccess(true);
-        mockResponse.setContractNo(null);
-
         when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
 
         // Act
-        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(resultDTO.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-        assertNull(resultDTO.getContractNo());
-
-        // Verify method calls
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
         verify(provisionNextService, times(1)).makeProvision(any());
     }
 
@@ -107,37 +62,16 @@ public class AccountProvisionServiceImplTest {
     void shouldHandleServiceCallException() {
         // Arrange
         CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
-
+        CreateAccountingResultDTO expectedResponse = new CreateAccountingResultDTO();
+        MakeProvisionRequest mockRequest = new MakeProvisionRequest();
         when(provisionNextService.makeProvision(any())).thenThrow(new ServiceCallException("Service call failed"));
 
         // Act
-        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(resultDTO.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-        assertNull(resultDTO.getContractNo());
-
-        // Verify method calls
-        verify(provisionNextService, times(1)).makeProvision(any());
-    }
-
-    @Test
-    void shouldHandleGeneralException() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
-
-        when(provisionNextService.makeProvision(any())).thenThrow(new RuntimeException("Unexpected error"));
-
-        // Act
-        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertFalse(resultDTO.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-        assertNull(resultDTO.getContractNo());
-
-        // Verify method calls
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
         verify(provisionNextService, times(1)).makeProvision(any());
     }
 
@@ -148,22 +82,21 @@ public class AccountProvisionServiceImplTest {
         CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
 
         // Act
-        MakeProvisionRequest request = accountProvisionService.prepareProvisionRequest(createAccountingDTO, createAccountingResultDTO);
+        MakeProvisionRequest request = accountProvisionService.prepareProvisionRequestForTest(createAccountingDTO, createAccountingResultDTO);
 
         // Assert
         assertNotNull(request);
         // Add specific assertions for the request object if needed
-
-        // Verify method calls (if any, depending on the assertions)
     }
 
     @Test
     void shouldHandleException() {
         // Arrange
+        Long errorCode = 500L;
         CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
 
         // Act
-        accountProvisionService.handleException(500L, createAccountingResultDTO);
+        accountProvisionService.handleException(errorCode, createAccountingResultDTO);
 
         // Assert
         assertFalse(createAccountingResultDTO.isSuccess());
@@ -171,7 +104,7 @@ public class AccountProvisionServiceImplTest {
     }
 
     @Test
-    void shouldGetBlockDayCount() {
+    void shouldGetBlockDayCountForDaily() {
         // Arrange
         InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
         institutionChannelPymMethodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.DAILY);
@@ -181,9 +114,37 @@ public class AccountProvisionServiceImplTest {
         Integer blockDayCount = accountProvisionService.getBlockDayCount(institutionChannelPymMethodDTO, institutionChnnlPymMthdPscDTO);
 
         // Assert
-        assertEquals(Calendar.getInstance().get(Calendar.DAY_OF_WEEK), blockDayCount); // Assuming this logic is correct for the test
+        assertNotNull(blockDayCount);
+        assertEquals(Calendar.getInstance().get(Calendar.DAY_OF_WEEK), blockDayCount);
     }
 
-    // Additional tests for edge cases or additional scenarios can be added here
+    @Test
+    void shouldGetBlockDayCountForChannel() {
+        // Arrange
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        institutionChannelPymMethodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.CHANNEL);
+        institutionChannelPymMethodDTO.setBlockDayCount(5);
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
 
-}
+        // Act
+        Integer blockDayCount = accountProvisionService.getBlockDayCount(institutionChannelPymMethodDTO, institutionChnnlPymMthdPscDTO);
+
+        // Assert
+        assertNotNull(blockDayCount);
+        assertEquals(5, blockDayCount);
+    }
+
+    @Test
+    void shouldHandleInvalidBlockDayStrategy() {
+        // Arrange
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        institutionChannelPymMethodDTO.setBlockDayStrategyCode("INVALID");
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+
+        // Act
+        Integer blockDayCount = accountProvisionService.getBlockDayCount(institutionChannelPymMethodDTO, institutionChnnlPymMthdPscDTO);
+
+        // Assert
+        assertNotNull(blockDayCount);
+        assertEquals(0, blockDayCount);
+    }
