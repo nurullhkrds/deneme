@@ -58,28 +58,7 @@
         paymentMethodDetailDTO.setAccountNo("1234567890");
         dto.setPaymentMethodDetailDTO(paymentMethodDetailDTO);
 
-        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
-        institutionChnnlPymMthdAccDTO.setInstitutionAccountNo("0987654321");
-        dto.setInstitutionChnnlPymMthdAccDTO(institutionChnnlPymMthdAccDTO);
-
-        dto.setResponseCommissionInformation(createCommissionInformation());
-
         return dto;
-    }
-
-    private ResponseCommissionInformation createCommissionInformation() {
-        ResponseCommissionInformation commissionInformation = new ResponseCommissionInformation();
-        List<CommissionOutputAccountingApiDTO> commissionList = new ArrayList<>();
-
-        CommissionOutputAccountingApiDTO commissionDTO = new CommissionOutputAccountingApiDTO();
-        commissionDTO.setAmount(BigDecimal.ONE);
-        commissionDTO.setCurrency("USD");
-        commissionDTO.setDescription("Commission");
-        commissionDTO.setIsCommissionTax(false);
-        commissionList.add(commissionDTO);
-
-        commissionInformation.setCommissionOutputAccountingApiDTOList(commissionList);
-        return commissionInformation;
     }
 
     private MakeProvisionResponse createMockProvisionResponse(boolean isSuccess, String contractNo) {
