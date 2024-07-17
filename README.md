@@ -1,13 +1,26 @@
-@Test
-void testGetProvisionService() {
-    // Mock ProvisionService instance
-    ProvisionService mockProvisionService = Mockito.mock(ProvisionService.class);
-    EnumProvisionType validProvisionType = EnumProvisionType.CARD;
+private ProvisionFactory provisionFactory;
 
-    when(provisionServiceMap.get(validProvisionType)).thenReturn(mockProvisionService);
+    @Mock
+    private List<ProvisionService> provisionServices;
 
-    ProvisionService result = provisionFactory.getProvisionService(validProvisionType);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+        provisionFactory = new ProvisionFactory(provisionServices);
+    }
 
-    assertNotNull(result);
-    assertEquals(mockProvisionService, result);
-}
+    @Test
+    void testGetProvisionService() {
+        // Mock ProvisionService instance
+        ProvisionService mockProvisionService = mock(ProvisionService.class);
+        EnumProvisionType validProvisionType = EnumProvisionType.CARD;
+
+        // Mock behavior for provisionServices
+        when(provisionServices.stream()).thenReturn(List.of(mockProvisionService).stream());
+        when(mockProvisionService.getProvisionType()).thenReturn(validProvisionType);
+
+        ProvisionService result = provisionFactory.getProvisionService(validProvisionType);
+
+        assertNotNull(result);
+        assertEquals(mockProvisionService, result);
+    }
