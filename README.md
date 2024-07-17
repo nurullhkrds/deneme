@@ -1,57 +1,185 @@
-main][HikariPool] HikariPool-1 - Exception during pool initialization.
-java.sql.SQLException: ORA-01017: invalid username/password; logon denied
+private static  final EnumProvisionType provisionType = EnumProvisionType.ACCOUNT;
 
-	at oracle.jdbc.driver.T4CTTIoer.processError(T4CTTIoer.java:450) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIoer.processError(T4CTTIoer.java:392) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIoer.processError(T4CTTIoer.java:385) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIfun.processError(T4CTTIfun.java:938) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIoauthenticate.processError(T4CTTIoauthenticate.java:480) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:655) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:249) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIoauthenticate.doOAUTH(T4CTTIoauthenticate.java:416) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CTTIoauthenticate.doOAUTH(T4CTTIoauthenticate.java:825) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CConnection.logon(T4CConnection.java:596) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.PhysicalConnection.<init>(PhysicalConnection.java:715) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CConnection.<init>(T4CConnection.java:385) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.T4CDriverExtension.getConnection(T4CDriverExtension.java:30) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at oracle.jdbc.driver.OracleDriver.connect(OracleDriver.java:564) ~[ojdbc7-12.1.0.jar:12.1.0.1.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-4.0.3.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:364) ~[HikariCP-4.0.3.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:206) ~[HikariCP-4.0.3.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:476) ~[HikariCP-4.0.3.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-4.0.3.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115) ~[HikariCP-4.0.3.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:112) ~[HikariCP-4.0.3.jar:?]
-	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess.obtainConnection(JdbcEnvironmentInitiator.java:181) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:68) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.initiateService(JdbcEnvironmentInitiator.java:35) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.boot.registry.internal.StandardServiceRegistryImpl.initiateService(StandardServiceRegistryImpl.java:101) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.service.internal.AbstractServiceRegistryImpl.createService(AbstractServiceRegistryImpl.java:272) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:246) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory.injectServices(DefaultIdentifierGeneratorFactory.java:175) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.service.internal.AbstractServiceRegistryImpl.injectDependencies(AbstractServiceRegistryImpl.java:295) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.service.internal.AbstractServiceRegistryImpl.initializeService(AbstractServiceRegistryImpl.java:252) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.service.internal.AbstractServiceRegistryImpl.getService(AbstractServiceRegistryImpl.java:223) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.<init>(InFlightMetadataCollectorImpl.java:173) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:127) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.metadata(EntityManagerFactoryBuilderImpl.java:1460) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1494) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
-	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:58) ~[spring-orm-5.3.27.jar:5.3.27]
-	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:365) ~[spring-orm-5.3.27.jar:5.3.27]
-	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:409) ~[spring-orm-5.3.27.jar:5.3.27]
-	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:396) ~[spring-orm-5.3.27.jar:5.3.27]
-	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:341) ~[spring-orm-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1863) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1800) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208) ~[spring-beans-5.3.27.jar:5.3.27]
-	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1156) ~[spring-context-5.3.27.jar:5.3.27]
-	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:910) ~[spring-context-5.3.27.jar:5.3.27]
-	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583) ~[spring-context-5.3.27.jar:5.3.27]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147) ~[spring-b
+    private final ProvisionNextService provisionNextService;
+    private final AccountingUtil accountingDateUtil;
+
+
+    @Override
+    public EnumProvisionType getProvisionType() {
+        return provisionType;
+    }
+
+    @Override
+    public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO) {
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        MakeProvisionRequest  makeProvisionRequest = prepareProvisionRequest(createAccountingDTO,createAccountingResultDTO);
+        try {
+            MakeProvisionResponse makeProvisionResponse = provisionNextService.makeProvision(makeProvisionRequest);
+            if(!makeProvisionResponse.isSuccess()){
+                handleException(makeProvisionResponse.getErrorCode(), createAccountingResultDTO);
+                createAccountingResultDTO.setSuccess(false);
+                return createAccountingResultDTO;
+            }
+            if(makeProvisionResponse.getContractNo() == null){
+                createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+                createAccountingResultDTO.setSuccess(false);
+                return createAccountingResultDTO;
+            }
+            createAccountingResultDTO.setContractNo(makeProvisionResponse.getContractNo());
+            createAccountingResultDTO.setPendingDetailList(makeProvisionResponse.getPendingDetailList());
+            createAccountingResultDTO.setSuccess(true);
+        }catch (Exception e){
+            if(e.getCause().getClass().equals(ServiceCallException.class)){
+                Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
+                handleException(errorCode, createAccountingResultDTO);
+                return createAccountingResultDTO;
+            }
+            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+            createAccountingResultDTO.setSuccess(false);
+        }
+        return createAccountingResultDTO;
+    }
+
+
+    private MakeProvisionRequest prepareProvisionRequest(CreateAccountingDTO createAccountingDTO,CreateAccountingResultDTO createAccountingResultDTO )  {
+        MakeProvisionRequest makeProvisionRequest = new MakeProvisionRequest();
+        makeProvisionRequest.setTransactionId(createAccountingDTO.getChannelTransactionId());
+        makeProvisionRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        makeProvisionRequest.setChannelCode(createAccountingDTO.getChannelCode());
+        makeProvisionRequest.setUserCode(createAccountingDTO.getAgentCode());
+        makeProvisionRequest.setOperationalBranchCode(createAccountingDTO.getBranchCode());
+
+        List<MakeProvisionInnerDTO> makeProvisionInnerList = new ArrayList<>();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = (AccountPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
+
+        /** Debit */
+        MakeProvisionInnerDTO debitProvisionInnerRequest = new MakeProvisionInnerDTO();
+        debitProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
+        debitProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
+        debitProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount().negate());
+        debitProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
+        debitProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        debitProvisionInnerRequest.setClientNo(createAccountingDTO.getProvisionDTO().getCustomerNo().intValue());
+        makeProvisionInnerList.add(debitProvisionInnerRequest);
+
+        /** Credit */
+        MakeProvisionInnerDTO creditProvisionInnerRequest = new MakeProvisionInnerDTO();
+        creditProvisionInnerRequest.setAccountNo(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo());
+        creditProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
+        creditProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount());
+        creditProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
+        creditProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        creditProvisionInnerRequest.setClientNo(createAccountingDTO.getInstitution().getCustomerNo().intValue());
+        //TODO:LocalAmount dövizlerde
+        LocalDate availableLocalDate ;
+        if(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.NO_VALOR)){
+            availableLocalDate = LocalDate.now();
+        }else {
+            availableLocalDate = accountingDateUtil.getAvailDate(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayType(),
+                    getBlockDayCount(createAccountingDTO.getInstitutionChannelPymMethodDTO(), createAccountingDTO.getInstitutionChnnlPymMthdPscDTO()));
+        }
+        createAccountingResultDTO.setAvailableDate(availableLocalDate);
+        Date availableDate = Date.valueOf(availableLocalDate);
+        Date valueDate = Date.valueOf(availableLocalDate.plusDays(1));
+        creditProvisionInnerRequest.setAvailableDate(availableDate);
+        creditProvisionInnerRequest.setValueDate(valueDate);
+
+        makeProvisionInnerList.add(creditProvisionInnerRequest);
+        /** Commission  **/
+        if (createAccountingDTO.getResponseCommissionInformation()!= null) {
+
+            ResponseCommissionInformation responseCommissionInformation = createAccountingDTO.getResponseCommissionInformation();
+            for (CommissionOutputAccountingApiDTO commissionOutputDTO : responseCommissionInformation.getCommissionOutputAccountingApiDTOList()) {
+                MakeProvisionInnerDTO commissionProvisionInnerRequest = new MakeProvisionInnerDTO();
+                commissionProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
+                commissionProvisionInnerRequest.setAmount(commissionOutputDTO.getAmount());
+                commissionProvisionInnerRequest.setCurrency(commissionOutputDTO.getCurrency());
+                commissionProvisionInnerRequest.setDescription(commissionOutputDTO.getDescription());
+                if (Boolean.TRUE.equals(commissionOutputDTO.getIsCommissionTax())) {
+                    commissionProvisionInnerRequest.setCommissionTax(true);
+                } else {
+                    commissionProvisionInnerRequest.setCommission(true);
+                }
+                commissionProvisionInnerRequest.setProvisionCode(commissionOutputDTO.getProvisionCode());
+                commissionProvisionInnerRequest.setReservationId(commissionOutputDTO.getReservationId());
+                commissionProvisionInnerRequest.setCommissionBalanceType(commissionOutputDTO.getBalanceControlType());
+                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
+                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
+                commissionProvisionInnerRequest.setDelinquencyRequired(commissionOutputDTO.getIsDelinquencyRequired());
+                makeProvisionInnerList.add(commissionProvisionInnerRequest);
+            }
+        }
+
+        makeProvisionRequest.setMakeProvisionInnerList(makeProvisionInnerList);
+
+
+        return makeProvisionRequest;
+    }
+
+    private void handleException(Long errorCode,CreateAccountingResultDTO createAccountingResultDTO){
+        EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
+        createAccountingResultDTO.setSuccess(false);
+        if(result == null){
+            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+            return;
+        }
+        createAccountingResultDTO.setError(result.getBillCode());
+    }
+
+    private Integer getBlockDayCount(InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO, InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO){
+        if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.DAILY)){
+            return  institutionChnnlPymMthdPscDTO.getBlockDayCount(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
+        }else if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.CHANNEL)){
+            return  institutionChannelPymMethodDTO.getBlockDayCount();
+        }else{
+            return 0;
+        }
+    }
+
+
+
+
+
+
+
+
+package com.ykb.payments.bill.transaction.accounting.provision.service;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class AccountProvisionServiceImplTest {
+
+    @BeforeEach
+    void setUp() {
+    }
+
+    @AfterEach
+    void tearDown() {
+    }
+
+    @Test
+    void getProvisionType() {
+    }
+
+    @Test
+    void doAccounting() {
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
