@@ -31,3 +31,12 @@ void shouldReturnIsDummyMerchantTrueButMakeReverseFalse() {
     assertEquals(expectedResult.isSuccess(), actualResult.isSuccess());
     verify(provisionNextService).makeReverseProvision(Mockito.eq(makeReverseProvisionRequest));
 }
+
+
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
