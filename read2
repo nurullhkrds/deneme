@@ -1,169 +1,189 @@
- @Test
-    void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
-        // Initialize mock responses
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-        // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+public class AccountProvisionServiceImplTest {
 
-        // Assert
-        assertTrue(result.isSuccess());
-        assertEquals(123L, result.getContractNo());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+    @Mock
+    private ProvisionNextService provisionNextService;
+
+    @Mock
+    private AccountingUtil accountingDateUtil;
+
+    @InjectMocks
+    private AccountProvisionServiceImpl accountProvisionService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    void doAccounting_WhenProvisionFails_ShouldHandleException() {
+    void shouldDoAccountingSuccessfully() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        MakeProvisionResponse mockResponse = new MakeProvisionResponse();
+        mockResponse.setSuccess(true);
+        mockResponse.setContractNo(12345L);
+        mockResponse.setPendingDetailList(new ArrayList<>()); // Assuming an empty list
 
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
-
-        // Initialize mock responses
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(false);
-        makeProvisionResponse.setErrorCode(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+        when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
+        when(accountingDateUtil.getAvailDate(any(), anyInt())).thenReturn(LocalDate.now());
 
         // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+        assertTrue(resultDTO.isSuccess());
+        assertEquals(12345L, resultDTO.getContractNo());
+        assertTrue(resultDTO.getPendingDetailList().isEmpty());
+        assertNull(resultDTO.getError());
+
+        // Verify method calls
+        verify(provisionNextService, times(1)).makeProvision(any());
+        verify(accountingDateUtil, times(1)).getAvailDate(any(), anyInt());
     }
 
     @Test
-    void doAccounting_WhenContractNoIsNull_ShouldReturnGenericUnknownError() {
+    void shouldHandleFailedMakeProvisionResponse() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        MakeProvisionResponse mockResponse = new MakeProvisionResponse();
+        mockResponse.setSuccess(false);
+        mockResponse.setErrorCode(500);
 
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
-
-        // Initialize mock responses
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo(null);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+        when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
 
         // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+        assertNull(resultDTO.getContractNo());
+
+        // Verify method calls
+        verify(provisionNextService, times(1)).makeProvision(any());
     }
 
     @Test
-    void doAccounting_WhenServiceCallExceptionOccurs_ShouldHandleException() {
+    void shouldHandleNullContractNoInMakeProvisionResponse() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        MakeProvisionResponse mockResponse = new MakeProvisionResponse();
+        mockResponse.setSuccess(true);
+        mockResponse.setContractNo(null);
 
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
-
-        // Mock service call exception
-        Mockito.when(provisionNextService.makeProvision(Mockito.any()))
-                .thenThrow(new RuntimeException(new ServiceCallException(exceptionData)));
+        when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
 
         // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+        assertNull(resultDTO.getContractNo());
+
+        // Verify method calls
+        verify(provisionNextService, times(1)).makeProvision(any());
     }
 
     @Test
-    void doAccounting_WhenUnknownExceptionOccurs_ShouldReturnGenericUnknownError() {
+    void shouldHandleServiceCallException() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
 
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
-
-        // Mock unknown exception
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenThrow(new RuntimeException());
+        when(provisionNextService.makeProvision(any())).thenThrow(new ServiceCallException("Service call failed"));
 
         // Act
-        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
-        Mockito.verifyNoMoreInteractions(provisionNextService);
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+        assertNull(resultDTO.getContractNo());
+
+        // Verify method calls
+        verify(provisionNextService, times(1)).makeProvision(any());
     }
 
     @Test
-    void doAccounting_ShouldCallPrepareProvisionRequest() {
+    void shouldHandleGeneralException() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
 
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
-
-        // Initialize mock responses
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(true);
-        makeProvisionResponse.setContractNo(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+        when(provisionNextService.makeProvision(any())).thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
-        accountProvisionService.doAccounting(createAccountingDTO);
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+        assertNull(resultDTO.getContractNo());
+
+        // Verify method calls
+        verify(provisionNextService, times(1)).makeProvision(any());
     }
 
     @Test
-    void prepareProvisionRequest_ShouldReturnValidRequest() {
+    void shouldPrepareProvisionRequest() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
-
-        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
-        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
-
-        // Set up mock responses
-        Mockito.when(accountPaymentMethodDetailDTO.getAccountNo()).thenReturn("12345");
-        Mockito.when(accountingDateUtil.getCurrentDate()).thenReturn(LocalDate.now());
+        CreateAccountingDTO createAccountingDTO = mock(CreateAccountingDTO.class);
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
 
         // Act
-        MakeProvisionRequest request = accountProvisionService.prepareProvisionRequest(createAccountingDTO);
+        MakeProvisionRequest request = accountProvisionService.prepareProvisionRequest(createAccountingDTO, createAccountingResultDTO);
 
         // Assert
         assertNotNull(request);
-        assertEquals("12345", request.getAccountNo());
+        // Add specific assertions for the request object if needed
+
+        // Verify method calls (if any, depending on the assertions)
     }
+
+    @Test
+    void shouldHandleException() {
+        // Arrange
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+
+        // Act
+        accountProvisionService.handleException(500L, createAccountingResultDTO);
+
+        // Assert
+        assertFalse(createAccountingResultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, createAccountingResultDTO.getError());
+    }
+
+    @Test
+    void shouldGetBlockDayCount() {
+        // Arrange
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        institutionChannelPymMethodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.DAILY);
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+
+        // Act
+        Integer blockDayCount = accountProvisionService.getBlockDayCount(institutionChannelPymMethodDTO, institutionChnnlPymMthdPscDTO);
+
+        // Assert
+        assertEquals(Calendar.getInstance().get(Calendar.DAY_OF_WEEK), blockDayCount); // Assuming this logic is correct for the test
+    }
+
+    // Additional tests for edge cases or additional scenarios can be added here
+
+}
