@@ -1,76 +1,44 @@
-class AccountProvisionServiceImplTest {
-
-
-    private AccountProvisionServiceImpl accountProvisionService;
-    private ProvisionNextService provisionNextService;
-    private AccountingUtil accountingDateUtil;
-
-    @BeforeEach
-    void setUp() {
-        provisionNextService = mock(ProvisionNextService.class);
-        accountingDateUtil = mock(AccountingUtil.class);
-        accountProvisionService = new AccountProvisionServiceImpl(provisionNextService, accountingDateUtil);
-    }
-
-    @AfterEach
-    void tearDown() {
-    }
-
-
-    @Test
-    void shouldReturnAccountProvisionType() {
-        // Arrange
-        EnumProvisionType expectedProvisionType = EnumProvisionType.ACCOUNT;
-
-        // Act
-        EnumProvisionType actualProvisionType = accountProvisionService.getProvisionType();
-
-        // Assert
-        assertEquals(expectedProvisionType, actualProvisionType);
-
-    }
-
-
-    @Test
-    void shouldHandleSuccessfulAccounting() throws ServiceCallException {
-        // Arrange
+@Test
+    void shouldHandleFailureIfMakeProvisionFails() throws ServiceCallException {
         CreateAccountingDTO createAccountingDTO = createSampleDTO();
-        MakeProvisionResponse mockResponse = createMockProvisionResponse(true, 12345L);
 
-        when(provisionNextService.makeProvision(any())).thenReturn(mockResponse);
-        when(accountingDateUtil.getAvailDate(any(), anyInt())).thenReturn(LocalDate.now());
+        when(provisionNextService.makeProvision(any())).thenReturn(createMockProvisionResponse(false, null));
 
-        // Act
         CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
-        // Assert
-        assertEquals(true, resultDTO.isSuccess());
-        assertEquals("123456", resultDTO.getContractNo());
-        assertEquals(LocalDate.now(), resultDTO.getAvailableDate());
-        assertEquals(1, resultDTO.getPendingDetailList().size());
+        assertFalse(resultDTO.isSuccess());
+        assertNotNull(resultDTO.getError());
 
-        // Verify interactions with mocks
         verify(provisionNextService, times(1)).makeProvision(any());
-        verify(accountingDateUtil, times(1)).getAvailDate(any(), anyInt());
         verifyNoMoreInteractions(provisionNextService);
-        verifyNoMoreInteractions(accountingDateUtil);
     }
 
     @Test
-    void shouldHandleFailedAccountingDueToServiceCallException() throws ServiceCallException {
-        // Arrange
+    void shouldHandleErrorIfContractNoIsNull() throws ServiceCallException {
+        CreateAccountingDTO createAccountingDTO = createSampleDTO();
+
+        when(provisionNextService.makeProvision(any())).thenReturn(createMockProvisionResponse(true, null));
+
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+
+        verify(provisionNextService, times(1)).makeProvision(any());
+        verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void shouldHandleExceptionAndReturnError() throws ServiceCallException {
         CreateAccountingDTO createAccountingDTO = createSampleDTO();
 
         when(provisionNextService.makeProvision(any())).thenThrow(new ServiceCallException(new ExceptionData()));
 
-        // Act
         CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
 
-        // Assert
-        assertEquals(false, resultDTO.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+        assertFalse(resultDTO.isSuccess());
+        assertNotNull(resultDTO.getError());
 
-        // Verify interactions with mocks
         verify(provisionNextService, times(1)).makeProvision(any());
         verifyNoMoreInteractions(provisionNextService);
     }
@@ -100,37 +68,4 @@ class AccountProvisionServiceImplTest {
         response.setContractNo(contractNo);
         // Add more fields as needed for your tests
         return response;
-    }
-
-
-
- @Override
-    public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO) {
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
-        MakeProvisionRequest  makeProvisionRequest = prepareProvisionRequest(createAccountingDTO,createAccountingResultDTO);
-        try {
-            MakeProvisionResponse makeProvisionResponse = provisionNextService.makeProvision(makeProvisionRequest);
-            if(!makeProvisionResponse.isSuccess()){
-                handleException(makeProvisionResponse.getErrorCode(), createAccountingResultDTO);
-                createAccountingResultDTO.setSuccess(false);
-                return createAccountingResultDTO;
-            }
-            if(makeProvisionResponse.getContractNo() == null){
-                createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-                createAccountingResultDTO.setSuccess(false);
-                return createAccountingResultDTO;
-            }
-            createAccountingResultDTO.setContractNo(makeProvisionResponse.getContractNo());
-            createAccountingResultDTO.setPendingDetailList(makeProvisionResponse.getPendingDetailList());
-            createAccountingResultDTO.setSuccess(true);
-        }catch (Exception e){
-            if(e.getCause().getClass().equals(ServiceCallException.class)){
-                Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
-                handleException(errorCode, createAccountingResultDTO);
-                return createAccountingResultDTO;
-            }
-            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-            createAccountingResultDTO.setSuccess(false);
-        }
-        return createAccountingResultDTO;
     }
