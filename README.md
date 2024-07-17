@@ -1,4 +1,70 @@
-private static  final EnumProvisionType provisionType = EnumProvisionType.ACCOUNT;
+package com.ykb.payments.bill.transaction.accounting.provision.service;
+
+import com.ykb.payments.bill.transaction.accounting.util.AccountingUtil;
+import com.ykb.payments.bill.transaction.external.corebanking.account.service.ProvisionNextService;
+import com.ykb.payments.bill.transaction.institution.enums.EnumProvisionType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+
+class AccountProvisionServiceImplTest {
+
+
+    private AccountProvisionServiceImpl accountProvisionService;
+    private ProvisionNextService provisionNextService;
+    private AccountingUtil accountingDateUtil;
+
+    @BeforeEach
+    void setUp() {
+        provisionNextService = Mockito.mock(ProvisionNextService.class);
+        accountingDateUtil = Mockito.mock(AccountingUtil.class);
+        accountProvisionService = new AccountProvisionServiceImpl(provisionNextService, accountingDateUtil);
+    }
+
+    @AfterEach
+    void tearDown() {
+    }
+
+
+    @Test
+    void shouldReturnAccountProvisionType() {
+        // Arrange
+        EnumProvisionType expectedProvisionType = EnumProvisionType.ACCOUNT;
+
+        // Act
+        EnumProvisionType actualProvisionType = accountProvisionService.getProvisionType();
+
+        // Assert
+        assertEquals(expectedProvisionType, actualProvisionType);
+
+    }
+
+
+    @Test
+    void doAccounting() {
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private final ProvisionNextService provisionNextService;
     private final AccountingUtil accountingDateUtil;
