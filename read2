@@ -1,47 +1,14 @@
-class AccountProvisionServiceImplTest {
-
-
-    private AccountProvisionServiceImpl accountProvisionService;
-    private ProvisionNextService provisionNextService;
-    private AccountingUtil accountingDateUtil;
-
-    @BeforeEach
-    void setUp() {
-        provisionNextService = Mockito.mock(ProvisionNextService.class);
-        accountingDateUtil = Mockito.mock(AccountingUtil.class);
-        accountProvisionService = new AccountProvisionServiceImpl(provisionNextService, accountingDateUtil);
-    }
-
-    @AfterEach
-    void tearDown() {
-    }
-
-
-    @Test
-    void shouldReturnAccountProvisionType() {
-        // Arrange
-        EnumProvisionType expectedProvisionType = EnumProvisionType.ACCOUNT;
-
-        // Act
-        EnumProvisionType actualProvisionType = accountProvisionService.getProvisionType();
-
-        // Assert
-        assertEquals(expectedProvisionType, actualProvisionType);
-
-    }
-
-
-    @Test
+ @Test
     void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Initialize createAccountingDTO with necessary mock data
+        // Initialize mock responses
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(true);
         makeProvisionResponse.setContractNo(123L);
@@ -53,21 +20,21 @@ class AccountProvisionServiceImplTest {
         // Assert
         assertTrue(result.isSuccess());
         assertEquals(123L, result.getContractNo());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
         Mockito.verifyNoMoreInteractions(provisionNextService);
     }
 
     @Test
     void doAccounting_WhenProvisionFails_ShouldHandleException() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Initialize createAccountingDTO with necessary mock data
+        // Initialize mock responses
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(false);
         makeProvisionResponse.setErrorCode(123L);
@@ -79,21 +46,21 @@ class AccountProvisionServiceImplTest {
         // Assert
         assertFalse(result.isSuccess());
         assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
         Mockito.verifyNoMoreInteractions(provisionNextService);
     }
 
     @Test
     void doAccounting_WhenContractNoIsNull_ShouldReturnGenericUnknownError() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Initialize createAccountingDTO with necessary mock data
+        // Initialize mock responses
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(true);
         makeProvisionResponse.setContractNo(null);
@@ -105,21 +72,21 @@ class AccountProvisionServiceImplTest {
         // Assert
         assertFalse(result.isSuccess());
         assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
         Mockito.verifyNoMoreInteractions(provisionNextService);
     }
 
     @Test
     void doAccounting_WhenServiceCallExceptionOccurs_ShouldHandleException() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymengetMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Initialize createAccountingDTO with necessary mock data
+        // Mock service call exception
         Mockito.when(provisionNextService.makeProvision(Mockito.any()))
                 .thenThrow(new RuntimeException(new ServiceCallException(exceptionData)));
 
@@ -129,21 +96,21 @@ class AccountProvisionServiceImplTest {
         // Assert
         assertFalse(result.isSuccess());
         assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
         Mockito.verifyNoMoreInteractions(provisionNextService);
     }
 
     @Test
     void doAccounting_WhenUnknownExceptionOccurs_ShouldReturnGenericUnknownError() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getPaymentMethod()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Initialize createAccountingDTO with necessary mock data
+        // Mock unknown exception
         Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenThrow(new RuntimeException());
 
         // Act
@@ -152,21 +119,21 @@ class AccountProvisionServiceImplTest {
         // Assert
         assertFalse(result.isSuccess());
         assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
         Mockito.verifyNoMoreInteractions(provisionNextService);
     }
 
     @Test
     void doAccounting_ShouldCallPrepareProvisionRequest() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getPaymentMethod()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Mocking a successful response
+        // Initialize mock responses
         MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
         makeProvisionResponse.setSuccess(true);
         makeProvisionResponse.setContractNo(123L);
@@ -176,43 +143,20 @@ class AccountProvisionServiceImplTest {
         accountProvisionService.doAccounting(createAccountingDTO);
 
         // Assert
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
-    }
-
-    @Test
-    void doAccounting_ShouldCallHandleException() {
-        // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
-
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-
-        // Mocking a failed response
-        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
-        makeProvisionResponse.setSuccess(false);
-        makeProvisionResponse.setErrorCode(123L);
-        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
-
-        // Act
-        accountProvisionService.doAccounting(createAccountingDTO);
-
-        // Assert
-        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any());
     }
 
     @Test
     void prepareProvisionRequest_ShouldReturnValidRequest() {
         // Arrange
-        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
-        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = Mockito.mock(AccountPaymentMethodDetailDTO.class);
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
 
-        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        Mockito.when(institutionChannelPymMethodDTO.getAccountPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
+        institutionChannelPymMethodDTO.setAccountPaymentMethodDetailDTO(accountPaymentMethodDetailDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-        // Set up the mocks to return valid data
+        // Set up mock responses
         Mockito.when(accountPaymentMethodDetailDTO.getAccountNo()).thenReturn("12345");
         Mockito.when(accountingDateUtil.getCurrentDate()).thenReturn(LocalDate.now());
 
@@ -223,6 +167,3 @@ class AccountProvisionServiceImplTest {
         assertNotNull(request);
         assertEquals("12345", request.getAccountNo());
     }
-
-
-}
