@@ -1,6 +1,79 @@
-shouldHandleErrorIfContractNoIsNull unitinde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO.getCustomerNo()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getProvisionDTO()" is null" 
-shouldHandleExceptionAndReturnError unitinde " org.mockito.exceptions.base.MockitoException: 
-Checked exception is invalid for this method!
-Invalid: com.ykb.architecture.micro.error.exception.ServiceCallException" 
-shouldHandleFailureIfMakeProvisionFails unitinde "java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO.getCustomerNo()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getProvisionDTO()" is null
-"
+@Test
+    void shouldHandleFailureIfMakeProvisionFails() throws ServiceCallException {
+        CreateAccountingDTO createAccountingDTO = createSampleDTO();
+
+        when(provisionNextService.makeProvision(any())).thenReturn(createMockProvisionResponse(false, null));
+
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+
+        assertFalse(resultDTO.isSuccess());
+        assertNotNull(resultDTO.getError());
+
+        verify(provisionNextService, times(1)).makeProvision(any());
+        verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void shouldHandleErrorIfContractNoIsNull() throws ServiceCallException {
+        CreateAccountingDTO createAccountingDTO = createSampleDTO();
+
+        when(provisionNextService.makeProvision(any())).thenReturn(createMockProvisionResponse(true, null));
+
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+
+        verify(provisionNextService, times(1)).makeProvision(any());
+        verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void shouldHandleExceptionAndReturnError() throws ServiceCallException {
+        CreateAccountingDTO createAccountingDTO = createSampleDTO();
+
+        when(provisionNextService.makeProvision(any())).thenThrow(new ServiceCallException(new ExceptionData()));
+
+        CreateAccountingResultDTO resultDTO = accountProvisionService.doAccounting(createAccountingDTO);
+
+        assertFalse(resultDTO.isSuccess());
+        assertNotNull(resultDTO.getError());
+
+        verify(provisionNextService, times(1)).makeProvision(any());
+        verifyNoMoreInteractions(provisionNextService);
+    }
+
+    // Helper methods for creating dummy data
+
+    private CreateAccountingDTO createSampleDTO() {
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        dto.setChannelTransactionId("123");
+
+        // Create ProvisionDTO if it's null
+        if (dto.getProvisionDTO() == null) {
+            dto.setProvisionDTO(new ProvisionDTO());
+        }
+        
+        dto.getProvisionDTO().setCustomerNo("1234567890");  // Or set any necessary fields
+
+        dto.getInstitutionChannelPymMethodDTO().setAccountingTemplateCode("template");
+        dto.setChannelCode("channel");
+        dto.setAgentCode("agent");
+        dto.setBranchCode("branch");
+        dto.setCurrency(EnumCurrencyCode.DOLAR);
+        dto.setPaymentAmount(BigDecimal.TEN);
+
+        AccountPaymentMethodDetailDTO paymentMethodDetailDTO = new AccountPaymentMethodDetailDTO();
+        paymentMethodDetailDTO.setAccountNo("1234567890");
+        dto.setPaymentMethodDetailDTO(paymentMethodDetailDTO);
+
+        return dto;
+    }
+
+    private MakeProvisionResponse createMockProvisionResponse(boolean isSuccess, Long contractNo) {
+        MakeProvisionResponse response = new MakeProvisionResponse();
+        response.setSuccess(isSuccess);
+        response.setContractNo(contractNo);
+        // Add more fields as needed for your tests
+        return response;
+    }
