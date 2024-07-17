@@ -1,48 +1,50 @@
-@Override
-	public EnumProvisionType getProvisionType() {
-		return provisionType;
-	}
+@Test
+    public void testDoReverseAccounting_Success() {
+        // Arrange
+        CreateReverseAccountingDTO dto = createSampleDTO();
+        MakeReverseProvisionResponse mockResponse = new MakeReverseProvisionResponse(true);
+        Mockito.when(provisionNextService.makeReverseProvision(Mockito.any())).thenReturn(mockResponse);
 
-	@Override
-	public CreateReverseAccountingResultDTO doReverseAccounting(CreateReverseAccountingDTO createReverseAccountingDTO) {
-		CreateReverseAccountingResultDTO createReverseAccountingResultDTO = new CreateReverseAccountingResultDTO();
-		MakeReverseProvisionRequest makeReverseProvisionRequest = prepareReverseProvisionRequest(createReverseAccountingDTO);
-		try {
-			MakeReverseProvisionResponse makeReverseProvision = provisionNextService.makeReverseProvision(makeReverseProvisionRequest);	// TODO: Servisten donen degerlerin hangisi kullanılacak?
+        // Act
+        CreateReverseAccountingResultDTO result = accountProvisionService.doReverseAccounting(dto);
 
-			if(!makeReverseProvision.isSuccess()){
-				handleException(makeReverseProvision.getErrorCode(), createReverseAccountingResultDTO);
-				createReverseAccountingResultDTO.setSuccess(false);
-				return createReverseAccountingResultDTO;
-			}
-			createReverseAccountingResultDTO.setSuccess(true);
-		}catch (Exception e){
-			if(e.getCause().getClass().equals(ServiceCallException.class)){
-				Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
-				handleException(errorCode, createReverseAccountingResultDTO);
-				return createReverseAccountingResultDTO;
-			}
-			createReverseAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-			createReverseAccountingResultDTO.setSuccess(false);
-		}
+        // Assert
+        assertTrue(result.isSuccess());
+        assertNull(result.getError());
+    }
 
-		return createReverseAccountingResultDTO;
-	}
+    @Test
+    public void testDoReverseAccounting_ServiceCallException() {
+        // Arrange
+        CreateReverseAccountingDTO dto = createSampleDTO();
+        Mockito.when(provisionNextService.makeReverseProvision(Mockito.any())).thenThrow(new ServiceCallException(500L));
 
-	private MakeReverseProvisionRequest prepareReverseProvisionRequest(CreateReverseAccountingDTO createReverseAccountingDTO) {
-		MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
-		makeReverseProvisionRequest.setTransactionId(createReverseAccountingDTO.getChannelTransactionId());
-		makeReverseProvisionRequest.setContractNo(createReverseAccountingDTO.getContractNo());
-		makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL"); //TODO: Bu alan nasıl doldurulacak?
-		return makeReverseProvisionRequest;
-	}
+        // Act
+        CreateReverseAccountingResultDTO result = accountProvisionService.doReverseAccounting(dto);
 
-	private void handleException(Long errorCode, CreateReverseAccountingResultDTO createReverseAccountingResultDTO){
-		EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
-		createReverseAccountingResultDTO.setSuccess(false);
-		if(result == null){
-			createReverseAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-			return;
-		}
-		createReverseAccountingResultDTO.setError(result.getBillCode());
-	}
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.SPECIFIC_ERROR_CODE, result.getError());
+    }
+
+    @Test
+    public void testDoReverseAccounting_GeneralException() {
+        // Arrange
+        CreateReverseAccountingDTO dto = createSampleDTO();
+        Mockito.when(provisionNextService.makeReverseProvision(Mockito.any())).thenThrow(new RuntimeException("Unexpected error"));
+
+        // Act
+        CreateReverseAccountingResultDTO result = accountProvisionService.doReverseAccounting(dto);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
+    }
+
+    private CreateReverseAccountingDTO createSampleDTO() {
+        CreateReverseAccountingDTO dto = new CreateReverseAccountingDTO();
+        dto.setChannelTransactionId("1234567890");
+        dto.setContractNo(123456789L); // Example long value
+        // Set other necessary properties
+        return dto;
+    }
