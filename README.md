@@ -1,44 +1,63 @@
-@Override
-public CreateReverseAccountingResultDTO doReverseAccounting(CreateReverseAccountingDTO createReverseAccountingDTO) {
-    CreateReverseAccountingResultDTO createReverseAccountingResultDTO = new CreateReverseAccountingResultDTO();
-    MakeReverseProvisionRequest makeReverseProvisionRequest = prepareReverseProvisionRequest(createReverseAccountingDTO);
-    try {
-        MakeReverseProvisionResponse makeReverseProvision = provisionNextService.makeReverseProvision(makeReverseProvisionRequest);
+java.lang.NullPointerException: Cannot invoke "Object.getClass()" because the return value of "java.lang.Exception.getCause()" is null
+ @Test
+    void shouldReturnIsDummyMerchantTrueButMakeReverseFalse(){
+        CreateReverseAccountingDTO inputDto=new CreateReverseAccountingDTO();
+        inputDto.setPaymentMethodType(EnumPaymentMethod.CARD);
+        inputDto.setContractNo(123L);
+        inputDto.setChannelTransactionId("123");
+        inputDto.setDummyMerchant(true);
+        CreateReverseAccountingResultDTO resultReverseAccountDTO=new CreateReverseAccountingResultDTO();
+        MakeReverseProvisionRequest makeReverseProvisionRequest=new MakeReverseProvisionRequest();
+        makeReverseProvisionRequest.setContractNo(inputDto.getContractNo());
+        makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
+        makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
 
-        if (!makeReverseProvision.isSuccess()) {
-            handleException(makeReverseProvision.getErrorCode(), createReverseAccountingResultDTO);
-            createReverseAccountingResultDTO.setSuccess(false);
-            return createReverseAccountingResultDTO;
-        }
-        createReverseAccountingResultDTO.setSuccess(true);
-    } catch (Exception e) {
-        if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
-            Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
-            handleException(errorCode, createReverseAccountingResultDTO);
-            return createReverseAccountingResultDTO;
-        }
-        createReverseAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-        createReverseAccountingResultDTO.setSuccess(false);
+        MakeReverseProvisionResponse makeDto=new MakeReverseProvisionResponse();
+        makeDto.setErrorCode(500L);
+        makeDto.setSuccess(false);
+
+        Mockito.when(provisionNextService.makeReverseProvision(makeReverseProvisionRequest)).thenReturn(makeDto);
+        resultReverseAccountDTO.setSuccess(false);
+
+        CreateReverseAccountingResultDTO returnResult= cardReverseProvisionService.doReverseAccounting(inputDto);
+        assertEquals(returnResult,resultReverseAccountDTO);
+        verify(provisionNextService).makeReverseProvision(makeReverseProvisionRequest);
+
+
+
     }
 
-    return createReverseAccountingResultDTO;
-}
-@Test
-public void testDoReverseAccounting_GeneralException() throws ServiceCallException {
-    CreateReverseAccountingDTO inputDTO = new CreateReverseAccountingDTO();
-    inputDTO.setChannelTransactionId("12345");
-    inputDTO.setContractNo(987654L);
 
-    MakeReverseProvisionRequest mockRequest = new MakeReverseProvisionRequest();
-    mockRequest.setTransactionId(inputDTO.getChannelTransactionId());
-    mockRequest.setContractNo(inputDTO.getContractNo());
-    mockRequest.setReverseDescriptionAppendix("İPTAL");
+	@Override
+	public CreateReverseAccountingResultDTO doReverseAccounting(CreateReverseAccountingDTO createReverseAccountingDTO) {
+		
+		CreateReverseAccountingResultDTO createReverseAccountingResultDTO = new CreateReverseAccountingResultDTO();
 
-    when(provisionNextService.makeReverseProvision(any())).thenThrow(new RuntimeException("Test exception"));
+		/* Gerçek üye işyeri için iptal muhasebesi yapılmayacak  */
+		if(!createReverseAccountingDTO.isDummyMerchant()) {
+			createReverseAccountingResultDTO.setSuccess(true);
+			return createReverseAccountingResultDTO;
+		}
+		
+		MakeReverseProvisionRequest makeReverseProvisionRequest = prepareReverseProvisionRequest(createReverseAccountingDTO);
+		try {
+			MakeReverseProvisionResponse makeReverseProvision = provisionNextService.makeReverseProvision(makeReverseProvisionRequest);	// TODO: Servisten donen degerlerin hangisi kullanılacak?
 
-    CreateReverseAccountingResultDTO resultDTO = accountReverseProvisionService.doReverseAccounting(inputDTO);
+			if(!makeReverseProvision.isSuccess()){
+				handleException(makeReverseProvision.getErrorCode(), createReverseAccountingResultDTO);
+				createReverseAccountingResultDTO.setSuccess(false);
+				return createReverseAccountingResultDTO;
+			}
+			createReverseAccountingResultDTO.setSuccess(true);
+		}catch (Exception e){
+			if(e.getCause().getClass().equals(ServiceCallException.class)){
+				Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
+				handleException(errorCode, createReverseAccountingResultDTO);
+				return createReverseAccountingResultDTO;
+			}
+			createReverseAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+			createReverseAccountingResultDTO.setSuccess(false);
+		}
 
-    verify(provisionNextService, times(1)).makeReverseProvision(any());
-    assertFalse(resultDTO.isSuccess());
-    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-}
+		return createReverseAccountingResultDTO;
+	}
