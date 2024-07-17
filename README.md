@@ -1,33 +1,32 @@
-@Test
-void shouldReturnIsDummyMerchantTrueButMakeReverseFalse() {
-    // Test verilerini oluştur
-    CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
-    inputDto.setPaymentMethodType(EnumPaymentMethod.CARD);
-    inputDto.setContractNo(123L);
-    inputDto.setChannelTransactionId("123");
-    inputDto.setDummyMerchant(true);
 
-    CreateReverseAccountingResultDTO expectedResult = new CreateReverseAccountingResultDTO();
-    expectedResult.setSuccess(false);
+Argument(s) are different! Wanted:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImplTest.shouldReturnIsDummyMerchantTrueButMakeReverseFalse(CardReverseProvisionServiceImplTest.java:87)
+Actual invocations have different arguments:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
+)
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardReverseProvisionServiceImpl.doReverseAccounting(CardReverseProvisionServiceImpl.java:43)
 
-    MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
-    makeReverseProvisionRequest.setContractNo(inputDto.getContractNo());
-    makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
-    makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
+Comparison Failure: 
+<Click to see difference>
 
-    // Mock MakeReverseProvisionResponse
-    MakeReverseProvisionResponse makeDto = new MakeReverseProvisionResponse();
-    makeDto.setErrorCode(500L);
-    makeDto.setSuccess(false);
-
-    // Mocking exception with cause
-    ServiceCallException serviceCallException = new ServiceCallException(500L);
-    RuntimeException runtimeException = new RuntimeException(serviceCallException);
-
-    Mockito.when(provisionNextService.makeReverseProvision(makeReverseProvisionRequest)).thenThrow(runtimeException);
-
-    // Metodu çağır ve sonucu doğrula
-    CreateReverseAccountingResultDTO actualResult = cardReverseProvisionService.doReverseAccounting(inputDto);
-    assertEquals(expectedResult.isSuccess(), actualResult.isSuccess());
-    verify(provisionNextService).makeReverseProvision(makeReverseProvisionRequest);
-}
+Argument(s) are different! Wanted:
+provisionNextService.makeReverseProvision(
+    
+(com.ykb.payments.bill.transaction.external.corebanking.account.model.request.MakeReverseProvisionRequest:
+    transactionId: 123
+  , contractNo: 123
+  , reverseDescriptionAppendix: İPTAL
