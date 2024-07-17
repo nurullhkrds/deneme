@@ -1,19 +1,24 @@
-import org.junit.Before;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+   @Test
+    public void testDoReverseAccounting_ServiceCallException() throws ServiceCallException {
+        // Mock ServiceCallException thrown by provisionNextService
+        CreateReverseAccountingDTO inputDTO = new CreateReverseAccountingDTO();
+        inputDTO.setChannelTransactionId("12345");
+        inputDTO.setContractNo(987654L);
 
-public class YourTestClass {
+        MakeReverseProvisionRequest mockRequest = new MakeReverseProvisionRequest();
+        mockRequest.setTransactionId(inputDTO.getChannelTransactionId());
+        mockRequest.setContractNo(inputDTO.getContractNo());
+        mockRequest.setReverseDescriptionAppendix("İPTAL");
 
-    @Mock
-    private ProvisionNextService provisionNextService;
+        when(provisionNextService.makeReverseProvision(any())).thenThrow(new ServiceCallException(new ExceptionData())); // Mock exception
 
-    @InjectMocks
-    private AccountReverseProvisionService accountReverseProvisionService;
+        // Invoke the method under test
+        CreateReverseAccountingResultDTO resultDTO = accountReverseProvisionService.doReverseAccounting(inputDTO);
 
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
+        // Verify the result
+        verify(provisionNextService, times(1)).makeReverseProvision(any());
+        assertEquals(false, resultDTO.isSuccess());
+        assertNotEquals(null, resultDTO.getError());
     }
 
     @Test
@@ -23,7 +28,15 @@ public class YourTestClass {
         inputDTO.setChannelTransactionId("12345");
         inputDTO.setContractNo(987654L);
 
-        // Mock nesne yapılandırması
+        MakeReverseProvisionRequest mockRequest = new MakeReverseProvisionRequest();
+        mockRequest.setTransactionId(inputDTO.getChannelTransactionId());
+        mockRequest.setContractNo(inputDTO.getContractNo());
+        mockRequest.setReverseDescriptionAppendix("İPTAL");
+// Mock nesneyi oluşturun
+        ProvisionNextService provisionNextService = mock(ProvisionNextService.class);
+
+
+
         when(provisionNextService.makeReverseProvision(any())).thenThrow(new RuntimeException("Test exception"));
 
         // Invoke the method under test
@@ -32,6 +45,5 @@ public class YourTestClass {
         // Verify the result
         verify(provisionNextService, times(1)).makeReverseProvision(any());
         assertFalse(resultDTO.isSuccess());
-        assertNotNull(resultDTO.getError()); // null kontrolü için assertNotNull kullanılabilir
+        assertNotEquals(null, resultDTO.getError());
     }
-}
