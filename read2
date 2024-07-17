@@ -1,0 +1,152 @@
+  @Test
+    void doAccounting_WhenProvisionIsSuccessful_ShouldReturnSuccess() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(true);
+        makeProvisionResponse.setContractNo("contract123");
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+
+        // Act
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertTrue(result.isSuccess());
+        assertEquals("contract123", result.getContractNo());
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void doAccounting_WhenProvisionFails_ShouldHandleException() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(false);
+        makeProvisionResponse.setErrorCode(123L);
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+
+        // Act
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void doAccounting_WhenContractNoIsNull_ShouldReturnGenericUnknownError() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(true);
+        makeProvisionResponse.setContractNo(null);
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+
+        // Act
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void doAccounting_WhenServiceCallExceptionOccurs_ShouldHandleException() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenThrow(new RuntimeException(new ServiceCallException(123L)));
+
+        // Act
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumAccountProvisionResult.parse(123L).getBillCode(), result.getError());
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void doAccounting_WhenUnknownExceptionOccurs_ShouldReturnGenericUnknownError() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenThrow(new RuntimeException());
+
+        // Act
+        CreateAccountingResultDTO result = accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+        Mockito.verifyNoMoreInteractions(provisionNextService);
+    }
+
+    @Test
+    void doAccounting_ShouldCallPrepareProvisionRequest() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+
+        // Mocking a successful response
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(true);
+        makeProvisionResponse.setContractNo("contract123");
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+
+        // Act
+        accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+    }
+
+    @Test
+    void doAccounting_ShouldCallHandleException() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        // Initialize createAccountingDTO with necessary mock data
+
+        // Mocking a failed response
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(false);
+        makeProvisionResponse.setErrorCode(123L);
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+
+        // Act
+        accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        Mockito.verify(provisionNextService, Mockito.times(1)).makeProvision(Mockito.any(MakeProvisionRequest.class));
+    }
+
+    @Test
+    void doAccounting_ShouldCallGetBlockDayCount() {
+        // Arrange
+        CreateAccountingDTO createAccountingDTO = Mockito.mock(CreateAccountingDTO.class);
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = Mockito.mock(InstitutionChannelPymMethodDTO.class);
+        Mockito.when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
+        Mockito.when(institutionChannelPymMethodDTO.getBlockDayStrategyCode()).thenReturn(EnumBlockDayStrategyCode.NO_VALOR);
+
+        // Mocking a successful response
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(true);
+        makeProvisionResponse.setContractNo("contract123");
+        Mockito.when(provisionNextService.makeProvision(Mockito.any())).thenReturn(makeProvisionResponse);
+
+        // Act
+        accountProvisionService.doAccounting(createAccountingDTO);
+
+        // Assert
+        Mockito.verify(institutionChannelPymMethodDTO, Mockito.times(1)).getBlockDayStrategyCode();
+    }
