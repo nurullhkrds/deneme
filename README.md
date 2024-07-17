@@ -207,5 +207,5 @@ class AccountProvisionServiceImplTest {
         assertEquals(expectedProvisionType, actualProvisionType);
     }
 
-
+Error running AccountProvisionServiceImplTest.getProvisionType. Command line is too long. Shorten the command line and rerun.
 
