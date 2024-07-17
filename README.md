@@ -1,21 +1,19 @@
-@Test
-public void testDoReverseAccounting_ServiceCallException() throws ServiceCallException {
-    CreateReverseAccountingDTO inputDTO = new CreateReverseAccountingDTO();
-    inputDTO.setChannelTransactionId("12345");
-    inputDTO.setContractNo(987654L);
+java.lang.NullPointerException: Cannot invoke "Object.getClass()" because the return value of "java.lang.Exception.getCause()" is null
+    public void testDoReverseAccounting_GeneralException() throws ServiceCallException {
+        CreateReverseAccountingDTO inputDTO = new CreateReverseAccountingDTO();
+        inputDTO.setChannelTransactionId("12345");
+        inputDTO.setContractNo(987654L);
 
-    MakeReverseProvisionRequest mockRequest = new MakeReverseProvisionRequest();
-    mockRequest.setTransactionId(inputDTO.getChannelTransactionId());
-    mockRequest.setContractNo(inputDTO.getContractNo());
-    mockRequest.setReverseDescriptionAppendix("İPTAL");
+        MakeReverseProvisionRequest mockRequest = new MakeReverseProvisionRequest();
+        mockRequest.setTransactionId(inputDTO.getChannelTransactionId());
+        mockRequest.setContractNo(inputDTO.getContractNo());
+        mockRequest.setReverseDescriptionAppendix("İPTAL");
 
-    // RuntimeException içerisine ServiceCallException'ı sararak fırlatma
-    when(provisionNextService.makeReverseProvision(any())).thenThrow(new RuntimeException(new ServiceCallException(new ExceptionData())));
+        when(provisionNextService.makeReverseProvision(any())).thenThrow(new RuntimeException("Test exception"));
 
-    CreateReverseAccountingResultDTO resultDTO = accountReverseProvisionService.doReverseAccounting(inputDTO);
+        CreateReverseAccountingResultDTO resultDTO = accountReverseProvisionService.doReverseAccounting(inputDTO);
 
-    verify(provisionNextService, times(1)).makeReverseProvision(any());
-    assertFalse(resultDTO.isSuccess());
-    assertNotNull(resultDTO.getError());
-    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-}
+        verify(provisionNextService, times(1)).makeReverseProvision(any());
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+    }
