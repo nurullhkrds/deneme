@@ -2,12 +2,11 @@
 public DataResult<List<ReturnMapDTO>> getAllReturnMapList(String returnMapCode) {
     List<ReturnMap> returnMapList = returnMapRepository.findByReturnMapCode(returnMapCode);
     List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
-    return new DataResult<>(returnMapDTOList, HttpStatus.OK.value());
-}
 
+    // DataResult constructor'larına uygun şekilde
+    boolean success = !returnMapDTOList.isEmpty();
+    String message = success ? "Data retrieved successfully" : "No data found";
+    int statusCode = success ? HttpStatus.OK.value() : HttpStatus.NO_CONTENT.value();
 
-@GetMapping("/getAllReturnMapList")
-public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAllReturnMapList(@RequestParam String returnMapCode) {
-    DataResult<List<ReturnMapDTO>> result = returnMapService.getAllReturnMapList(returnMapCode);
-    return ResponseEntity.status(result.getStatusCode()).body(result);
+    return new DataResult<>(success, message, returnMapDTOList, statusCode);
 }
