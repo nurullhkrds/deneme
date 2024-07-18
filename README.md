@@ -1,6 +1,3 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionService.getProvisionType()" because "this.reverseProvisionService1" is null
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionService.getProvisionType()" because "this.reverseProvisionService1" is null
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionService.getProvisionType()" because "this.reverseProvisionService1" is null
 public class ReverseProvisionFactoryTest {
 
     @Mock
@@ -17,9 +14,9 @@ public class ReverseProvisionFactoryTest {
 
     @BeforeEach
     public void setUp() {
+        MockitoAnnotations.openMocks(this);
         when(reverseProvisionService1.getProvisionType()).thenReturn(provisionType1);
         when(reverseProvisionService2.getProvisionType()).thenReturn(provisionType2);
-
     }
 
     @Test
