@@ -26,3 +26,23 @@
         DataResult<ReturnMap> result=returnMapService.createReturnMap(createReturnMapRequest);
         return ResponseEntity.status(result.getStatusCode()).body(result);
     }
+{
+  "success": true,
+  "message": "Return map created successfully",
+  "statusCode": 201,
+  "data": {
+    "createDate": "2024-07-18T14:23:21",
+    "createdBy": "SYSTEM",
+    "version": 0,
+    "updateDate": null,
+    "updatedBy": null,
+    "id": 2500064,
+    "returnMapCode": null,
+    "institutionReturnCode": null,
+    "institutionReturnText": null,
+    "bankReturnCode": null,
+    "bankReturnText": null,
+    "returnType": null,
+    "isReversible": null
+  }
+}
