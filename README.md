@@ -1,48 +1,73 @@
-@Override
-    public DataResult<ReturnMap> createReturnMap(CreateReturnMapRequest createReturnMapRequest) {
-        // ReturnMap nesnesini oluştur ve alanlarını doldur
-        ReturnMap returnMap = new ReturnMap();
-        returnMap.setBankReturnCode(createReturnMapRequest.getBankReturnCode());
-        returnMap.setBankReturnText(createReturnMapRequest.getBankReturnText());
-        returnMap.setInstitutionReturnCode(createReturnMapRequest.getInstitutionReturnCode());
-        returnMap.setInstitutionReturnText(createReturnMapRequest.getInstitutionReturnText());
-        returnMap.setReturnType(createReturnMapRequest.getReturnType());
-        returnMap.setIsReversible(createReturnMapRequest.getIsReversible());
-        returnMap.setCreateDate(LocalDateTime.now());
+public class CreateReturnMapRequest {
+    private String bankReturnCode;
+    private String bankReturnText;
+    private String institutionReturnCode;
+    private String institutionReturnText;
+    private String returnType;
+    private Boolean isReversible;
 
-        ReturnMap savedReturnMap = returnMapRepository.save(returnMap);
-
-        ReturnMapDTO returnMapDTO = returnMapMapper.toReturnMapDTO(savedReturnMap);
-
-        boolean success = savedReturnMap != null;
-        String message = success ? "Return map created successfully" : "Failed to create return map";
-        int statusCode = success ? HttpStatus.CREATED.value() : HttpStatus.INTERNAL_SERVER_ERROR.value();
-
-        return new DataResult<>(success, message, returnMap, statusCode);
+    // Getters and setters
+    public String getBankReturnCode() {
+        return bankReturnCode;
     }
 
-   @PostMapping("/createReturnMap")
-    public ResponseEntity<DataResult<ReturnMap>> createReturnMap(@RequestBody CreateReturnMapRequest createReturnMapRequest){
-        DataResult<ReturnMap> result=returnMapService.createReturnMap(createReturnMapRequest);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+    public void setBankReturnCode(String bankReturnCode) {
+        this.bankReturnCode = bankReturnCode;
     }
+
+    public String getBankReturnText() {
+        return bankReturnText;
+    }
+
+    public void setBankReturnText(String bankReturnText) {
+        this.bankReturnText = bankReturnText;
+    }
+
+    public String getInstitutionReturnCode() {
+        return institutionReturnCode;
+    }
+
+    public void setInstitutionReturnCode(String institutionReturnCode) {
+        this.institutionReturnCode = institutionReturnCode;
+    }
+
+    public String getInstitutionReturnText() {
+        return institutionReturnText;
+    }
+
+    public void setInstitutionReturnText(String institutionReturnText) {
+        this.institutionReturnText = institutionReturnText;
+    }
+
+    public String getReturnType() {
+        return returnType;
+    }
+
+    public void setReturnType(String returnType) {
+        this.returnType = returnType;
+    }
+
+    public Boolean getIsReversible() {
+        return isReversible;
+    }
+
+    public void setIsReversible(Boolean isReversible) {
+        this.isReversible = isReversible;
+    }
+}
 {
-  "success": true,
-  "message": "Return map created successfully",
-  "statusCode": 201,
-  "data": {
-    "createDate": "2024-07-18T14:23:21",
-    "createdBy": "SYSTEM",
-    "version": 0,
-    "updateDate": null,
-    "updatedBy": null,
-    "id": 2500064,
-    "returnMapCode": null,
-    "institutionReturnCode": null,
-    "institutionReturnText": null,
-    "bankReturnCode": null,
-    "bankReturnText": null,
-    "returnType": null,
-    "isReversible": null
-  }
+    "bankReturnCode": "BR123",
+    "bankReturnText": "Bank return text",
+    "institutionReturnCode": "IR123",
+    "institutionReturnText": "Institution return text",
+    "returnType": "SomeType",
+    "isReversible": true
+}
+@PostMapping("/createReturnMap")
+public ResponseEntity<DataResult<ReturnMap>> createReturnMap(@RequestBody CreateReturnMapRequest createReturnMapRequest){
+    // Log the request data
+    System.out.println(createReturnMapRequest);
+    
+    DataResult<ReturnMap> result = returnMapService.createReturnMap(createReturnMapRequest);
+    return ResponseEntity.status(result.getStatusCode()).body(result);
 }
