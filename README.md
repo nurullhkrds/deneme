@@ -1,26 +1,25 @@
-@SpringBootTest
-@ExtendWith(MockitoExtension.class)
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionService.getProvisionType()" because "this.reverseProvisionService1" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionService.getProvisionType()" because "this.reverseProvisionService1" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionService.getProvisionType()" because "this.reverseProvisionService1" is null
 public class ReverseProvisionFactoryTest {
 
     @Mock
     private ReverseProvisionService reverseProvisionService1;
-    
+
     @Mock
     private ReverseProvisionService reverseProvisionService2;
 
     @InjectMocks
     private ReverseProvisionFactory reverseProvisionFactory;
 
-    private EnumProvisionType provisionType1 = EnumProvisionType.TYPE1;
-    private EnumProvisionType provisionType2 = EnumProvisionType.TYPE2;
+    private EnumProvisionType provisionType1 = EnumProvisionType.CARD;
+    private EnumProvisionType provisionType2 = EnumProvisionType.ACCOUNT;
 
     @BeforeEach
     public void setUp() {
         when(reverseProvisionService1.getProvisionType()).thenReturn(provisionType1);
         when(reverseProvisionService2.getProvisionType()).thenReturn(provisionType2);
 
-        List<ReverseProvisionService> services = Arrays.asList(reverseProvisionService1, reverseProvisionService2);
-        reverseProvisionFactory = new ReverseProvisionFactory(services);
     }
 
     @Test
@@ -40,7 +39,7 @@ public class ReverseProvisionFactoryTest {
     @Test
     public void testGetReverseProvisionService_InvalidProvisionType() {
         assertThrows(IllegalArgumentException.class, () -> {
-            reverseProvisionFactory.getReverseProvisionService(EnumProvisionType.UNKNOWN);
+            reverseProvisionFactory.getReverseProvisionService(EnumProvisionType.CARD);
         });
     }
 }
