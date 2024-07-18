@@ -24,3 +24,24 @@
 
         returnMapRepository.saveAll(copiedReturnMaps);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  @GetMapping("/search")
+    public ResponseEntity<DataResult<List<ReturnMap>>> searchReturnMaps(
+            @RequestParam(required = false) String returnMapCode,
+            @RequestParam(required = false) String aaErrorCode,
+            @RequestParam(required = false) String institutionErrorCode) {
+        DataResult<List<ReturnMap>> searhResult = returnMapService.searchReturnMaps(returnMapCode, aaErrorCode, institutionErrorCode);
+        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
+    }
