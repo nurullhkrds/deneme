@@ -1,73 +1,83 @@
-public class CreateReturnMapRequest {
-    private String bankReturnCode;
-    private String bankReturnText;
-    private String institutionReturnCode;
-    private String institutionReturnText;
-    private String returnType;
-    private Boolean isReversible;
+import org.springframework.data.jpa.domain.Specification;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
-    // Getters and setters
-    public String getBankReturnCode() {
-        return bankReturnCode;
+public class ReturnMapSpecification {
+
+    public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (returnMapCode == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("returnMapCode"), returnMapCode);
+        };
     }
 
-    public void setBankReturnCode(String bankReturnCode) {
-        this.bankReturnCode = bankReturnCode;
+    public static Specification<ReturnMap> hasAaErrorCode(String aaErrorCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (aaErrorCode == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("aaErrorCode"), aaErrorCode);
+        };
     }
 
-    public String getBankReturnText() {
-        return bankReturnText;
-    }
-
-    public void setBankReturnText(String bankReturnText) {
-        this.bankReturnText = bankReturnText;
-    }
-
-    public String getInstitutionReturnCode() {
-        return institutionReturnCode;
-    }
-
-    public void setInstitutionReturnCode(String institutionReturnCode) {
-        this.institutionReturnCode = institutionReturnCode;
-    }
-
-    public String getInstitutionReturnText() {
-        return institutionReturnText;
-    }
-
-    public void setInstitutionReturnText(String institutionReturnText) {
-        this.institutionReturnText = institutionReturnText;
-    }
-
-    public String getReturnType() {
-        return returnType;
-    }
-
-    public void setReturnType(String returnType) {
-        this.returnType = returnType;
-    }
-
-    public Boolean getIsReversible() {
-        return isReversible;
-    }
-
-    public void setIsReversible(Boolean isReversible) {
-        this.isReversible = isReversible;
+    public static Specification<ReturnMap> hasInstitutionErrorCode(String institutionErrorCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (institutionErrorCode == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("institutionErrorCode"), institutionErrorCode);
+        };
     }
 }
-{
-    "bankReturnCode": "BR123",
-    "bankReturnText": "Bank return text",
-    "institutionReturnCode": "IR123",
-    "institutionReturnText": "Institution return text",
-    "returnType": "SomeType",
-    "isReversible": true
-}
-@PostMapping("/createReturnMap")
-public ResponseEntity<DataResult<ReturnMap>> createReturnMap(@RequestBody CreateReturnMapRequest createReturnMapRequest){
-    // Log the request data
-    System.out.println(createReturnMapRequest);
-    
-    DataResult<ReturnMap> result = returnMapService.createReturnMap(createReturnMapRequest);
-    return ResponseEntity.status(result.getStatusCode()).body(result);
+
+
+
+
+
+
+
+ @GetMapping("/search")
+    public List<ReturnMap> searchReturnMaps(
+            @RequestParam(required = false) String returnMapCode,
+            @RequestParam(required = false) String aaErrorCode,
+            @RequestParam(required = false) String institutionErrorCode) {
+        return returnMapService.searchReturnMaps(returnMapCode, aaErrorCode, institutionErrorCode);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+public class ReturnMapController {
+
+    @Autowired
+    private ReturnMapService returnMapService;
+
+    @GetMapping("/search")
+    public List<ReturnMap> searchReturnMaps(
+            @RequestParam(required = false) String returnMapCode,
+            @RequestParam(required = false) String aaErrorCode,
+            @RequestParam(required = false) String institutionErrorCode) {
+        return returnMapService.searchReturnMaps(returnMapCode, aaErrorCode, institutionErrorCode);
+    }
 }
