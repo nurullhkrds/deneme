@@ -1,9 +1,10 @@
+@SpringBootTest
 @ExtendWith(MockitoExtension.class)
 public class ReverseProvisionFactoryTest {
 
     @Mock
     private ReverseProvisionService reverseProvisionService1;
-
+    
     @Mock
     private ReverseProvisionService reverseProvisionService2;
 
@@ -14,22 +15,32 @@ public class ReverseProvisionFactoryTest {
     private EnumProvisionType provisionType2 = EnumProvisionType.TYPE2;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         when(reverseProvisionService1.getProvisionType()).thenReturn(provisionType1);
         when(reverseProvisionService2.getProvisionType()).thenReturn(provisionType2);
 
-        List<ReverseProvisionService> reverseProvisionServices = Arrays.asList(reverseProvisionService1, reverseProvisionService2);
-        new ReverseProvisionFactory(reverseProvisionServices);  // Initialize the factory with the mocked services
+        List<ReverseProvisionService> services = Arrays.asList(reverseProvisionService1, reverseProvisionService2);
+        reverseProvisionFactory = new ReverseProvisionFactory(services);
     }
 
     @Test
-    void testGetReverseProvisionService_Success() {
-        assertEquals(reverseProvisionService1, reverseProvisionFactory.getReverseProvisionService(provisionType1));
-        assertEquals(reverseProvisionService2, reverseProvisionFactory.getReverseProvisionService(provisionType2));
+    public void testGetReverseProvisionService_ValidProvisionType1() {
+        ReverseProvisionService service = reverseProvisionFactory.getReverseProvisionService(provisionType1);
+        assertNotNull(service);
+        assertEquals(reverseProvisionService1, service);
     }
 
     @Test
-    void testGetReverseProvisionService_Failure() {
-        assertThrows(IllegalArgumentException.class, () -> reverseProvisionFactory.getReverseProvisionService(EnumProvisionType.UNKNOWN));
+    public void testGetReverseProvisionService_ValidProvisionType2() {
+        ReverseProvisionService service = reverseProvisionFactory.getReverseProvisionService(provisionType2);
+        assertNotNull(service);
+        assertEquals(reverseProvisionService2, service);
+    }
+
+    @Test
+    public void testGetReverseProvisionService_InvalidProvisionType() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            reverseProvisionFactory.getReverseProvisionService(EnumProvisionType.UNKNOWN);
+        });
     }
 }
