@@ -1,28 +1,125 @@
-@Test
-    public void testGetAvailDate_WorkingDay() {
-        int blockDayCount = 5;
-        Calendar nowCalendar = Calendar.getInstance();
-        nowCalendar.set(Calendar.HOUR_OF_DAY, 0);
-        nowCalendar.set(Calendar.MINUTE, 0);
-        nowCalendar.set(Calendar.SECOND, 0);
-        Date nowDate = nowCalendar.getTime();
+  public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO) {
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        MakeProvisionRequest  makeProvisionRequest = prepareProvisionRequest(createAccountingDTO,createAccountingResultDTO);
+        try {
+            MakeProvisionResponse makeProvisionResponse = provisionNextService.makeProvision(makeProvisionRequest);
+            if(!makeProvisionResponse.isSuccess()){
+                handleException(makeProvisionResponse.getErrorCode(), createAccountingResultDTO);
+                createAccountingResultDTO.setSuccess(false);
+                return createAccountingResultDTO;
+            }
+            if(makeProvisionResponse.getContractNo() == null){
+                createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+                createAccountingResultDTO.setSuccess(false);
+                return createAccountingResultDTO;
+            }
+            createAccountingResultDTO.setContractNo(makeProvisionResponse.getContractNo());
+            createAccountingResultDTO.setPendingDetailList(makeProvisionResponse.getPendingDetailList());
+            createAccountingResultDTO.setSuccess(true);
+        }catch (Exception e){
+            if(e.getCause().getClass().equals(ServiceCallException.class)){
+                Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
+                handleException(errorCode, createAccountingResultDTO);
+                return createAccountingResultDTO;
+            }
+            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+            createAccountingResultDTO.setSuccess(false);
+        }
+        return createAccountingResultDTO;
+    }
 
-        // Define the next business date in LocalDate
-        LocalDate nextBusinessDate = LocalDate.now().plusDays(7); // Assuming business logic adds 7 days
-        Date nextBusinessDateAsDate = DateUtils.convertLocalDateToDate(nextBusinessDate);
 
-        // Mock the service method to return a non-null Date
-        when(accountingDataLookupService.getNextBusinessDate(nowDate, blockDayCount))
-                .thenReturn(nextBusinessDateAsDate);
+    MakeProvisionRequest prepareProvisionRequest(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO)  {
+        MakeProvisionRequest makeProvisionRequest = new MakeProvisionRequest();
+        makeProvisionRequest.setTransactionId(createAccountingDTO.getChannelTransactionId());
+        makeProvisionRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        makeProvisionRequest.setChannelCode(createAccountingDTO.getChannelCode());
+        makeProvisionRequest.setUserCode(createAccountingDTO.getAgentCode());
+        makeProvisionRequest.setOperationalBranchCode(createAccountingDTO.getBranchCode());
 
-        // Call the method under test
-        LocalDate actualDate = accountingUtil.getAvailDate(EnumBlockDayType.WORKING_DAY, blockDayCount);
+        List<MakeProvisionInnerDTO> makeProvisionInnerList = new ArrayList<>();
+        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = (AccountPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
 
-        // Debugging output
-        System.out.println("Mocked nextBusinessDateAsDate: " + nextBusinessDateAsDate);
-        System.out.println("Returned date from getAvailDate: " + actualDate);
+        /** Debit */
+        MakeProvisionInnerDTO debitProvisionInnerRequest = new MakeProvisionInnerDTO();
+        debitProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
+        debitProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
+        debitProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount().negate());
+        debitProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
+        debitProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        debitProvisionInnerRequest.setClientNo(createAccountingDTO.getProvisionDTO().getCustomerNo().intValue());
+        makeProvisionInnerList.add(debitProvisionInnerRequest);
 
-        // Verify the result
-        assertNotNull(actualDate, "The returned date should not be null");
-        assertEquals(nextBusinessDate, actualDate, "The returned date does not match the expected business date");
-    }    private AccountingDataLookupService accountingDataLookupService;
+        /** Credit */
+        MakeProvisionInnerDTO creditProvisionInnerRequest = new MakeProvisionInnerDTO();
+        creditProvisionInnerRequest.setAccountNo(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo());
+        creditProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
+        creditProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount());
+        creditProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
+        creditProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
+        creditProvisionInnerRequest.setClientNo(createAccountingDTO.getInstitution().getCustomerNo().intValue());
+        //TODO:LocalAmount dövizlerde
+        LocalDate availableLocalDate ;
+        if(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.NO_VALOR)){
+            availableLocalDate = LocalDate.now();
+        }else {
+            availableLocalDate = accountingDateUtil.getAvailDate(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayType(),
+                    getBlockDayCount(createAccountingDTO.getInstitutionChannelPymMethodDTO(), createAccountingDTO.getInstitutionChnnlPymMthdPscDTO()));
+        }
+        createAccountingResultDTO.setAvailableDate(availableLocalDate);
+        Date availableDate = Date.valueOf(availableLocalDate);
+        Date valueDate = Date.valueOf(availableLocalDate.plusDays(1));
+        creditProvisionInnerRequest.setAvailableDate(availableDate);
+        creditProvisionInnerRequest.setValueDate(valueDate);
+
+        makeProvisionInnerList.add(creditProvisionInnerRequest);
+        /** Commission  **/
+        if (createAccountingDTO.getResponseCommissionInformation()!= null) {
+
+            ResponseCommissionInformation responseCommissionInformation = createAccountingDTO.getResponseCommissionInformation();
+            for (CommissionOutputAccountingApiDTO commissionOutputDTO : responseCommissionInformation.getCommissionOutputAccountingApiDTOList()) {
+                MakeProvisionInnerDTO commissionProvisionInnerRequest = new MakeProvisionInnerDTO();
+                commissionProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
+                commissionProvisionInnerRequest.setAmount(commissionOutputDTO.getAmount());
+                commissionProvisionInnerRequest.setCurrency(commissionOutputDTO.getCurrency());
+                commissionProvisionInnerRequest.setDescription(commissionOutputDTO.getDescription());
+                if (Boolean.TRUE.equals(commissionOutputDTO.getIsCommissionTax())) {
+                    commissionProvisionInnerRequest.setCommissionTax(true);
+                } else {
+                    commissionProvisionInnerRequest.setCommission(true);
+                }
+                commissionProvisionInnerRequest.setProvisionCode(commissionOutputDTO.getProvisionCode());
+                commissionProvisionInnerRequest.setReservationId(commissionOutputDTO.getReservationId());
+                commissionProvisionInnerRequest.setCommissionBalanceType(commissionOutputDTO.getBalanceControlType());
+                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
+                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
+                commissionProvisionInnerRequest.setDelinquencyRequired(commissionOutputDTO.getIsDelinquencyRequired());
+                makeProvisionInnerList.add(commissionProvisionInnerRequest);
+            }
+        }
+
+        makeProvisionRequest.setMakeProvisionInnerList(makeProvisionInnerList);
+
+
+        return makeProvisionRequest;
+    }
+
+    private void handleException(Long errorCode, CreateAccountingResultDTO createAccountingResultDTO){
+        EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
+        createAccountingResultDTO.setSuccess(false);
+        if(result == null){
+            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+            return;
+        }
+        createAccountingResultDTO.setError(result.getBillCode());
+    }
+
+    private Integer getBlockDayCount(InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO, InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO){
+        if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.DAILY)){
+            return  institutionChnnlPymMthdPscDTO.getBlockDayCount(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
+        }else if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.CHANNEL)){
+            return  institutionChannelPymMethodDTO.getBlockDayCount();
+        }else{
+            return 0;
+        }
+    }
