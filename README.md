@@ -1,10 +1,4 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getCustomerNo()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitution()" is null
-
-
-
-
 public class AccountingProvisionServiceImplTest {
-
 
     @InjectMocks
     private AccountProvisionServiceImpl accountingService;
@@ -31,10 +25,13 @@ public class AccountingProvisionServiceImplTest {
     private AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO;
 
     @Mock
-    private InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO; // Add this mock
+    private InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO;
 
     @Mock
-    private ProvisionDTO provisionDTO; // Add this mock
+    private ProvisionDTO provisionDTO;
+
+    @Mock
+    private InstitutionDTO institutionDTO; // Add this mock
 
     @BeforeEach
     public void setUp() {
@@ -48,7 +45,8 @@ public class AccountingProvisionServiceImplTest {
         when(createAccountingDTO.getCurrency()).thenReturn(EnumCurrencyCode.DOLAR);
         when(createAccountingDTO.getProvisionDTO()).thenReturn(provisionDTO);
         when(createAccountingDTO.getProvisionDTO().getCustomerNo()).thenReturn(123L);
-        when(createAccountingDTO.getInstitution().getCustomerNo()).thenReturn(456L);
+        when(createAccountingDTO.getInstitution()).thenReturn(institutionDTO); // Mock this method
+        when(institutionDTO.getCustomerNo()).thenReturn(456L); // Mock the InstitutionDTO method
     }
 
     @Test
@@ -62,7 +60,7 @@ public class AccountingProvisionServiceImplTest {
 
         when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenReturn(makeProvisionResponse);
         when(makeProvisionResponse.isSuccess()).thenReturn(true);
-        when(makeProvisionResponse.getContractNo()).thenReturn(123L);
+        when(makeProvisionResponse.getContractNo()).thenReturn(123L); // Long value
         when(makeProvisionResponse.getPendingDetailList()).thenReturn(Collections.emptyList());
 
         // Act
@@ -70,7 +68,7 @@ public class AccountingProvisionServiceImplTest {
 
         // Assert
         assertTrue(result.isSuccess());
-        assertEquals("contractNo", result.getContractNo());
+        assertEquals(123L, result.getContractNo()); // Long value
     }
 
     @Test
@@ -103,7 +101,7 @@ public class AccountingProvisionServiceImplTest {
         when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
         when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
 
-        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException(new ServiceCallException(new ExceptionData())));
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException(new ServiceCallException(1002L)));
 
         // Act
         CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
@@ -112,5 +110,4 @@ public class AccountingProvisionServiceImplTest {
         assertFalse(result.isSuccess());
         assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
     }
-
 }
