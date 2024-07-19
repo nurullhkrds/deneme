@@ -8,7 +8,7 @@ public void testGetAvailDate_WorkingDay() {
     Date nowDate = nowCalendar.getTime();
 
     // Define the next business date in LocalDate
-    LocalDate nextBusinessDate = LocalDate.now().plusDays(7);
+    LocalDate nextBusinessDate = LocalDate.now().plusDays(7); // Mocked business day calculation
     Date nextBusinessDateAsDate = DateUtils.convertLocalDateToDate(nextBusinessDate);
 
     // Mock the service method to return a non-null Date
@@ -20,9 +20,9 @@ public void testGetAvailDate_WorkingDay() {
 
     // Debugging output
     System.out.println("Mocked nextBusinessDateAsDate: " + nextBusinessDateAsDate);
-    System.out.println("Returned date from getAvailDate: " + actualDate); // Ensure this is not null
+    System.out.println("Returned date from getAvailDate: " + actualDate);
 
     // Verify the result
-    assertNotNull("Returned date should not be null", actualDate);
-    assertEquals(nextBusinessDate, actualDate);
+    assertNotNull("The returned date should not be null", actualDate);
+    assertEquals("The returned date does not match the expected business date", nextBusinessDate, actualDate);
 }
