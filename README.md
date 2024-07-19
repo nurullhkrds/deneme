@@ -1,36 +1,3 @@
-package com.ykb.payments.bill.transaction.accounting.receipt;
-
-import com.ykb.payments.bill.common.enums.EnumCurrencyCode;
-import com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO;
-import com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingResultDTO;
-import com.ykb.payments.bill.transaction.common.constant.AccountingConstant;
-import com.ykb.payments.bill.transaction.common.util.DateUtils;
-import com.ykb.payments.bill.transaction.external.corebanking.account.model.dto.ProvisionDetailDTO;
-import com.ykb.payments.bill.transaction.external.corebanking.receipt.model.request.RequestApiReceiptDTO;
-import com.ykb.payments.bill.transaction.external.corebanking.receipt.service.ReceiptApiService;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionAccountingInfoDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO;
-import com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod;
-import com.ykb.payments.bill.transaction.institution.enums.EnumProvisionType;
-import com.ykb.payments.bill.transaction.payment.dto.AccountPaymentMethodDetailDTO;
-import com.ykb.payments.bill.transaction.payment.dto.CreditCardPaymentMethodDetailDTO;
-import com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.Date;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
 
 public class ReceiptServiceImplTest {
