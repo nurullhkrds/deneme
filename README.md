@@ -1,3 +1,12 @@
+java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
+java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getName()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitution()" is null
+java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
+java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
+
+
+
+
 public class ReceiptServiceImplTest {
 
     @Mock
@@ -20,12 +29,12 @@ public class ReceiptServiceImplTest {
         AccountPaymentMethodDetailDTO accountDetailDTO = new AccountPaymentMethodDetailDTO();
         accountDetailDTO.setAccountNo("123456789");
 
-        createAccountingDTO.setPaymentMethodType(EnumProvisionType.ACCOUNT);
+        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.ACCOUNT);
         createAccountingDTO.setPaymentMethodDetailDTO(accountDetailDTO);
         createAccountingDTO.setBranchCode("001");
         createAccountingDTO.setAgentCode("AGENT001");
         createAccountingDTO.setChannelCode("CH001");
-        createAccountingDTO.setCurrency(CurrencyType.USD);
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
         createAccountingDTO.setProvisionDTO(new ProvisionDTO());
         createAccountingDTO.getProvisionDTO().setCustomerNo(1001L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
@@ -51,12 +60,12 @@ public class ReceiptServiceImplTest {
         CreditCardPaymentMethodDetailDTO cardDetailDTO = new CreditCardPaymentMethodDetailDTO();
         cardDetailDTO.setCardNumber("4111111111111111");
 
-        createAccountingDTO.setPaymentMethodType(EnumProvisionType.CARD);
+        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CARD);
         createAccountingDTO.setPaymentMethodDetailDTO(cardDetailDTO);
         createAccountingDTO.setBranchCode("002");
         createAccountingDTO.setAgentCode("AGENT002");
         createAccountingDTO.setChannelCode("CH002");
-        createAccountingDTO.setCurrency(CurrencyType.EUR);
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
         createAccountingDTO.setProvisionDTO(new ProvisionDTO());
         createAccountingDTO.getProvisionDTO().setCustomerNo(1002L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
@@ -79,12 +88,12 @@ public class ReceiptServiceImplTest {
         CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
         CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
 
-        createAccountingDTO.setPaymentMethodType(EnumProvisionType.ACCOUNT);
+        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.ACCOUNT);
         createAccountingDTO.setPaymentMethodDetailDTO(new AccountPaymentMethodDetailDTO());
         createAccountingDTO.setBranchCode("003");
         createAccountingDTO.setAgentCode("AGENT003");
         createAccountingDTO.setChannelCode("CH003");
-        createAccountingDTO.setCurrency(CurrencyType.GBP);
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
         createAccountingDTO.setProvisionDTO(new ProvisionDTO());
         createAccountingDTO.getProvisionDTO().setCustomerNo(1003L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
@@ -110,12 +119,12 @@ public class ReceiptServiceImplTest {
         CreditCardPaymentMethodDetailDTO cardDetailDTO = new CreditCardPaymentMethodDetailDTO();
         cardDetailDTO.setCardNumber("4111111111111111");
 
-        createAccountingDTO.setPaymentMethodType(EnumProvisionType.CARD);
+        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CARD);
         createAccountingDTO.setPaymentMethodDetailDTO(cardDetailDTO);
         createAccountingDTO.setBranchCode("004");
         createAccountingDTO.setAgentCode("AGENT004");
         createAccountingDTO.setChannelCode("CH004");
-        createAccountingDTO.setCurrency(CurrencyType.JPY);
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
         createAccountingDTO.setProvisionDTO(new ProvisionDTO());
         createAccountingDTO.getProvisionDTO().setCustomerNo(1004L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
@@ -139,11 +148,11 @@ public class ReceiptServiceImplTest {
         CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
         CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
 
-        createAccountingDTO.setPaymentMethodType(EnumProvisionType.CASH);
+        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CASH);
         createAccountingDTO.setBranchCode("005");
         createAccountingDTO.setAgentCode("AGENT005");
         createAccountingDTO.setChannelCode("CH005");
-        createAccountingDTO.setCurrency(CurrencyType.AUD);
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
         createAccountingDTO.setProvisionDTO(new ProvisionDTO());
         createAccountingDTO.getProvisionDTO().setCustomerNo(1005L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
