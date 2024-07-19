@@ -1,125 +1,108 @@
-  public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO) {
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
-        MakeProvisionRequest  makeProvisionRequest = prepareProvisionRequest(createAccountingDTO,createAccountingResultDTO);
-        try {
-            MakeProvisionResponse makeProvisionResponse = provisionNextService.makeProvision(makeProvisionRequest);
-            if(!makeProvisionResponse.isSuccess()){
-                handleException(makeProvisionResponse.getErrorCode(), createAccountingResultDTO);
-                createAccountingResultDTO.setSuccess(false);
-                return createAccountingResultDTO;
-            }
-            if(makeProvisionResponse.getContractNo() == null){
-                createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-                createAccountingResultDTO.setSuccess(false);
-                return createAccountingResultDTO;
-            }
-            createAccountingResultDTO.setContractNo(makeProvisionResponse.getContractNo());
-            createAccountingResultDTO.setPendingDetailList(makeProvisionResponse.getPendingDetailList());
-            createAccountingResultDTO.setSuccess(true);
-        }catch (Exception e){
-            if(e.getCause().getClass().equals(ServiceCallException.class)){
-                Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
-                handleException(errorCode, createAccountingResultDTO);
-                return createAccountingResultDTO;
-            }
-            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-            createAccountingResultDTO.setSuccess(false);
-        }
-        return createAccountingResultDTO;
+ @InjectMocks
+    private AccountingService accountingService;
+
+    @Mock
+    private ProvisionNextService provisionNextService;
+
+    @Mock
+    private AccountingDateUtil accountingDateUtil;
+
+    @Mock
+    private CreateAccountingDTO createAccountingDTO;
+
+    @Mock
+    private CreateAccountingResultDTO createAccountingResultDTO;
+
+    @Mock
+    private MakeProvisionRequest makeProvisionRequest;
+
+    @Mock
+    private MakeProvisionResponse makeProvisionResponse;
+
+    @Mock
+    private AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    public void testDoAccounting_Success() {
+        // Arrange
+        when(createAccountingDTO.getChannelTransactionId()).thenReturn("transactionId");
+        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode()).thenReturn("templateCode");
+        when(createAccountingDTO.getChannelCode()).thenReturn("channelCode");
+        when(createAccountingDTO.getAgentCode()).thenReturn("agentCode");
+        when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
+        when(createAccountingDTO.getPaymentAmount()).thenReturn(BigDecimal.valueOf(100));
+        when(createAccountingDTO.getCurrency()).thenReturn(Currency.TRY); // Use your actual currency enum
+        when(createAccountingDTO.getProvisionDTO().getCustomerNo()).thenReturn(123L);
+        when(createAccountingDTO.getInstitution().getCustomerNo()).thenReturn(456L);
+        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode()).thenReturn(EnumBlockDayStrategyCode.NO_VALOR);
+        when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
 
-    MakeProvisionRequest prepareProvisionRequest(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO)  {
-        MakeProvisionRequest makeProvisionRequest = new MakeProvisionRequest();
-        makeProvisionRequest.setTransactionId(createAccountingDTO.getChannelTransactionId());
-        makeProvisionRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
-        makeProvisionRequest.setChannelCode(createAccountingDTO.getChannelCode());
-        makeProvisionRequest.setUserCode(createAccountingDTO.getAgentCode());
-        makeProvisionRequest.setOperationalBranchCode(createAccountingDTO.getBranchCode());
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenReturn(makeProvisionResponse);
+        when(makeProvisionResponse.isSuccess()).thenReturn(true);
+        when(makeProvisionResponse.getContractNo()).thenReturn("contractNo");
+        when(makeProvisionResponse.getPendingDetailList()).thenReturn(Collections.emptyList());
 
-        List<MakeProvisionInnerDTO> makeProvisionInnerList = new ArrayList<>();
-        AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = (AccountPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
+        // Act
+        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
 
-        /** Debit */
-        MakeProvisionInnerDTO debitProvisionInnerRequest = new MakeProvisionInnerDTO();
-        debitProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
-        debitProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
-        debitProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount().negate());
-        debitProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
-        debitProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
-        debitProvisionInnerRequest.setClientNo(createAccountingDTO.getProvisionDTO().getCustomerNo().intValue());
-        makeProvisionInnerList.add(debitProvisionInnerRequest);
-
-        /** Credit */
-        MakeProvisionInnerDTO creditProvisionInnerRequest = new MakeProvisionInnerDTO();
-        creditProvisionInnerRequest.setAccountNo(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo());
-        creditProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
-        creditProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount());
-        creditProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
-        creditProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
-        creditProvisionInnerRequest.setClientNo(createAccountingDTO.getInstitution().getCustomerNo().intValue());
-        //TODO:LocalAmount dövizlerde
-        LocalDate availableLocalDate ;
-        if(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.NO_VALOR)){
-            availableLocalDate = LocalDate.now();
-        }else {
-            availableLocalDate = accountingDateUtil.getAvailDate(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayType(),
-                    getBlockDayCount(createAccountingDTO.getInstitutionChannelPymMethodDTO(), createAccountingDTO.getInstitutionChnnlPymMthdPscDTO()));
-        }
-        createAccountingResultDTO.setAvailableDate(availableLocalDate);
-        Date availableDate = Date.valueOf(availableLocalDate);
-        Date valueDate = Date.valueOf(availableLocalDate.plusDays(1));
-        creditProvisionInnerRequest.setAvailableDate(availableDate);
-        creditProvisionInnerRequest.setValueDate(valueDate);
-
-        makeProvisionInnerList.add(creditProvisionInnerRequest);
-        /** Commission  **/
-        if (createAccountingDTO.getResponseCommissionInformation()!= null) {
-
-            ResponseCommissionInformation responseCommissionInformation = createAccountingDTO.getResponseCommissionInformation();
-            for (CommissionOutputAccountingApiDTO commissionOutputDTO : responseCommissionInformation.getCommissionOutputAccountingApiDTOList()) {
-                MakeProvisionInnerDTO commissionProvisionInnerRequest = new MakeProvisionInnerDTO();
-                commissionProvisionInnerRequest.setAccountNo(accountPaymentMethodDetailDTO.getAccountNo());
-                commissionProvisionInnerRequest.setAmount(commissionOutputDTO.getAmount());
-                commissionProvisionInnerRequest.setCurrency(commissionOutputDTO.getCurrency());
-                commissionProvisionInnerRequest.setDescription(commissionOutputDTO.getDescription());
-                if (Boolean.TRUE.equals(commissionOutputDTO.getIsCommissionTax())) {
-                    commissionProvisionInnerRequest.setCommissionTax(true);
-                } else {
-                    commissionProvisionInnerRequest.setCommission(true);
-                }
-                commissionProvisionInnerRequest.setProvisionCode(commissionOutputDTO.getProvisionCode());
-                commissionProvisionInnerRequest.setReservationId(commissionOutputDTO.getReservationId());
-                commissionProvisionInnerRequest.setCommissionBalanceType(commissionOutputDTO.getBalanceControlType());
-                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
-                commissionProvisionInnerRequest.setFeeDefinitionId(commissionOutputDTO.getFeeDefinitionId());
-                commissionProvisionInnerRequest.setDelinquencyRequired(commissionOutputDTO.getIsDelinquencyRequired());
-                makeProvisionInnerList.add(commissionProvisionInnerRequest);
-            }
-        }
-
-        makeProvisionRequest.setMakeProvisionInnerList(makeProvisionInnerList);
-
-
-        return makeProvisionRequest;
+        // Assert
+        assertTrue(result.isSuccess());
+        assertEquals("contractNo", result.getContractNo());
     }
 
-    private void handleException(Long errorCode, CreateAccountingResultDTO createAccountingResultDTO){
-        EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
-        createAccountingResultDTO.setSuccess(false);
-        if(result == null){
-            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-            return;
-        }
-        createAccountingResultDTO.setError(result.getBillCode());
+    @Test
+    public void testDoAccounting_Failure_MakeProvisionResponseNotSuccess() {
+        // Arrange
+        when(createAccountingDTO.getChannelTransactionId()).thenReturn("transactionId");
+        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode()).thenReturn("templateCode");
+        when(createAccountingDTO.getChannelCode()).thenReturn("channelCode");
+        when(createAccountingDTO.getAgentCode()).thenReturn("agentCode");
+        when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
+        when(createAccountingDTO.getPaymentAmount()).thenReturn(BigDecimal.valueOf(100));
+        when(createAccountingDTO.getCurrency()).thenReturn(Currency.TRY);
+        when(createAccountingDTO.getProvisionDTO().getCustomerNo()).thenReturn(123L);
+        when(createAccountingDTO.getInstitution().getCustomerNo()).thenReturn(456L);
+        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode()).thenReturn(EnumBlockDayStrategyCode.NO_VALOR);
+        when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
+
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenReturn(makeProvisionResponse);
+        when(makeProvisionResponse.isSuccess()).thenReturn(false);
+        when(makeProvisionResponse.getErrorCode()).thenReturn(1001L);
+
+        // Act
+        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
     }
 
-    private Integer getBlockDayCount(InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO, InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO){
-        if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.DAILY)){
-            return  institutionChnnlPymMthdPscDTO.getBlockDayCount(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
-        }else if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.CHANNEL)){
-            return  institutionChannelPymMethodDTO.getBlockDayCount();
-        }else{
-            return 0;
-        }
+    @Test
+    public void testDoAccounting_Failure_ExceptionHandling() {
+        // Arrange
+        when(createAccountingDTO.getChannelTransactionId()).thenReturn("transactionId");
+        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode()).thenReturn("templateCode");
+        when(createAccountingDTO.getChannelCode()).thenReturn("channelCode");
+        when(createAccountingDTO.getAgentCode()).thenReturn("agentCode");
+        when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
+        when(createAccountingDTO.getPaymentAmount()).thenReturn(BigDecimal.valueOf(100));
+        when(createAccountingDTO.getCurrency()).thenReturn(Currency.TRY);
+        when(createAccountingDTO.getProvisionDTO().getCustomerNo()).thenReturn(123L);
+        when(createAccountingDTO.getInstitution().getCustomerNo()).thenReturn(456L);
+        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode()).thenReturn(EnumBlockDayStrategyCode.NO_VALOR);
+        when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
+
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException(new ServiceCallException(1002L)));
+
+        // Act
+        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
+
+        // Assert
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
     }
