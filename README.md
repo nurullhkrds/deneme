@@ -11,13 +11,14 @@
         createAccountingDTO.setPaymentAmount(BigDecimal.valueOf(100));
         createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CREDIT_CARD); // EnumPaymentMethod'dan bir örnek kullanın
         
-        // ProvisionDTO ve CommissionData ayarlamaları
+        // ProvisionDTO ve gerekli verileri ayarlama
         ProvisionDTO provisionDTO = new ProvisionDTO();
-        CommissionData commissionData = new CommissionData();
-        commissionData.setTotalCommissionLocalCurrencyAmount(BigDecimal.valueOf(10));
-        commissionData.setTotalCommissionTaxLocalCurrencyAmount(BigDecimal.valueOf(2));
-        provisionDTO.setCommissionData(commissionData);
-        
+        provisionDTO.setCommissionData(new CommissionData()); // Burayı kendi yapınıza göre ayarlayın
+
+        // Komisyon bilgilerini ProvisionDTO'da doğru şekilde ayarlayın
+        provisionDTO.getCommissionData().setTotalCommissionLocalCurrencyAmount(BigDecimal.valueOf(10));
+        provisionDTO.getCommissionData().setTotalCommissionTaxLocalCurrencyAmount(BigDecimal.valueOf(2));
+
         createAccountingDTO.setProvisionDTO(provisionDTO);
 
         CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
@@ -35,8 +36,8 @@
         createAccountingDTO.setPaymentAmount(BigDecimal.valueOf(100));
         createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CREDIT_CARD); // EnumPaymentMethod'dan bir örnek kullanın
         
-        // ProvisionDTO ayarları
-        createAccountingDTO.setProvisionDTO(null); // ProvisionDTO'nun null olduğu senaryo
+        // ProvisionDTO'nun null olduğu senaryo
+        createAccountingDTO.setProvisionDTO(null);
 
         CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
 
