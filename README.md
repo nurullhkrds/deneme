@@ -1,72 +1,29 @@
-@Mock
-    private ProvisionFactory provisionFactory;
+@Component
+@RequiredArgsConstructor
+public class AccountingUtil {
 
-    @Mock
-    private ReverseProvisionFactory reverseProvisionFactory;
+    private final AccountingDataLookupService accountingDataLookupService;
 
-    @Mock
-    private ReceiptService receiptService;
+    public LocalDate getAvailDate(EnumBlockDayType enumBlockDayType, Integer blockDayCount){
+        Calendar nowCalendar = Calendar.getInstance();
+        nowCalendar.set(Calendar.HOUR, 0);
+        nowCalendar.set(Calendar.MINUTE, 0);
+        nowCalendar.set(Calendar.SECOND, 0);
+        nowCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        if(enumBlockDayType.equals(EnumBlockDayType.CALENDAR_DAY)){
+            nowCalendar.add(Calendar.DAY_OF_YEAR,blockDayCount);
+        }else{
+            nowCalendar.setTime(accountingDataLookupService.getNextBusinessDate(nowCalendar.getTime(),blockDayCount));
+        }
 
-    @Mock
-    private ProvisionService provisionService;
-
-    @Mock
-    private ReverseProvisionService reverseProvisionService;
-
-    @InjectMocks
-    private AccountingServiceImpl accountingService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    return DateUtils.convertDateTOLocalDate(nowCalendar.getTime());
     }
 
-    @Test
-    void testDoAccounting_Success() {
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        createAccountingDTO.setPaymentMethodType(PaymentMethodType.CREDIT_CARD); // örnek veri
-        createAccountingDTO.setProvisionDTO(new ProvisionDTO());
-        createAccountingDTO.setPaymentAmount(BigDecimal.valueOf(100));
-        
-        ResponseCommissionInformation responseCommissionInformation = new ResponseCommissionInformation();
-        responseCommissionInformation.setTotalCommissionLocalCurrencyAmount(BigDecimal.valueOf(10));
-        responseCommissionInformation.setTotalCommissionTaxLocalCurrencyAmount(BigDecimal.valueOf(5));
-        
-        createAccountingDTO.getProvisionDTO().setCommissionData("{\"totalCommissionLocalCurrencyAmount\": 10, \"totalCommissionTaxLocalCurrencyAmount\": 5}");
-
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
-        createAccountingResultDTO.setSuccess(true);
-        createAccountingResultDTO.setPendingDetailList(null);
-
-        when(provisionFactory.getProvisionService(any())).thenReturn(provisionService);
-        when(provisionService.doAccounting(any())).thenReturn(createAccountingResultDTO);
-
-        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
-
-        verify(provisionFactory).getProvisionService(createAccountingDTO.getPaymentMethodType().getProvisionType());
-        verify(provisionService).doAccounting(createAccountingDTO);
-        verify(receiptService).printReceipt(createAccountingDTO, createAccountingResultDTO);
-
-        assertTrue(result.isSuccess());
-        assertEquals(BigDecimal.valueOf(115), result.getTotalPaymentAmount());
-        assertEquals(BigDecimal.valueOf(15), result.getCommissionAmount());
+    public static String formatCurrency(String toFormat) {
+        NumberFormat formatter = NumberFormat.getInstance(Locale.GERMAN);
+        formatter.setMinimumFractionDigits(2);
+        formatter.setMaximumFractionDigits(2);
+        BigDecimal bdToFormat = new BigDecimal(toFormat);
+        return formatter.format(bdToFormat);
     }
-
-    @Test
-    void testDoReverseAccounting() {
-        CreateReverseAccountingDTO createReverseAccountingDTO = new CreateReverseAccountingDTO();
-        createReverseAccountingDTO.setPaymentMethodType(PaymentMethodType.CREDIT_CARD); // örnek veri
-
-        CreateReverseAccountingResultDTO createReverseAccountingResultDTO = new CreateReverseAccountingResultDTO();
-        createReverseAccountingResultDTO.setSuccess(true);
-
-        when(reverseProvisionFactory.getReverseProvisionService(any())).thenReturn(reverseProvisionService);
-        when(reverseProvisionService.doReverseAccounting(any())).thenReturn(createReverseAccountingResultDTO);
-
-        CreateReverseAccountingResultDTO result = accountingService.doReverseAccounting(createReverseAccountingDTO);
-
-        verify(reverseProvisionFactory).getReverseProvisionService(createReverseAccountingDTO.getPaymentMethodType().getProvisionType());
-        verify(reverseProvisionService).doReverseAccounting(createReverseAccountingDTO);
-
-        assertTrue(result.isSuccess());
-    }
+}
