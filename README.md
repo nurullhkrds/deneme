@@ -1,1 +1,1 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ProvisionFactory.getProvisionService(com.ykb.payments.bill.transaction.institution.enums.EnumProvisionType)" because "this.provisionFactory" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod.getProvisionType()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getPaymentMethodType()" is null
