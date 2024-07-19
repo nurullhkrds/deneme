@@ -1,11 +1,3 @@
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getName()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitution()" is null
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
-
-
-
 
 public class ReceiptServiceImplTest {
 
@@ -39,6 +31,8 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1001L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
+        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(123456789L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(100.00));
@@ -70,6 +64,8 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1002L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
+        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(234567890L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(200.00));
@@ -98,6 +94,8 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1003L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
+        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(345678901L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(300.00));
@@ -130,6 +128,8 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
         createAccountingDTO.setDummyMerchant(true);
+        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(456789012L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(400.00));
@@ -157,6 +157,8 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1005L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
+        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(567890123L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(500.00));
