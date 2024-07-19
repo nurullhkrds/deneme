@@ -1,17 +1,3 @@
-
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.Date;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-
-
 public class ReceiptServiceImplTest {
 
     @Mock
@@ -50,6 +36,7 @@ public class ReceiptServiceImplTest {
         createAccountingResultDTO.setContractNo(123456789L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(100.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
+        createAccountingResultDTO.setAvailableDate(new Date()); // Set a valid date
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -83,6 +70,7 @@ public class ReceiptServiceImplTest {
         createAccountingResultDTO.setContractNo(234567890L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(200.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
+        createAccountingResultDTO.setAvailableDate(new Date()); // Set a valid date
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -90,8 +78,6 @@ public class ReceiptServiceImplTest {
         // Assert
         verify(receiptApiService).printReceipt(any(List.class));
     }
-
-
 
     @Test
     void testPrintReceiptWithCardPaymentMethodAndDummyMerchant() {
@@ -119,6 +105,7 @@ public class ReceiptServiceImplTest {
         createAccountingResultDTO.setContractNo(456789012L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(400.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
+        createAccountingResultDTO.setAvailableDate(new Date()); // Set a valid date
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -148,6 +135,7 @@ public class ReceiptServiceImplTest {
         createAccountingResultDTO.setContractNo(567890123L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(500.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
+        createAccountingResultDTO.setAvailableDate(new Date()); // Set a valid date
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -156,4 +144,3 @@ public class ReceiptServiceImplTest {
         verify(receiptApiService).printReceipt(any(List.class));
     }
 }
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
