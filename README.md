@@ -1,146 +1,59 @@
-public class AccountingProvisionServiceImplTest {
+@Service
+@RequiredArgsConstructor
+public class AccountReverseProvisionServiceImpl implements ReverseProvisionService{
 
-    @InjectMocks
-    private AccountProvisionServiceImpl accountingService;
+    private static  final EnumProvisionType provisionType = EnumProvisionType.ACCOUNT;
+    
+    private final ProvisionNextService provisionNextService;
 
-    @Mock
-    private ProvisionNextService provisionNextService;
+	@Override
+	public EnumProvisionType getProvisionType() {
+		return provisionType;
+	}
 
-    @Mock
-    private AccountingUtil accountingDateUtil;
+	@Override
+	public CreateReverseAccountingResultDTO doReverseAccounting(CreateReverseAccountingDTO createReverseAccountingDTO) {
+		CreateReverseAccountingResultDTO createReverseAccountingResultDTO = new CreateReverseAccountingResultDTO();
+		MakeReverseProvisionRequest makeReverseProvisionRequest = prepareReverseProvisionRequest(createReverseAccountingDTO);
+		try {
+			MakeReverseProvisionResponse makeReverseProvision = provisionNextService.makeReverseProvision(makeReverseProvisionRequest);	// TODO: Servisten donen degerlerin hangisi kullanılacak?
 
-    @Mock
-    private CreateAccountingDTO createAccountingDTO;
+			if(!makeReverseProvision.isSuccess()){
+				handleException(makeReverseProvision.getErrorCode(), createReverseAccountingResultDTO);
+				createReverseAccountingResultDTO.setSuccess(false);
+				return createReverseAccountingResultDTO;
+			}
+			createReverseAccountingResultDTO.setSuccess(true);
+		}catch (Exception e){
+			if(e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)){
+				Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
+				handleException(errorCode, createReverseAccountingResultDTO);
+				return createReverseAccountingResultDTO;
+			}
+			createReverseAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+			createReverseAccountingResultDTO.setSuccess(false);
+		}
 
-    @Mock
-    private CreateAccountingResultDTO createAccountingResultDTO;
+		return createReverseAccountingResultDTO;
+	}
 
-    @Mock
-    private MakeProvisionRequest makeProvisionRequest;
+	private MakeReverseProvisionRequest prepareReverseProvisionRequest(CreateReverseAccountingDTO createReverseAccountingDTO) {
+		MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
+		makeReverseProvisionRequest.setTransactionId(createReverseAccountingDTO.getChannelTransactionId());
+		makeReverseProvisionRequest.setContractNo(createReverseAccountingDTO.getContractNo());
+		makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL"); //TODO: Bu alan nasıl doldurulacak?
+		return makeReverseProvisionRequest;
+	}
 
-    @Mock
-    private MakeProvisionResponse makeProvisionResponse;
+	private void handleException(Long errorCode, CreateReverseAccountingResultDTO createReverseAccountingResultDTO){
+		EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
+		createReverseAccountingResultDTO.setSuccess(false);
+		if(result == null){
+			createReverseAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
+			return;
+		}
+		createReverseAccountingResultDTO.setError(result.getBillCode());
+	}
 
-    @Mock
-    private AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO;
 
-    @Mock
-    private InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO;
-
-    @Mock
-    private ProvisionDTO provisionDTO;
-
-    @Mock
-    private InstitutionDTO institutionDTO;
-
-    @Mock
-    private InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO;
-
-    @Mock
-    private ResponseCommissionInformation responseCommissionInformation;
-
-    @Mock
-    private CommissionOutputAccountingApiDTO commissionOutputDTO;
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        // Set up the mock objects to avoid NullPointerException
-        when(createAccountingDTO.getInstitutionChannelPymMethodDTO()).thenReturn(institutionChannelPymMethodDTO);
-        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode()).thenReturn("templateCode");
-        when(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode()).thenReturn(EnumBlockDayStrategyCode.NO_VALOR);
-        when(createAccountingDTO.getPaymentAmount()).thenReturn(BigDecimal.valueOf(100));
-        when(createAccountingDTO.getCurrency()).thenReturn(EnumCurrencyCode.DOLAR);
-        when(createAccountingDTO.getProvisionDTO()).thenReturn(provisionDTO);
-        when(createAccountingDTO.getProvisionDTO().getCustomerNo()).thenReturn(123L);
-        when(createAccountingDTO.getInstitution()).thenReturn(institutionDTO);
-        when(institutionDTO.getCustomerNo()).thenReturn(456L);
-
-        // Initialize the accountPaymentMethodDetailDTO mock
-        when(createAccountingDTO.getPaymentMethodDetailDTO()).thenReturn(accountPaymentMethodDetailDTO);
-        when(accountPaymentMethodDetailDTO.getAccountNo()).thenReturn("accountNo");
-
-        // Initialize the institutionChnnlPymMthdAccDTO mock
-        when(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO()).thenReturn(institutionChnnlPymMthdAccDTO);
-        when(institutionChnnlPymMthdAccDTO.getInstitutionAccountNo()).thenReturn("institutionAccountNo");
-
-        // Initialize the responseCommissionInformation mock
-        when(createAccountingDTO.getResponseCommissionInformation()).thenReturn(responseCommissionInformation);
-        when(responseCommissionInformation.getCommissionOutputAccountingApiDTOList())
-            .thenReturn(Collections.singletonList(commissionOutputDTO));
-
-        // Set up commissionOutputDTO mock
-        when(commissionOutputDTO.getAmount()).thenReturn(BigDecimal.valueOf(50));
-        when(commissionOutputDTO.getCurrency()).thenReturn(EnumCurrencyCode.DOLAR);
-        when(commissionOutputDTO.getDescription()).thenReturn("Description");
-        when(commissionOutputDTO.getIsCommissionTax()).thenReturn(false);
-        when(commissionOutputDTO.getProvisionCode()).thenReturn("ProvisionCode");
-        when(commissionOutputDTO.getReservationId()).thenReturn("ReservationId");
-        when(commissionOutputDTO.getBalanceControlType()).thenReturn(EnumBalanceControlType.SOME_TYPE);
-        when(commissionOutputDTO.getFeeDefinitionId()).thenReturn("FeeDefinitionId");
-        when(commissionOutputDTO.getIsDelinquencyRequired()).thenReturn(false);
-    }
-
-    @Test
-    public void testDoAccounting_Success() {
-        // Arrange
-        when(createAccountingDTO.getChannelTransactionId()).thenReturn("transactionId");
-        when(createAccountingDTO.getChannelCode()).thenReturn("channelCode");
-        when(createAccountingDTO.getAgentCode()).thenReturn("agentCode");
-        when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
-        when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
-
-        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenReturn(makeProvisionResponse);
-        when(makeProvisionResponse.isSuccess()).thenReturn(true);
-        when(makeProvisionResponse.getContractNo()).thenReturn(123L);
-        when(makeProvisionResponse.getPendingDetailList()).thenReturn(Collections.emptyList());
-
-        // Act
-        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertTrue(result.isSuccess());
-        assertEquals(123L, result.getContractNo());
-    }
-
-    @Test
-    public void testDoAccounting_Failure_MakeProvisionResponseNotSuccess() {
-        // Arrange
-        when(createAccountingDTO.getChannelTransactionId()).thenReturn("transactionId");
-        when(createAccountingDTO.getChannelCode()).thenReturn("channelCode");
-        when(createAccountingDTO.getAgentCode()).thenReturn("agentCode");
-        when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
-        when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
-
-        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenReturn(makeProvisionResponse);
-        when(makeProvisionResponse.isSuccess()).thenReturn(false);
-        when(makeProvisionResponse.getErrorCode()).thenReturn(1001L);
-
-        // Act
-        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-    }
-
-    @Test
-    public void testDoAccounting_Failure_ExceptionHandling() {
-        // Arrange
-        when(createAccountingDTO.getChannelTransactionId()).thenReturn("transactionId");
-        when(createAccountingDTO.getChannelCode()).thenReturn("channelCode");
-        when(createAccountingDTO.getAgentCode()).thenReturn("agentCode");
-        when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
-        when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
-
-        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException(new ServiceCallException(1002L)));
-
-        // Act
-        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
-
-        // Assert
-        assertFalse(result.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-    }
 }
