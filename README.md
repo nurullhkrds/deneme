@@ -1,6 +1,13 @@
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getCustomerNo()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitution()" is null
+
+
+
+
+public class AccountingProvisionServiceImplTest {
+
 
     @InjectMocks
-    private AccountingServiceImpl accountingService;
+    private AccountProvisionServiceImpl accountingService;
 
     @Mock
     private ProvisionNextService provisionNextService;
@@ -55,7 +62,7 @@
 
         when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenReturn(makeProvisionResponse);
         when(makeProvisionResponse.isSuccess()).thenReturn(true);
-        when(makeProvisionResponse.getContractNo()).thenReturn("contractNo");
+        when(makeProvisionResponse.getContractNo()).thenReturn(123L);
         when(makeProvisionResponse.getPendingDetailList()).thenReturn(Collections.emptyList());
 
         // Act
@@ -96,7 +103,7 @@
         when(createAccountingDTO.getBranchCode()).thenReturn("branchCode");
         when(accountingDateUtil.getAvailDate(any(), any())).thenReturn(LocalDate.now());
 
-        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException(new ServiceCallException(1002L)));
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException(new ServiceCallException(new ExceptionData())));
 
         // Act
         CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
@@ -105,3 +112,5 @@
         assertFalse(result.isSuccess());
         assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
     }
+
+}
