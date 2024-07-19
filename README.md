@@ -200,8 +200,6 @@ public class CardProvisionServiceImplTest {
         InstitutionChnnlPymMthdPscDTO pymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
         pymMthdPscDTO.setBlockDayCount(3); // Assume Sunday
 
-        when(Calendar.getInstance().get(Calendar.DAY_OF_WEEK)).thenReturn(Calendar.SUNDAY);
-
         // Act
         Integer blockDayCount = cardProvisionServiceImpl.getBlockDayCount(pymMethodDTO, pymMthdPscDTO);
 
