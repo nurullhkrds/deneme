@@ -1,22 +1,27 @@
 @Test
-public void testGetAvailDate_CalendarDay() {
-    int blockDayCount = 5;
-    Calendar nowCalendar = Calendar.getInstance();
-    nowCalendar.set(Calendar.HOUR_OF_DAY, 0);
-    nowCalendar.set(Calendar.MINUTE, 0);
-    nowCalendar.set(Calendar.SECOND, 0);
-    Date nowDate = nowCalendar.getTime();
+    public void testGetAvailDate_BusinessDay() {
+        int blockDayCount = 5;
+        Calendar nowCalendar = Calendar.getInstance();
+        nowCalendar.set(Calendar.HOUR_OF_DAY, 0);
+        nowCalendar.set(Calendar.MINUTE, 0);
+        nowCalendar.set(Calendar.SECOND, 0);
+        Date nowDate = nowCalendar.getTime();
 
-    // Define the expected date 5 days from now
-    LocalDate expectedDate = LocalDate.now().plusDays(blockDayCount);
+        // Define the next business date in LocalDate
+        LocalDate nextBusinessDate = LocalDate.now().plusDays(7);
+        Date nextBusinessDateAsDate = DateUtils.convertLocalDateToDate(nextBusinessDate);
 
-    // Call the method under test
-    LocalDate actualDate = accountingUtil.getAvailDate(EnumBlockDayType.CALENDAR_DAY, blockDayCount);
+        // Mock the service method to return a non-null Date
+        when(accountingDataLookupService.getNextBusinessDate(nowDate, blockDayCount))
+                .thenReturn(nextBusinessDateAsDate);
 
-    // Additional debug information
-    System.out.println("Expected Date: " + expectedDate);
-    System.out.println("Actual Date: " + actualDate);
+        // Call the method under test
+        LocalDate actualDate = accountingUtil.getAvailDate(EnumBlockDayType.WORKING_DAY, blockDayCount);
 
-    // Verify the result
-    assertEquals(expectedDate, actualDate);
-}
+        // Additional debug information
+        System.out.println("Mocked nextBusinessDateAsDate: " + nextBusinessDateAsDate);
+        System.out.println("Returned date from getAvailDate: " + DateUtils.convertDateTOLocalDate(nowDate));
+
+        // Verify the result
+        assertEquals(nextBusinessDate, actualDate);
+    }
