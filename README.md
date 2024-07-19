@@ -1,56 +1,56 @@
-  @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this); // Mockito nesnelerini başlatır
-        when(provisionFactory.getProvisionService(any())).thenReturn(provisionService);
-        when(provisionService.doAccounting(any())).thenReturn(createAccountingResultDTO(true));
+@Service
+@RequiredArgsConstructor
+public class AccountingServiceImpl implements AccountingService {
+
+    private final ProvisionFactory  provisionFactory;
+    private final ReverseProvisionFactory reverseProvisionFactory;
+    private final ReceiptService receiptService;
+
+    @Override
+    public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO) {
+        ProvisionService provisionService = provisionFactory.getProvisionService(createAccountingDTO.getPaymentMethodType().getProvisionType());
+        prepareCreateAccountingDTO(createAccountingDTO);
+        CreateAccountingResultDTO createAccountingResultDTO = provisionService.doAccounting(createAccountingDTO);
+        if(createAccountingResultDTO.isSuccess()) {
+            prepareCreateAccountingResultDTO(createAccountingResultDTO,createAccountingDTO);
+            receiptService.printReceipt(createAccountingDTO, createAccountingResultDTO);
+        }
+        return createAccountingResultDTO;
     }
 
-    @Test
-    public void testDoAccounting_SuccessfulAccounting() {
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        createAccountingDTO.setPaymentAmount(BigDecimal.valueOf(100));
-        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CREDIT_CARD); // EnumPaymentMethod'dan bir örnek kullanın
-        
-        // ProvisionDTO ve gerekli verileri ayarlama
-        ProvisionDTO provisionDTO = new ProvisionDTO();
-        provisionDTO.setCommissionData(new CommissionData()); // Burayı kendi yapınıza göre ayarlayın
+	@Override
+	public CreateReverseAccountingResultDTO doReverseAccounting(CreateReverseAccountingDTO createReverseAccountingDTO) {
+		ReverseProvisionService reverseProvisionService = reverseProvisionFactory.getReverseProvisionService(createReverseAccountingDTO.getPaymentMethodType().getProvisionType());
+		return reverseProvisionService.doReverseAccounting(createReverseAccountingDTO);
+	}
 
-        // Komisyon bilgilerini ProvisionDTO'da doğru şekilde ayarlayın
-        provisionDTO.getCommissionData().setTotalCommissionLocalCurrencyAmount(BigDecimal.valueOf(10));
-        provisionDTO.getCommissionData().setTotalCommissionTaxLocalCurrencyAmount(BigDecimal.valueOf(2));
+	private CreateAccountingDTO prepareCreateAccountingDTO(CreateAccountingDTO createAccountingDTO) {
+        if(createAccountingDTO.getProvisionDTO().getCommissionData()==null){
+            return createAccountingDTO;
+        }
 
-        createAccountingDTO.setProvisionDTO(provisionDTO);
-
-        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
-
-        assertTrue(result.isSuccess());
-        assertEquals(BigDecimal.valueOf(12), result.getCommissionAmount());
-        assertEquals(BigDecimal.valueOf(112), result.getTotalPaymentAmount());
-
-        verify(receiptService, times(1)).printReceipt(createAccountingDTO, result);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            createAccountingDTO.setResponseCommissionInformation(objectMapper.readValue(createAccountingDTO.getProvisionDTO().getCommissionData(), ResponseCommissionInformation.class));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return createAccountingDTO;
     }
 
-    @Test
-    public void testDoAccounting_NoCommission() {
-        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
-        createAccountingDTO.setPaymentAmount(BigDecimal.valueOf(100));
-        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.CREDIT_CARD); // EnumPaymentMethod'dan bir örnek kullanın
-        
-        // ProvisionDTO'nun null olduğu senaryo
-        createAccountingDTO.setProvisionDTO(null);
+    private CreateAccountingResultDTO prepareCreateAccountingResultDTO(CreateAccountingResultDTO createAccountingResultDTO, CreateAccountingDTO createAccountingDTO) {
 
-        CreateAccountingResultDTO result = accountingService.doAccounting(createAccountingDTO);
+        BigDecimal totalPaymentAmount = createAccountingDTO.getPaymentAmount();
+        if (createAccountingDTO.getResponseCommissionInformation() != null) {
+            BigDecimal commissionAmount = createAccountingDTO.getResponseCommissionInformation().getTotalCommissionLocalCurrencyAmount();
+            commissionAmount = commissionAmount.add(createAccountingDTO.getResponseCommissionInformation().getTotalCommissionTaxLocalCurrencyAmount());
+            createAccountingResultDTO.setCommissionAmount(commissionAmount);
+            totalPaymentAmount = totalPaymentAmount.add(commissionAmount);
+        } else {
+            createAccountingResultDTO.setCommissionAmount(BigDecimal.ZERO);
+        }
 
-        assertTrue(result.isSuccess());
-        assertEquals(BigDecimal.ZERO, result.getCommissionAmount());
-        assertEquals(BigDecimal.valueOf(100), result.getTotalPaymentAmount());
-
-        verify(receiptService, times(1)).printReceipt(createAccountingDTO, result);
-    }
-
-    private CreateAccountingResultDTO createAccountingResultDTO(boolean isSuccess) {
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
-        createAccountingResultDTO.setSuccess(isSuccess);
-        createAccountingResultDTO.setPendingDetailList(Collections.emptyList());
+        createAccountingResultDTO.setTotalPaymentAmount(totalPaymentAmount);
+        createAccountingResultDTO.setPendingDetailList(createAccountingResultDTO.getPendingDetailList());
         return createAccountingResultDTO;
     }
