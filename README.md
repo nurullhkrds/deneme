@@ -18,10 +18,10 @@ public void testGetAvailDate_BusinessDay() {
     // Call the method under test
     LocalDate actualDate = accountingUtil.getAvailDate(EnumBlockDayType.BUSINESS_DAY, blockDayCount);
 
-    // Debugging output
-    System.out.println("Expected Date: " + nextBusinessDate);
-    System.out.println("Actual Date: " + actualDate);
-
+    // Additional debug information
+    System.out.println("Mocked nextBusinessDateAsDate: " + nextBusinessDateAsDate);
+    System.out.println("Returned date from getAvailDate: " + DateUtils.convertDateTOLocalDate(nowDate));
+    
     // Verify the result
     assertEquals(nextBusinessDate, actualDate);
 }
