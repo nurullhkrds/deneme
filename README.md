@@ -1,1 +1,1 @@
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
+        createAccountingResultDTO.setAvailableDate(LocalDate.now()); // Set a valid Date
