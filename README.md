@@ -30,13 +30,13 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1001L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
-        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.setInstitution(new InstitutionDTO());
         createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(123456789L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(100.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
-        createAccountingResultDTO.setAvailableDate(Date.from(Instant.now())); // Set a valid Date
+        // Skipping setting the availableDate
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -64,13 +64,13 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1002L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
-        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.setInstitution(new InstitutionDTO());
         createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(234567890L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(200.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
-        createAccountingResultDTO.setAvailableDate(Date.from(Instant.now())); // Set a valid Date
+        // Skipping setting the availableDate
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -99,13 +99,13 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
         createAccountingDTO.setDummyMerchant(true);
-        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.setInstitution(new InstitutionDTO());
         createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(456789012L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(400.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
-        createAccountingResultDTO.setAvailableDate(Date.from(Instant.now())); // Set a valid Date
+        // Skipping setting the availableDate
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
@@ -129,13 +129,13 @@ public class ReceiptServiceImplTest {
         createAccountingDTO.getProvisionDTO().setCustomerNo(1005L);
         createAccountingDTO.setInstitutionAccountingInfoDTO(new InstitutionAccountingInfoDTO());
         createAccountingDTO.getInstitutionAccountingInfoDTO().setReceiptCode("RECEIPT_CODE");
-        createAccountingDTO.setInstitution(new InstitutionDTO()); // Ensure InstitutionDTO is not null
+        createAccountingDTO.setInstitution(new InstitutionDTO());
         createAccountingDTO.getInstitution().setName("Institution Name");
 
         createAccountingResultDTO.setContractNo(567890123L);
         createAccountingResultDTO.setTotalPaymentAmount(BigDecimal.valueOf(500.00));
         createAccountingResultDTO.setPendingDetailList(Collections.singletonList(new ProvisionDetailDTO()));
-        createAccountingResultDTO.setAvailableDate(Date.from(Instant.now())); // Set a valid Date
+        // Skipping setting the availableDate
 
         // Act
         receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
