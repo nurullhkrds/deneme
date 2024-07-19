@@ -1,11 +1,3 @@
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-
 public class ReceiptServiceImplTest {
 
     @Mock
