@@ -1,9 +1,1 @@
-public class SampleDTO extends BaseWebDTO {
-
-    @Serial
-    private static final long serialVersionUID = 123456L;
-
-    private Long id;
-
-    private String name;
-
+remote: >> Valid Issue Types: [Story,Improvement,Incident]** 1) Commit message should start with JIRA issue key(s)!        
