@@ -1,1 +1,9 @@
-java.lang.NullPointerException: Cannot invoke "java.util.Date.toInstant()" because "date" is null
+public class SampleDTO extends BaseWebDTO {
+
+    @Serial
+    private static final long serialVersionUID = 123456L;
+
+    private Long id;
+
+    private String name;
+
