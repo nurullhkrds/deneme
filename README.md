@@ -1,58 +1,106 @@
-@Test
-void testDoAccountingSuccessRealMerchant() throws BusinessException, ServiceCallException {
-    // Test verilerini oluştur
-    CreateAccountingDTO dto = new CreateAccountingDTO();
-    dto.setDummyMerchant(false);
-    dto.setPaymentAmount(BigDecimal.valueOf(100));
-    dto.setCurrency(EnumCurrencyCode.DOLAR);
-    dto.setChannelCode("channelCode");
-    dto.setChannelSessionId("sessionId");
-    dto.setBranchCode("branchCode");
-    dto.setMerchantNo("merchantNo");
+ @Test
+    void whenCreateAccountingResultDTOisFailed() throws BusinessException, ServiceCallException {
 
-    ProvisionDTO provisionDTO = new ProvisionDTO();
-    provisionDTO.setId(1L);
-    dto.setProvisionDTO(provisionDTO);
+        ProvisionDTO dto1=new ProvisionDTO();
+        dto1.setId(1L);
+        dto1.setStatus(EnumProvisionStatus.PAID);
+        ResponseCommissionInformation dto2=new ResponseCommissionInformation();
+        dto2.setInquiryId("123");
+        InstitutionDTO dto3=new InstitutionDTO();
+        dto3.setId(1L);
+        dto3.setCustomerNo(123L);
+        InstitutionDebtTypeDTO dto4=new InstitutionDebtTypeDTO();
+        dto4.setId(123L);
+        InstitutionChannelPymMethodDTO dto5=new InstitutionChannelPymMethodDTO();
+        dto5.setId(123L);
+        dto5.setIsActive(true);
+        InstitutionChnnlPymMthdAccDTO dto6=new InstitutionChnnlPymMthdAccDTO();
+        dto6.setId(123L);
+        dto6.setIsActive(true);
 
-    InstitutionDTO institutionDTO = new InstitutionDTO();
-    institutionDTO.setId(1L);
-    institutionDTO.setName("Institution");
-    institutionDTO.setProduct(new ProductDTO());
-    dto.setInstitution(institutionDTO);
+        InstitutionChnnlPymMthdPscDTO dto7= new InstitutionChnnlPymMthdPscDTO();
+        dto7.setId(123L);
+        InstitutionAccountingInfoDTO dto8=new InstitutionAccountingInfoDTO();
+        dto8.setId(123L);
 
-    InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
-    institutionChannelPymMethodDTO.setAccountingTemplateCode("templateCode");
-    institutionChannelPymMethodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.NO_VALOR);
-    dto.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
 
-    InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
-    institutionChnnlPymMthdAccDTO.setInstitutionAccountNo("accountNo");
-    dto.setInstitutionChnnlPymMthdAccDTO(institutionChnnlPymMthdAccDTO);
+        CreateAccountingDTO inputDto=new CreateAccountingDTO();
+        inputDto.setCurrency(EnumCurrencyCode.DOLAR);
+        inputDto.setProvisionDTO(dto1);
+        inputDto.setResponseCommissionInformation(dto2);
+        inputDto.setInstitution(dto3);
+        inputDto.setInstitutionDebtType(dto4);
+        inputDto.setInstitutionChannelPymMethodDTO(dto5);
+        inputDto.setInstitutionChnnlPymMthdAccDTO(dto6);
+        inputDto.setInstitutionChnnlPymMthdPscDTO(dto7);
+        inputDto.setInstitutionAccountingInfoDTO(dto8);
+        inputDto.setChannelCode("123");
+        //dummymerchant true ise
+        inputDto.setDummyMerchant(true);
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
+        String provisionRequestId = "123";
 
-    InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
-    institutionChnnlPymMthdPscDTO.setId(1L);
-    dto.setInstitutionChnnlPymMthdPscDTO(institutionChnnlPymMthdPscDTO);
+        CardProvisionRequest cardProvisionRequest=new CardProvisionRequest();
+        cardProvisionRequest.setRequestId("123");
 
-    CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO = new CreditCardPaymentMethodDetailDTO();
-    creditCardPaymentMethodDetailDTO.setCardNumber("1234567812345678"); // Örnek kart numarası
-    dto.setPaymentMethodDetailDTO(creditCardPaymentMethodDetailDTO);
+        cardProvisionRequest.setRequestId(provisionRequestId);
+        cardProvisionRequest.setRequestDate(DateUtils.formatLocalDateTime(LocalDateTime.now(), DateUtils.DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS));
+        cardProvisionRequest.setSessionId(inputDto.getChannelSessionId());
+        cardProvisionRequest.setChannelCode(inputDto.getChannelCode());
+        cardProvisionRequest.setTransactionType(BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY);
 
-    // Mock sonuçlarını ayarla
-    CreateAccountingResultDTO cardProvisionResultDTO = new CreateAccountingResultDTO();
-    cardProvisionResultDTO.setSuccess(true);
-    cardProvisionResultDTO.setProvisionRequestId("requestId");
 
-    when(accountingUtilServiceImpl.getContractNumber()).thenReturn(12345L);
+        CardProvisionCardInfoDTO cardInfoDTO = new CardProvisionCardInfoDTO();
+        cardInfoDTO.setEncKeyIndex((short) 0);
+        cardInfoDTO.setEncrypted(Boolean.FALSE);
+        CardProvisionCommissionInfoDTO commissionInfoDTO = new CardProvisionCommissionInfoDTO();
+        //getResponseCommissionInformation null değilse
+        ResponseCommissionInformation responseCommissionInformation = inputDto.getResponseCommissionInformation() ;
+        commissionInfoDTO.setReferenceCode(responseCommissionInformation.getInquiryId());
+        commissionInfoDTO.setAmount(responseCommissionInformation.getTotalCommissionTaxLocalCurrencyAmount().add(responseCommissionInformation.getTotalCommissionLocalCurrencyAmount()));
+        cardProvisionRequest.setAmount(inputDto.getPaymentAmount().add(commissionInfoDTO.getAmount()));
+        commissionInfoDTO.setCurrencyCode(CommonUtils.currencyConverter(inputDto.getCurrency().getValue())); //TODO  ytodo currency kontrol edilecek
+        cardProvisionRequest.setCommissionInfo(commissionInfoDTO);
+        CardProvisionInstallmentInfoDTO installmentInfoDTO = new CardProvisionInstallmentInfoDTO();
+        installmentInfoDTO.setInstallmentAmount(BigDecimal.ZERO);
+        installmentInfoDTO.setInstallmentCount(0);
+        installmentInfoDTO.setInterestRate(BigDecimal.ZERO);
+        installmentInfoDTO.setInterestAmount(BigDecimal.ZERO);
+        cardProvisionRequest.setInstallmentInfo(installmentInfoDTO);
 
-    CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
-    cardProvisionResponse.setGuid("guid");
-    when(cardProvisionService.doProvision(any(CardProvisionRequest.class))).thenReturn(cardProvisionResponse);
+        List<KeyValueDto> additionalTransactionInfoList = new ArrayList<>();
 
-    // Gerçek metod çağrısı
-    CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
+        KeyValueDto additionalProductCodeInfo = new KeyValueDto();
+        additionalProductCodeInfo.setKey("productCode");
+        additionalProductCodeInfo.setValue(inputDto.getInstitution().getProduct().getProductCampaignCode());
+        additionalTransactionInfoList.add(additionalProductCodeInfo);
 
-    // Sonuçları doğrula
-    assertTrue(result.isSuccess(), "Expected success to be true");
-    assertEquals(12345L, result.getContractNo(), "Expected contract number to be 12345");
-    assertEquals("guid", result.getProvisionRequestId(), "Expected provision request ID to be 'guid'");
-}
+        KeyValueDto additionalInstitutionCodeInfo = new KeyValueDto();
+        additionalInstitutionCodeInfo.setKey("institutionCode");
+        additionalInstitutionCodeInfo.setValue(inputDto.getInstitution().getId().toString());
+        additionalTransactionInfoList.add(additionalInstitutionCodeInfo);
+
+        cardProvisionRequest.setAdditionalTransactionInfoList(additionalTransactionInfoList);
+
+        CardProvisionRequest cardProvisionRequest1=cardProvisionRequest;
+        CardProvisionResponse cardProvisionResponse=new CardProvisionResponse();
+        cardProvisionResponse.setGuid("guid");
+        cardProvisionResponse.setRequestId("123");
+
+
+
+        // guid boş değilse
+        createAccountingResultDTO.setOceanTransactionId(Long.parseLong(cardProvisionResponse.getGuid())); //TODO ytodo eslestirme dogru mu teyit edilecek. servis string biz long tutmusuz tabloda teyit edilecek
+        createAccountingResultDTO.setProvisionRequestId(provisionRequestId);
+        createAccountingResultDTO.setSuccess(true);
+
+
+        CreateAccountingResultDTO result= cardProvisionServiceImpl.doAccounting(inputDto);
+
+
+        Mockito.when(cardProvisionService.doProvision(cardProvisionRequest1)).thenReturn(cardProvisionResponse);
+        Mockito.when(CommonUtils.generateCreditCardProvisionRequestId(inputDto.getChannelCode(),inputDto.isDummyMerchant())).thenReturn(provisionRequestId);
+
+        assertEquals(createAccountingResultDTO.isSuccess(),result.isSuccess());
+    }
+java.lang.NullPointerException: Cannot invoke "java.math.BigDecimal.add(java.math.BigDecimal)" because the return value of "com.ykb.payments.bill.transaction.external.corebanking.commission.model.response.ResponseCommissionInformation.getTotalCommissionTaxLocalCurrencyAmount()" is null
