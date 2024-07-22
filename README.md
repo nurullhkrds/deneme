@@ -1,10 +1,26 @@
-TypeError: Cannot read properties of null (reading 'querySelector')
-Bootstrap
-C:/Applications/react/deneme/node_modules/ykb-shell/lib/bootstrap.js:100
-   97 | });
-   98 | var sparxEl = document.getElementById(mountId);
-   99 | if (!sparxEl) return;
-> 100 | var mountEl = process.env.NODE_ENV === 'development' && standAloneMode === true ? sparxEl : sparxEl.shadowRoot.querySelector('.sparx-app-container');
-      | ^  101 | _reactDom.default.render( /*#__PURE__*/_react.default.createElement(_ykbUi.StyleSheetManager, {
-  102 |   target: mountEl
-  103 | }, /*#__PURE__*/_react.default.createElement(_ykbUi.ThemeProvider, {
+var sparxEl = document.getElementById(mountId);
+if (!sparxEl) return;
+
+var mountEl;
+if (process.env.NODE_ENV === 'development' && standAloneMode === true) {
+    mountEl = sparxEl;
+} else if (sparxEl.shadowRoot) {
+    mountEl = sparxEl.shadowRoot.querySelector('.sparx-app-container');
+} else {
+    // Handle the case where shadowRoot is not available
+    console.error('shadowRoot is not available on the element');
+    return;
+}
+
+if (!mountEl) {
+    console.error('mountEl is not found');
+    return;
+}
+
+_reactDom.default.render(
+    /*#__PURE__*/_react.default.createElement(_ykbUi.StyleSheetManager, {
+        target: mountEl
+    }, /*#__PURE__*/_react.default.createElement(_ykbUi.ThemeProvider, {
+        // ... other props
+    }))
+);
