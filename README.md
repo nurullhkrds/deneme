@@ -1,271 +1,162 @@
-@Service
-@RequiredArgsConstructor
-public class CardProvisionServiceImpl implements ProvisionService  {
-    private static  final EnumProvisionType provisionType = EnumProvisionType.CARD;
+package com.example.service;
 
-    private final SwtSwitchIntegrationService cardProvisionService;
+import com.example.dto.*;
+import com.example.exception.ServiceCallException;
+import com.example.integration.SwtSwitchIntegrationService;
+import com.example.model.*;
+import com.example.util.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-    private final ProvisionNextService provisionNextService;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-    private final AccountingUtilServiceImpl accountingUtilServiceImpl;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final AccountingUtil accountingDateUtil;
+class CardProvisionServiceImplTest {
 
-    @Override
-    public EnumProvisionType getProvisionType() {
-        return provisionType;
+    @Mock
+    private SwtSwitchIntegrationService cardProvisionService;
+
+    @Mock
+    private ProvisionNextService provisionNextService;
+
+    @Mock
+    private AccountingUtilServiceImpl accountingUtilServiceImpl;
+
+    @Mock
+    private AccountingUtil accountingDateUtil;
+
+    @InjectMocks
+    private CardProvisionServiceImpl cardProvisionServiceImpl;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    @Override
-    public CreateAccountingResultDTO doAccounting(CreateAccountingDTO createAccountingDTO)  {
-        CreateAccountingResultDTO createAccountingResultDTO ;
-
-
-        createAccountingResultDTO = doCardProvision(createAccountingDTO);
-        if(!createAccountingResultDTO.isSuccess()) {
-            return createAccountingResultDTO;
-        }
-
-        /** 2 tip üye iş yeri var DUMMY or REAL.
-         * Kurum Dummy üye işyeri ise provizyon alındıktan sonra muhasebe bizim tarafımızdan yapılır.
-         * Eğer Kurum Gerçek üye işyeri ise biz provizyonu alırız. Finansallaşmasını kart ekibi yapıyor **/
-        if(!createAccountingDTO.isDummyMerchant()) {
-            /** REAL olduğu için Finansallaşması kart ekibi yapıyor. Yani Kart GL'den al Kurum Hesabına geç.
-             * Provizyon ekibi diyor ki biz bu işlemlerin provizyonunu aldık. Al kardeşim bunların finansallaştır.
-             * Muhasebeyi biz yapmadığımız için Dekont üretirken Contract Numarasına ihtiyacımız var.
-             * Kontrat numarası üret ve response'a bas.**/
-
-            Long contractNumber = accountingUtilServiceImpl.getContractNumber();
-            createAccountingResultDTO.setContractNo(contractNumber);
-
-            return createAccountingResultDTO;
-        }else {
-            /** DUMMY olduğu için GL'den aldığımız miktarı Kurum hesabına aktarıyoruz */
-            doGLAccounting(createAccountingDTO,createAccountingResultDTO);
-            return createAccountingResultDTO;
-        }
+    @Test
+    void testGetProvisionType() {
+        assertEquals(EnumProvisionType.CARD, cardProvisionServiceImpl.getProvisionType());
     }
 
+    @Test
+    void testDoAccountingSuccessRealMerchant() {
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        dto.setDummyMerchant(false);
+        dto.setPaymentAmount(BigDecimal.valueOf(100));
+        dto.setCurrency(CurrencyType.TL);
+        dto.setChannelCode("channelCode");
+        dto.setChannelSessionId("sessionId");
+        dto.setBranchCode("branchCode");
+        dto.setMerchantNo("merchantNo");
+        dto.setInstitution(new InstitutionDTO("Institution", 1L, new ProductDTO("Product")));
+        dto.setProvisionDTO(new ProvisionDTO(1L));
+        dto.setInstitutionChannelPymMethodDTO(new InstitutionChannelPymMethodDTO("templateCode", EnumBlockDayStrategyCode.NO_VALOR));
+        dto.setInstitutionChnnlPymMthdAccDTO(new InstitutionChnnlPymMthdAccDTO("accountNo"));
+        dto.setInstitutionChnnlPymMthdPscDTO(new InstitutionChnnlPymMthdPscDTO(1));
 
-    private CreateAccountingResultDTO doCardProvision(CreateAccountingDTO createAccountingDTO)  {
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
-        String provisionRequestId = CommonUtils.generateCreditCardProvisionRequestId(createAccountingDTO.getChannelCode(),createAccountingDTO.isDummyMerchant());
+        CreateAccountingResultDTO cardProvisionResultDTO = new CreateAccountingResultDTO();
+        cardProvisionResultDTO.setSuccess(true);
+        cardProvisionResultDTO.setProvisionRequestId("requestId");
 
-        /** Prepare Card Provision Request **/
-        CardProvisionRequest cardProvisionRequest = prepareCardProvisionRequest(createAccountingDTO, provisionRequestId);
+        when(accountingUtilServiceImpl.getContractNumber()).thenReturn(12345L);
+        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+            .thenReturn(new CardProvisionResponse("guid"));
 
-        CardProvisionResponse cardProvisionResponse;
-        try {
-            cardProvisionResponse = cardProvisionService.doProvision(cardProvisionRequest);
-
-            if (!StringUtils.isEmpty(cardProvisionResponse.getGuid())){
-                createAccountingResultDTO.setOceanTransactionId(Long.parseLong(cardProvisionResponse.getGuid())); //TODO ytodo eslestirme dogru mu teyit edilecek. servis string biz long tutmusuz tabloda teyit edilecek
-            }
-            /** Bizim gonderdigimiz request id yi donuyorlar ileride farklilasma olusursa odeme tablosunda bizin gonderdigimiz olmali onlarin guid sini tutuyoruz zaten
-             * createAccountingResultDTO.setProvisionRequestId(cardProvisionResponse.getRequestId());
-             */
-            createAccountingResultDTO.setProvisionRequestId(provisionRequestId);
-            createAccountingResultDTO.setSuccess(true);
-
-        } catch (Exception e) {
-            /**throw new BusinessException(PaymentExceptions.AccountingExceptions.CREDIT_CARD_PROVISION_NOT_SUCCEEDED); */
-            createAccountingResultDTO.setSuccess(false);
-            createAccountingResultDTO.setError(EnumBillResult.BILL_CREDIT_CARD_PROVISION_ERROR);
-        }
-
-        return createAccountingResultDTO;
-
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
+        assertTrue(result.isSuccess());
+        assertEquals(12345L, result.getContractNo());
+        assertEquals("requestId", result.getProvisionRequestId());
     }
 
+    @Test
+    void testDoAccountingSuccessDummyMerchant() {
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        dto.setDummyMerchant(true);
+        dto.setPaymentAmount(BigDecimal.valueOf(100));
+        dto.setCurrency(CurrencyType.TL);
+        dto.setChannelCode("channelCode");
+        dto.setChannelSessionId("sessionId");
+        dto.setBranchCode("branchCode");
+        dto.setMerchantNo("merchantNo");
+        dto.setInstitution(new InstitutionDTO("Institution", 1L, new ProductDTO("Product")));
+        dto.setProvisionDTO(new ProvisionDTO(1L));
+        dto.setInstitutionChannelPymMethodDTO(new InstitutionChannelPymMethodDTO("templateCode", EnumBlockDayStrategyCode.NO_VALOR));
+        dto.setInstitutionChnnlPymMthdAccDTO(new InstitutionChnnlPymMthdAccDTO("accountNo"));
+        dto.setInstitutionChnnlPymMthdPscDTO(new InstitutionChnnlPymMthdPscDTO(1));
 
-    private CardProvisionRequest prepareCardProvisionRequest(CreateAccountingDTO createAccountingDTO, String provisionRequestId) {
+        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+            .thenReturn(new CardProvisionResponse("guid"));
 
-        CardProvisionRequest cardProvisionRequest = new CardProvisionRequest();
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class)))
+            .thenReturn(new MakeProvisionResponse(true, "contractNo", new ArrayList<>()));
 
-        cardProvisionRequest.setRequestId(provisionRequestId);
-        cardProvisionRequest.setRequestDate(DateUtils.formatLocalDateTime(LocalDateTime.now(), DateUtils.DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS));
-        cardProvisionRequest.setSessionId(createAccountingDTO.getChannelSessionId());
-        cardProvisionRequest.setChannelCode(createAccountingDTO.getChannelCode());
-        cardProvisionRequest.setBranchCode(createAccountingDTO.getBranchCode());
-        cardProvisionRequest.setConsumerChannelCode(createAccountingDTO.getChannelCode());
-        cardProvisionRequest.setChannelEndpoint(BillTransactionConstant.CreditCardProvision.CARD_PROVISION_CHANNEL_ENDPOINT);
-        cardProvisionRequest.setTerminalId(BillTransactionConstant.CreditCardProvision.CARD_PROVISION_TERM_ID);
-
-        cardProvisionRequest.setBankReferenceNumber(BillTransactionConstant.BANK_CODE);
-        cardProvisionRequest.setMerchantCode(createAccountingDTO.getMerchantNo()); /** 1804210497 */
-
-        if(createAccountingDTO.isDummyMerchant()) {
-            cardProvisionRequest.setTransactionType(BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY);
-        }else {
-            cardProvisionRequest.setTransactionType(BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_REAL);
-        }
-
-        cardProvisionRequest.setTransactionEntry(TransactionEntryType.MANUAL.getShortType());
-        cardProvisionRequest.setAmount(createAccountingDTO.getPaymentAmount());
-        cardProvisionRequest.setCurrencyCode(CommonUtils.currencyConverter(createAccountingDTO.getCurrency().getValue()));  //TODO  ytodo currency kontrol edilecek
-        cardProvisionRequest.setDescription(prepareCardProvisionDescription(createAccountingDTO));
-        cardProvisionRequest.setEncryptedPinBlock(null);
-
-        CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO = (CreditCardPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
-
-        CardProvisionCardInfoDTO cardInfoDTO = new CardProvisionCardInfoDTO();
-        cardInfoDTO.setCardNo(creditCardPaymentMethodDetailDTO.getCardNumber());
-        cardInfoDTO.setEmvData("");
-        cardInfoDTO.setEncKeyIndex((short) 0);
-        cardInfoDTO.setEncrypted(Boolean.FALSE);
-        cardInfoDTO.setTrack1Data("");
-        cardInfoDTO.setTrack2Data("");
-        cardInfoDTO.setTrack3Data("");
-        cardProvisionRequest.setCardInfo(cardInfoDTO);
-
-
-        CardProvisionCommissionInfoDTO commissionInfoDTO = new CardProvisionCommissionInfoDTO();
-        /** Commission  **/
-        if (createAccountingDTO.getResponseCommissionInformation() != null) {
-
-            ResponseCommissionInformation responseCommissionInformation = createAccountingDTO.getResponseCommissionInformation() ;
-
-
-            commissionInfoDTO.setReferenceCode(responseCommissionInformation.getInquiryId());
-            commissionInfoDTO.setAmount(responseCommissionInformation.getTotalCommissionTaxLocalCurrencyAmount().add(responseCommissionInformation.getTotalCommissionLocalCurrencyAmount()));
-            cardProvisionRequest.setAmount(createAccountingDTO.getPaymentAmount().add(commissionInfoDTO.getAmount()));
-        }
-
-        commissionInfoDTO.setCurrencyCode(CommonUtils.currencyConverter(createAccountingDTO.getCurrency().getValue())); //TODO  ytodo currency kontrol edilecek
-        cardProvisionRequest.setCommissionInfo(commissionInfoDTO);
-
-        CardProvisionInstallmentInfoDTO installmentInfoDTO = new CardProvisionInstallmentInfoDTO();
-        installmentInfoDTO.setInstallmentAmount(BigDecimal.ZERO);
-        installmentInfoDTO.setInstallmentCount(0);
-        installmentInfoDTO.setInterestRate(BigDecimal.ZERO);
-        installmentInfoDTO.setInterestAmount(BigDecimal.ZERO);
-        cardProvisionRequest.setInstallmentInfo(installmentInfoDTO);
-
-        List<KeyValueDto> additionalTransactionInfoList = new ArrayList<>();
-
-        KeyValueDto additionalProductCodeInfo = new KeyValueDto();
-        additionalProductCodeInfo.setKey("productCode");
-        additionalProductCodeInfo.setValue(createAccountingDTO.getInstitution().getProduct().getProductCampaignCode());
-        additionalTransactionInfoList.add(additionalProductCodeInfo);
-
-        KeyValueDto additionalInstitutionCodeInfo = new KeyValueDto();
-        additionalInstitutionCodeInfo.setKey("institutionCode");
-        additionalInstitutionCodeInfo.setValue(createAccountingDTO.getInstitution().getId().toString());
-        additionalTransactionInfoList.add(additionalInstitutionCodeInfo);
-
-        cardProvisionRequest.setAdditionalTransactionInfoList(additionalTransactionInfoList);
-
-        return cardProvisionRequest;
-
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
+        assertTrue(result.isSuccess());
+        assertEquals("contractNo", result.getContractNo());
     }
 
-    private String prepareCardProvisionDescription(CreateAccountingDTO createAccountingDTO) {
-        return StringUtils.rightPad((createAccountingDTO.getInstitution().getName().length()>25 ? createAccountingDTO.getInstitution().getName().substring(0, 25) :createAccountingDTO.getInstitution().getName()), 40);
+    @Test
+    void testDoAccountingFailure() {
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        dto.setDummyMerchant(false);
+
+        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+            .thenThrow(new RuntimeException("Provision error"));
+
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
+        assertFalse(result.isSuccess());
+        assertEquals(EnumBillResult.BILL_CREDIT_CARD_PROVISION_ERROR, result.getError());
     }
 
-    private CreateAccountingResultDTO doGLAccounting(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO) {
-        MakeProvisionRequest  makeProvisionRequest = prepareProvisionRequest(createAccountingDTO,createAccountingResultDTO);
-        try {
-            MakeProvisionResponse makeProvisionResponse = provisionNextService.makeProvision(makeProvisionRequest); //TODO: Exception mapping yapılacak
-            if(!makeProvisionResponse.isSuccess()){
-                handleException(makeProvisionResponse.getErrorCode(), createAccountingResultDTO);
-                createAccountingResultDTO.setSuccess(false);
-                return createAccountingResultDTO;
-            }
-            if(makeProvisionResponse.getContractNo() == null){
-                createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-                createAccountingResultDTO.setSuccess(false);
-                return createAccountingResultDTO;
-            }
-            createAccountingResultDTO.setContractNo(makeProvisionResponse.getContractNo());
-            createAccountingResultDTO.setPendingDetailList(makeProvisionResponse.getPendingDetailList());
-            createAccountingResultDTO.setSuccess(true);
-        }catch (Exception e){
-            if(e.getCause().getClass().equals(ServiceCallException.class)){
-                Long errorCode =((ServiceCallException) e.getCause()).getErrorCode();
-                handleException(errorCode, createAccountingResultDTO);
-                return createAccountingResultDTO;
-            }
-            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-            createAccountingResultDTO.setSuccess(false);
-        }
-        return createAccountingResultDTO;
+    @Test
+    void testDoCardProvision() {
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        dto.setChannelCode("channelCode");
+        dto.setPaymentAmount(BigDecimal.valueOf(100));
+        dto.setCurrency(CurrencyType.TL);
+        dto.setDummyMerchant(false);
+
+        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+            .thenReturn(new CardProvisionResponse("guid"));
+
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
+        assertTrue(result.isSuccess());
+        assertEquals("guid", result.getProvisionRequestId());
     }
 
+    @Test
+    void testDoGLAccounting() {
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        dto.setPaymentAmount(BigDecimal.valueOf(100));
+        dto.setCurrency(CurrencyType.TL);
+        dto.setChannelTransactionId("transactionId");
+        dto.setInstitutionChannelPymMethodDTO(new InstitutionChannelPymMethodDTO("templateCode", EnumBlockDayStrategyCode.NO_VALOR));
+        dto.setInstitutionChnnlPymMthdAccDTO(new InstitutionChnnlPymMthdAccDTO("accountNo"));
+        dto.setInstitution(new InstitutionDTO("Institution", 1L, new ProductDTO("Product")));
+        dto.setProvisionDTO(new ProvisionDTO(1L));
 
-    private MakeProvisionRequest prepareProvisionRequest(CreateAccountingDTO createAccountingDTO,CreateAccountingResultDTO createAccountingResultDTO )  {
-        MakeProvisionRequest makeProvisionRequest = new MakeProvisionRequest();
-        makeProvisionRequest.setTransactionId(createAccountingDTO.getChannelTransactionId());
-        makeProvisionRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
-        makeProvisionRequest.setChannelCode(createAccountingDTO.getChannelCode());
-        makeProvisionRequest.setUserCode(createAccountingDTO.getAgentCode());
-        makeProvisionRequest.setOperationalBranchCode(createAccountingDTO.getBranchCode());
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class)))
+            .thenReturn(new MakeProvisionResponse(true, "contractNo", new ArrayList<>()));
 
-        List<MakeProvisionInnerDTO> makeProvisionInnerList = new ArrayList<>();
-
-        /** Debit */
-        MakeProvisionInnerDTO debitProvisionInnerRequest = new MakeProvisionInnerDTO();
-        debitProvisionInnerRequest.setAccountNo(null);
-        debitProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
-        debitProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount().negate());
-        debitProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
-        debitProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
-        debitProvisionInnerRequest.setClientNo(createAccountingDTO.getProvisionDTO().getCustomerNo().intValue());
-        debitProvisionInnerRequest.setDelinquencyRequired(false);
-        debitProvisionInnerRequest.setCommissionTax(false);
-        debitProvisionInnerRequest.setCommission(false);
-        debitProvisionInnerRequest.setGlRow(true);
-        makeProvisionInnerList.add(debitProvisionInnerRequest);
-
-
-        /** Credit */
-        MakeProvisionInnerDTO creditProvisionInnerRequest = new MakeProvisionInnerDTO();
-        creditProvisionInnerRequest.setAccountNo(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo());
-        creditProvisionInnerRequest.setCurrency(createAccountingDTO.getCurrency().getValue());
-        creditProvisionInnerRequest.setAmount(createAccountingDTO.getPaymentAmount());
-        creditProvisionInnerRequest.setDescription("Fatura Ödemesi");//TODO: Review
-        creditProvisionInnerRequest.setProvisionCode(createAccountingDTO.getInstitutionChannelPymMethodDTO().getAccountingTemplateCode());
-        creditProvisionInnerRequest.setClientNo(createAccountingDTO.getInstitution().getCustomerNo().intValue());
-        //TODO:LocalAmount dövizlerde
-
-        LocalDate availableLocalDate ;
-        if(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.NO_VALOR)){
-            availableLocalDate = LocalDate.now();
-        }else {
-            availableLocalDate = accountingDateUtil.getAvailDate(createAccountingDTO.getInstitutionChannelPymMethodDTO().getBlockDayType(),
-                    getBlockDayCount(createAccountingDTO.getInstitutionChannelPymMethodDTO(), createAccountingDTO.getInstitutionChnnlPymMthdPscDTO()));
-        }
-        createAccountingResultDTO.setAvailableDate(availableLocalDate);
-        Date availableDate = Date.valueOf(availableLocalDate);
-        Date valueDate = Date.valueOf(availableLocalDate.plusDays(1));
-        creditProvisionInnerRequest.setAvailableDate(availableDate);
-        creditProvisionInnerRequest.setValueDate(valueDate);
-
-        makeProvisionInnerList.add(creditProvisionInnerRequest);
-
-        makeProvisionRequest.setMakeProvisionInnerList(makeProvisionInnerList);
-
-
-        return makeProvisionRequest;
-    }
-    //TODO: utill e al
-    private void handleException(Long errorCode, CreateAccountingResultDTO createAccountingResultDTO){
-        EnumAccountProvisionResult result = EnumAccountProvisionResult.parse(errorCode);
-        createAccountingResultDTO.setSuccess(false);
-        if(result == null){
-            createAccountingResultDTO.setError(EnumBillResult.GENERIC_UNKNOWN_ERROR);
-            return;
-        }
-        createAccountingResultDTO.setError(result.getBillCode());
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
+        assertTrue(result.isSuccess());
+        assertEquals("contractNo", result.getContractNo());
     }
 
-    private Integer getBlockDayCount(InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO, InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO){
-        if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.DAILY)){
-            return  institutionChnnlPymMthdPscDTO.getBlockDayCount(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
-        }else if(institutionChannelPymMethodDTO.getBlockDayStrategyCode().equals(EnumBlockDayStrategyCode.CHANNEL)){
-            return  institutionChannelPymMethodDTO.getBlockDayCount();
-        }else{
-            return 0;
-        }
+    @Test
+    void testHandleException() {
+        CreateAccountingResultDTO resultDTO = new CreateAccountingResultDTO();
+        cardProvisionServiceImpl.handleException(123L, resultDTO);
+        assertFalse(resultDTO.isSuccess());
+        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
     }
 }
