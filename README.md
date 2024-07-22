@@ -1,57 +1,87 @@
-ublic class DateUtils {
-    //TODO common a tasinacak
-    private DateUtils() {
-        throw new IllegalStateException("Utility class");
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DateUtilsTest {
+
+    @Test
+    void whenInstantiatingDateUtils_thenThrowException() {
+        Executable executable = DateUtils::new;
+        IllegalStateException exception = assertThrows(IllegalStateException.class, executable);
+        assertEquals("Utility class", exception.getMessage());
     }
 
-    public static final String DATE_FORMAT_TOKEN_WITH_TIME_ZONE = "yyyyMMddHHmmss";
-
-    public static final String DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS = "yyyyMMddHHmmssSSS";
-
-    public static final String DATE_FORMAT_DD_MM_YYYY_WITH_SLASH = "dd/MM/yyyy";
-
-    public static final String DATE_FORMAT_YYYY_MM_DD_WITH_HYPHEN = "yyyy-MM-dd";
-
-    public static String formatLocalDateTime(LocalDateTime ldt, String pattern) {
-        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
-        return ldt.format(customFormatter);
+    @Test
+    void whenFormattingLocalDateTime_thenReturnFormattedString() {
+        LocalDateTime dateTime = LocalDateTime.of(2023, 7, 20, 15, 30, 45);
+        String pattern = DateUtils.DATE_FORMAT_TOKEN_WITH_TIME_ZONE;
+        String formatted = DateUtils.formatLocalDateTime(dateTime, pattern);
+        assertEquals("20230720153045", formatted);
     }
 
-    public static LocalDateTime parseLocalDateTime(String ldtStr, String pattern) {
-        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
-        return LocalDateTime.parse(ldtStr, customFormatter);
+    @Test
+    void whenParsingValidLocalDateTime_thenReturnLocalDateTime() {
+        String dateTimeString = "20230720153045";
+        String pattern = DateUtils.DATE_FORMAT_TOKEN_WITH_TIME_ZONE;
+        LocalDateTime parsedDateTime = DateUtils.parseLocalDateTime(dateTimeString, pattern);
+        assertEquals(LocalDateTime.of(2023, 7, 20, 15, 30, 45), parsedDateTime);
     }
 
-    public static String formatLocalDate(LocalDate ld, String pattern) {
-        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
-        return ld.format(customFormatter);
+    @Test
+    void whenFormattingLocalDate_thenReturnFormattedString() {
+        LocalDate date = LocalDate.of(2023, 7, 20);
+        String pattern = DateUtils.DATE_FORMAT_DD_MM_YYYY_WITH_SLASH;
+        String formatted = DateUtils.formatLocalDate(date, pattern);
+        assertEquals("20/07/2023", formatted);
     }
 
-    public static LocalDate parseLocalDate(String ldStr, String pattern) {
-        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
-        return LocalDate.parse(ldStr, customFormatter);
+    @Test
+    void whenParsingValidLocalDate_thenReturnLocalDate() {
+        String dateString = "20/07/2023";
+        String pattern = DateUtils.DATE_FORMAT_DD_MM_YYYY_WITH_SLASH;
+        LocalDate parsedDate = DateUtils.parseLocalDate(dateString, pattern);
+        assertEquals(LocalDate.of(2023, 7, 20), parsedDate);
     }
 
-    public static Date convertLocalDateToDate(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    @Test
+    void whenConvertingLocalDateToDate_thenReturnDate() {
+        LocalDate localDate = LocalDate.of(2023, 7, 20);
+        Date date = DateUtils.convertLocalDateToDate(localDate);
+        assertEquals(Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant()), date);
     }
 
-    public static LocalDate convertDateTOLocalDate(Date date) {
-        return date.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+    @Test
+    void whenConvertingDateToLocalDate_thenReturnLocalDate() {
+        Date date = Date.from(LocalDate.of(2023, 7, 20).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        LocalDate localDate = DateUtils.convertDateTOLocalDate(date);
+        assertEquals(LocalDate.of(2023, 7, 20), localDate);
     }
 
-    public static Date getCurrentDate() {
-        return Calendar.getInstance().getTime();
+    @Test
+    void whenGettingCurrentDate_thenReturnNonNullDate() {
+        Date currentDate = DateUtils.getCurrentDate();
+        assertNotNull(currentDate);
     }
 
-    public static long findReldayDiff(LocalDate ld) {
-        LocalDate firstDate = LocalDate.of(1957, 01, 01);
-        return firstDate.until(ld, ChronoUnit.DAYS);
+    @Test
+    void whenFindingRelDayDiffForLocalDate_thenReturnCorrectDays() {
+        LocalDate date = LocalDate.of(2023, 7, 20);
+        long daysDiff = DateUtils.findReldayDiff(date);
+        LocalDate referenceDate = LocalDate.of(1957, 1, 1);
+        assertEquals(referenceDate.until(date, ChronoUnit.DAYS), daysDiff);
     }
 
-    public static long findRelDayDiff(LocalDateTime ld) {
-        return findReldayDiff(ld.toLocalDate());
+    @Test
+    void whenFindingRelDayDiffForLocalDateTime_thenReturnCorrectDays() {
+        LocalDateTime dateTime = LocalDateTime.of(2023, 7, 20, 15, 30, 45);
+        long daysDiff = DateUtils.findRelDayDiff(dateTime);
+        LocalDate referenceDate = LocalDate.of(1957, 1, 1);
+        assertEquals(referenceDate.until(dateTime.toLocalDate(), ChronoUnit.DAYS), daysDiff);
     }
 }
