@@ -1,56 +1,57 @@
- @Test
-    public void testCurrencyConverter_NullCurrency() {
-        assertEquals(BillTransactionConstant.YTL_CURRENCY, YourClass.currencyConverter(null));
+ublic class DateUtils {
+    //TODO common a tasinacak
+    private DateUtils() {
+        throw new IllegalStateException("Utility class");
     }
 
-    @Test
-    public void testCurrencyConverter_TLCurrency() {
-        assertEquals(BillTransactionConstant.YTL_CURRENCY, YourClass.currencyConverter(BillTransactionConstant.TL_CURRENCY));
+    public static final String DATE_FORMAT_TOKEN_WITH_TIME_ZONE = "yyyyMMddHHmmss";
+
+    public static final String DATE_FORMAT_YYYY_MM_DD_HH_MM_SS_SSS = "yyyyMMddHHmmssSSS";
+
+    public static final String DATE_FORMAT_DD_MM_YYYY_WITH_SLASH = "dd/MM/yyyy";
+
+    public static final String DATE_FORMAT_YYYY_MM_DD_WITH_HYPHEN = "yyyy-MM-dd";
+
+    public static String formatLocalDateTime(LocalDateTime ldt, String pattern) {
+        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
+        return ldt.format(customFormatter);
     }
 
-    @Test
-    public void testCurrencyConverter_TryCurrency() {
-        assertEquals(BillTransactionConstant.YTL_CURRENCY, YourClass.currencyConverter(BillTransactionConstant.TRY_CURRENCY));
+    public static LocalDateTime parseLocalDateTime(String ldtStr, String pattern) {
+        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
+        return LocalDateTime.parse(ldtStr, customFormatter);
     }
 
-    @Test
-    public void testCurrencyConverter_OtherCurrency() {
-        String otherCurrency = "USD";
-        assertEquals(otherCurrency, YourClass.currencyConverter(otherCurrency));
+    public static String formatLocalDate(LocalDate ld, String pattern) {
+        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
+        return ld.format(customFormatter);
     }
 
-    // Test for generateCreditCardProvisionRequestId method
-    @Test
-    public void testGenerateCreditCardProvisionRequestId_DummyMerchant() {
-        String channelCode = "123";
-        String requestId = YourClass.generateCreditCardProvisionRequestId(channelCode, true);
-        assertTrue(requestId.startsWith(BillTransactionConstant.BILLPRE + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY + channelCode));
-        assertTrue(requestId.length() > BillTransactionConstant.BILLPRE.length() + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY.length() + channelCode.length());
+    public static LocalDate parseLocalDate(String ldStr, String pattern) {
+        DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern(pattern);
+        return LocalDate.parse(ldStr, customFormatter);
     }
 
-    @Test
-    public void testGenerateCreditCardProvisionRequestId_RealMerchant() {
-        String channelCode = "123";
-        String requestId = YourClass.generateCreditCardProvisionRequestId(channelCode, false);
-        assertTrue(requestId.startsWith(BillTransactionConstant.BILLPRE + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_REAL + channelCode));
-        assertTrue(requestId.length() > BillTransactionConstant.BILLPRE.length() + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_REAL.length() + channelCode.length());
+    public static Date convertLocalDateToDate(LocalDate localDate) {
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
-    // Test for maskCreditCardNo method
-    @Test
-    public void testMaskCreditCardNo() {
-        String cardNo = "1234567890123456";
-        String maskChar = "*";
-        Integer maskCharLength = 6;
-        String expectedMaskedCardNo = "123456******3456";
-        assertEquals(expectedMaskedCardNo, YourClass.maskCreditCardNo(cardNo, maskChar, maskCharLength));
+    public static LocalDate convertDateTOLocalDate(Date date) {
+        return date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 
-    @Test
-    public void testMaskCreditCardNo_DifferentMaskChar() {
-        String cardNo = "1234567890123456";
-        String maskChar = "#";
-        Integer maskCharLength = 6;
-        String expectedMaskedCardNo = "123456######3456";
-        assertEquals(expectedMaskedCardNo, YourClass.maskCreditCardNo(cardNo, maskChar, maskCharLength));
+    public static Date getCurrentDate() {
+        return Calendar.getInstance().getTime();
     }
+
+    public static long findReldayDiff(LocalDate ld) {
+        LocalDate firstDate = LocalDate.of(1957, 01, 01);
+        return firstDate.until(ld, ChronoUnit.DAYS);
+    }
+
+    public static long findRelDayDiff(LocalDateTime ld) {
+        return findReldayDiff(ld.toLocalDate());
+    }
+}
