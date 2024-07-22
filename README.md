@@ -1,31 +1,56 @@
-public static String currencyConverter(String currency) {
-        if (currency == null || currency.equals(BillTransactionConstant.TL_CURRENCY) || currency.equals(BillTransactionConstant.TRY_CURRENCY)) {
-            return BillTransactionConstant.YTL_CURRENCY;
-        }
-        return currency;
+ @Test
+    public void testCurrencyConverter_NullCurrency() {
+        assertEquals(BillTransactionConstant.YTL_CURRENCY, YourClass.currencyConverter(null));
     }
 
-    public static String generateCreditCardProvisionRequestId(String channelCode,boolean isDummyMerchant) {
-
-        StringBuilder requestIdBuilder = new StringBuilder();
-
-        requestIdBuilder.append(BillTransactionConstant.BILLPRE);
-        if(isDummyMerchant) { 
-        	requestIdBuilder.append(BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY);
-        }else {
-        	requestIdBuilder.append(BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_REAL);
-        }
-        
-        requestIdBuilder.append(channelCode);
-        String uuidAsString = UUID.randomUUID().toString().replace("-", "");
-        requestIdBuilder.append(uuidAsString);
-
-        return requestIdBuilder.toString();
-
+    @Test
+    public void testCurrencyConverter_TLCurrency() {
+        assertEquals(BillTransactionConstant.YTL_CURRENCY, YourClass.currencyConverter(BillTransactionConstant.TL_CURRENCY));
     }
 
-    public static String maskCreditCardNo(String cardNo, String maskChar, Integer maskCharLength) {
-        return StringUtils.substring(cardNo, 0, 6) +
-                StringUtils.repeat(maskChar, maskCharLength) +
-                StringUtils.substring(cardNo, cardNo.length() - 4);
+    @Test
+    public void testCurrencyConverter_TryCurrency() {
+        assertEquals(BillTransactionConstant.YTL_CURRENCY, YourClass.currencyConverter(BillTransactionConstant.TRY_CURRENCY));
+    }
+
+    @Test
+    public void testCurrencyConverter_OtherCurrency() {
+        String otherCurrency = "USD";
+        assertEquals(otherCurrency, YourClass.currencyConverter(otherCurrency));
+    }
+
+    // Test for generateCreditCardProvisionRequestId method
+    @Test
+    public void testGenerateCreditCardProvisionRequestId_DummyMerchant() {
+        String channelCode = "123";
+        String requestId = YourClass.generateCreditCardProvisionRequestId(channelCode, true);
+        assertTrue(requestId.startsWith(BillTransactionConstant.BILLPRE + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY + channelCode));
+        assertTrue(requestId.length() > BillTransactionConstant.BILLPRE.length() + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_DUMMY.length() + channelCode.length());
+    }
+
+    @Test
+    public void testGenerateCreditCardProvisionRequestId_RealMerchant() {
+        String channelCode = "123";
+        String requestId = YourClass.generateCreditCardProvisionRequestId(channelCode, false);
+        assertTrue(requestId.startsWith(BillTransactionConstant.BILLPRE + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_REAL + channelCode));
+        assertTrue(requestId.length() > BillTransactionConstant.BILLPRE.length() + BillTransactionConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE_REAL.length() + channelCode.length());
+    }
+
+    // Test for maskCreditCardNo method
+    @Test
+    public void testMaskCreditCardNo() {
+        String cardNo = "1234567890123456";
+        String maskChar = "*";
+        Integer maskCharLength = 6;
+        String expectedMaskedCardNo = "123456******3456";
+        assertEquals(expectedMaskedCardNo, YourClass.maskCreditCardNo(cardNo, maskChar, maskCharLength));
+    }
+
+    @Test
+    public void testMaskCreditCardNo_DifferentMaskChar() {
+        String cardNo = "1234567890123456";
+        String maskChar = "#";
+        Integer maskCharLength = 6;
+        String expectedMaskedCardNo = "123456######3456";
+        assertEquals(expectedMaskedCardNo, YourClass.maskCreditCardNo(cardNo, maskChar, maskCharLength));
     }
