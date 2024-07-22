@@ -1,19 +1,31 @@
-@Test
-void whenGetProvisionServiceWithValidType_thenShouldReturnService() {
-    // Arrange
-    ProvisionService mockProvisionService = mock(ProvisionService.class);
-    EnumProvisionType validProvisionType = EnumProvisionType.CARD;
 
-    List<ProvisionService> mockServices = List.of(mockProvisionService);
-    provisionServices = mock(List.class);
+public class ProvisionFactoryTest {
 
-    when(provisionServices.stream()).thenReturn(mockServices.stream());
-    when(mockProvisionService.getProvisionType()).thenReturn(validProvisionType);
+    @Mock
+    private List<ProvisionService> provisionServices;
 
-    // Act
-    ProvisionService result = provisionFactory.getProvisionService(validProvisionType);
+    @InjectMocks
+    private ProvisionFactory provisionFactory;
 
-    // Assert
-    assertNotNull(result);
-    assertEquals(mockProvisionService, result);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void whenGetProvisionServiceWithValidType_thenShouldReturnService() {
+        // Arrange
+        ProvisionService mockProvisionService = mock(ProvisionService.class);
+        EnumProvisionType validProvisionType = EnumProvisionType.CARD;
+
+        when(provisionServices.stream()).thenReturn(Stream.of(mockProvisionService));
+        when(mockProvisionService.getProvisionType()).thenReturn(validProvisionType);
+
+        // Act
+        ProvisionService result = provisionFactory.getProvisionService(validProvisionType);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockProvisionService, result);
+    }
 }
