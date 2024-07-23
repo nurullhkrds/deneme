@@ -1,5 +1,62 @@
-{
-  "returnMapCode": "exampleCode",
-  "bankReturnCode": "exampleBankCode",
-  "institutionReturnCode": "exampleInstitutionCode"
+@ExtendWith(MockitoExtension.class)
+public class ReverseProvisionFactoryTest {
+
+    @Mock
+    private ReverseProvisionService reverseProvisionService1;
+
+    @Mock
+    private ReverseProvisionService reverseProvisionService2;
+
+    @InjectMocks
+    private ReverseProvisionFactory reverseProvisionFactory;
+
+    private EnumProvisionType provisionType1 = EnumProvisionType.CARD;
+    private EnumProvisionType provisionType2 = EnumProvisionType.ACCOUNT;
+
+    @BeforeEach
+    public void setUp() {
+        when(reverseProvisionService1.getProvisionType()).thenReturn(provisionType1);
+        when(reverseProvisionService2.getProvisionType()).thenReturn(provisionType2);
+
+        List<ReverseProvisionService> services = Arrays.asList(reverseProvisionService1, reverseProvisionService2);
+
+        
+
+    }
+
+    @Test
+    public void testGetReverseProvisionService_ValidProvisionType1() {
+        ReverseProvisionService service = reverseProvisionFactory.getReverseProvisionService(provisionType1);
+        assertNotNull(service);
+        assertEquals(reverseProvisionService1, service);
+    }
+
+    @Test
+    public void testGetReverseProvisionService_ValidProvisionType2() {
+        ReverseProvisionService service = reverseProvisionFactory.getReverseProvisionService(provisionType2);
+        assertNotNull(service);
+        assertEquals(reverseProvisionService2, service);
+    }
+
+
 }
+
+
+
+@Component
+public class ReverseProvisionFactory {
+	
+	   private static Map<EnumProvisionType, ReverseProvisionService> reverseProvisionServiceMap = null;
+
+	    @Autowired
+		private ReverseProvisionFactory(List<ReverseProvisionService> reverseProvisionServices){
+	        reverseProvisionServiceMap = reverseProvisionServices.stream().collect(Collectors.toUnmodifiableMap(ReverseProvisionService::getProvisionType, Function.identity()));
+	    }
+
+	    public ReverseProvisionService getReverseProvisionService(EnumProvisionType provisionType) {
+	        return   Optional.ofNullable(reverseProvisionServiceMap.get(provisionType)).orElseThrow(IllegalArgumentException::new);
+	    }
+
+}
+
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionFactory.getReverseProvisionService(com.ykb.payments.bill.transaction.institution.enums.EnumProvisionType)" because "this.reverseProvisionFactory" is null
