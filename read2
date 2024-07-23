@@ -1,22 +1,9 @@
-@Override
-public DataResult<List<ReturnMapDTO>> searchReturnMaps(ReturnMapSearchCriteria request) {
-    Specification<ReturnMap> spec = Specification.where(null);
-
-    if (request.getReturnMapCode() != null && !request.getReturnMapCode().isEmpty()) {
-        spec = spec.and(ReturnMapCriteria.hasReturnMapCode(request.getReturnMapCode()));
-    }
-    if (request.getBankReturnCode() != null && !request.getBankReturnCode().isEmpty()) {
-        spec = spec.and(ReturnMapCriteria.hasBankErrorCode(request.getBankReturnCode()));
-    }
-    if (request.getInstitutionErrorCode() != null && !request.getInstitutionErrorCode().isEmpty()) {
-        spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(request.getInstitutionErrorCode()));
-    }
-
-    List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
-    List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
-    boolean success = !returnMapDTOList.isEmpty();
-    String message = success ? "Results listed" : "No results found";
-    int statusCode = success ? HttpStatus.OK.value() : HttpStatus.NOT_FOUND.value();
-
-    return new DataResult<>(success, message, returnMapDTOList, statusCode);
+{
+  "exceptionData": {
+    "applicationName": "PAYMENTS.BILL.bill-transaction",
+    "errorCode": -995,
+    "errorMessage": "Invalid request: Required request body is missing: public org.springframework.http.ResponseEntity<com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult<java.util.List<com.ykb.payments.bill.transaction.adapter.dto.ReturnMapDTO>>> com.ykb.payments.bill.transaction.adapter.web.ReturnMapController.searchReturnMaps(com.ykb.payments.bill.transaction.adapter.web.request.ReturnMapSearchCriteria)",
+    "traceId": null
+  },
+  "parameters": {}
 }
