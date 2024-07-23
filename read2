@@ -1,161 +1,57 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Col, Row, Table, TableHeader, Tooltip } from 'ykb-ui';
+import { useIntl, useShellCommunicator } from "ykb-shell";
+import { useSelector, useDispatch } from 'react-redux';
 import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
-import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
-import { useIntl, withPermission, useShellCommunicator } from "ykb-shell";
-import { useSelector } from 'react-redux';
 
 const columns = [
   {
-    title: 'Parent Title',
-    data: 'asd',
-    children: [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        sortable: true,
-        filter: true,
-        filterMultiple: true,
-        sorter: (a, b) => {
-          var nameA = a.name.toUpperCase(); // ignore upper and lowercase
-          var nameB = b.name.toUpperCase(); // ignore upper and lowercase
-          if (nameA < nameB) {
-            return -1;
-          }
-          if (nameA > nameB) {
-            return 1;
-          }
-
-          // names must be equal
-          return 0;
-        },
-      },
-      {
-        title: 'Age',
-        dataIndex: 'age',
-        type: 'number',
-        sortable: true,
-      },
-      {
-        title: 'Iban',
-        dataIndex: 'iban',
-        type: 'iban',
-        render: data => {
-          let arr = data.split(',');
-          if (!data) return;
-          return (
-            <Tooltip
-              placement="left"
-              overlay={arr.map(item => {
-                return (
-                  <span>
-                    {item}
-                    <br />
-                  </span>
-                );
-              })}>
-              <span>
-                {data.length > 80 ? data.slice(0, 80) + ' ...' : data}
-              </span>
-            </Tooltip>
-          );
-        },
-      },
-      {
-        title: 'Currency',
-        dataIndex: 'currency',
-        type: 'currency',
-        currencyType: 'USD',
-      },
-      {
-        title: 'Date',
-        dataIndex: 'birthdate',
-        type: 'date',
-        onCell: (record, index) => ({
-          onClick(e) {
-            console.log('Click cell', ` row ${index}`, record, e.target);
-          },
-        }),
-      },
-      {
-        title: 'Time',
-        dataIndex: 'recordtime',
-        type: 'time',
-      },
-      {
-        title: 'Date Time',
-        dataIndex: 'lastmodified',
-        type: 'datetime',
-      },
-    ],
+    title: 'Return Map Code',
+    dataIndex: 'returnMapCode',
+    sortable: true,
   },
   {
-    dataIndex: 'custom',
-    type: {
-      action: 'detail',
-      handler: (record, event) => {
-        console.log('detail click:', record);
-      },
-    },
+    title: 'Institution Return Code',
+    dataIndex: 'institutionReturnCode',
   },
   {
-    dataIndex: 'custom',
-    type: {
-      action: 'edit',
-      hidden: record => {
-        return record.key % 2 === 0;
-      },
-      handler: (record, event) => {
-        console.log('icon-click:', record);
-      },
-      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
-      disabled: true,
-    },
+    title: 'Institution Return Text',
+    dataIndex: 'institutionReturnText',
   },
   {
-    dataIndex: 'custom2',
-    type: {
-      action: 'delete',
-      disabled: record => {
-        return record.key % 3 === 0;
-      },
-      handler: (record, event) => {
-        console.log('icon-click:', record);
-      },
-    },
+    title: 'Bank Return Code',
+    dataIndex: 'bankReturnCode',
+  },
+  {
+    title: 'Bank Return Text',
+    dataIndex: 'bankReturnText',
+  },
+  {
+    title: 'Return Type',
+    dataIndex: 'returnType',
+  },
+  {
+    title: 'Is Reversible',
+    dataIndex: 'isReversible',
+    render: value => (value ? 'Yes' : 'No'),
   },
 ];
 
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    name: `a${i}`,
-    age: 42,
-    iban: `TR100006400000124122142141`,
-    birthdate: '22-11-2017',
-    recordtime: '12:55',
-    currency: 100.5,
-    lastmodified: '22-11-2017 15:55:22',
-  });
-}
-
-const rowSelection = {
-  getCheckboxProps: record => ({
-    disabled: record.name === 'a5',
-  }),
-};
-
 function ReturnMapServiceParametersTable() {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [returnMapData, setReturnMapData] = useState([]);
   const { callApi } = useShellCommunicator();
-
+  const dispatch = useDispatch();
   const list = useSelector((state) => state.returnMap.list);
 
+  useEffect(() => {
+    // Fetch data when component mounts
+    dispatch(fetchReturnMapList());
+  }, [dispatch]);
 
-
-
+  useEffect(() => {
+    setReturnMapData(list);
+  }, [list]);
 
   const onChange = (selectedRowKeys, selectedRows) => {
     console.log(
@@ -171,11 +67,13 @@ function ReturnMapServiceParametersTable() {
   return (
     <Table
       rowSelection={{
-        getCheckboxProps: rowSelection.getCheckboxProps,
+        getCheckboxProps: record => ({
+          disabled: record.name === 'a5',
+        }),
         selectedRowKeys: selectedRowKeys,
         onChange: onChange,
       }}
-      data={data}
+      data={returnMapData}
       columns={columns}
       pagination={{ showTotal: false }}
       title={
@@ -202,14 +100,12 @@ function ReturnMapServiceParametersTable() {
           </Row>
         </React.Fragment>
       )}
-      emptyText={() => {
-        return (
-          <React.Fragment>
-            Yeni eklemek için
-            <Button link="#">tıklayınız.</Button>
-          </React.Fragment>
-        );
-      }}
+      emptyText={() => (
+        <React.Fragment>
+          Yeni eklemek için
+          <Button link="#">tıklayınız.</Button>
+        </React.Fragment>
+      )}
       onRow={(record, index) => ({
         onClick: () => {
           console.log('onRowClick', record, index);
@@ -217,59 +113,6 @@ function ReturnMapServiceParametersTable() {
       })}
     />
   );
-};
+}
 
-
-
-export default ReturnMapServiceParametersTable
- bu benim table componentim.... 
-
-
-
-
-
-
-
-
-[
-
-
-   {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },
-{
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },{
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },{
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        }
-    ]
+export default ReturnMapServiceParametersTable;
