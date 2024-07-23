@@ -1,52 +1,33 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+returnMaps/search şöyle bir apim var bu api aynı zamanda critearya dinamik bir api yani 
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import java.lang.reflect.Constructor;
-import java.util.List;
+  @GetMapping("/search")
+    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
+            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
+            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
+            @RequestParam(required = false) @Parameter(name = "institutionCode") String institutionErrorCode) {
+        DataResult<List<ReturnMapDTO>> searhResult = adapterReturnMapClient.searchReturnMaps(returnMapCode,bankReturnCode,institutionErrorCode);
+        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
+    } .
+bu şekil "    @Override
+    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode,String bankReturnCode,String institutionErrorCode) {
+        Specification<ReturnMap> spec = Specification.where(null);
 
-public class ReverseProvisionFactoryTest {
+        if (returnMapCode != null && !returnMapCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasReturnMapCode(returnMapCode));
+        }
+        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
+        }
+        if (institutionErrorCode != null && !institutionErrorCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionErrorCode));
+        }
 
-    @Mock
-    private ReverseProvisionService mockService1;
+        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
+        boolean success = !returnMapDTOList.isEmpty();
+        String message = success ? "Results listed" : "No results found";
+        int statusCode = success ? HttpStatus.OK.value() : HttpStatus.NOT_FOUND.value();
 
-    @Mock
-    private ReverseProvisionService mockService2;
-
-    private ReverseProvisionFactory factory;
-
-    @BeforeEach
-    public void setUp() throws Exception {
-        MockitoAnnotations.openMocks(this);
-
-        // Set up mock behavior
-        when(mockService1.getProvisionType()).thenReturn(EnumProvisionType.TYPE1);
-        when(mockService2.getProvisionType()).thenReturn(EnumProvisionType.TYPE2);
-
-        // Use reflection to create an instance of ReverseProvisionFactory
-        Constructor<ReverseProvisionFactory> constructor = ReverseProvisionFactory.class.getDeclaredConstructor(List.class);
-        constructor.setAccessible(true);
-        factory = constructor.newInstance(List.of(mockService1, mockService2));
-    }
-
-    @Test
-    public void testGetReverseProvisionService_withValidType_returnsService() {
-        // Act
-        ReverseProvisionService result = factory.getReverseProvisionService(EnumProvisionType.TYPE1);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(mockService1, result);
-    }
-
-    @Test
-    public void testGetReverseProvisionService_withInvalidType_throwsException() {
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> 
-            factory.getReverseProvisionService(EnumProvisionType.INVALID_TYPE));
-    }
-}
+        return new DataResult<>(success, message, returnMapDTOList, statusCode);
+    }" bu benim servicem gördüğün gibi dinamik.. parametleri vermezsen tüm verileri getirir verirsen ona göre filtreler.
