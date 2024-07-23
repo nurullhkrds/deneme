@@ -1,118 +1,57 @@
-import React, { useEffect, useState } from 'react'
-import { Button, Col, Row, Table, TableHeader, Tooltip } from 'ykb-ui';
-import { useIntl, useShellCommunicator } from "ykb-shell";
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Row, Col, Input, Spin, Table, Button } from 'ykb-ui';
 
-const columns = [
-  {
-    title: 'Return Map Code',
-    dataIndex: 'returnMapCode',
-    sortable: true,
-  },
-  {
-    title: 'Institution Return Code',
-    dataIndex: 'institutionReturnCode',
-  },
-  {
-    title: 'Institution Return Text',
-    dataIndex: 'institutionReturnText',
-  },
-  {
-    title: 'Bank Return Code',
-    dataIndex: 'bankReturnCode',
-  },
-  {
-    title: 'Bank Return Text',
-    dataIndex: 'bankReturnText',
-  },
-  {
-    title: 'Return Type',
-    dataIndex: 'returnType',
-  },
-  {
-    title: 'Is Reversible',
-    dataIndex: 'isReversible',
-    render: value => (value ? 'Yes' : 'No'),
-  },
-];
+import { useShellCommunicator } from 'ykb-shell';
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import { setError, setReturnMapList, setSpinning } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
+import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
 
-function ReturnMapServiceParametersTable() {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [returnMapData, setReturnMapData] = useState([]);
-  const { callApi } = useShellCommunicator();
+function ReturnMapServiceParameters() {
   const dispatch = useDispatch();
-  const list = useSelector((state) => state.returnMap.list);
+  const { callApi } = useShellCommunicator();
 
-  useEffect(() => {
-    // Fetch data when component mounts
-    dispatch(fetchReturnMapList());
-  }, [dispatch]);
-
-  useEffect(() => {
-    setReturnMapData(list);
-  }, [list]);
-
-  const onChange = (selectedRowKeys, selectedRows) => {
-    console.log(
-      'selectedRowKeys:',
-      selectedRowKeys,
-      'selectedRows: ',
-      selectedRows
-    );
-
-    setSelectedRowKeys(selectedRowKeys);
+  const fetchInstitutionsData = async (searchCriteria = {}) => {
+    dispatch(setSpinning(true));
+    try {
+      let response = await sendSearchReturnMapRequest(callApi, searchCriteria);
+      dispatch(setReturnMapList(response));
+    } catch (error) {
+      dispatch(setError(error));
+      console.error("fetchInstitutionsData", error);
+    } finally {
+      dispatch(setSpinning(false));
+    }
   };
 
+  useEffect(() => {
+    fetchInstitutionsData();
+  }, []);
+
   return (
-    <Table
-      rowSelection={{
-        getCheckboxProps: record => ({
-          disabled: record.name === 'a5',
-        }),
-        selectedRowKeys: selectedRowKeys,
-        onChange: onChange,
-      }}
-      data={returnMapData}
-      columns={columns}
-      pagination={{ showTotal: false }}
-      title={
-        <TableHeader
-          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
-        />
-      }
-      footer={() => (
-        <React.Fragment>
-          <Row>
-            <Col xs={24}>
-              <p
-                style={{
-                  margin: '0',
-                  height: '30px',
-                  lineHeight: '30px',
-                }}>
-                Lorem ipsum dolor sit amet
-                <Button size="small" className="right-floated">
-                  Button 1
-                </Button>
-              </p>
-            </Col>
-          </Row>
-        </React.Fragment>
-      )}
-      emptyText={() => (
-        <React.Fragment>
-          Yeni eklemek için
-          <Button link="#">tıklayınız.</Button>
-        </React.Fragment>
-      )}
-      onRow={(record, index) => ({
-        onClick: () => {
-          console.log('onRowClick', record, index);
-        },
-      })}
-    />
+    <>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch fetchInstitutionsData={fetchInstitutionsData} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable />
+        </Col>
+      </Row>
+      <Row style={{ marginTop: "25px" }}>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <Button>Ekle</Button>
+          <Button>Güncelle</Button>
+          <Button>Kopyala</Button>
+        </Col>
+      </Row>
+    </>
   );
 }
 
-export default ReturnMapServiceParametersTable;
+export default ReturnMapServiceParameters;
+
+
