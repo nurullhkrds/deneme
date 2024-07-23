@@ -1,100 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Col, Row, Table, TableHeader } from 'ykb-ui';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import { createSlice } from '@reduxjs/toolkit';
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
 
-const columns = [
-  {
-    title: 'Return Map Code',
-    dataIndex: 'returnMapCode',
-    sortable: true,
+const returnMapSlice = createSlice({
+  name: 'returnMap',
+  initialState: {
+    list: [],
+    spinning: false,
+    error: null,
   },
-  {
-    title: 'Institution Return Code',
-    dataIndex: 'institutionReturnCode',
-    sortable: true,
+  reducers: {
+    setReturnMapList: (state, action) => {
+      state.list = action.payload;
+    },
+    setSpinning: (state, action) => {
+      state.spinning = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
   },
-  {
-    title: 'Institution Return Text',
-    dataIndex: 'institutionReturnText',
-  },
-  {
-    title: 'Bank Return Code',
-    dataIndex: 'bankReturnCode',
-  },
-  {
-    title: 'Bank Return Text',
-    dataIndex: 'bankReturnText',
-  },
-  {
-    title: 'Return Type',
-    dataIndex: 'returnType',
-  },
-  {
-    title: 'Is Reversible',
-    dataIndex: 'isReversible',
-    render: (text) => (text ? 'Yes' : 'No'),
-  },
-];
+});
 
-function ReturnMapServiceParametersTable() {
-  const dispatch = useDispatch();
-  const { list, spinning } = useSelector((state) => state.returnMap);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+export const { setReturnMapList, setSpinning, setError } = returnMapSlice.actions;
+export default returnMapSlice.reducer;
 
-  useEffect(() => {
-    dispatch(fetchReturnMapList({}));
-  }, [dispatch]);
-
-  const onChange = (selectedRowKeys, selectedRows) => {
-    setSelectedRowKeys(selectedRowKeys);
-  };
-
-  return (
-    <Table
-      rowSelection={{
-        selectedRowKeys,
-        onChange,
-      }}
-      data={list}
-      columns={columns}
-      pagination={{ showTotal: false }}
-      title={
-        <TableHeader
-          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
-        />
-      }
-      footer={() => (
-        <Row>
-          <Col xs={24}>
-            <p
-              style={{
-                margin: '0',
-                height: '30px',
-                lineHeight: '30px',
-              }}
-            >
-              Lorem ipsum dolor sit amet
-              <Button size="small" className="right-floated">
-                Button 1
-              </Button>
-            </p>
-          </Col>
-        </Row>
-      )}
-      emptyText={() => (
-        <>
-          Yeni eklemek için
-          <Button link="#">tıklayınız.</Button>
-        </>
-      )}
-      onRow={(record, index) => ({
-        onClick: () => {
-          console.log('onRowClick', record, index);
-        },
-      })}
-    />
-  );
-}
-
-export default ReturnMapServiceParametersTable;
+// API çağrısını doğrudan burada yapacağız
+export const fetchReturnMapList = (filters) => async (dispatch) => {
+  dispatch(setSpinning(true));
+  try {
+    const { callApi } = useShellCommunicator(); // veya çağrıyı aldığınız yer
+    const response = await sendSearchReturnMapRequest(callApi, filters);
+    console.log('Fetch Response:', response); // Yanıtı loglayın
+    dispatch(setReturnMapList(response.data));
+  } catch (error) {
+    console.error('Fetch Error:', error); // Hata mesajını loglayın
+    dispatch(setError(error.response?.data || error.message));
+  } finally {
+    dispatch(setSpinning(false));
+  }
+};
