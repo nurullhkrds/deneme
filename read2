@@ -1,174 +1,100 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import React, { useState, useEffect } from 'react';
+import { Button, Col, Row, Table, TableHeader, Tooltip } from 'ykb-ui';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
 
-export const fetchReturnMapList = createAsyncThunk(
-  'returnMap/fetchReturnMapList',
-  async (filters, { rejectWithValue }) => {
-    const { callApi } = useShellCommunicator(); // veya callApi'yi başka bir şekilde elde ediyorsanız orayı kullanın
-    try {
-      const response = await sendSearchReturnMapRequest(callApi, filters);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-const returnMapSlice = createSlice({
-  name: 'returnMap',
-  initialState: {
-    list: [],
-    spinning: false,
-    error: null,
+const columns = [
+  {
+    title: 'Return Map Code',
+    dataIndex: 'returnMapCode',
+    sortable: true,
   },
-  reducers: {
-    setReturnMapList: (state, action) => {
-      state.list = action.payload;
-    },
-    setSpinning: (state, action) => {
-      state.spinning = action.payload;
-    },
+  {
+    title: 'Institution Return Code',
+    dataIndex: 'institutionReturnCode',
+    sortable: true,
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchReturnMapList.pending, (state) => {
-        state.spinning = true;
-      })
-      .addCase(fetchReturnMapList.fulfilled, (state, action) => {
-        state.spinning = false;
-        state.list = action.payload;
-      })
-      .addCase(fetchReturnMapList.rejected, (state, action) => {
-        state.spinning = false;
-        state.error = action.payload;
-      });
+  {
+    title: 'Institution Return Text',
+    dataIndex: 'institutionReturnText',
   },
-});
+  {
+    title: 'Bank Return Code',
+    dataIndex: 'bankReturnCode',
+  },
+  {
+    title: 'Bank Return Text',
+    dataIndex: 'bankReturnText',
+  },
+  {
+    title: 'Return Type',
+    dataIndex: 'returnType',
+  },
+  {
+    title: 'Is Reversible',
+    dataIndex: 'isReversible',
+    render: (text) => (text ? 'Yes' : 'No'),
+  },
+];
 
-export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
-export default returnMapSlice.reducer;
+function ReturnMapServiceParametersTable() {
+  const dispatch = useDispatch();
+  const { list, spinning } = useSelector((state) => state.returnMap);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
+  useEffect(() => {
+    dispatch(fetchReturnMapList({}));
+  }, [dispatch]);
 
-import {
-  buildQueryString,
-  arrangeExMessageAndThrowEx,
-} from "../../../utils/ApiCallUtils";
+  const onChange = (selectedRowKeys, selectedRows) => {
+    setSelectedRowKeys(selectedRowKeys);
+  };
 
-export const sendSearchReturnMapRequest = async (callApi, filters) => {
-  const endpoint = 'returnMaps/search';
-  const criteria = filters ?? {};
-  const url = buildQueryString(endpoint, criteria);
-  try {
-    return await callApi({
-      method: 'GET',
-      endpoint: url,
-    });
-  } catch (ex) {
-    arrangeExMessageAndThrowEx(ex);
-  }
-};
-
-
-
-
-import React from 'react';
-import { Row, Col, Button } from 'ykb-ui';
-import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
-import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
-
-function ReturnMapServiceParameters() {
   return (
-    <>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersSearch />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersTable />
-        </Col>
-      </Row>
-
-      <Row style={{ marginTop: "25px" }}>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Button>Ekle</Button>
-          <Button>Güncelle</Button>
-          <Button>Kopyala</Button>
-        </Col>
-      </Row>
-    </>
+    <Table
+      rowSelection={{
+        selectedRowKeys,
+        onChange,
+      }}
+      data={list}
+      columns={columns}
+      pagination={{ showTotal: false }}
+      title={
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      }
+      footer={() => (
+        <Row>
+          <Col xs={24}>
+            <p
+              style={{
+                margin: '0',
+                height: '30px',
+                lineHeight: '30px',
+              }}
+            >
+              Lorem ipsum dolor sit amet
+              <Button size="small" className="right-floated">
+                Button 1
+              </Button>
+            </p>
+          </Col>
+        </Row>
+      )}
+      emptyText={() => (
+        <>
+          Yeni eklemek için
+          <Button link="#">tıklayınız.</Button>
+        </>
+      )}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
+    />
   );
 }
 
-export default ReturnMapServiceParameters;
-
-
-
-
-
-import React, { Fragment, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
-import { Form, TextInput, Button } from 'ykb-ui';
-
-const ReturnMapServiceParametersSearch = () => {
-  const dispatch = useDispatch();
-  const [searchCriteria, setSearchCriteria] = useState({
-    returnMapCode: '',
-    bankReturnCode: '',
-    institutionReturnCode: '',
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSearchCriteria((prevCriteria) => ({
-      ...prevCriteria,
-      [name]: value,
-    }));
-  };
-
-  const handleSearch = () => {
-    dispatch(fetchReturnMapList(searchCriteria));
-  };
-
-  return (
-    <Fragment>
-      <Form>
-        <Form.Item label="ReturnMap Kodu">
-          <TextInput
-            name="returnMapCode"
-            value={searchCriteria.returnMapCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Kurum Kodu">
-          <TextInput
-            name="institutionReturnCode"
-            value={searchCriteria.institutionReturnCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Banka Kodu">
-          <TextInput
-            name="bankReturnCode"
-            value={searchCriteria.bankReturnCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Button type="primary" onClick={handleSearch}>Search</Button>
-      </Form>
-    </Fragment>
-  );
-};
-
-export default ReturnMapServiceParametersSearch;
-
-
-
-
-
-
+export default ReturnMapServiceParametersTable;
