@@ -1,7 +1,10 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+
 export const fetchReturnMapList = createAsyncThunk(
   'returnMap/fetchReturnMapList',
   async (filters, { rejectWithValue }) => {
-    const { callApi } = useShellCommunicator(); // or however you get callApi
+    const { callApi } = useShellCommunicator(); // veya callApi'yi başka bir şekilde elde ediyorsanız orayı kullanın
     try {
       const response = await sendSearchReturnMapRequest(callApi, filters);
       return response.data;
@@ -44,7 +47,6 @@ const returnMapSlice = createSlice({
 
 export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
 export default returnMapSlice.reducer;
- bu slice..........
 
 
 import {
@@ -66,52 +68,49 @@ export const sendSearchReturnMapRequest = async (callApi, filters) => {
   }
 };
 
-bu api çağırma.... 
 
 
-"import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
-import { setReturnMapList, setSpinning } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+
+import React from 'react';
+import { Row, Col, Button } from 'ykb-ui';
 import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
 import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
 
-function ReturnMapServiceParameters()  {
-  const { callApi } = useShellCommunicator();
- 
-
+function ReturnMapServiceParameters() {
   return (
     <>
       <Row>
         <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersSearch  />
+          <ReturnMapServiceParametersSearch />
         </Col>
       </Row>
       <Row>
         <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersTable  />
+          <ReturnMapServiceParametersTable />
         </Col>
       </Row>
 
-      <Row style={{marginTop:"25px"}}>
+      <Row style={{ marginTop: "25px" }}>
         <Col xs={24} sm={24} md={24} lg={24}>
-        <Button>Ekle</Button>
-        <Button>Güncelle</Button>
-        <Button>Kopyala</Button>
+          <Button>Ekle</Button>
+          <Button>Güncelle</Button>
+          <Button>Kopyala</Button>
         </Col>
       </Row>
     </>
   );
-};
+}
 
-export default ReturnMapServiceParameters
-" componentim.... 
-
+export default ReturnMapServiceParameters;
 
 
 
-// ReturnMapServiceParametersSearch.js
+
+
 import React, { Fragment, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import { Form, TextInput, Button } from 'ykb-ui';
 
 const ReturnMapServiceParametersSearch = () => {
   const dispatch = useDispatch();
@@ -167,258 +166,9 @@ const ReturnMapServiceParametersSearch = () => {
 };
 
 export default ReturnMapServiceParametersSearch;
-diğer componentim
-
-...
 
 
 
 
-"import React, { useState } from 'react'
-import { Button, Col, Row, Table, TableHeader } from 'ykb-ui';
-const columns = [
-  {
-    title: 'Parent Title',
-    data: 'asd',
-    children: [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        sortable: true,
-        filter: true,
-        filterMultiple: true,
-        sorter: (a, b) => {
-          var nameA = a.name.toUpperCase(); // ignore upper and lowercase
-          var nameB = b.name.toUpperCase(); // ignore upper and lowercase
-          if (nameA < nameB) {
-            return -1;
-          }
-          if (nameA > nameB) {
-            return 1;
-          }
-
-          // names must be equal
-          return 0;
-        },
-      },
-      {
-        title: 'Age',
-        dataIndex: 'age',
-        type: 'number',
-        sortable: true,
-      },
-      {
-        title: 'Iban',
-        dataIndex: 'iban',
-        type: 'iban',
-        render: data => {
-          let arr = data.split(',');
-          if (!data) return;
-          return (
-            <Tooltip
-              placement="left"
-              overlay={arr.map(item => {
-                return (
-                  <span>
-                    {item}
-                    <br />
-                  </span>
-                );
-              })}>
-              <span>
-                {data.length > 80 ? data.slice(0, 80) + ' ...' : data}
-              </span>
-            </Tooltip>
-          );
-        },
-      },
-      {
-        title: 'Currency',
-        dataIndex: 'currency',
-        type: 'currency',
-        currencyType: 'USD',
-      },
-      {
-        title: 'Date',
-        dataIndex: 'birthdate',
-        type: 'date',
-        onCell: (record, index) => ({
-          onClick(e) {
-            console.log('Click cell', ` row ${index}`, record, e.target);
-          },
-        }),
-      },
-      {
-        title: 'Time',
-        dataIndex: 'recordtime',
-        type: 'time',
-      },
-      {
-        title: 'Date Time',
-        dataIndex: 'lastmodified',
-        type: 'datetime',
-      },
-    ],
-  },
-  {
-    dataIndex: 'custom',
-    type: {
-      action: 'detail',
-      handler: (record, event) => {
-        console.log('detail click:', record);
-      },
-    },
-  },
-  {
-    dataIndex: 'custom',
-    type: {
-      action: 'edit',
-      hidden: record => {
-        return record.key % 2 === 0;
-      },
-      handler: (record, event) => {
-        console.log('icon-click:', record);
-      },
-      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
-      disabled: true,
-    },
-  },
-  {
-    dataIndex: 'custom2',
-    type: {
-      action: 'delete',
-      disabled: record => {
-        return record.key % 3 === 0;
-      },
-      handler: (record, event) => {
-        console.log('icon-click:', record);
-      },
-    },
-  },
-];
-
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    name: `a${i}`,
-    age: 42,
-    iban: `TR100006400000124122142141`,
-    birthdate: '22-11-2017',
-    recordtime: '12:55',
-    currency: 100.5,
-    lastmodified: '22-11-2017 15:55:22',
-  });
-}
-
-const rowSelection = {
-  getCheckboxProps: record => ({
-    disabled: record.name === 'a5',
-  }),
-};
-
-function ReturnMapServiceParametersTable() {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
-
-  const onChange = (selectedRowKeys, selectedRows) => {
-    console.log(
-      'selectedRowKeys:',
-      selectedRowKeys,
-      'selectedRows: ',
-      selectedRows
-    );
-
-    setSelectedRowKeys(selectedRowKeys);
-  };
-
-  return (
-    <Table
-      rowSelection={{
-        getCheckboxProps: rowSelection.getCheckboxProps,
-        selectedRowKeys: selectedRowKeys,
-        onChange: onChange,
-      }}
-      data={data}
-      columns={columns}
-      pagination={{ showTotal: false }}
-      title={
-        <TableHeader
-          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
-        />
-      }
-      footer={() => (
-        <React.Fragment>
-          <Row>
-            <Col xs={24}>
-              <p
-                style={{
-                  margin: '0',
-                  height: '30px',
-                  lineHeight: '30px',
-                }}>
-                Lorem ipsum dolor sit amet
-                <Button size="small" className="right-floated">
-                  Button 1
-                </Button>
-              </p>
-            </Col>
-          </Row>
-        </React.Fragment>
-      )}
-      emptyText={() => {
-        return (
-          <React.Fragment>
-            Yeni eklemek için
-            <Button link="#">tıklayınız.</Button>
-          </React.Fragment>
-        );
-      }}
-      onRow={(record, index) => ({
-        onClick: () => {
-          console.log('onRowClick', record, index);
-        },
-      })}
-    />
-  );
-};
 
 
-
-export default ReturnMapServiceParametersTable
-" buda tablo componentim...
-
-{
-    "success": true,
-    "message": "Results listed",
-    "statusCode": 200,
-    "data": [
-
-        {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },   {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },   {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        }
-    ]
