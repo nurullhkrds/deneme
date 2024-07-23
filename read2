@@ -1,21 +1,121 @@
-// returnMapSlice.js
-import { createSlice } from '@reduxjs/toolkit';
+// api.js
+export const sendSearchReturnMapRequest = async (callApi, filters) => {
+  const endpoint = 'management/return-map/search';
+  const criteria = filters ?? {};
+  const url = buildQueryString(endpoint, criteria);
+  try {
+    return await callApi({
+      method: 'GET',
+      endpoint: url,
+    });
+  } catch (ex) {
+    arrangeExMessageAndThrowEx(ex);
+  }
+};
 
-const returnMapSlice = createSlice({
-  name: 'returnMap',
-  initialState: {
-    list: [],
-    spinning: false,
-  },
-  reducers: {
-    setReturnMapList: (state, action) => {
-      state.list = action.payload;
-    },
-    setSpinning: (state, action) => {
-      state.spinning = action.payload;
-    },
-  },
-});
 
-export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
-export default returnMapSlice.reducer;
+
+
+
+
+
+
+
+
+
+
+
+// ReturnMap.js
+import React, { useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Row, Col, Input, Spin, Table } from 'antd';
+import { sendSearchReturnMapRequest } from './api';
+import { setReturnMapList, setSpinning } from './returnMapSlice';
+
+const ReturnMap = () => {
+  const { callApi } = useShellCommunicator();
+  const dispatch = useDispatch();
+  const returnMapSearchFormRef = useRef(null);
+
+  const spinning = useSelector((state) => state.returnMap.spinning);
+  const returnMapList = useSelector((state) => state.returnMap.list);
+
+  const searchHandler = async (criteria) => {
+    try {
+      dispatch(setSpinning(true));
+
+      const searchReturnMapResponse = await sendSearchReturnMapRequest(callApi, criteria);
+      dispatch(setReturnMapList(searchReturnMapResponse));
+
+      dispatch(setSpinning(false));
+    } catch (ex) {
+      dispatch(setReturnMapList([]));
+      dispatch(setSpinning(false));
+    }
+  };
+
+  const onSearchClick = () => {
+    const searchRequest = returnMapSearchFormRef.current.getFieldsValue();
+    searchHandler(searchRequest);
+  };
+
+  const columns = [
+    { title: 'Version', dataIndex: 'version', key: 'version' },
+    { title: 'Return Map Code', dataIndex: 'returnMapCode', key: 'returnMapCode' },
+    { title: 'Institution Return Code', dataIndex: 'institutionReturnCode', key: 'institutionReturnCode' },
+    { title: 'Institution Text Code', dataIndex: 'institutionTextCode', key: 'institutionTextCode' },
+    { title: 'Bank Return Code', dataIndex: 'bankReturnCode', key: 'bankReturnCode' },
+    { title: 'Return Type', dataIndex: 'returnType', key: 'returnType' },
+    { title: 'Is Reservible', dataIndex: 'is_reservible', key: 'is_reservible' },
+  ];
+
+  return (
+    <Spin spinning={spinning}>
+      <Row>
+        <Col xs={24} sm={24} md={8} lg={8}>
+          <Input placeholder="Return Map" ref={returnMapSearchFormRef.current?.returnMap} />
+        </Col>
+        <Col xs={24} sm={24} md={8} lg={8}>
+          <Input placeholder="Bank Return Code" ref={returnMapSearchFormRef.current?.bankReturnCode} />
+        </Col>
+        <Col xs={24} sm={24} md={8} lg={8}>
+          <Input placeholder="Institution Return Code" ref={returnMapSearchFormRef.current?.institutionReturnCode} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <Table dataSource={returnMapList} columns={columns} rowKey="id" />
+        </Col>
+      </Row>
+    </Spin>
+  );
+};
+
+export default ReturnMap;
+
+
+
+
+
+
+
+
+    returnMap: returnMapReducer,
+
+
+
+
+
+
+routes::
+
+{
+    exact: true,
+    processId: Pages.returnMap.processId,
+    path: Pages.returnMap.path,
+    component: asyncComponent(() => import('./pages/returnMap/ReturnMap')),
+    i18n: (lang) =>
+      import(
+        /* webpackMode: "lazy" */ `./i18n/returnMap/ReturnMap-${lang}.js`
+      ),
+  },
