@@ -1,46 +1,50 @@
-<Fragment>
-      <Form style={}>
-        <Form.Item
-          label={"ReturnMap Kodu"}
-          colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
-        >
-          <TextInput
-            name="returnMapCode"
-            data={
-             "asd"
-            }
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item
-          label={"Kurum Kodu"}
-          colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
-        >
-          <TextInput
-            name="institutionReturnCode"
-            data={
-             "asd"
-            }
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item
-          label={"ReturnMap Kodu"}
-          colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
-        >
-          <TextInput
-            name="bankReturnCode"
-            data={
-             "asd"
-            }
-            allowClear
-          />
-        </Form.Item>
+{
+  return (
+    <Fragment>
+      <Form>
+        <Row>
+          <Col span={24}>
+            <Form.Item
+              label={"ReturnMap Kodu"}
+              colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
+            >
+              <TextInput
+                name="returnMapCode"
+                data={"asd"}
+                allowClear
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24}>
+            <Form.Item
+              label={"Kurum Kodu"}
+              colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
+            >
+              <TextInput
+                name="institutionReturnCode"
+                data={"asd"}
+                allowClear
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24}>
+            <Form.Item
+              label={"ReturnMap Kodu"}
+              colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
+            >
+              <TextInput
+                name="bankReturnCode"
+                data={"asd"}
+                allowClear
+              />
+            </Form.Item>
+          </Col>
+        </Row>
       </Form>
     </Fragment>
-
-   
   );
 };
-
-export default ReturnMapServiceParametersSearch;
