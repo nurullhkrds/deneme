@@ -1,78 +1,12 @@
-Access to fetch at 'http://localhost:8080/returnMaps/search?' from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
 
-@Tag(name = "Management ReturnMap BFF Controller")
-@RequestMapping(RETURN_MAP_PATH)
-@RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
-public class ReturnMapController {
-
-    private final AdapterReturnMapClient adapterReturnMapClient;
-
-    @Autowired
-    public ReturnMapController(AdapterReturnMapClient adapterReturnMapClient) {
-        this.adapterReturnMapClient = adapterReturnMapClient;
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000") // İstemci URL'sini buraya ekleyin
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true); // Eğer kimlik doğrulama veya çerez kullanıyorsanız
     }
-
-    @Schema(description = "Get ReturnMaps By ReturnMapCode")
-    @GetMapping("/getAllByReturnMapCode")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAllByReturnMapCode(@RequestParam String returnMapCode) {
-        DataResult<List<ReturnMapDTO>> result = adapterReturnMapClient.getAllByReturnMapCode(returnMapCode);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-    @GetMapping("/getAll")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAll() {
-        DataResult<List<ReturnMapDTO>> result = adapterReturnMapClient.getAll();
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-    @PostMapping("/createReturnMap")
-    public ResponseEntity<DataResult<ReturnMapDTO>> createReturnMap(
-            @RequestBody CreateReturnMapRequest request)
-            throws MicroException {
-        DataResult<ReturnMapDTO> result = adapterReturnMapClient.createReturnMap(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-    @PutMapping("/updateReturnMap")
-    public ResponseEntity<DataResult<ReturnMapDTO>> updateReturnMap(
-            @RequestBody UpdateReturnMapRequest request)
-            throws MicroException {
-        DataResult<ReturnMapDTO> result = adapterReturnMapClient.updateReturnMap(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-    @PostMapping("/copy")
-    public ResponseEntity<Result> copyReturnMaps(@RequestBody CopyForIdsAndDataRequest request) {
-        Result result = adapterReturnMapClient.copyReturnMaps(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
-            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
-            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
-            @RequestParam(required = false) @Parameter(name = "institutionCode") String institutionErrorCode) {
-        DataResult<List<ReturnMapDTO>> searhResult = adapterReturnMapClient.searchReturnMaps(returnMapCode,bankReturnCode,institutionErrorCode);
-        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
-    }
-@FeignClient(name = "PAYMENTS.BILL.bill-transaction", path = RETURN_MAP_PATH, configuration = {MicroErrorDecoder.class})
-public interface AdapterReturnMapClient {
-
-    @GetMapping("/getAllByReturnMapCode")
-    DataResult<List<ReturnMapDTO>> getAllByReturnMapCode(@RequestParam String returnMapCode);
-    @GetMapping("/getAll")
-    DataResult<List<ReturnMapDTO>> getAll();
-    @PostMapping("/createReturnMap")
-    DataResult<ReturnMapDTO> createReturnMap(@RequestBody CreateReturnMapRequest request);
-
-    @PutMapping("/updateReturnMap")
-    DataResult<ReturnMapDTO> updateReturnMap(@RequestBody UpdateReturnMapRequest request);
-
-    @PostMapping("/copy")
-    Result copyReturnMaps(@RequestBody CopyForIdsAndDataRequest request);
-
-    @GetMapping("/search")
-    DataResult<List<ReturnMapDTO>> searchReturnMaps(@RequestParam String returnMapCode,@RequestParam String bankReturnCode,@RequestParam String institutionErrorCode);
 }
