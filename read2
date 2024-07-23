@@ -5,3 +5,4 @@
   useEffect(() => {
     dispatch(fetchReturnMapList({}));
   }, [dispatch]);
+import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
