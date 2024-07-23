@@ -1,33 +1,361 @@
-returnMaps/search şöyle bir apim var bu api aynı zamanda critearya dinamik bir api yani 
+// returnMapSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const returnMapSliceParameterSlice = createSlice({
+  name: 'returnMap',
+  initialState: {
+    list: [],
+    spinning: false,
+  },
+  reducers: {
+    setReturnMapList: (state, action) => {
+      state.list = action.payload;
+    },
+    setSpinning: (state, action) => {
+      state.spinning = action.payload;
+    },
+  },
+});
+
+export const { setReturnMapList, setSpinning } = returnMapSliceParameterSlice.actions;
+export default returnMapSliceParameterSlice.reducer;
 
 
-  @GetMapping("/search")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
-            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
-            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
-            @RequestParam(required = false) @Parameter(name = "institutionCode") String institutionErrorCode) {
-        DataResult<List<ReturnMapDTO>> searhResult = adapterReturnMapClient.searchReturnMaps(returnMapCode,bankReturnCode,institutionErrorCode);
-        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
-    } .
-bu şekil "    @Override
-    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode,String bankReturnCode,String institutionErrorCode) {
-        Specification<ReturnMap> spec = Specification.where(null);
 
-        if (returnMapCode != null && !returnMapCode.isEmpty()) {
-            spec = spec.and(ReturnMapCriteria.hasReturnMapCode(returnMapCode));
-        }
-        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
-            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
-        }
-        if (institutionErrorCode != null && !institutionErrorCode.isEmpty()) {
-            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionErrorCode));
-        }
+"import React, { useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
-        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
-        boolean success = !returnMapDTOList.isEmpty();
-        String message = success ? "Results listed" : "No results found";
-        int statusCode = success ? HttpStatus.OK.value() : HttpStatus.NOT_FOUND.value();
+import { useShellCommunicator } from 'ykb-shell';
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import { setReturnMapList, setSpinning } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
+import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
 
-        return new DataResult<>(success, message, returnMapDTOList, statusCode);
-    }" bu benim servicem gördüğün gibi dinamik.. parametleri vermezsen tüm verileri getirir verirsen ona göre filtreler.
+function ReturnMapServiceParameters()  {
+  const { callApi } = useShellCommunicator();
+ 
+
+  return (
+    <>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch  />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable  />
+        </Col>
+      </Row>
+
+      <Row style={{marginTop:"25px"}}>
+        <Col xs={24} sm={24} md={24} lg={24}>
+        <Button>Ekle</Button>
+        <Button>Güncelle</Button>
+        <Button>Kopyala</Button>
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+export default ReturnMapServiceParameters
+"
+
+
+ve "// ReturnMapServiceParametersSearch.js
+import React, { Fragment, useState } from 'react';
+
+const ReturnMapServiceParametersSearch = ({ onSearch }) => {
+  const [searchCriteria, setSearchCriteria] = useState({
+    returnMap: '',
+    bankReturnCode: '',
+    institutionReturnCode: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria((prevCriteria) => ({
+      ...prevCriteria,
+      [name]: value,
+    }));
+  };
+
+
+  return (
+    
+<Fragment>
+      <Form >
+        <Form.Item
+          label={"ReturnMap Kodu"}
+          colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
+        >
+          <TextInput
+            name="returnMapCode"
+            data={
+             "asd"
+            }
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item
+          label={"Kurum Kodu"}
+          colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
+        >
+          <TextInput
+            name="institutionReturnCode"
+            data={
+             "asd"
+            }
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item
+          label={"Banka Kodu"}
+          colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
+        >
+          <TextInput
+            name="bankReturnCode"
+            data={
+             "asd"
+            }
+            allowClear
+          />
+        </Form.Item>
+      </Form>
+    </Fragment>
+
+   
+  );
+};
+
+export default ReturnMapServiceParametersSearch;"
+
+"import React, { useState } from 'react'
+const columns = [
+  {
+    title: 'ReturnMap Data',
+    data: 'asd',
+    children: [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        sortable: true,
+        filter: true,
+        filterMultiple: true,
+        sorter: (a, b) => {
+          var nameA = a.name.toUpperCase(); // ignore upper and lowercase
+          var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        },
+      },
+      {
+        title: 'Age',
+        dataIndex: 'age',
+        type: 'number',
+        sortable: true,
+      },
+      {
+        title: 'Iban',
+        dataIndex: 'iban',
+        type: 'iban',
+        render: data => {
+          let arr = data.split(',');
+          if (!data) return;
+          return (
+            <Tooltip
+              placement="left"
+              overlay={arr.map(item => {
+                return (
+                  <span>
+                    {item}
+                    <br />
+                  </span>
+                );
+              })}>
+              <span>
+                {data.length > 80 ? data.slice(0, 80) + ' ...' : data}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        title: 'Currency',
+        dataIndex: 'currency',
+        type: 'currency',
+        currencyType: 'USD',
+      },
+      {
+        title: 'Date',
+        dataIndex: 'birthdate',
+        type: 'date',
+        onCell: (record, index) => ({
+          onClick(e) {
+            console.log('Click cell', ` row ${index}`, record, e.target);
+          },
+        }),
+      },
+      {
+        title: 'Time',
+        dataIndex: 'recordtime',
+        type: 'time',
+      },
+      {
+        title: 'Date Time',
+        dataIndex: 'lastmodified',
+        type: 'datetime',
+      },
+    ],
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'detail',
+      handler: (record, event) => {
+        console.log('detail click:', record);
+      },
+    },
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'edit',
+      hidden: record => {
+        return record.key % 2 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
+      disabled: true,
+    },
+  },
+  {
+    dataIndex: 'custom2',
+    type: {
+      action: 'delete',
+      disabled: record => {
+        return record.key % 3 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+    },
+  },
+];
+
+const data = [];
+for (let i = 0; i < 100; i++) {
+  data.push({
+    key: i,
+    name: `a${i}`,
+    age: 42,
+    iban: `TR100006400000124122142141`,
+    birthdate: '22-11-2017',
+    recordtime: '12:55',
+    currency: 100.5,
+    lastmodified: '22-11-2017 15:55:22',
+  });
+}
+
+const rowSelection = {
+  getCheckboxProps: record => ({
+    disabled: record.name === 'a5',
+  }),
+};
+
+function ReturnMapServiceParametersTable() {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
+
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log(
+      'selectedRowKeys:',
+      selectedRowKeys,
+      'selectedRows: ',
+      selectedRows
+    );
+
+    setSelectedRowKeys(selectedRowKeys);
+  };
+
+  return (
+    <Table
+      rowSelection={{
+        getCheckboxProps: rowSelection.getCheckboxProps,
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
+      }}
+      data={data}
+      columns={columns}
+      pagination={{ showTotal: false }}
+      title={
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      }
+      footer={() => (
+        <React.Fragment>
+          <Row>
+            <Col xs={24}>
+              <p
+                style={{
+                  margin: '0',
+                  height: '30px',
+                  lineHeight: '30px',
+                }}>
+                Lorem ipsum dolor sit amet
+                <Button size="small" className="right-floated">
+                  Button 1
+                </Button>
+              </p>
+            </Col>
+          </Row>
+        </React.Fragment>
+      )}
+      emptyText={() => {
+        return (
+          <React.Fragment>
+            Yeni eklemek için
+            <Button link="#">tıklayınız.</Button>
+          </React.Fragment>
+        );
+      }}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
+    />
+  );
+};
+
+
+
+"export const sendSearchReturnMapRequest = async (callApi, filters) => {
+  const endpoint = 'returnMaps/search';
+  const criteria = filters ?? {};
+  const url = buildQueryString(endpoint, criteria);
+  try {
+    return await callApi({
+      method: 'GET',
+      endpoint: url,
+    });
+  } catch (ex) {
+    arrangeExMessageAndThrowEx(ex);
+  }
+};
+"
+
+
+export default ReturnMapServiceParametersTable
+"
+
