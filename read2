@@ -1,45 +1,53 @@
-function ReturnMapServiceParameters() {
-  const dispatch = useDispatch();
-  const { callApi } = useShellCommunicator();
+const ReturnMapServiceParametersSearch = ({ fetchInstitutionsData }) => {
+  const [searchCriteria, setSearchCriteria] = useState({
+    returnMapCode: '',
+    bankReturnCode: '',
+    institutionReturnCode: '',
+  });
 
-  const fetchInstitutionsData = async (searchCriteria = {}) => {
-    dispatch(setSpinning(true));
-    try {
-      let response = await sendSearchReturnMapRequest(callApi, searchCriteria);
-      dispatch(setReturnMapList(response));
-    } catch (error) {
-      dispatch(setError(error));
-      console.error("fetchInstitutionsData", error);
-    } finally {
-      dispatch(setSpinning(false));
-    }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria((prevCriteria) => ({
+      ...prevCriteria,
+      [name]: value,
+    }));
   };
 
-  useEffect(() => {
-    fetchInstitutionsData();
-  }, []);
+  const handleSearch = () => {
+    fetchInstitutionsData(searchCriteria);
+  };
 
   return (
-    <>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersSearch fetchInstitutionsData={fetchInstitutionsData} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersTable />
-        </Col>
-      </Row>
-      <Row style={{ marginTop: "25px" }}>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Button>Ekle</Button>
-          <Button>Güncelle</Button>
-          <Button>Kopyala</Button>
-        </Col>
-      </Row>
-    </>
+    <Fragment>
+      <Form>
+        <Form.Item label="ReturnMap Kodu">
+          <Input
+            name="returnMapCode"
+            value={searchCriteria.returnMapCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Kurum Kodu">
+          <Input
+            name="institutionReturnCode"
+            value={searchCriteria.institutionReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Banka Kodu">
+          <Input
+            name="bankReturnCode"
+            value={searchCriteria.bankReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Button type="primary" onClick={handleSearch}>Search</Button>
+      </Form>
+    </Fragment>
   );
-}
+};
 
-export default ReturnMapServiceParameters;
+export default ReturnMapServiceParametersSearch;
