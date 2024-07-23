@@ -1,1 +1,21 @@
+// returnMapSlice.js
+import { createSlice } from '@reduxjs/toolkit';
 
+const returnMapSlice = createSlice({
+  name: 'returnMap',
+  initialState: {
+    list: [],
+    spinning: false,
+  },
+  reducers: {
+    setReturnMapList: (state, action) => {
+      state.list = action.payload;
+    },
+    setSpinning: (state, action) => {
+      state.spinning = action.payload;
+    },
+  },
+});
+
+export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
+export default returnMapSlice.reducer;
