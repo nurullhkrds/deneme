@@ -1,9 +1,5 @@
 {
-  "exceptionData": {
-    "applicationName": "PAYMENTS.BILL.bill-transaction",
-    "errorCode": -995,
-    "errorMessage": "Invalid request: Required request body is missing: public org.springframework.http.ResponseEntity<com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult<java.util.List<com.ykb.payments.bill.transaction.adapter.dto.ReturnMapDTO>>> com.ykb.payments.bill.transaction.adapter.web.ReturnMapController.searchReturnMaps(com.ykb.payments.bill.transaction.adapter.web.request.ReturnMapSearchCriteria)",
-    "traceId": null
-  },
-  "parameters": {}
+  "returnMapCode": "exampleCode",
+  "bankReturnCode": "exampleBankCode",
+  "institutionReturnCode": "exampleInstitutionCode"
 }
