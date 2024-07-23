@@ -1,3 +1,158 @@
+  const { callApi } = useShellCommunicator();
+
+
+  const fetchInstitutionsData = async () => {
+    try {
+      let response = await sendSearchReturnMapRequest(callApi);
+      console.log(response)
+    } catch (error) {
+      console.log("fetchInstitutionsData", error);
+    }
+  };
+  useEffect(() => {
+    fetchInstitutionsData();
+  }, []); veri çekme işlemi 
+
+
+
+
+import { createSlice } from '@reduxjs/toolkit';
+
+const returnMapSlice = createSlice({
+  name: 'returnMap',
+  initialState: {
+    list: [],
+    spinning: false,
+    error: null,
+  },
+  reducers: {
+    setReturnMapList: (state, action) => {
+      state.list = action.payload;
+    },
+    setSpinning: (state, action) => {
+      state.spinning = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+    },
+  },
+});
+
+export const { setReturnMapList, setSpinning, setError } = returnMapSlice.actions;
+export default returnMapSlice.reducer; slice
+
+
+const ReturnMapServiceParametersWrapper = (props) => {
+  return (
+    <Provider store={store}>
+      <ReturnMapServiceParameters {...props} />
+    </Provider>
+  );
+};
+
+export default ReturnMapServiceParametersWrapper; ReturnMapServiceParametersWrapper componentim..
+
+
+import React, { useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import { setReturnMapList, setSpinning } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
+import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
+
+function ReturnMapServiceParameters() {
+  return (
+    <>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable />
+        </Col>
+      </Row>
+
+      <Row style={{ marginTop: "25px" }}>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <Button>Ekle</Button>
+          <Button>Güncelle</Button>
+          <Button>Kopyala</Button>
+        </Col>
+      </Row>
+    </>
+  );
+}
+
+export default ReturnMapServiceParameters; ReturnMapServiceParameters componentim.... 
+
+
+
+
+
+
+const ReturnMapServiceParametersSearch = () => {
+  const dispatch = useDispatch();
+  const [searchCriteria, setSearchCriteria] = useState({
+    returnMapCode: '',
+    bankReturnCode: '',
+    institutionReturnCode: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria((prevCriteria) => ({
+      ...prevCriteria,
+      [name]: value,
+    }));
+  };
+
+  const handleSearch = () => {
+    dispatch(fetchReturnMapList(searchCriteria));
+  };
+
+  return (
+    <Fragment>
+      <Form>
+        <Form.Item label="ReturnMap Kodu">
+          <TextInput
+            name="returnMapCode"
+            value={searchCriteria.returnMapCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Kurum Kodu">
+          <TextInput
+            name="institutionReturnCode"
+            value={searchCriteria.institutionReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Banka Kodu">
+          <TextInput
+            name="bankReturnCode"
+            value={searchCriteria.bankReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Button type="primary" onClick={handleSearch}>Search</Button>
+      </Form>
+    </Fragment>
+  );
+};
+
+export default ReturnMapServiceParametersSearch; ReturnMapServiceParametersSearch componentim..
+
+
+
+
+
+
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Col, Row, Table, TableHeader, Tooltip } from 'ykb-ui';
@@ -148,23 +303,7 @@ const rowSelection = {
 
 function ReturnMapServiceParametersTable() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
-  const [returnMapData, setReturnMapData] = useState([]);
-  const { callApi } = useShellCommunicator();
 
-
-  const dispatch = useDispatch();
-  const fetchInstitutionsData = async () => {
-    try {
-      let response = await sendSearchReturnMapRequest(callApi);
-      setReturnMapData(response);
-      console.log(response)
-    } catch (error) {
-      console.log("fetchInstitutionsData", error);
-    }
-  };
-  useEffect(() => {
-    fetchInstitutionsData();
-  }, []);
 
 
   const onChange = (selectedRowKeys, selectedRows) => {
@@ -232,3 +371,5 @@ function ReturnMapServiceParametersTable() {
 
 
 export default ReturnMapServiceParametersTable
+table componentim
+
