@@ -1,92 +1,36 @@
-const columns = [
-  { title: 'ID', dataIndex: 'id', sortable: true },
-  { title: 'Return Map Code', dataIndex: 'returnMapCode', sortable: true },
-  { title: 'Institution Return Code', dataIndex: 'institutionReturnCode', sortable: true },
-  { title: 'Institution Return Text', dataIndex: 'institutionReturnText', sortable: true },
-  { title: 'Bank Return Code', dataIndex: 'bankReturnCode', sortable: true },
-  { title: 'Bank Return Text', dataIndex: 'bankReturnText', sortable: true },
-  { title: 'Return Type', dataIndex: 'returnType', sortable: true },
-  { title: 'Is Reversible', dataIndex: 'isReversible', render: isReversible => (isReversible ? 'Yes' : 'No') },
-  {
-    title: 'Actions',
-    dataIndex: 'actions',
-    render: (text, record) => (
-      <span>
-        <Button onClick={() => handleDetailClick(record)}>Detail</Button>
-        <Button onClick={() => handleEditClick(record)}>Edit</Button>
-        <Button onClick={() => handleDeleteClick(record)}>Delete</Button>
-      </span>
-    ),
-  },
-];
-
-const handleDetailClick = (record) => {
-  console.log('Detail click:', record);
-};
-
-const handleEditClick = (record) => {
-  console.log('Edit click:', record);
-};
-
-const handleDeleteClick = (record) => {
-  console.log('Delete click:', record);
-};
-
-function ReturnMapServiceParametersTable() {
-  const data = useSelector((state) => state.returnMap.list);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-
-  const onChange = (selectedRowKeys, selectedRows) => {
-    console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
-    setSelectedRowKeys(selectedRowKeys);
-  };
-
-  return (
-    <Table
-      rowSelection={{
-        selectedRowKeys: selectedRowKeys,
-        onChange: onChange,
-      }}
-      dataSource={data}
-      columns={columns}
-      pagination={{ showTotal: false }}
-      title={() => (
-        <TableHeader
-          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
-        />
-      )}
-      footer={() => (
-        <React.Fragment>
-          <Row>
-            <Col xs={24}>
-              <p
-                style={{
-                  margin: '0',
-                  height: '30px',
-                  lineHeight: '30px',
-                }}>
-                Lorem ipsum dolor sit amet
-                <Button size="small" className="right-floated">
-                  Button 1
-                </Button>
-              </p>
-            </Col>
-          </Row>
-        </React.Fragment>
-      )}
-      emptyText={() => (
-        <React.Fragment>
-          Yeni eklemek için
-          <Button link="#">tıklayınız.</Button>
-        </React.Fragment>
-      )}
-      onRow={(record, index) => ({
-        onClick: () => {
-          console.log('onRowClick', record, index);
+{
+    "success": true,
+    "message": "Results listed",
+    "statusCode": 200,
+    "data": [
+    {
+            "id": 2550045,
+            "returnMapCode": "string",
+            "institutionReturnCode": "string",
+            "institutionReturnText": "string",
+            "bankReturnCode": "string",
+            "bankReturnText": "string",
+            "returnType": "ERROR",
+            "isReversible": true
         },
-      })}
-    />
-  );
-}
-
-export default ReturnMapServiceParametersTable;
+  {
+            "id": 2550045,
+            "returnMapCode": "string",
+            "institutionReturnCode": "string",
+            "institutionReturnText": "string",
+            "bankReturnCode": "string",
+            "bankReturnText": "string",
+            "returnType": "ERROR",
+            "isReversible": true
+        },
+  {
+            "id": 2550045,
+            "returnMapCode": "string",
+            "institutionReturnCode": "string",
+            "institutionReturnText": "string",
+            "bankReturnCode": "string",
+            "bankReturnText": "string",
+            "returnType": "ERROR",
+            "isReversible": true
+        }
+    ]
