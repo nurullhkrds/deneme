@@ -1,66 +1,54 @@
-// api/returnMapServiceParameter/ReturnMapServiceParametersApi.js
-export const sendSearchReturnMapRequest = async (callApi, filters) => {
-  const endpoint = 'returnMaps/search';
-  const criteria = filters ?? {};
-  const url = buildQueryString(endpoint, criteria);
-  try {
-    return await callApi({
-      method: 'GET',
-      endpoint: url,
-    });
-  } catch (ex) {
-    arrangeExMessageAndThrowEx(ex);
-  }
+onst ReturnMapServiceParametersSearch = () => {
+  const dispatch = useDispatch();
+  const [searchCriteria, setSearchCriteria] = useState({
+    returnMapCode: '',
+    bankReturnCode: '',
+    institutionReturnCode: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria((prevCriteria) => ({
+      ...prevCriteria,
+      [name]: value,
+    }));
+  };
+
+  const handleSearch = () => {
+    dispatch(fetchReturnMapList(searchCriteria));
+  };
+
+  return (
+    <Fragment>
+      <Form>
+        <Form.Item label="ReturnMap Kodu">
+          <TextInput
+            name="returnMapCode"
+            value={searchCriteria.returnMapCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Kurum Kodu">
+          <TextInput
+            name="institutionReturnCode"
+            value={searchCriteria.institutionReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Banka Kodu">
+          <TextInput
+            name="bankReturnCode"
+            value={searchCriteria.bankReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Button type="primary" onClick={handleSearch}>Search</Button>
+      </Form>
+    </Fragment>
+  );
 };
 
-
-// redux/slices/returnMapSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
-
-export const fetchReturnMapList = createAsyncThunk(
-  'returnMap/fetchReturnMapList',
-  async (filters, { rejectWithValue }) => {
-    const { callApi } = useShellCommunicator(); // or however you get callApi
-    try {
-      const response = await sendSearchReturnMapRequest(callApi, filters);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-const returnMapSlice = createSlice({
-  name: 'returnMap',
-  initialState: {
-    list: [],
-    spinning: false,
-    error: null,
-  },
-  reducers: {
-    setReturnMapList: (state, action) => {
-      state.list = action.payload;
-    },
-    setSpinning: (state, action) => {
-      state.spinning = action.payload;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchReturnMapList.pending, (state) => {
-        state.spinning = true;
-      })
-      .addCase(fetchReturnMapList.fulfilled, (state, action) => {
-        state.spinning = false;
-        state.list = action.payload;
-      })
-      .addCase(fetchReturnMapList.rejected, (state, action) => {
-        state.spinning = false;
-        state.error = action.payload;
-      });
-  },
-});
-
-export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
-export default returnMapSlice.reducer;
+export default ReturnMapServiceParametersSearch;
