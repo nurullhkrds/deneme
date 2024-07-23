@@ -1,121 +1,101 @@
-// api.js
-export const sendSearchReturnMapRequest = async (callApi, filters) => {
-  const endpoint = 'management/return-map/search';
-  const criteria = filters ?? {};
-  const url = buildQueryString(endpoint, criteria);
-  try {
-    return await callApi({
-      method: 'GET',
-      endpoint: url,
-    });
-  } catch (ex) {
-    arrangeExMessageAndThrowEx(ex);
-  }
-};
+const columnsData = [
+  {
+    title: 'Name',
+    dataIndex: 'name',
+    key: 'name',
+    width: 200,
+    resizable: true, // if resizable is enabled, width must be mandatory and number must be
+    render: text => (
+      <a href="#" onClick={e => e.preventDefault()}>
+        {text}
+      </a>
+    ),
+  },
+  {
+    title: 'Age',
+    dataIndex: 'age',
+    key: 'age',
+    width: 200,
+  },
+  {
+    title: 'Address',
+    dataIndex: 'address',
+    key: 'address',
+    width: 200,
+  },
+  {
+    title: 'Action',
+    key: 'action',
+    width: 200,
+    render: (text, record) => (
+      <Button type="primary" size="small">
+        Invite {record.name}
+      </Button>
+    ),
+  },
+];
 
-
-
-
-
-
-
-
-
-
-
-
-
-// ReturnMap.js
-import React, { useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Row, Col, Input, Spin, Table } from 'antd';
-import { sendSearchReturnMapRequest } from './api';
-import { setReturnMapList, setSpinning } from './returnMapSlice';
-
-const ReturnMap = () => {
-  const { callApi } = useShellCommunicator();
-  const dispatch = useDispatch();
-  const returnMapSearchFormRef = useRef(null);
-
-  const spinning = useSelector((state) => state.returnMap.spinning);
-  const returnMapList = useSelector((state) => state.returnMap.list);
-
-  const searchHandler = async (criteria) => {
-    try {
-      dispatch(setSpinning(true));
-
-      const searchReturnMapResponse = await sendSearchReturnMapRequest(callApi, criteria);
-      dispatch(setReturnMapList(searchReturnMapResponse));
-
-      dispatch(setSpinning(false));
-    } catch (ex) {
-      dispatch(setReturnMapList([]));
-      dispatch(setSpinning(false));
-    }
-  };
-
-  const onSearchClick = () => {
-    const searchRequest = returnMapSearchFormRef.current.getFieldsValue();
-    searchHandler(searchRequest);
-  };
-
-  const columns = [
-    { title: 'Version', dataIndex: 'version', key: 'version' },
-    { title: 'Return Map Code', dataIndex: 'returnMapCode', key: 'returnMapCode' },
-    { title: 'Institution Return Code', dataIndex: 'institutionReturnCode', key: 'institutionReturnCode' },
-    { title: 'Institution Text Code', dataIndex: 'institutionTextCode', key: 'institutionTextCode' },
-    { title: 'Bank Return Code', dataIndex: 'bankReturnCode', key: 'bankReturnCode' },
-    { title: 'Return Type', dataIndex: 'returnType', key: 'returnType' },
-    { title: 'Is Reservible', dataIndex: 'is_reservible', key: 'is_reservible' },
-  ];
+const data = [
+  {
+    key: '1',
+    name: 'John Brown',
+    age: 32,
+    address: 'New York No. 1 Lake Park',
+    tags: ['nice', 'developer'],
+  },
+  {
+    key: '2',
+    name: 'Jim Green',
+    age: 42,
+    address: 'London No. 1 Lake Park',
+    tags: ['loser'],
+  },
+];
+function ReturnMapServiceParametersTable() {
+  const [columns, setColumns] = useState(columnsData);
 
   return (
-    <Spin spinning={spinning}>
-      <Row>
-        <Col xs={24} sm={24} md={8} lg={8}>
-          <Input placeholder="Return Map" ref={returnMapSearchFormRef.current?.returnMap} />
-        </Col>
-        <Col xs={24} sm={24} md={8} lg={8}>
-          <Input placeholder="Bank Return Code" ref={returnMapSearchFormRef.current?.bankReturnCode} />
-        </Col>
-        <Col xs={24} sm={24} md={8} lg={8}>
-          <Input placeholder="Institution Return Code" ref={returnMapSearchFormRef.current?.institutionReturnCode} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Table dataSource={returnMapList} columns={columns} rowKey="id" />
-        </Col>
-      </Row>
-    </Spin>
+    <Table
+      rowSelection={{}}
+      columns={columns}
+      data={data}
+      onResize={(event, { element, size, handle }, index) => {
+        console.log('event, { element, size, handle }', event, {
+          element,
+          size,
+          handle,
+        });
+        if (size.width) {
+          setColumns(prevColumns => {
+            const nextColumns = [...columns];
+            nextColumns[index - 1] = {
+              ...nextColumns[index - 1],
+              width: size.width,
+            };
+            return nextColumns;
+          });
+        }
+      }}
+    />
   );
 };
 
-export default ReturnMap;
+
+export default ReturnMapServiceParametersTable;
 
 
 
 
 
+function ReturnMapServiceParameters()  {
 
 
-
-    returnMap: returnMapReducer,
-
-
-
-
-
-
-routes::
-
-{
-    exact: true,
-    processId: Pages.returnMap.processId,
-    path: Pages.returnMap.path,
-    component: asyncComponent(() => import('./pages/returnMap/ReturnMap')),
-    i18n: (lang) =>
-      import(
-        /* webpackMode: "lazy" */ `./i18n/returnMap/ReturnMap-${lang}.js`
-      ),
-  },
+  return (
+        
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable/>
+        </Col>
+      </Row>
+  );
+};
