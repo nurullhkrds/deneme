@@ -1,31 +1,92 @@
-The above error occurred in the <ReturnMapServiceParametersTable> component:
-    in ReturnMapServiceParametersTable (at ReturnMapServiceParameters.js:24)
-    in div (created by styled.div)
-    in styled.div (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Col)
-    in Col (at ReturnMapServiceParameters.js:23)
-    in div (created by styled.div)
-    in styled.div (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Row)
-    in Row (at ReturnMapServiceParameters.js:22)
-    in ReturnMapServiceParameters (at ReturnMapServiceParametersWrapper.js:10)
-    in Provider (at ReturnMapServiceParametersWrapper.js:9)
-    in ReturnMapServiceParametersWrapper (created by AsyncComponent)
-    in AsyncComponent (created by _class)
-    in ExternalDataContextProvider (created by _class)
-    in _class (created by SparxPage)
-    in ShellCommunicatorProvider (created by SparxPage)
-    in PermissionProvider (created by SparxPage)
-    in IntlProvider (created by SparxPage)
-    in SparxPage (created by Route)
-    in Route (created by RouteCreator)
-    in div (created by RouteCreator)
-    in Router (created by MemoryRouter)
-    in MemoryRouter (created by RouteCreator)
-    in div (created by RouteCreator)
-    in RouteCreator
-    in Le (created by YkbUiThemeProvider)
-    in YkbUiThemeProvider
-    in me
+const columns = [
+  { title: 'ID', dataIndex: 'id', sortable: true },
+  { title: 'Return Map Code', dataIndex: 'returnMapCode', sortable: true },
+  { title: 'Institution Return Code', dataIndex: 'institutionReturnCode', sortable: true },
+  { title: 'Institution Return Text', dataIndex: 'institutionReturnText', sortable: true },
+  { title: 'Bank Return Code', dataIndex: 'bankReturnCode', sortable: true },
+  { title: 'Bank Return Text', dataIndex: 'bankReturnText', sortable: true },
+  { title: 'Return Type', dataIndex: 'returnType', sortable: true },
+  { title: 'Is Reversible', dataIndex: 'isReversible', render: isReversible => (isReversible ? 'Yes' : 'No') },
+  {
+    title: 'Actions',
+    dataIndex: 'actions',
+    render: (text, record) => (
+      <span>
+        <Button onClick={() => handleDetailClick(record)}>Detail</Button>
+        <Button onClick={() => handleEditClick(record)}>Edit</Button>
+        <Button onClick={() => handleDeleteClick(record)}>Delete</Button>
+      </span>
+    ),
+  },
+];
 
-React will try to recreate this component tree from scratch using the error boundary you provided, _class.
+const handleDetailClick = (record) => {
+  console.log('Detail click:', record);
+};
+
+const handleEditClick = (record) => {
+  console.log('Edit click:', record);
+};
+
+const handleDeleteClick = (record) => {
+  console.log('Delete click:', record);
+};
+
+function ReturnMapServiceParametersTable() {
+  const data = useSelector((state) => state.returnMap.list);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
+    setSelectedRowKeys(selectedRowKeys);
+  };
+
+  return (
+    <Table
+      rowSelection={{
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
+      }}
+      dataSource={data}
+      columns={columns}
+      pagination={{ showTotal: false }}
+      title={() => (
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      )}
+      footer={() => (
+        <React.Fragment>
+          <Row>
+            <Col xs={24}>
+              <p
+                style={{
+                  margin: '0',
+                  height: '30px',
+                  lineHeight: '30px',
+                }}>
+                Lorem ipsum dolor sit amet
+                <Button size="small" className="right-floated">
+                  Button 1
+                </Button>
+              </p>
+            </Col>
+          </Row>
+        </React.Fragment>
+      )}
+      emptyText={() => (
+        <React.Fragment>
+          Yeni eklemek için
+          <Button link="#">tıklayınız.</Button>
+        </React.Fragment>
+      )}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
+    />
+  );
+}
+
+export default ReturnMapServiceParametersTable;
