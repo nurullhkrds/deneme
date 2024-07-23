@@ -1,41 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+  const dispatch = useDispatch();
+  const { list, spinning, error } = useSelector((state) => state.returnMap);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-const returnMapSlice = createSlice({
-  name: 'returnMap',
-  initialState: {
-    list: [],
-    spinning: false,
-    error: null,
-  },
-  reducers: {
-    setReturnMapList: (state, action) => {
-      state.list = action.payload;
-    },
-    setSpinning: (state, action) => {
-      state.spinning = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
-  },
-});
-
-export const { setReturnMapList, setSpinning, setError } = returnMapSlice.actions;
-export default returnMapSlice.reducer;
-
-// API çağrısını doğrudan burada yapacağız
-export const fetchReturnMapList = (filters) => async (dispatch) => {
-  dispatch(setSpinning(true));
-  try {
-    const { callApi } = useShellCommunicator(); // veya çağrıyı aldığınız yer
-    const response = await sendSearchReturnMapRequest(callApi, filters);
-    console.log('Fetch Response:', response); // Yanıtı loglayın
-    dispatch(setReturnMapList(response.data));
-  } catch (error) {
-    console.error('Fetch Error:', error); // Hata mesajını loglayın
-    dispatch(setError(error.response?.data || error.message));
-  } finally {
-    dispatch(setSpinning(false));
-  }
-};
+  useEffect(() => {
+    dispatch(fetchReturnMapList({}));
+  }, [dispatch]);
