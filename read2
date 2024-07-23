@@ -1,12 +1,123 @@
+// ReturnMapServiceParametersSearch.js
+import React, { useState } from 'react';
+import { Row, Col, Input, Button } from 'antd';
+
+const ReturnMapServiceParametersSearch = ({ onSearch }) => {
+  const [searchCriteria, setSearchCriteria] = useState({
+    returnMap: '',
+    bankReturnCode: '',
+    institutionReturnCode: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria((prevCriteria) => ({
+      ...prevCriteria,
+      [name]: value,
+    }));
+  };
+
+  const handleSearchClick = () => {
+    onSearch(searchCriteria);
+  };
+
+  return (
+    <Row gutter={16}>
+      <Col xs={24} sm={24} md={8} lg={8}>
+        <Input
+          placeholder="Return Map"
+          name="returnMap"
+          value={searchCriteria.returnMap}
+          onChange={handleInputChange}
+        />
+      </Col>
+      <Col xs={24} sm={24} md={8} lg={8}>
+        <Input
+          placeholder="Bank Return Code"
+          name="bankReturnCode"
+          value={searchCriteria.bankReturnCode}
+          onChange={handleInputChange}
+        />
+      </Col>
+      <Col xs={24} sm={24} md={8} lg={8}>
+        <Input
+          placeholder="Institution Return Code"
+          name="institutionReturnCode"
+          value={searchCriteria.institutionReturnCode}
+          onChange={handleInputChange}
+        />
+      </Col>
+      <Col xs={24} sm={24} md={24} lg={24}>
+        <Button type="primary" onClick={handleSearchClick}>
+          Search
+        </Button>
+      </Col>
+    </Row>
+  );
+};
+
+export default ReturnMapServiceParametersSearch;
+
+
+
+
+// ReturnMapServiceParameters.js
+import React, { useState } from 'react';
+import { Row, Col } from 'antd';
+import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
+import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
+import { sendSearchReturnMapRequest } from './api';
+import { useShellCommunicator } from 'path-to-useShellCommunicator';
+
+const ReturnMapServiceParameters = () => {
+  const { callApi } = useShellCommunicator();
+  const [data, setData] = useState([]);
+
+  const handleSearch = async (criteria) => {
+    try {
+      const response = await sendSearchReturnMapRequest(callApi, criteria);
+      setData(response);
+    } catch (error) {
+      console.error('Error fetching return map data:', error);
+    }
+  };
+
+  return (
+    <>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch onSearch={handleSearch} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable data={data} />
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+export default ReturnMapServiceParameters;
+
+
+
+
+
+
+// ReturnMapServiceParametersTable.js
+import React, { useState } from 'react';
+import { Table, Button } from 'antd';
+
 const columnsData = [
   {
     title: 'Name',
     dataIndex: 'name',
     key: 'name',
     width: 200,
-    resizable: true, // if resizable is enabled, width must be mandatory and number must be
-    render: text => (
-      <a href="#" onClick={e => e.preventDefault()}>
+    resizable: true,
+    render: (text) => (
+      <a href="#" onClick={(e) => e.preventDefault()}>
         {text}
       </a>
     ),
@@ -35,38 +146,17 @@ const columnsData = [
   },
 ];
 
-const data = [
-  {
-    key: '1',
-    name: 'John Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-    tags: ['nice', 'developer'],
-  },
-  {
-    key: '2',
-    name: 'Jim Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-    tags: ['loser'],
-  },
-];
-function ReturnMapServiceParametersTable() {
+const ReturnMapServiceParametersTable = ({ data }) => {
   const [columns, setColumns] = useState(columnsData);
 
   return (
     <Table
       rowSelection={{}}
       columns={columns}
-      data={data}
+      dataSource={data}
       onResize={(event, { element, size, handle }, index) => {
-        console.log('event, { element, size, handle }', event, {
-          element,
-          size,
-          handle,
-        });
         if (size.width) {
-          setColumns(prevColumns => {
+          setColumns((prevColumns) => {
             const nextColumns = [...columns];
             nextColumns[index - 1] = {
               ...nextColumns[index - 1],
@@ -80,22 +170,7 @@ function ReturnMapServiceParametersTable() {
   );
 };
 
-
 export default ReturnMapServiceParametersTable;
 
 
 
-
-
-function ReturnMapServiceParameters()  {
-
-
-  return (
-        
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersTable/>
-        </Col>
-      </Row>
-  );
-};
