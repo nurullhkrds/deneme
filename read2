@@ -1,1 +1,10 @@
-eturnMapte version,returnMapCode,InstıtutionReturnCode,InstıtutionTextCode,bankReturnCode,returnType,is_reservible 
+     {
+            "id": 50001,
+            "returnMapCode": "TELEKOM_INTKUTUSU_ALL",
+            "institutionReturnCode": "2061",
+            "institutionReturnText": "Hizmet bulunamadı. Lütfen geçerli bir hizmet numarası giriniz.",
+            "bankReturnCode": "01253",
+            "bankReturnText": "CUSTOMER__SUBSCRIBER_NOT_FOUND",
+            "returnType": "ERROR",
+            "isReversible": false
+        },
