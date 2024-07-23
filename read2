@@ -1,15 +1,15 @@
-  @Test
-    public void testPrivateMethod() throws Exception {
-        // Örnek bir yapılandırma
-        ReverseProvisionFactory factory = new ReverseProvisionFactory(/* gerekli bağımlılıklar */);
+@Component
+public class ReverseProvisionFactory {
+	
+	   private static Map<EnumProvisionType, ReverseProvisionService> reverseProvisionServiceMap = null;
 
-        // Private metoda erişim için Reflection kullanma
-        Method privateMethod = ReverseProvisionFactory.class.getDeclaredMethod("yourPrivateMethodName", /* parametre türleri */);
-        privateMethod.setAccessible(true);
+	    @Autowired
+		private ReverseProvisionFactory(List<ReverseProvisionService> reverseProvisionServices){
+	        reverseProvisionServiceMap = reverseProvisionServices.stream().collect(Collectors.toUnmodifiableMap(ReverseProvisionService::getProvisionType, Function.identity()));
+	    }
 
-        // Metodu çağırma
-        Object result = privateMethod.invoke(factory, /* parametreler */);
+	    public ReverseProvisionService getReverseProvisionService(EnumProvisionType provisionType) {
+	        return   Optional.ofNullable(reverseProvisionServiceMap.get(provisionType)).orElseThrow(IllegalArgumentException::new);
+	    }
 
-        // Sonuçları doğrulama
-        assertEquals(expectedResult, result);
-    }
+}
