@@ -1,36 +1,107 @@
-{
-    "success": true,
-    "message": "Results listed",
-    "statusCode": 200,
-    "data": [
-    {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },
+const returnMapSlice = createSlice({
+  name: 'returnMap',
+  initialState: {
+    list: [],
+    spinning: false,
+  },
+  reducers: {
+    setReturnMapList: (state, action) => {
+      state.list = action.payload;
+    },
+    setSpinning: (state, action) => {
+      state.spinning = action.payload;
+    },
+  },
+});
+
+export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
+export default returnMapSlice.reducer;
+
+
+
+export const sendSearchReturnMapRequest = async () => {
+  const endpoint = 'returnMaps/search';
+  try {
+    const response = await axios.get(endpoint);
+    return response.data.data;  // "data" alanını alarak return ediyoruz
+  } catch (error) {
+    console.error('API call failed:', error);
+    throw error;
+  }
+};
+
+
+import { setReturnMapList, setSpinning } from '../../redux/slices/returnMapSlice';
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+
+const columns = [
   {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        },
+    title: 'ReturnMap Code',
+    dataIndex: 'returnMapCode',
+    key: 'returnMapCode',
+  },
   {
-            "id": 2550045,
-            "returnMapCode": "string",
-            "institutionReturnCode": "string",
-            "institutionReturnText": "string",
-            "bankReturnCode": "string",
-            "bankReturnText": "string",
-            "returnType": "ERROR",
-            "isReversible": true
-        }
-    ]
+    title: 'Institution Return Code',
+    dataIndex: 'institutionReturnCode',
+    key: 'institutionReturnCode',
+  },
+  {
+    title: 'Institution Return Text',
+    dataIndex: 'institutionReturnText',
+    key: 'institutionReturnText',
+  },
+  {
+    title: 'Bank Return Code',
+    dataIndex: 'bankReturnCode',
+    key: 'bankReturnCode',
+  },
+  {
+    title: 'Bank Return Text',
+    dataIndex: 'bankReturnText',
+    key: 'bankReturnText',
+  },
+  {
+    title: 'Return Type',
+    dataIndex: 'returnType',
+    key: 'returnType',
+  },
+  {
+    title: 'Is Reversible',
+    dataIndex: 'isReversible',
+    key: 'isReversible',
+    render: (text) => (text ? 'Yes' : 'No'),
+  },
+];
+
+function ReturnMapServiceParametersTable() {
+  const dispatch = useDispatch();
+  const { list, spinning } = useSelector((state) => state.returnMap);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      dispatch(setSpinning(true));
+      try {
+        const result = await sendSearchReturnMapRequest();
+        dispatch(setReturnMapList(result));
+      } catch (error) {
+        console.error('Error fetching return map data:', error);
+      } finally {
+        dispatch(setSpinning(false));
+      }
+    };
+
+    fetchData();
+  }, [dispatch]);
+
+  return (
+    <Table
+      columns={columns}
+      dataSource={list}
+      loading={spinning}
+      rowKey="id"
+      pagination={{ showTotal: false }}
+    />
+  );
+}
+
+export default ReturnMapServiceParametersTable;
