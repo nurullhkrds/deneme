@@ -1,1 +1,34 @@
   const list = useSelector((state) => state.returnMap.list);
+
+
+The above error occurred in the <ReturnMapServiceParametersTable> component:
+    in ReturnMapServiceParametersTable (at ReturnMapServiceParameters.js:41)
+    in div (created by styled.div)
+    in styled.div (created by Context.Consumer)
+    in YkbUiThemeConsumer (created by Col)
+    in Col (at ReturnMapServiceParameters.js:40)
+    in div (created by styled.div)
+    in styled.div (created by Context.Consumer)
+    in YkbUiThemeConsumer (created by Row)
+    in Row (at ReturnMapServiceParameters.js:39)
+    in ReturnMapServiceParameters (at ReturnMapServiceParametersWrapper.js:10)
+    in Provider (at ReturnMapServiceParametersWrapper.js:9)
+    in ReturnMapServiceParametersWrapper (created by AsyncComponent)
+    in AsyncComponent (created by _class)
+    in ExternalDataContextProvider (created by _class)
+    in _class (created by SparxPage)
+    in ShellCommunicatorProvider (created by SparxPage)
+    in PermissionProvider (created by SparxPage)
+    in IntlProvider (created by SparxPage)
+    in SparxPage (created by Route)
+    in Route (created by RouteCreator)
+    in div (created by RouteCreator)
+    in Router (created by MemoryRouter)
+    in MemoryRouter (created by RouteCreator)
+    in div (created by RouteCreator)
+    in RouteCreator
+    in Le (created by YkbUiThemeProvider)
+    in YkbUiThemeProvider
+    in me
+
+React will try to recreate this component tree from scratch using the error boundary you provided, _class.
