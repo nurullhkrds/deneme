@@ -1,1 +1,234 @@
-When allowCredentials is true, allowedOrigins cannot contain the special value "*" since that cannot be set on the "Access-Control-Allow-Origin" response header. To allow credentials to a set of origins, list them explicitly or consider using "allowedOriginPatterns" instead.
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
+import { Button, Col, Row, Table, TableHeader, Tooltip } from 'ykb-ui';
+import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import { useIntl, withPermission, useShellCommunicator } from "ykb-shell";
+
+const columns = [
+  {
+    title: 'Parent Title',
+    data: 'asd',
+    children: [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        sortable: true,
+        filter: true,
+        filterMultiple: true,
+        sorter: (a, b) => {
+          var nameA = a.name.toUpperCase(); // ignore upper and lowercase
+          var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        },
+      },
+      {
+        title: 'Age',
+        dataIndex: 'age',
+        type: 'number',
+        sortable: true,
+      },
+      {
+        title: 'Iban',
+        dataIndex: 'iban',
+        type: 'iban',
+        render: data => {
+          let arr = data.split(',');
+          if (!data) return;
+          return (
+            <Tooltip
+              placement="left"
+              overlay={arr.map(item => {
+                return (
+                  <span>
+                    {item}
+                    <br />
+                  </span>
+                );
+              })}>
+              <span>
+                {data.length > 80 ? data.slice(0, 80) + ' ...' : data}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        title: 'Currency',
+        dataIndex: 'currency',
+        type: 'currency',
+        currencyType: 'USD',
+      },
+      {
+        title: 'Date',
+        dataIndex: 'birthdate',
+        type: 'date',
+        onCell: (record, index) => ({
+          onClick(e) {
+            console.log('Click cell', ` row ${index}`, record, e.target);
+          },
+        }),
+      },
+      {
+        title: 'Time',
+        dataIndex: 'recordtime',
+        type: 'time',
+      },
+      {
+        title: 'Date Time',
+        dataIndex: 'lastmodified',
+        type: 'datetime',
+      },
+    ],
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'detail',
+      handler: (record, event) => {
+        console.log('detail click:', record);
+      },
+    },
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'edit',
+      hidden: record => {
+        return record.key % 2 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
+      disabled: true,
+    },
+  },
+  {
+    dataIndex: 'custom2',
+    type: {
+      action: 'delete',
+      disabled: record => {
+        return record.key % 3 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+    },
+  },
+];
+
+const data = [];
+for (let i = 0; i < 100; i++) {
+  data.push({
+    key: i,
+    name: `a${i}`,
+    age: 42,
+    iban: `TR100006400000124122142141`,
+    birthdate: '22-11-2017',
+    recordtime: '12:55',
+    currency: 100.5,
+    lastmodified: '22-11-2017 15:55:22',
+  });
+}
+
+const rowSelection = {
+  getCheckboxProps: record => ({
+    disabled: record.name === 'a5',
+  }),
+};
+
+function ReturnMapServiceParametersTable() {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
+  const [returnMapData, setReturnMapData] = useState([]);
+  const { callApi } = useShellCommunicator();
+
+
+  const dispatch = useDispatch();
+  const fetchInstitutionsData = async () => {
+    try {
+      let response = await sendSearchReturnMapRequest(callApi);
+      setReturnMapData(response);
+      console.log(response)
+    } catch (error) {
+      console.log("fetchInstitutionsData", error);
+    }
+  };
+  useEffect(() => {
+    fetchInstitutionsData();
+  }, []);
+
+
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log(
+      'selectedRowKeys:',
+      selectedRowKeys,
+      'selectedRows: ',
+      selectedRows
+    );
+
+    setSelectedRowKeys(selectedRowKeys);
+  };
+
+  return (
+    <Table
+      rowSelection={{
+        getCheckboxProps: rowSelection.getCheckboxProps,
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
+      }}
+      data={data}
+      columns={columns}
+      pagination={{ showTotal: false }}
+      title={
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      }
+      footer={() => (
+        <React.Fragment>
+          <Row>
+            <Col xs={24}>
+              <p
+                style={{
+                  margin: '0',
+                  height: '30px',
+                  lineHeight: '30px',
+                }}>
+                Lorem ipsum dolor sit amet
+                <Button size="small" className="right-floated">
+                  Button 1
+                </Button>
+              </p>
+            </Col>
+          </Row>
+        </React.Fragment>
+      )}
+      emptyText={() => {
+        return (
+          <React.Fragment>
+            Yeni eklemek için
+            <Button link="#">tıklayınız.</Button>
+          </React.Fragment>
+        );
+      }}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
+    />
+  );
+};
+
+
+
+export default ReturnMapServiceParametersTable
