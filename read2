@@ -15,13 +15,29 @@ public class ReverseProvisionFactoryTest {
 
     @BeforeEach
     public void setUp() {
+        // Bu `when` komutları, mock nesnelerinin davranışlarını ayarlamak için kullanılır
         when(reverseProvisionService1.getProvisionType()).thenReturn(provisionType1);
         when(reverseProvisionService2.getProvisionType()).thenReturn(provisionType2);
 
+        // `reverseProvisionFactory`'nin bağımlılıklarının sağlandığından emin olmak için liste oluşturulur
         List<ReverseProvisionService> services = Arrays.asList(reverseProvisionService1, reverseProvisionService2);
 
-        
+        // `ReverseProvisionFactory`'yi, yukarıda oluşturulan liste ile başlatmak için Reflection kullanarak
+        // `reverseProvisionServiceMap`'i el ile ayarlıyoruz.
+        setReverseProvisionFactoryMap(services);
+    }
 
+    private void setReverseProvisionFactoryMap(List<ReverseProvisionService> services) {
+        try {
+            // `ReverseProvisionFactory`'nin `reverseProvisionServiceMap`'ini erişmek için Reflection kullanıyoruz.
+            Field field = ReverseProvisionFactory.class.getDeclaredField("reverseProvisionServiceMap");
+            field.setAccessible(true);
+            Map<EnumProvisionType, ReverseProvisionService> map = services.stream()
+                .collect(Collectors.toUnmodifiableMap(ReverseProvisionService::getProvisionType, Function.identity()));
+            field.set(reverseProvisionFactory, map);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -37,26 +53,4 @@ public class ReverseProvisionFactoryTest {
         assertNotNull(service);
         assertEquals(reverseProvisionService2, service);
     }
-
-
 }
-
-
-
-@Component
-public class ReverseProvisionFactory {
-	
-	   private static Map<EnumProvisionType, ReverseProvisionService> reverseProvisionServiceMap = null;
-
-	    @Autowired
-		private ReverseProvisionFactory(List<ReverseProvisionService> reverseProvisionServices){
-	        reverseProvisionServiceMap = reverseProvisionServices.stream().collect(Collectors.toUnmodifiableMap(ReverseProvisionService::getProvisionType, Function.identity()));
-	    }
-
-	    public ReverseProvisionService getReverseProvisionService(EnumProvisionType provisionType) {
-	        return   Optional.ofNullable(reverseProvisionServiceMap.get(provisionType)).orElseThrow(IllegalArgumentException::new);
-	    }
-
-}
-
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.accounting.provision.service.ReverseProvisionFactory.getReverseProvisionService(com.ykb.payments.bill.transaction.institution.enums.EnumProvisionType)" because "this.reverseProvisionFactory" is null
