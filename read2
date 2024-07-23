@@ -1,8 +1,22 @@
+export const fetchReturnMapList = createAsyncThunk(
+  'returnMap/fetchReturnMapList',
+  async (filters, { rejectWithValue }) => {
+    const { callApi } = useShellCommunicator(); // or however you get callApi
+    try {
+      const response = await sendSearchReturnMapRequest(callApi, filters);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const returnMapSlice = createSlice({
   name: 'returnMap',
   initialState: {
     list: [],
     spinning: false,
+    error: null,
   },
   reducers: {
     setReturnMapList: (state, action) => {
@@ -12,96 +26,399 @@ const returnMapSlice = createSlice({
       state.spinning = action.payload;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchReturnMapList.pending, (state) => {
+        state.spinning = true;
+      })
+      .addCase(fetchReturnMapList.fulfilled, (state, action) => {
+        state.spinning = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchReturnMapList.rejected, (state, action) => {
+        state.spinning = false;
+        state.error = action.payload;
+      });
+  },
 });
 
 export const { setReturnMapList, setSpinning } = returnMapSlice.actions;
 export default returnMapSlice.reducer;
+ bu slice..........
 
 
+import {
+  buildQueryString,
+  arrangeExMessageAndThrowEx,
+} from "../../../utils/ApiCallUtils";
 
-export const sendSearchReturnMapRequest = async () => {
+export const sendSearchReturnMapRequest = async (callApi, filters) => {
   const endpoint = 'returnMaps/search';
+  const criteria = filters ?? {};
+  const url = buildQueryString(endpoint, criteria);
   try {
-    const response = await axios.get(endpoint);
-    return response.data.data;  // "data" alanını alarak return ediyoruz
-  } catch (error) {
-    console.error('API call failed:', error);
-    throw error;
+    return await callApi({
+      method: 'GET',
+      endpoint: url,
+    });
+  } catch (ex) {
+    arrangeExMessageAndThrowEx(ex);
   }
 };
 
+bu api çağırma.... 
 
-import { setReturnMapList, setSpinning } from '../../redux/slices/returnMapSlice';
-import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
 
+"import { sendSearchReturnMapRequest } from '../../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import { setReturnMapList, setSpinning } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+import ReturnMapServiceParametersTable from './ReturnMapServiceParametersTable';
+import ReturnMapServiceParametersSearch from './ReturnMapServiceParametersSearch';
+
+function ReturnMapServiceParameters()  {
+  const { callApi } = useShellCommunicator();
+ 
+
+  return (
+    <>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch  />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable  />
+        </Col>
+      </Row>
+
+      <Row style={{marginTop:"25px"}}>
+        <Col xs={24} sm={24} md={24} lg={24}>
+        <Button>Ekle</Button>
+        <Button>Güncelle</Button>
+        <Button>Kopyala</Button>
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+export default ReturnMapServiceParameters
+" componentim.... 
+
+
+
+
+// ReturnMapServiceParametersSearch.js
+import React, { Fragment, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { fetchReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+
+const ReturnMapServiceParametersSearch = () => {
+  const dispatch = useDispatch();
+  const [searchCriteria, setSearchCriteria] = useState({
+    returnMapCode: '',
+    bankReturnCode: '',
+    institutionReturnCode: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria((prevCriteria) => ({
+      ...prevCriteria,
+      [name]: value,
+    }));
+  };
+
+  const handleSearch = () => {
+    dispatch(fetchReturnMapList(searchCriteria));
+  };
+
+  return (
+    <Fragment>
+      <Form>
+        <Form.Item label="ReturnMap Kodu">
+          <TextInput
+            name="returnMapCode"
+            value={searchCriteria.returnMapCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Kurum Kodu">
+          <TextInput
+            name="institutionReturnCode"
+            value={searchCriteria.institutionReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item label="Banka Kodu">
+          <TextInput
+            name="bankReturnCode"
+            value={searchCriteria.bankReturnCode}
+            onChange={handleInputChange}
+            allowClear
+          />
+        </Form.Item>
+        <Button type="primary" onClick={handleSearch}>Search</Button>
+      </Form>
+    </Fragment>
+  );
+};
+
+export default ReturnMapServiceParametersSearch;
+diğer componentim
+
+...
+
+
+
+
+"import React, { useState } from 'react'
+import { Button, Col, Row, Table, TableHeader } from 'ykb-ui';
 const columns = [
   {
-    title: 'ReturnMap Code',
-    dataIndex: 'returnMapCode',
-    key: 'returnMapCode',
+    title: 'Parent Title',
+    data: 'asd',
+    children: [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        sortable: true,
+        filter: true,
+        filterMultiple: true,
+        sorter: (a, b) => {
+          var nameA = a.name.toUpperCase(); // ignore upper and lowercase
+          var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        },
+      },
+      {
+        title: 'Age',
+        dataIndex: 'age',
+        type: 'number',
+        sortable: true,
+      },
+      {
+        title: 'Iban',
+        dataIndex: 'iban',
+        type: 'iban',
+        render: data => {
+          let arr = data.split(',');
+          if (!data) return;
+          return (
+            <Tooltip
+              placement="left"
+              overlay={arr.map(item => {
+                return (
+                  <span>
+                    {item}
+                    <br />
+                  </span>
+                );
+              })}>
+              <span>
+                {data.length > 80 ? data.slice(0, 80) + ' ...' : data}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        title: 'Currency',
+        dataIndex: 'currency',
+        type: 'currency',
+        currencyType: 'USD',
+      },
+      {
+        title: 'Date',
+        dataIndex: 'birthdate',
+        type: 'date',
+        onCell: (record, index) => ({
+          onClick(e) {
+            console.log('Click cell', ` row ${index}`, record, e.target);
+          },
+        }),
+      },
+      {
+        title: 'Time',
+        dataIndex: 'recordtime',
+        type: 'time',
+      },
+      {
+        title: 'Date Time',
+        dataIndex: 'lastmodified',
+        type: 'datetime',
+      },
+    ],
   },
   {
-    title: 'Institution Return Code',
-    dataIndex: 'institutionReturnCode',
-    key: 'institutionReturnCode',
+    dataIndex: 'custom',
+    type: {
+      action: 'detail',
+      handler: (record, event) => {
+        console.log('detail click:', record);
+      },
+    },
   },
   {
-    title: 'Institution Return Text',
-    dataIndex: 'institutionReturnText',
-    key: 'institutionReturnText',
+    dataIndex: 'custom',
+    type: {
+      action: 'edit',
+      hidden: record => {
+        return record.key % 2 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
+      disabled: true,
+    },
   },
   {
-    title: 'Bank Return Code',
-    dataIndex: 'bankReturnCode',
-    key: 'bankReturnCode',
-  },
-  {
-    title: 'Bank Return Text',
-    dataIndex: 'bankReturnText',
-    key: 'bankReturnText',
-  },
-  {
-    title: 'Return Type',
-    dataIndex: 'returnType',
-    key: 'returnType',
-  },
-  {
-    title: 'Is Reversible',
-    dataIndex: 'isReversible',
-    key: 'isReversible',
-    render: (text) => (text ? 'Yes' : 'No'),
+    dataIndex: 'custom2',
+    type: {
+      action: 'delete',
+      disabled: record => {
+        return record.key % 3 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+    },
   },
 ];
 
+const data = [];
+for (let i = 0; i < 100; i++) {
+  data.push({
+    key: i,
+    name: `a${i}`,
+    age: 42,
+    iban: `TR100006400000124122142141`,
+    birthdate: '22-11-2017',
+    recordtime: '12:55',
+    currency: 100.5,
+    lastmodified: '22-11-2017 15:55:22',
+  });
+}
+
+const rowSelection = {
+  getCheckboxProps: record => ({
+    disabled: record.name === 'a5',
+  }),
+};
+
 function ReturnMapServiceParametersTable() {
-  const dispatch = useDispatch();
-  const { list, spinning } = useSelector((state) => state.returnMap);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      dispatch(setSpinning(true));
-      try {
-        const result = await sendSearchReturnMapRequest();
-        dispatch(setReturnMapList(result));
-      } catch (error) {
-        console.error('Error fetching return map data:', error);
-      } finally {
-        dispatch(setSpinning(false));
-      }
-    };
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log(
+      'selectedRowKeys:',
+      selectedRowKeys,
+      'selectedRows: ',
+      selectedRows
+    );
 
-    fetchData();
-  }, [dispatch]);
+    setSelectedRowKeys(selectedRowKeys);
+  };
 
   return (
     <Table
+      rowSelection={{
+        getCheckboxProps: rowSelection.getCheckboxProps,
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
+      }}
+      data={data}
       columns={columns}
-      dataSource={list}
-      loading={spinning}
-      rowKey="id"
       pagination={{ showTotal: false }}
+      title={
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      }
+      footer={() => (
+        <React.Fragment>
+          <Row>
+            <Col xs={24}>
+              <p
+                style={{
+                  margin: '0',
+                  height: '30px',
+                  lineHeight: '30px',
+                }}>
+                Lorem ipsum dolor sit amet
+                <Button size="small" className="right-floated">
+                  Button 1
+                </Button>
+              </p>
+            </Col>
+          </Row>
+        </React.Fragment>
+      )}
+      emptyText={() => {
+        return (
+          <React.Fragment>
+            Yeni eklemek için
+            <Button link="#">tıklayınız.</Button>
+          </React.Fragment>
+        );
+      }}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
     />
   );
-}
+};
 
-export default ReturnMapServiceParametersTable;
+
+
+export default ReturnMapServiceParametersTable
+" buda tablo componentim...
+
+{
+    "success": true,
+    "message": "Results listed",
+    "statusCode": 200,
+    "data": [
+
+        {
+            "id": 2550045,
+            "returnMapCode": "string",
+            "institutionReturnCode": "string",
+            "institutionReturnText": "string",
+            "bankReturnCode": "string",
+            "bankReturnText": "string",
+            "returnType": "ERROR",
+            "isReversible": true
+        },   {
+            "id": 2550045,
+            "returnMapCode": "string",
+            "institutionReturnCode": "string",
+            "institutionReturnText": "string",
+            "bankReturnCode": "string",
+            "bankReturnText": "string",
+            "returnType": "ERROR",
+            "isReversible": true
+        },   {
+            "id": 2550045,
+            "returnMapCode": "string",
+            "institutionReturnCode": "string",
+            "institutionReturnText": "string",
+            "bankReturnCode": "string",
+            "bankReturnText": "string",
+            "returnType": "ERROR",
+            "isReversible": true
+        }
+    ]
