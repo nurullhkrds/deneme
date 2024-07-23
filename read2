@@ -1,15 +1,52 @@
-@Component
-public class ReverseProvisionFactory {
-	
-	   private static Map<EnumProvisionType, ReverseProvisionService> reverseProvisionServiceMap = null;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-	    @Autowired
-		private ReverseProvisionFactory(List<ReverseProvisionService> reverseProvisionServices){
-	        reverseProvisionServiceMap = reverseProvisionServices.stream().collect(Collectors.toUnmodifiableMap(ReverseProvisionService::getProvisionType, Function.identity()));
-	    }
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-	    public ReverseProvisionService getReverseProvisionService(EnumProvisionType provisionType) {
-	        return   Optional.ofNullable(reverseProvisionServiceMap.get(provisionType)).orElseThrow(IllegalArgumentException::new);
-	    }
+import java.lang.reflect.Constructor;
+import java.util.List;
 
+public class ReverseProvisionFactoryTest {
+
+    @Mock
+    private ReverseProvisionService mockService1;
+
+    @Mock
+    private ReverseProvisionService mockService2;
+
+    private ReverseProvisionFactory factory;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        MockitoAnnotations.openMocks(this);
+
+        // Set up mock behavior
+        when(mockService1.getProvisionType()).thenReturn(EnumProvisionType.TYPE1);
+        when(mockService2.getProvisionType()).thenReturn(EnumProvisionType.TYPE2);
+
+        // Use reflection to create an instance of ReverseProvisionFactory
+        Constructor<ReverseProvisionFactory> constructor = ReverseProvisionFactory.class.getDeclaredConstructor(List.class);
+        constructor.setAccessible(true);
+        factory = constructor.newInstance(List.of(mockService1, mockService2));
+    }
+
+    @Test
+    public void testGetReverseProvisionService_withValidType_returnsService() {
+        // Act
+        ReverseProvisionService result = factory.getReverseProvisionService(EnumProvisionType.TYPE1);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockService1, result);
+    }
+
+    @Test
+    public void testGetReverseProvisionService_withInvalidType_throwsException() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> 
+            factory.getReverseProvisionService(EnumProvisionType.INVALID_TYPE));
+    }
 }
