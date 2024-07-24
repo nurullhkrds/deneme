@@ -1,95 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Table, TableHeader, Tooltip, Button, Row, Col } from 'ykb-ui';
-import { useSelector, useDispatch } from 'react-redux';
-import { setSelectedReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
-
-
-
-const columns = [
-  {
-    title: 'Return Map Code',
-    dataIndex: 'returnMapCode',
-    key: 'returnMapCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Institution Return Code',
-    dataIndex: 'institutionReturnCode',
-    key: 'institutionReturnCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Institution Return Text',
-    dataIndex: 'institutionReturnText',
-    key: 'institutionReturnText',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Bank Return Code',
-    dataIndex: 'bankReturnCode',
-    key: 'bankReturnCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Bank Return Text',
-    dataIndex: 'bankReturnText',
-    key: 'bankReturnText',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Return Type',
-    dataIndex: 'returnType',
-    key: 'returnType',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Is Reversible',
-    dataIndex: 'isReversible',
-    key: 'isReversible',
-    width: 200,
-    render: value => (value ? 'Evet' : 'Hayır'),
-    resizable: true,
-  },
-  {
-    dataIndex: 'custom',
-    type: {
-      action: 'edit',
-      hidden: record => {
-        return record.key % 2 === 0;
-      },
-      handler: (record, event) => {
-        console.log('icon-click:', record);
-      },
-      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
-      disabled: true,
-    },
-  },
-];
-
 const ReturnMapServiceParametersTable = () => {
   const returnMapData = useSelector((state) => state.returnMap.list);
+  const dispatch = useDispatch();
 
-  const dispatch = useDispatch()
   const dataWithKeys = useMemo(
     () => returnMapData.map((item, index) => ({ ...item, key: index + 1 })),
     [returnMapData]
   );
+
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(
-        `selectedRowKeys: ${selectedRowKeys}`,
-        'selectedRows: ',
-        selectedRows
-      );
-
-
-
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
       const selectedIds = selectedRows.map(row => row.id);
       dispatch(setSelectedReturnMapList(selectedIds));
     },
@@ -98,6 +18,71 @@ const ReturnMapServiceParametersTable = () => {
       name: record.name,
     }),
   };
+
+  const handleEdit = (record) => {
+    console.log('Editing record id:', record.id);
+  };
+
+  const columns = [
+    {
+      title: 'Return Map Code',
+      dataIndex: 'returnMapCode',
+      key: 'returnMapCode',
+      width: 200,
+      resizable: true,
+    },
+    {
+      title: 'Institution Return Code',
+      dataIndex: 'institutionReturnCode',
+      key: 'institutionReturnCode',
+      width: 200,
+      resizable: true,
+    },
+    {
+      title: 'Institution Return Text',
+      dataIndex: 'institutionReturnText',
+      key: 'institutionReturnText',
+      width: 200,
+      resizable: true,
+    },
+    {
+      title: 'Bank Return Code',
+      dataIndex: 'bankReturnCode',
+      key: 'bankReturnCode',
+      width: 200,
+      resizable: true,
+    },
+    {
+      title: 'Bank Return Text',
+      dataIndex: 'bankReturnText',
+      key: 'bankReturnText',
+      width: 200,
+      resizable: true,
+    },
+    {
+      title: 'Return Type',
+      dataIndex: 'returnType',
+      key: 'returnType',
+      width: 200,
+      resizable: true,
+    },
+    {
+      title: 'Is Reversible',
+      dataIndex: 'isReversible',
+      key: 'isReversible',
+      width: 200,
+      render: value => (value ? 'Evet' : 'Hayır'),
+      resizable: true,
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      render: (text, record) => (
+        <Button onClick={() => handleEdit(record)}>Edit</Button>
+      ),
+    },
+  ];
 
   return (
     <Table rowSelection={rowSelection} columns={columns} data={dataWithKeys} />
