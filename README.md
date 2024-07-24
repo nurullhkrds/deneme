@@ -1,93 +1,55 @@
-const columns = [
-  {
-    title: 'Return Map Code',
-    dataIndex: 'returnMapCode',
-    key: 'returnMapCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Institution Return Code',
-    dataIndex: 'institutionReturnCode',
-    key: 'institutionReturnCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Institution Return Text',
-    dataIndex: 'institutionReturnText',
-    key: 'institutionReturnText',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Bank Return Code',
-    dataIndex: 'bankReturnCode',
-    key: 'bankReturnCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Bank Return Text',
-    dataIndex: 'bankReturnText',
-    key: 'bankReturnText',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Return Type',
-    dataIndex: 'returnType',
-    key: 'returnType',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Is Reversible',
-    dataIndex: 'isReversible',
-    key: 'isReversible',
-    width: 200,
-    render: value => (value ? 'Evet' : 'Hayır'),
-    resizable: true,
-  },
-  {
-    title: 'Actions',
-    key: 'actions',
-    width: 100,
-    render: (text, record) => (
-      <Button onClick={() => handleEdit(record)}>Edit</Button>
-    ),
-  },
-];
 
-const ReturnMapServiceParametersTable = () => {
-  const returnMapData = useSelector((state) => state.returnMap.list);
-  const dispatch = useDispatch();
+public class QueryBillProcessInputTest {
 
-  const dataWithKeys = useMemo(
-    () => returnMapData.map((item, index) => ({ ...item, key: index + 1 })),
-    [returnMapData]
-  );
+    private QueryBillProcessInput queryBillProcessInput;
 
-  const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      const selectedIds = selectedRows.map(row => row.id);
-      dispatch(setSelectedReturnMapList(selectedIds));
-    },
-    getCheckboxProps: record => ({
-      disabled: record.name === 'Disabled User',
-      name: record.name,
-    }),
-  };
+    @Mock
+    private List<SubscriberNoPartRequestDTO> subscriberNoPartList;
 
-  const handleEdit = (record) => {
-    // Your edit logic here
-    console.log('Editing record:', record);
-  };
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        queryBillProcessInput = new QueryBillProcessInput();
+    }
 
-  return (
-    <Table rowSelection={rowSelection} columns={columns} data={dataWithKeys} />
-  );
-};
+    @Test
+    public void testSetCustomerNo() {
+        Long customerNo = 123L;
+        queryBillProcessInput.setCustomerNo(customerNo);
+        assertEquals(customerNo, queryBillProcessInput.getDataPack().get(ProcessDataPackKey.CUSTOMER_NO.getKey()));
+    }
 
-export default ReturnMapServiceParametersTable;
+    @Test
+    public void testSetIdentityNo() {
+        Long identityNo = 456L;
+        queryBillProcessInput.setIdentityNo(identityNo);
+        assertEquals(identityNo, queryBillProcessInput.getDataPack().get(ProcessDataPackKey.IDENTITY_NO.getKey()));
+    }
+
+    @Test
+    public void testSetTaxOfficeNo() {
+        String taxNo = "TAX123";
+        queryBillProcessInput.setTaxOfficeNo(taxNo);
+        assertEquals(taxNo, queryBillProcessInput.getDataPack().get(ProcessDataPackKey.TAX_ID.getKey()));
+    }
+
+    @Test
+    public void testSetSubscriberNo() {
+        String subscriberNo = "SUB456";
+        queryBillProcessInput.setSubscriberNo(subscriberNo);
+        assertEquals(subscriberNo, queryBillProcessInput.getDataPack().get(ProcessDataPackKey.SUBSCRIBER_NO.getKey()));
+    }
+
+    @Test
+    public void testSetSubscriberNoPartList() {
+        queryBillProcessInput.setSubscriberNoPartList(subscriberNoPartList);
+        assertEquals(subscriberNoPartList, queryBillProcessInput.getDataPack().get(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey()));
+    }
+
+    @Test
+    public void testSetCurrency() {
+        String currency = "USD";
+        queryBillProcessInput.setCurrency(currency);
+        assertEquals(currency, queryBillProcessInput.getDataPack().get(ProcessDataPackKey.CURRENCY.getKey()));
+    }
+}
