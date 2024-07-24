@@ -1,108 +1,82 @@
-const handleInputChange = (e) => {
-  const { name, value } = e.target || {}; // Güvenli bir şekilde destructure et
-  if (name === 'returnMapCode') {
-    setReturnMapCode(value);
-  } else if (name === 'bankReturnCode') {
-    setBankReturnCode(value);
-  } else if (name === 'institutionReturnCode') {
-    setInstitutionReturnCode(value);
-  }
-};
+   @Override
+    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
+        Specification<ReturnMap> spec = Specification.where(null);
 
+        if (returnMapCode != null && !returnMapCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasReturnMapCode(returnMapCode));
+        }
+        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
+        }
+        if (institutionReturnCode != null && !institutionReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode));
+        }
 
-
-// api.js (veya uygun bir dosya adı)
-export const fetchInstitutionsData = (dispatch, callApi, searchCriteria = {}) => async () => {
-  dispatch(setSpinning(true));
-  try {
-    let response = await sendSearchReturnMapRequest(callApi, searchCriteria);
-    dispatch(setReturnMapList(response.data));
-  } catch (error) {
-    dispatch(setError(error));
-    console.error("fetchInstitutionsData", error);
-  } finally {
-    dispatch(setSpinning(false));
-  }
-};
-
-
-const ReturnMapServiceParametersSearch = ({ callApi }) => {
-  const dispatch = useDispatch();
-  const [returnMapCode, setReturnMapCode] = useState('');
-  const [bankReturnCode, setBankReturnCode] = useState('');
-  const [institutionReturnCode, setInstitutionReturnCode] = useState('');
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target || {};
-    if (name === 'returnMapCode') {
-      setReturnMapCode(value);
-    } else if (name === 'bankReturnCode') {
-      setBankReturnCode(value);
-    } else if (name === 'institutionReturnCode') {
-      setInstitutionReturnCode(value);
+        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
+        if (returnMapDTOList.isEmpty()){
+            List<ReturnMapDTO> returnMapDTOList1=new ArrayList<>();
+            new ErrorDataResult<>("Listed is empty",returnMapDTOList1,400);
+        }
+        return new SuccessDataResult<>("Result listed", returnMapDTOList, 200);
     }
-  };
 
-  const handleSearch = () => {
-    const searchCriteria = {
-      returnMapCode,
-      bankReturnCode,
-      institutionReturnCode,
-    };
-    
-    // Tüm inputlar boşsa tüm verileri getirecek şekilde düzenleyelim
-    if (!returnMapCode && !bankReturnCode && !institutionReturnCode) {
-      // Eğer tüm inputlar boşsa, tüm verileri getirmek için arama yapalım
-      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-    } else {
-      dispatch(fetchInstitutionsData(dispatch, callApi, searchCriteria));
+
+    @GetMapping("/search")
+    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
+            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
+            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
+            @RequestParam(required = false) @Parameter(name = "institutionReturnCode") String institutionReturnCode) {
+        DataResult<List<ReturnMapDTO>> searhResult = returnMapService.searchReturnMaps(returnMapCode,bankReturnCode,institutionReturnCode);
+        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
     }
-  };
 
-  const handleReset = () => {
-    setReturnMapCode('');
-    setBankReturnCode('');
-    setInstitutionReturnCode('');
-    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-  };
+ public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (returnMapCode == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("returnMapCode"), returnMapCode);
+        };
+    }
 
-  return (
-    <Fragment>
-      <Form>
-        <Form.Item label="ReturnMap Kodu">
-          <TextInput
-            name="returnMapCode"
-            value={returnMapCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Kurum Kodu">
-          <TextInput
-            name="institutionReturnCode"
-            value={institutionReturnCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Banka Kodu">
-          <TextInput
-            name="bankReturnCode"
-            value={bankReturnCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-      </Form>
-      <Button onClick={handleSearch}>Search</Button>
-      <Button
-        type="secondary"
-        onClick={handleReset}
-      >
-        Reset
-      </Button>
-    </Fragment>
-  );
-};
+    public static Specification<ReturnMap> hasBankErrorCode(String bankReturnCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (bankReturnCode == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("bankReturnCode"), bankReturnCode);
+        };
+    }
 
-export default ReturnMapServiceParametersSearch;
+    public static Specification<ReturnMap> hasInstitutionErrorCode(String institutionReturnCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (institutionReturnCode == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("institutionReturnCode"), institutionReturnCode);
+        };
+    }
+
+   @Override
+    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
+        Specification<ReturnMap> spec = Specification.where(null);
+
+        if (returnMapCode != null && !returnMapCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasReturnMapCode(returnMapCode));
+        }
+        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
+        }
+        if (institutionReturnCode != null && !institutionReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode));
+        }
+
+        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
+        if (returnMapDTOList.isEmpty()){
+            List<ReturnMapDTO> returnMapDTOList1=new ArrayList<>();
+            new ErrorDataResult<>("Listed is empty",returnMapDTOList1,400);
+        }
+        return new SuccessDataResult<>("Result listed", returnMapDTOList, 200);
+    }
