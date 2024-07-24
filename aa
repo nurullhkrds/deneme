@@ -18,3 +18,9 @@ bu benim bff tarafı FeignClient tarafım...
         "errorMessage": "[400] during [GET] to [http://PAYMENTS.BILL.bill-transaction/returnMaps/search?returnMapCode=abccc] [AdapterReturnMapClient#searchReturnMaps(String,String,String)]: []",
         "traceId": null
     },
+{
+    "success": false,
+    "message": "Listed is empty",
+    "statusCode": 400,
+    "data": []
+}
