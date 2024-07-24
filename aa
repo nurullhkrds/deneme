@@ -1,15 +1,17 @@
- useEffect(() => {
-    if (formRef.current) {
-      formRef.current.setFieldsValue(returnMapOneData);
-    }
-  }, [returnMapOneData]);
-          <Form.Item label="Geri Dönüş Tipi">
-                <Select onChange={handleSelectReturnType}>
-                  <Option value="SUCCESS">
-                    Başarılı
-                  </Option>
-                  <Option value="ERROR" >
-                    Başarısız
-                  </Option>
-                </Select>
-              </Form.Item>
+ <Form.Item label="" colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}>
+          <SecureButton
+            type="secondary"
+            onClick={resetSearchFormFields}
+            permission="instServiceParameterSearchFormClearBtn"
+          >
+            {InstServiceParameterSearchFormLocale.clearButton}
+          </SecureButton>
+          <SecureButton
+            htmlType="submit"
+            type="primary"
+            className="left-floated"
+            permission="instServiceParameterSearchFormSubmitBtn"
+          >
+            {InstServiceParameterSearchFormLocale.submitButton}
+          </SecureButton>
+        </Form.Item>const SecureButton = withPermission(Button);
