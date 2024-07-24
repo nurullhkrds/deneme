@@ -1,48 +1,25 @@
-@Transactional
-public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
-    try {
-        List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
-        List<ReturnMap> copiedReturnMaps = new ArrayList<>();
+  const handleOk = () => {
+    setModalVisible(false);
+    sendcreateReturnMapRequest(callApi, createRequest).then(
+      dispatch(fetchInstitutionsData(dispatch, callApi, {}))
+    )
+    Notification.success('success message', 5);
 
-        for (ReturnMap original : returnMapsToCopy) {
-            ReturnMap copied = new ReturnMap();
 
-            copied.setReturnMapCode(
-                isNotBlank(request.getReturnMapCode()) ? request.getReturnMapCode() : original.getReturnMapCode()
-            );
-            copied.setInstitutionReturnCode(
-                isNotBlank(request.getInstitutionReturnCode()) ? request.getInstitutionReturnCode() : original.getInstitutionReturnCode()
-            );
-            copied.setInstitutionReturnText(
-                isNotBlank(request.getInstitutionReturnText()) ? request.getInstitutionReturnText() : original.getInstitutionReturnText()
-            );
-            copied.setBankReturnCode(
-                isNotBlank(request.getBankReturnCode()) ? request.getBankReturnCode() : original.getBankReturnCode()
-            );
-            copied.setBankReturnText(
-                isNotBlank(request.getBankReturnText()) ? request.getBankReturnText() : original.getBankReturnText()
-            );
-            
-            // Handle Enum conversion with blank or null string
-            copied.setReturnType(
-                isNotBlank(request.getReturnType()) ? EnumReturnType.valueOf(request.getReturnType()) : original.getReturnType()
-            );
+  };
 
-            copied.setIsReversible(
-                request.getIsReversible() != null ? request.getIsReversible() : original.getIsReversible()
-            );
+export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest) => {
+  const endpoint = "returnMaps/createReturnMap";
 
-            copiedReturnMaps.add(copied);
-        }
-
-        returnMapRepository.saveAll(copiedReturnMaps);
-        return new SuccessResult("Copy successful", 200);
-
-    } catch (Exception e) {
-        return new ErrorResult("Error! " + e.getMessage(), 400);
-    }
-}
-
-private boolean isNotBlank(String value) {
-    return value != null && !value.trim().isEmpty();
-}
+  try {
+    return await callApi({
+      method: "POST",
+      endpoint: endpoint,
+      body: createReturnMapRequest,
+      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
+    });
+  } catch (ex) {
+    console.error('API error:', ex);
+    throw ex; // Hataları üst bileşene fırlat
+  }
+};
