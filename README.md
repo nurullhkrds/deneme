@@ -1,67 +1,22 @@
-const ReturnMapServiceParametersSearch = ({ callApi }) => {
-  const dispatch = useDispatch();
-  const [searchCriteria, setSearchCriteria] = useState({
-    returnMapCode: '',
-    bankReturnCode: '',
-    institutionReturnCode: '',
-  });
+ @Override
+    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode,String bankReturnCode,String institutionErrorCode) {
+        Specification<ReturnMap> spec = Specification.where(null);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSearchCriteria((prevCriteria) => ({
-      ...prevCriteria,
-      [name]: value,
-    }));
-  };
+        if (returnMapCode != null && !returnMapCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasReturnMapCode(returnMapCode));
+        }
+        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
+        }
+        if (institutionErrorCode != null && !institutionErrorCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionErrorCode));
+        }
 
-  const handleSearch = () => {
-    dispatch(fetchInstitutionsData(callApi, searchCriteria, dispatch)());
-  };
+        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
+        boolean success = !returnMapDTOList.isEmpty();
+        String message = success ? "Results listed" : "No results found";
+        int statusCode = success ? HttpStatus.OK.value() : HttpStatus.NOT_FOUND.value();
 
-  return (
-    <Fragment>
-      <Form>
-        <Form.Item label="ReturnMap Kodu">
-          <TextInput
-            name="returnMapCode"
-            value={searchCriteria.returnMapCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Kurum Kodu">
-          <TextInput
-            name="institutionReturnCode"
-            value={searchCriteria.institutionReturnCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Form.Item label="Banka Kodu">
-          <TextInput
-            name="bankReturnCode"
-            value={searchCriteria.bankReturnCode}
-            onChange={handleInputChange}
-            allowClear
-          />
-        </Form.Item>
-        <Button type="primary" onClick={handleSearch}>Search</Button>
-        <Button
-          type="secondary"
-          onClick={() => {
-            setSearchCriteria({
-              returnMapCode: '',
-              bankReturnCode: '',
-              institutionReturnCode: '',
-            });
-            dispatch(fetchInstitutionsData(callApi, {}, dispatch)());
-          }}
-        >
-          Reset
-        </Button>
-      </Form>
-    </Fragment>
-  );
-};
-
-export default ReturnMapServiceParametersSearch;
+        return new DataResult<>(success, message, returnMapDTOList, statusCode);
+    }
