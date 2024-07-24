@@ -1,133 +1,28 @@
-const Option = Select.Option;
+  const handleOk = async () => {
+    await setModalVisible(false);
+    await console.log(data)
+    await dispatch(sendcreateReturnMapRequest(callApi, data))
 
-function ReturnMapServiceParameters() {
-  const dispatch = useDispatch();
-  const { callApi } = useShellCommunicator(); // Adjust this if needed
-  const [modalVisible, setModalVisible] = useState(false);
-  const [returnMapCode, setReturnMapCode] = useState("");
-  const [institutionReturnCode, setinstitutionReturnCode] = useState("");
-  const [institutionReturnText, setinstitutionReturnText] = useState("");
-  const [bankReturnCode, setbankReturnCode] = useState("");
-  const [bankReturnText, setbankReturnText] = useState("");
-  const [returnType, setreturnType] = useState("");
-  const [isReversible, setisReversible] = useState(false);
-
-  const showModal = () => {
-    setModalVisible(true);
   };
 
-  const handleOk = () => {
-    setModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setModalVisible(false);
-  };
-
-  const handleInputChange = () => {
-    console.log("");
+export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest) => {
+  const endpoint = "returnMaps/createReturnMap";
+  try {
+    return await callApi({
+      method: "POST",
+      endpoint: endpoint,
+      body: createReturnMapRequest,
+      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
+    });
+  } catch (ex) {
+    console.error('API error:', ex);
+    throw ex; // Hataları üst bileşene fırlat
   }
+};
 
-  useEffect(() => {
-    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-  }, [dispatch, callApi]);
-
-  return (
-    <>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersSearch callApi={callApi} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersTable />
-        </Col>
-      </Row>
-      <Row style={{ marginTop: "25px" }}>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Button onClick={showModal}>Ekle</Button>
-          <Button>Güncelle</Button>
-          <Button>Kopyala</Button>
-        </Col>
-      </Row>
-
-      <Modal
-        title="Add New Return Map"
-        visible={modalVisible}
-        onClose={handleCancel}
-        footer={[
-          <Button key="cancel" onClick={handleCancel}>
-            Cancel
-          </Button>,
-          <Button key="ok" type="primary" onClick={handleOk}>
-            Save
-          </Button>,
-        ]}
-      >
-
-        <div>
-          <Form>
-            <Form.Item label="ReturnMap Kodu">
-              <TextInput
-                name="returnMapCode"
-                value={returnMapCode}
-                onChange={handleInputChange}
-              />
-            </Form.Item>
-
-            <Form.Item label="Kurum Kodu">
-              <TextInput
-                name="institutionReturnCode"
-                value={institutionReturnCode}
-                onChange={handleInputChange}
-              />
-            </Form.Item>
-            <Form.Item label="Kurum Metni">
-              <TextInput
-                name="institutionReturnText"
-                value={institutionReturnText}
-                onChange={handleInputChange}
-              />
-            </Form.Item>
-            <Form.Item label="Banka Kodu">
-              <TextInput
-                name="bankReturnCode"
-                value={bankReturnCode}
-                onChange={handleInputChange}
-              />
-            </Form.Item>
-            <Form.Item label="Banka Metni">
-              <TextInput
-                name="bankReturnText"
-                value={bankReturnText}
-                onChange={handleInputChange}
-              />
-            </Form.Item>
-
-            <Form.Item label="Geri Dönüş Tipi">
-              <Select onChange={handleInputChange}>
-
-                <Option value="SUCCESS" >
-                  Başarılı
-                </Option>
-                <Option value="ERROR">Başarısız</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item label="isReversible">
-              <Select onChange={handleInputChange}>
-
-                <Option value="true" >
-                  true
-                </Option>
-                <Option value="false">false</Option>
-              </Select>
-            </Form.Item>
-          </Form>
-        </div>
-      </Modal>
-    </>
-  );
-}
-
-export default ReturnMapServiceParameters;
+Uncaught (in promise) Error: Actions must be plain objects. Instead, the actual type was: 'Promise'. You may need to add middleware to your store setup to handle dispatching other values, such as 'redux-thunk' to handle dispatching functions. See https://redux.js.org/tutorials/fundamentals/part-4-store#middleware and https://redux.js.org/tutorials/fundamentals/part-6-async-logic#using-the-redux-thunk-middleware for examples.
+    at dispatch (redux.js:275:1)
+    at serializableStateInvariantMiddleware.ts:171:1
+    at index.js:20:1
+    at immutableStateInvariantMiddleware.ts:253:1
+    at handleOk (ReturnMapServiceParameters.js:43:1)
