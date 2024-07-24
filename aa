@@ -562,3 +562,16 @@ export default lang;
 };
 
 export default lang;
+
+  {
+    exact: true,
+    processId: Pages.instServiceParameters.processId,
+    path: Pages.instServiceParameters.path,
+    component: asyncComponent(() =>
+      import("./pages/instServiceParameter/InstServiceParametersWrapper")
+    ),
+    i18n: (lang) =>
+      import(
+        /* webpackMode: "lazy" */ `./i18n/instServiceParameter/InstServiceParameters-${lang}.js`
+      ),
+  },
