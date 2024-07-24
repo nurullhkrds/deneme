@@ -1,24 +1,28 @@
-  @Test
-    void shouldHandleGenericException() {
-        CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
-        inputDto.setPaymentMethodType(EnumPaymentMethod.CARD);
-        inputDto.setContractNo(123L);
-        inputDto.setChannelTransactionId("123");
-        inputDto.setDummyMerchant(true);
+@Test
+void shouldHandleGenericException() {
+    // Given
+    CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
+    inputDto.setPaymentMethodType(EnumPaymentMethod.CARD);
+    inputDto.setContractNo(123L);
+    inputDto.setChannelTransactionId("123");
+    inputDto.setDummyMerchant(true);
 
-        MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
-        makeReverseProvisionRequest.setContractNo(inputDto.getContractNo());
-        makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
-        makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
+    MakeReverseProvisionRequest makeReverseProvisionRequest = new MakeReverseProvisionRequest();
+    makeReverseProvisionRequest.setContractNo(inputDto.getContractNo());
+    makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
+    makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
 
-        RuntimeException runtimeException = new RuntimeException();
+    RuntimeException runtimeException = new RuntimeException("Test exception");
 
-        Mockito.when(provisionNextService.makeReverseProvision(Mockito.any(MakeReverseProvisionRequest.class)))
-                .thenThrow(runtimeException);
+    // Mock the behavior
+    Mockito.when(provisionNextService.makeReverseProvision(Mockito.any(MakeReverseProvisionRequest.class)))
+            .thenThrow(runtimeException);
 
-        CreateReverseAccountingResultDTO actualResult = cardReverseProvisionService.doReverseAccounting(inputDto);
+    // When
+    CreateReverseAccountingResultDTO actualResult = cardReverseProvisionService.doReverseAccounting(inputDto);
 
-        assertFalse(actualResult.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, actualResult.getError());
-        verify(provisionNextService).makeReverseProvision(Mockito.any(MakeReverseProvisionRequest.class));
-    }java.lang.NullPointerException: Cannot invoke "Object.getClass()" because the return value of "java.lang.Exception.getCause()" is null
+    // Then
+    assertFalse(actualResult.isSuccess(), "Expected the result to be unsuccessful.");
+    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, actualResult.getError(), "Expected the error to be GENERIC_UNKNOWN_ERROR.");
+    verify(provisionNextService).makeReverseProvision(Mockito.any(MakeReverseProvisionRequest.class));
+}
