@@ -1,21 +1,4 @@
-const handleOk = () => {
-  // Modal'ı kapat
-  setModalVisible(false);
-
-  // API isteğini yap
-  sendcreateReturnMapRequest(callApi, createRequest)
-    .then(() => {
-      // Başarılı olduğunda state'i güncelle
-      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-
-      // Başarı mesajını göster
-      Notification.success('Success message', 5);
-    })
-    .catch(error => {
-      // Hata durumunda gerekli işlemleri yap
-      console.error('Error creating return map:', error);
-      // Hata mesajını kullanıcıya gösterebilirsiniz
-      Notification.error('Error creating return map', 5);
-    });
-};
-      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
+  {
+            selectedIds.length > 0 &&  ? 
+          }
+          <Button onClick={showModal2}>Kopyala</Button>
