@@ -1,98 +1,65 @@
-public class CardProvisionServiceImplTest {
+public class BillPaymentProcessInputTest {
 
-    @InjectMocks
-    private CardProvisionServiceImpl cardProvisionServiceImpl;
-
-    @Mock
-    private SwtSwitchIntegrationService cardProvisionService;
+    private BillPaymentProcessInput billPaymentProcessInput;
 
     @Mock
-    private ProvisionNextService provisionNextService;
+    private AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO;
 
     @Mock
-    private AccountingUtilServiceImpl accountingUtilServiceImpl;
+    private CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO;
 
     @Mock
-    private AccountingUtil accountingDateUtil;
+    private CashPaymentMethodDetailDTO cashPaymentMethodDetailDTO;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        billPaymentProcessInput = new BillPaymentProcessInput(EnumProcessCode.BILL_PAYMENT);
     }
 
     @Test
-    public void testDoAccountingSuccessRealMerchant() {
-        // Create and set up CreateAccountingDTO
-        CreateAccountingDTO dto = new CreateAccountingDTO();
-        dto.setDummyMerchant(false);
-        dto.setPaymentAmount(BigDecimal.valueOf(1000));
-        dto.setCurrency(new Currency("USD"));
-        dto.setChannelCode("12345");
-        dto.setMerchantNo("67890");
-        dto.setChannelSessionId("session-id");
-        dto.setBranchCode("branch-code");
-
-        // Mock InstitutionDTO
-        InstitutionDTO institutionDTO = mock(InstitutionDTO.class);
-        when(institutionDTO.getName()).thenReturn("Institution Name");
-
-        // Set InstitutionDTO to CreateAccountingDTO
-        dto.setInstitution(institutionDTO);
-
-        // Mock CardProvisionResponse
-        CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
-        cardProvisionResponse.setGuid("GUID-12345");
-        cardProvisionResponse.setRequestId("12345");
-
-        // Set up mock for cardProvisionService
-        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-            .thenReturn(cardProvisionResponse);
-
-        // Mock AccountingUtilServiceImpl
-        when(accountingUtilServiceImpl.getContractNumber()).thenReturn(123456L);
-
-        // Call the method under test
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
-
-        // Verify results
-        assertTrue(result.isSuccess());
-        assertEquals(123456L, result.getContractNo());
-        assertEquals(12345L, result.getOceanTransactionId());
+    public void testSetBillProvisionId() {
+        Long billProvisionId = 123L;
+        billPaymentProcessInput.setBillProvisionId(billProvisionId);
+        assertEquals(billProvisionId, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.BILL_PROVISION_ID.getKey()));
     }
 
     @Test
-    public void testDoAccountingDummyMerchant() {
-        // Create and set up CreateAccountingDTO
-        CreateAccountingDTO dto = new CreateAccountingDTO();
-        dto.setDummyMerchant(true);
-        dto.setPaymentAmount(BigDecimal.valueOf(1000));
-        dto.setCurrency(new Currency("USD"));
-        dto.setChannelCode("12345");
-        dto.setMerchantNo("67890");
-        dto.setChannelSessionId("session-id");
-        dto.setBranchCode("branch-code");
+    public void testSetPaymentAmount() {
+        BigDecimal paymentAmount = BigDecimal.valueOf(100.50);
+        billPaymentProcessInput.setPaymentAmount(paymentAmount);
+        assertEquals(paymentAmount, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.PAYMENT_AMOUNT.getKey()));
+    }
 
-        // Mock InstitutionDTO
-        InstitutionDTO institutionDTO = mock(InstitutionDTO.class);
-        when(institutionDTO.getName()).thenReturn("Institution Name");
+    @Test
+    public void testSetCurrency() {
+        String currency = "USD";
+        billPaymentProcessInput.setCurrency(currency);
+        assertEquals(currency, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.CURRENCY.getKey()));
+    }
 
-        // Set InstitutionDTO to CreateAccountingDTO
-        dto.setInstitution(institutionDTO);
+    @Test
+    public void testSetPaymentMethodType() {
+        String paymentMethodType = "CREDIT_CARD";
+        billPaymentProcessInput.setPaymentMethodType(paymentMethodType);
+        assertEquals(EnumPaymentMethod.valueOf(paymentMethodType), billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.PAYMENT_METHOD_TYPE.getKey()));
+    }
 
-        // Mock CreateAccountingResultDTO
-        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
-        createAccountingResultDTO.setSuccess(true);
-        createAccountingResultDTO.setOceanTransactionId(12345L);
+    @Test
+    public void testSetAccountPaymentMethodDetail() {
+        billPaymentProcessInput.setAccountPaymentMethodDetail(accountPaymentMethodDetailDTO);
+        assertEquals(accountPaymentMethodDetailDTO, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.ACCOUNT_PAYMENT_METHOD_DETAIL.getKey()));
+    }
 
-        // Mock ProvisionNextService
-        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class)))
-            .thenReturn(new MakeProvisionResponse(true, "Contract-12345"));
+    @Test
+    public void testSetCreditCardPaymentMethodDetail() {
+        billPaymentProcessInput.setCreditCardPaymentMethodDetail(creditCardPaymentMethodDetailDTO);
+        assertEquals(creditCardPaymentMethodDetailDTO, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.CREDIT_CARD_PAYMENT_METHOD_DETAIL.getKey()));
+    }
 
-        // Call the method under test
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(dto);
-
-        // Verify results
-        assertTrue(result.isSuccess());
-        assertEquals("Contract-12345", result.getContractNo());
+    @Test
+    public void testSetCashPaymentMethodDetail() {
+        billPaymentProcessInput.setCashPaymentMethodDetail(cashPaymentMethodDetailDTO);
+        assertEquals(cashPaymentMethodDetailDTO, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.CASH_PAYMENT_METHOD_DETAIL.getKey()));
     }
 }
