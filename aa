@@ -1,40 +1,42 @@
-@Getter
-@Setter
-public class CopyForIdsAndDataRequest {
-    private List<Long> ids;
-    private String returnMapCode;
-    private String institutionReturnCode;
-    private String institutionReturnText;
-    private String bankReturnCode;
-    private String bankReturnText;
-    private String returnType;
-    private Boolean isReversible;}
+@Transactional
+public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
+    try {
+        List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
+        List<ReturnMap> copiedReturnMaps = new ArrayList<>();
 
- şöyle bir requestim var ... 
-    @Transactional
-    public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
-        try{
-            List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
-            List<ReturnMap> copiedReturnMaps = new ArrayList<>();
+        for (ReturnMap original : returnMapsToCopy) {
+            ReturnMap copied = new ReturnMap();
 
-            for (ReturnMap original : returnMapsToCopy) {
-                ReturnMap copied = new ReturnMap();
-                copied.setReturnMapCode(original.getReturnMapCode() );
-                copied.setInstitutionReturnCode(original.getInstitutionReturnCode());
-                copied.setInstitutionReturnText(original.getInstitutionReturnText());
-                copied.setBankReturnCode(original.getBankReturnCode());
-                copied.setBankReturnText(original.getBankReturnText());
-                copied.setReturnType(original.getReturnType());
-                copied.setIsReversible(original.getIsReversible());
-                copiedReturnMaps.add(copied);
-            }
+            // Conditionally set fields based on request
+            copied.setReturnMapCode(
+                request.getReturnMapCode() != null ? request.getReturnMapCode() : original.getReturnMapCode()
+            );
+            copied.setInstitutionReturnCode(
+                request.getInstitutionReturnCode() != null ? request.getInstitutionReturnCode() : original.getInstitutionReturnCode()
+            );
+            copied.setInstitutionReturnText(
+                request.getInstitutionReturnText() != null ? request.getInstitutionReturnText() : original.getInstitutionReturnText()
+            );
+            copied.setBankReturnCode(
+                request.getBankReturnCode() != null ? request.getBankReturnCode() : original.getBankReturnCode()
+            );
+            copied.setBankReturnText(
+                request.getBankReturnText() != null ? request.getBankReturnText() : original.getBankReturnText()
+            );
+            copied.setReturnType(
+                request.getReturnType() != null ? request.getReturnType() : original.getReturnType()
+            );
+            copied.setIsReversible(
+                request.getIsReversible() != null ? request.getIsReversible() : original.getIsReversible()
+            );
 
-            returnMapRepository.saveAll(copiedReturnMaps);
-            return new SuccessResult("copy successful",200);
-
-        }
-        catch (Exception e){
-           return new ErrorResult("Error! "+e.getMessage(),400);
+            copiedReturnMaps.add(copied);
         }
 
+        returnMapRepository.saveAll(copiedReturnMaps);
+        return new SuccessResult("Copy successful", 200);
+
+    } catch (Exception e) {
+        return new ErrorResult("Error! " + e.getMessage(), 400);
     }
+}
