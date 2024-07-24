@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import { Table } from 'ykb-ui'; // ykb-ui kullanılıyor
+import { useSelector } from 'react-redux';
 
 const columnsData = [
   {
@@ -65,7 +68,7 @@ const ReturnMapServiceParametersTable = () => {
       );
     },
     getCheckboxProps: record => ({
-      disabled: record.returnMapCode === 'Disabled Code', // Örneğe uygun olarak düzenlendi
+      disabled: record.returnMapCode === 'Disabled Code', // Özelliğe göre düzenlendi
     }),
   };
 
@@ -73,8 +76,8 @@ const ReturnMapServiceParametersTable = () => {
     <Table
       rowSelection={rowSelection}
       columns={columns}
-      dataSource={returnMapData} // dataSource olarak değiştirildi
-      rowKey="key" // Key özelliği eklenmiş olabilir, eklenmeli
+      data={returnMapData} // data kullanıldı
+      rowKey="key" // Benzersiz anahtar, verinin her satırında bulunmalı
     />
   );
 };
