@@ -1,37 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Input, Select } from 'ykb-ui'; // Adjust import as needed
-import { useDispatch } from 'react-redux';
-import { fetchInstitutionsData } from './actions'; // Adjust import if needed
-
-const { Option } = Select;
+const Option = Select.Option;
 
 function ReturnMapServiceParameters() {
   const dispatch = useDispatch();
   const { callApi } = useShellCommunicator(); // Adjust this if needed
   const [modalVisible, setModalVisible] = useState(false);
-  const [returnMapCode, setReturnMapCode] = useState('');
-  const [institutionReturnCode, setInstitutionReturnCode] = useState('');
-  const [institutionReturnText, setInstitutionReturnText] = useState('');
-  const [bankReturnCode, setBankReturnCode] = useState('');
-  const [bankReturnText, setBankReturnText] = useState('');
-  const [returnType, setReturnType] = useState('SUCCESS'); // Default value
-  const [isReversible, setIsReversible] = useState(false); // Default value
+  const [returnMapCode, setReturnMapCode] = useState("");
+  const [institutionReturnCode, setinstitutionReturnCode] = useState("");
+  const [institutionReturnText, setinstitutionReturnText] = useState("");
+  const [bankReturnCode, setbankReturnCode] = useState("");
+  const [bankReturnText, setbankReturnText] = useState("");
+  const [returnType, setreturnType] = useState("");
+  const [isReversible, setisReversible] = useState(false);
 
   const showModal = () => {
     setModalVisible(true);
   };
 
   const handleOk = () => {
-    console.log('Form submitted with values:', {
-      returnMapCode,
-      institutionReturnCode,
-      institutionReturnText,
-      bankReturnCode,
-      bankReturnText,
-      returnType,
-      isReversible,
-    });
-    // Add your API call or form submission logic here
     setModalVisible(false);
   };
 
@@ -39,36 +24,9 @@ function ReturnMapServiceParameters() {
     setModalVisible(false);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    switch (name) {
-      case 'returnMapCode':
-        setReturnMapCode(value);
-        break;
-      case 'institutionReturnCode':
-        setInstitutionReturnCode(value);
-        break;
-      case 'institutionReturnText':
-        setInstitutionReturnText(value);
-        break;
-      case 'bankReturnCode':
-        setBankReturnCode(value);
-        break;
-      case 'bankReturnText':
-        setBankReturnText(value);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleSelectChange = (value, field) => {
-    if (field === 'returnType') {
-      setReturnType(value);
-    } else if (field === 'isReversible') {
-      setIsReversible(value === 'true');
-    }
-  };
+  const handleInputChange = () => {
+    console.log("");
+  }
 
   useEffect(() => {
     dispatch(fetchInstitutionsData(dispatch, callApi, {}));
@@ -86,7 +44,7 @@ function ReturnMapServiceParameters() {
           <ReturnMapServiceParametersTable />
         </Col>
       </Row>
-      <Row style={{ marginTop: '25px' }}>
+      <Row style={{ marginTop: "25px" }}>
         <Col xs={24} sm={24} md={24} lg={24}>
           <Button onClick={showModal}>Ekle</Button>
           <Button>Güncelle</Button>
@@ -97,7 +55,7 @@ function ReturnMapServiceParameters() {
       <Modal
         title="Add New Return Map"
         visible={modalVisible}
-        onCancel={handleCancel} // Use onCancel instead of onClose
+        onClose={handleCancel}
         footer={[
           <Button key="cancel" onClick={handleCancel}>
             Cancel
@@ -107,61 +65,66 @@ function ReturnMapServiceParameters() {
           </Button>,
         ]}
       >
-        <Form layout="vertical">
-          <Form.Item label="Return Map Code">
-            <Input
-              name="returnMapCode"
-              value={returnMapCode}
-              onChange={handleInputChange}
-            />
-          </Form.Item>
-          <Form.Item label="Institution Return Code">
-            <Input
-              name="institutionReturnCode"
-              value={institutionReturnCode}
-              onChange={handleInputChange}
-            />
-          </Form.Item>
-          <Form.Item label="Institution Return Text">
-            <Input
-              name="institutionReturnText"
-              value={institutionReturnText}
-              onChange={handleInputChange}
-            />
-          </Form.Item>
-          <Form.Item label="Bank Return Code">
-            <Input
-              name="bankReturnCode"
-              value={bankReturnCode}
-              onChange={handleInputChange}
-            />
-          </Form.Item>
-          <Form.Item label="Bank Return Text">
-            <Input
-              name="bankReturnText"
-              value={bankReturnText}
-              onChange={handleInputChange}
-            />
-          </Form.Item>
-          <Form.Item label="Return Type">
-            <Select
-              value={returnType}
-              onChange={(value) => handleSelectChange(value, 'returnType')}
-            >
-              <Option value="SUCCESS">Success</Option>
-              <Option value="ERROR">Error</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="Is Reversible">
-            <Select
-              value={isReversible ? 'true' : 'false'}
-              onChange={(value) => handleSelectChange(value, 'isReversible')}
-            >
-              <Option value="true">True</Option>
-              <Option value="false">False</Option>
-            </Select>
-          </Form.Item>
-        </Form>
+
+        <div>
+          <Form>
+            <Form.Item label="ReturnMap Kodu">
+              <TextInput
+                name="returnMapCode"
+                value={returnMapCode}
+                onChange={handleInputChange}
+              />
+            </Form.Item>
+
+            <Form.Item label="Kurum Kodu">
+              <TextInput
+                name="institutionReturnCode"
+                value={institutionReturnCode}
+                onChange={handleInputChange}
+              />
+            </Form.Item>
+            <Form.Item label="Kurum Metni">
+              <TextInput
+                name="institutionReturnText"
+                value={institutionReturnText}
+                onChange={handleInputChange}
+              />
+            </Form.Item>
+            <Form.Item label="Banka Kodu">
+              <TextInput
+                name="bankReturnCode"
+                value={bankReturnCode}
+                onChange={handleInputChange}
+              />
+            </Form.Item>
+            <Form.Item label="Banka Metni">
+              <TextInput
+                name="bankReturnText"
+                value={bankReturnText}
+                onChange={handleInputChange}
+              />
+            </Form.Item>
+
+            <Form.Item label="Geri Dönüş Tipi">
+              <Select onChange={handleInputChange}>
+
+                <Option value="SUCCESS" >
+                  Başarılı
+                </Option>
+                <Option value="ERROR">Başarısız</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="isReversible">
+              <Select onChange={handleInputChange}>
+
+                <Option value="true" >
+                  true
+                </Option>
+                <Option value="false">false</Option>
+              </Select>
+            </Form.Item>
+          </Form>
+        </div>
       </Modal>
     </>
   );
