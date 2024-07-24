@@ -1,145 +1,33 @@
-java.lang.IllegalArgumentException: No enum constant com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod.CREDIT_CARD
+ublic class BillPaymentReverseProcessInputTest {
 
+    private BillPaymentReverseProcessInput input;
 
+    @BeforeEach
+    public void setUp() {
+        input = new BillPaymentReverseProcessInput();
+    }
 
+    @Test
+    public void testConstructor() {
+        // Test edilecek constructor'ın doğru EnumProcessCode'u kullanıp kullanmadığını kontrol edin
+        assertEquals(EnumProcessCode.PAYMENT_CANCEL, input.getProcessCode(), "Constructor should initialize with PAYMENT_CANCEL");
+    }
 
-public class BillPaymentReverseProcessInput extends ProcessExecutionInput {
+    @Test
+    public void testSetContractNumber() {
+        Long contractNumber = 12345L;
+        input.setContractNumber(contractNumber);
 
-	public BillPaymentReverseProcessInput() {
-		super(EnumProcessCode.PAYMENT_CANCEL);
-	}
+        // ProcessDataPackKey.CONTRACT_NO.getKey() değerinin doğru olduğunu varsayıyorum
+        assertEquals(contractNumber, input.getDataPack().get(ProcessDataPackKey.CONTRACT_NO.getKey()), "Contract number should be set correctly");
+    }
 
-	public void setContractNumber(Long contractNumber) {
-		dataPack.put(ProcessDataPackKey.CONTRACT_NO.getKey(), contractNumber);
-	}
+    @Test
+    public void testSetBillId() {
+        Long billId = 67890L;
+        input.setBillId(billId);
 
-	public void setBillId(Long billId) {
-		dataPack.put(ProcessDataPackKey.BILL_ID.getKey(), billId);
-	}
-
-
+        // ProcessDataPackKey.BILL_ID.getKey() değerinin doğru olduğunu varsayıyorum
+        assertEquals(billId, input.getDataPack().get(ProcessDataPackKey.BILL_ID.getKey()), "Bill ID should be set correctly");
+    }
 }
-
-
-public class QueryBillProcessInput extends ProcessExecutionInput {
-
-	public QueryBillProcessInput() {
-		super(EnumProcessCode.QUERY_BILLS);
-	}
-
-	public void setCustomerNo(Long customerNo) {
-		dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), customerNo);
-	}
-
-	public void setIdentityNo(Long identityNo) {
-		dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), identityNo);
-	}
-
-	public void setTaxOfficeNo(String taxNo) {
-		dataPack.put(ProcessDataPackKey.TAX_ID.getKey(), taxNo);
-	}
-
-	public void setSubscriberNo(String subscriberNo) {
-		dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), subscriberNo);
-	}
-
-	public void setSubscriberNoPartList(List<SubscriberNoPartRequestDTO> subscriberNoPartList) {
-		dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
-	}
-
-	public void setCurrency(String currency) {
-		dataPack.put(ProcessDataPackKey.CURRENCY.getKey(), currency);
-	}
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@Service
-@RequiredArgsConstructor
-public class ProcessServiceImpl implements ProcessService {
-
-	private final ProcessChannelService processChannelService;
-	private final InstitutionService institutionService;
-	private final InstitutionDebtTypeService institutionDebtTypeService;
-
-	@Override
-	@Cacheable(value = "getInstitutionForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionDTO getInstitutionForProcess(String productCode, String institutionCode) {
-		if (StringUtils.isAnyEmpty(productCode, institutionCode)) {
-			return null;
-		}
-
-		return institutionService.getInstitution(productCode, institutionCode);
-	}
-
-	@Override
-	@Cacheable(value = "getInstitutionChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionChannelDTO getInstitutionChannelForProcess(Long institutionDebtTypeId, String channelCode) {
-		if (institutionDebtTypeId == null || StringUtils.isEmpty(channelCode)) {
-			return null;
-		}
-
-		return institutionService.getInstitutionChannel(institutionDebtTypeId, channelCode);
-	}
-
-	@Override
-	@Cacheable(value = "getProcessChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public ProcessChannelDTO getProcessChannel(String code, String channelCode) {
-		if (StringUtils.isEmpty(code) || StringUtils.isEmpty(channelCode)) {
-			return null;
-		}
-
-		return processChannelService.findProcessChannel(code, channelCode);
-	}
-
-	@Override
-	@Cacheable(value = "getInstitutionProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionProcessDTO getInstitutionProcess(String productCode, String institutionCode, String code) {
-		if (StringUtils.isAnyEmpty(productCode, institutionCode, code)) {
-			return null;
-		}
-
-		return institutionService.getInstitutionProcess(productCode, institutionCode, code);
-	}
-
-	@Override
-	@Cacheable(value = "getInstitutionChannelProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionChannelProcessDTO getInstitutionChannelProcess(Long institutionDebtTypeId,
-			String processCode, String channelCode) {
-		if (institutionDebtTypeId == null || StringUtils.isAnyEmpty(processCode, channelCode)) {
-			return null;
-		}
-
-		return institutionService.getInstitutionChannelProcess(institutionDebtTypeId, processCode, channelCode);
-	}
-
-	@Override
-	@Cacheable(value = "getInstitutionDebtTypeForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionDebtTypeDTO getInstitutionDebtTypeForProcess(String productCode, String institutionCode,Long institutionDebtTypeId) {
-		if(institutionDebtTypeId != null) {
-			return institutionDebtTypeService.getDebtType(institutionDebtTypeId);
-		}
-		if(!StringUtils.isAnyEmpty(productCode,institutionCode)){
-			return institutionDebtTypeService.getDefaultDebtType(productCode,institutionCode);
-		}
-		return null;
-	}
-}
-
