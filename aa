@@ -1,4 +1,79 @@
-public class ProcessUtil {
+
+public class ProcessUtilTest {
+
+    @BeforeEach
+    public void setUp() {
+        // Mock veya setup işlemleri gerekiyorsa buraya eklenebilir
+    }
+
+    @Test
+    public void testIsTimeBetweenWorkingHour() {
+        LocalTime time = LocalTime.of(10, 0);
+        LocalTime start = LocalTime.of(9, 0);
+        LocalTime end = LocalTime.of(17, 0);
+
+        assertTrue(ProcessUtil.isTimeBetweenWorkingHour(time, start, end), "Time should be between working hours");
+
+        assertFalse(ProcessUtil.isTimeBetweenWorkingHour(LocalTime.of(8, 0), start, end), "Time should not be before working hours");
+        assertFalse(ProcessUtil.isTimeBetweenWorkingHour(LocalTime.of(18, 0), start, end), "Time should not be after working hours");
+        assertFalse(ProcessUtil.isTimeBetweenWorkingHour(time, null, end), "Time should not be valid if start is null");
+        assertFalse(ProcessUtil.isTimeBetweenWorkingHour(time, start, null), "Time should not be valid if end is null");
+    }
+
+    @Test
+    public void testFormatWorkingTime() {
+        LocalTime time = LocalTime.of(15, 30, 45);
+        String formattedTime = ProcessUtil.formatWorkingTime(time);
+        assertEquals("15:30:45", formattedTime, "Time should be formatted as HH:mm:ss");
+
+        assertEquals("", ProcessUtil.formatWorkingTime(null), "Formatting null time should return an empty string");
+    }
+
+    @Test
+    public void testValidateCondition() throws BillException {
+        // Mock BillValidationUtil
+        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
+        ProcessUtil spyUtil = spy(new ProcessUtil());
+        doNothing().when(mockUtil).validateCondition(anyBoolean(), any(), anyString());
+
+        ProcessUtil.validateCondition(true, EnumBillResult.SUCCESS);
+        verify(mockUtil).validateCondition(true, EnumBillResult.SUCCESS, BillTransactionConstant.APP_NAME);
+    }
+
+    @Test
+    public void testValidateConditionWithArgs() throws BillException {
+        // Mock BillValidationUtil
+        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
+        ProcessUtil spyUtil = spy(new ProcessUtil());
+        doNothing().when(mockUtil).validateConditionWithArgs(anyString(), anyBoolean(), any(), any());
+
+        ProcessUtil.validateConditionWithArgs(true, EnumBillResult.SUCCESS, "arg1", "arg2");
+        verify(mockUtil).validateConditionWithArgs(BillTransactionConstant.APP_NAME, true, EnumBillResult.SUCCESS, "arg1", "arg2");
+    }
+
+    @Test
+    public void testRaiseBillExceptionWithResult() throws BillException {
+        // Mock BillValidationUtil
+        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
+        ProcessUtil spyUtil = spy(new ProcessUtil());
+        doNothing().when(mockUtil).throwBillException(anyString(), any());
+
+        ProcessUtil.raiseBillException(EnumBillResult.ERROR);
+        verify(mockUtil).throwBillException(BillTransactionConstant.APP_NAME, EnumBillResult.ERROR);
+    }
+
+    @Test
+    public void testRaiseBillExceptionWithException() throws BillException {
+        // Mock BillValidationUtil
+        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
+        ProcessUtil spyUtil = spy(new ProcessUtil());
+        doNothing().when(mockUtil).throwBillException(anyString(), any());
+
+        Exception ex = new Exception("Test Exception");
+        ProcessUtil.raiseBillException(ex);
+        verify(mockUtil).throwBillException(BillTransactionConstant.APP_NAME, ex);
+    }
+}public class ProcessUtil {
 
 	private static final String APP_NAME = BillTransactionConstant.APP_NAME;
 
