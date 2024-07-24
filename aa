@@ -1,26 +1,15 @@
-    @GetMapping("/search")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
-            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
-            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
-            @RequestParam(required = false) @Parameter(name = "institutionCode") String institutionErrorCode) {
-        DataResult<List<ReturnMapDTO>> searhResult = adapterReturnMapClient.searchReturnMaps(returnMapCode,bankReturnCode,institutionErrorCode);
-        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
+ useEffect(() => {
+    if (formRef.current) {
+      formRef.current.setFieldsValue(returnMapOneData);
     }
-  @GetMapping("/search")
-    DataResult<List<ReturnMapDTO>> searchReturnMaps(@RequestParam String returnMapCode,@RequestParam String bankReturnCode,@RequestParam String institutionErrorCode);
-
-
-bu benim bff tarafı FeignClient tarafım... 
-{
-    "exceptionData": {
-        "applicationName": "PAYMENTS.BILL.bill-bff",
-        "errorCode": -999,
-        "errorMessage": "[400] during [GET] to [http://PAYMENTS.BILL.bill-transaction/returnMaps/search?returnMapCode=abccc] [AdapterReturnMapClient#searchReturnMaps(String,String,String)]: []",
-        "traceId": null
-    },
-{
-    "success": false,
-    "message": "Listed is empty",
-    "statusCode": 400,
-    "data": []
-}
+  }, [returnMapOneData]);
+          <Form.Item label="Geri Dönüş Tipi">
+                <Select onChange={handleSelectReturnType}>
+                  <Option value="SUCCESS">
+                    Başarılı
+                  </Option>
+                  <Option value="ERROR" >
+                    Başarısız
+                  </Option>
+                </Select>
+              </Form.Item>
