@@ -1,4 +1,15 @@
-  // Extract only IDs from selectedRows
-      const selectedIds = selectedRows.map(row => row.id);
-      // Dispatch the IDs to Redux store
-      dispatch(setSelectedReturnMapList(selectedIds));
+   const selectedIds = useSelector((state) => state.returnMap.selectedList);
+
+
+ const copyData = {
+
+     ids:selectedIds,
+     returnMapCode:returnMapCode2,
+     institutionReturnCode:institutionReturnCode2,
+     institutionReturnText:institutionReturnText2,
+     bankReturnCode:bankReturnCode2,
+     bankReturnText:bankReturnText2,
+     returnType:returnType2,
+    isReversible:isReversible2,
+
+  }
