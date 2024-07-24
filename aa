@@ -1,1 +1,35 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getName()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitution()" is null
+public class BillPaymentProcessInput extends ProcessExecutionInput {
+
+    public BillPaymentProcessInput(EnumProcessCode processCode) {
+        super(EnumProcessCode.BILL_PAYMENT);
+    }
+
+    public void setBillProvisionId(Long billProvisionId) {
+        dataPack.put(ProcessDataPackKey.BILL_PROVISION_ID.getKey(), billProvisionId);
+    }
+
+    public void setPaymentAmount(BigDecimal paymentAmount){
+        dataPack.put(ProcessDataPackKey.PAYMENT_AMOUNT.getKey(), paymentAmount);
+    }
+
+    public void setCurrency(String currency){
+        dataPack.put(ProcessDataPackKey.CURRENCY.getKey(), currency);
+    }
+
+    public void setPaymentMethodType(String paymentMethodType){
+        dataPack.put(ProcessDataPackKey.PAYMENT_METHOD_TYPE.getKey(), EnumPaymentMethod.valueOf(paymentMethodType));
+    }
+
+    public void setAccountPaymentMethodDetail(AccountPaymentMethodDetailDTO accountPaymentMethodDetailWebDTO){
+        dataPack.put(ProcessDataPackKey.ACCOUNT_PAYMENT_METHOD_DETAIL.getKey(), accountPaymentMethodDetailWebDTO);
+    }
+
+    public void setCreditCardPaymentMethodDetail(CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailWebDTO){
+        dataPack.put(ProcessDataPackKey.CREDIT_CARD_PAYMENT_METHOD_DETAIL.getKey(), creditCardPaymentMethodDetailWebDTO);
+    }
+
+    public void setCashPaymentMethodDetail(CashPaymentMethodDetailDTO cashPaymentMethodDetailWebDTO){
+        dataPack.put(ProcessDataPackKey.CASH_PAYMENT_METHOD_DETAIL.getKey(),cashPaymentMethodDetailWebDTO);
+    }
+
+}
