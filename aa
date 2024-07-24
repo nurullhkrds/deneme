@@ -1,40 +1,77 @@
-package com.ykb.payments.bill.transaction.accounting.dto;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ykb.payments.bill.common.enums.EnumCurrencyCode;
-import com.ykb.payments.bill.transaction.external.corebanking.commission.model.response.ResponseCommissionInformation;
-import com.ykb.payments.bill.transaction.institution.dto.*;
-import com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod;
-import com.ykb.payments.bill.transaction.payment.dto.PaymentMethodDetailDTO;
-import com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO;
-import lombok.Getter;
-import lombok.Setter;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
-public class CreateAccountingDTO {
+public class CreateAccountingDTOTest {
 
-    private BigDecimal paymentAmount;
-    private EnumCurrencyCode currency;
-    private EnumPaymentMethod paymentMethodType;
-    private PaymentMethodDetailDTO paymentMethodDetailDTO;
-    private ProvisionDTO provisionDTO;
-    private ResponseCommissionInformation responseCommissionInformation;
-    private InstitutionDTO institution;
-    private InstitutionDebtTypeDTO institutionDebtType;
-    private InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO;
-    private InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO;
-    private InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO;
-    private InstitutionAccountingInfoDTO institutionAccountingInfoDTO;
-    private String channelSessionId;
-    private String channelTransactionId;
-    private String channelCode;
-    private String agentCode;
-    private String branchCode;
-    private boolean isDummyMerchant;
-    private String merchantNo;
-	  
-    
-
+    @Test
+    public void testGetterAndSetter() {
+        // Create a new instance of CreateAccountingDTO
+        CreateAccountingDTO dto = new CreateAccountingDTO();
+        
+        // Define test values
+        BigDecimal paymentAmount = new BigDecimal("100.00");
+        EnumCurrencyCode currency = EnumCurrencyCode.USD; // Örnek bir Enum değerini kullanın
+        EnumPaymentMethod paymentMethodType = EnumPaymentMethod.CREDIT_CARD; // Örnek bir Enum değerini kullanın
+        PaymentMethodDetailDTO paymentMethodDetailDTO = new PaymentMethodDetailDTO(); // Örnek DTO
+        ProvisionDTO provisionDTO = new ProvisionDTO(); // Örnek DTO
+        ResponseCommissionInformation responseCommissionInformation = new ResponseCommissionInformation(); // Örnek DTO
+        InstitutionDTO institution = new InstitutionDTO(); // Örnek DTO
+        InstitutionDebtTypeDTO institutionDebtType = new InstitutionDebtTypeDTO(); // Örnek DTO
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO(); // Örnek DTO
+        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO(); // Örnek DTO
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO(); // Örnek DTO
+        InstitutionAccountingInfoDTO institutionAccountingInfoDTO = new InstitutionAccountingInfoDTO(); // Örnek DTO
+        String channelSessionId = "session123";
+        String channelTransactionId = "transaction123";
+        String channelCode = "channelCode123";
+        String agentCode = "agentCode123";
+        String branchCode = "branchCode123";
+        boolean isDummyMerchant = true;
+        String merchantNo = "merchantNo123";
+        
+        // Set values
+        dto.setPaymentAmount(paymentAmount);
+        dto.setCurrency(currency);
+        dto.setPaymentMethodType(paymentMethodType);
+        dto.setPaymentMethodDetailDTO(paymentMethodDetailDTO);
+        dto.setProvisionDTO(provisionDTO);
+        dto.setResponseCommissionInformation(responseCommissionInformation);
+        dto.setInstitution(institution);
+        dto.setInstitutionDebtType(institutionDebtType);
+        dto.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
+        dto.setInstitutionChnnlPymMthdAccDTO(institutionChnnlPymMthdAccDTO);
+        dto.setInstitutionChnnlPymMthdPscDTO(institutionChnnlPymMthdPscDTO);
+        dto.setInstitutionAccountingInfoDTO(institutionAccountingInfoDTO);
+        dto.setChannelSessionId(channelSessionId);
+        dto.setChannelTransactionId(channelTransactionId);
+        dto.setChannelCode(channelCode);
+        dto.setAgentCode(agentCode);
+        dto.setBranchCode(branchCode);
+        dto.setDummyMerchant(isDummyMerchant);
+        dto.setMerchantNo(merchantNo);
+        
+        // Assert values
+        assertThat(dto.getPaymentAmount()).isEqualTo(paymentAmount);
+        assertThat(dto.getCurrency()).isEqualTo(currency);
+        assertThat(dto.getPaymentMethodType()).isEqualTo(paymentMethodType);
+        assertThat(dto.getPaymentMethodDetailDTO()).isEqualTo(paymentMethodDetailDTO);
+        assertThat(dto.getProvisionDTO()).isEqualTo(provisionDTO);
+        assertThat(dto.getResponseCommissionInformation()).isEqualTo(responseCommissionInformation);
+        assertThat(dto.getInstitution()).isEqualTo(institution);
+        assertThat(dto.getInstitutionDebtType()).isEqualTo(institutionDebtType);
+        assertThat(dto.getInstitutionChannelPymMethodDTO()).isEqualTo(institutionChannelPymMethodDTO);
+        assertThat(dto.getInstitutionChnnlPymMthdAccDTO()).isEqualTo(institutionChnnlPymMthdAccDTO);
+        assertThat(dto.getInstitutionChnnlPymMthdPscDTO()).isEqualTo(institutionChnnlPymMthdPscDTO);
+        assertThat(dto.getInstitutionAccountingInfoDTO()).isEqualTo(institutionAccountingInfoDTO);
+        assertThat(dto.getChannelSessionId()).isEqualTo(channelSessionId);
+        assertThat(dto.getChannelTransactionId()).isEqualTo(channelTransactionId);
+        assertThat(dto.getChannelCode()).isEqualTo(channelCode);
+        assertThat(dto.getAgentCode()).isEqualTo(agentCode);
+        assertThat(dto.getBranchCode()).isEqualTo(branchCode);
+        assertThat(dto.isDummyMerchant()).isEqualTo(isDummyMerchant);
+        assertThat(dto.getMerchantNo()).isEqualTo(merchantNo);
+    }
 }
