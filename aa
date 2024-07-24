@@ -1,136 +1,57 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Table, Button } from 'ykb-ui'; // `ykb-ui` kütüphanesinin doğru yoldan import edildiğini varsayıyoruz
-import TableHeader from './TableHeader'; // TableHeader bileşeni doğru yoldan import edilmelidir
-
-const columnsData = [
+const columns = [
   {
-    title: 'Return Map Code',
-    dataIndex: 'returnMapCode',
-    key: 'returnMapCode',
-    width: 200,
-    resizable: true, // Eğer yeniden boyutlandırma etkinse, genişlik zorunlu olmalıdır
+    title: 'Name',
+    dataIndex: 'name',
   },
   {
-    title: 'Institution Return Code',
-    dataIndex: 'institutionReturnCode',
-    key: 'institutionReturnCode',
-    width: 200,
-    resizable: true,
+    title: 'Age',
+    dataIndex: 'age',
   },
   {
-    title: 'Institution Return Text',
-    dataIndex: 'institutionReturnText',
-    key: 'institutionReturnText',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Bank Return Code',
-    dataIndex: 'bankReturnCode',
-    key: 'bankReturnCode',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Bank Return Text',
-    dataIndex: 'bankReturnText',
-    key: 'bankReturnText',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Return Type',
-    dataIndex: 'returnType',
-    key: 'returnType',
-    width: 200,
-    resizable: true,
-  },
-  {
-    title: 'Is Reversible',
-    dataIndex: 'isReversible',
-    key: 'isReversible',
-    width: 200,
-    render: value => (value ? 'Yes' : 'No'),
-    resizable: true,
-  },
-  {
-    title: 'Actions',
-    key: 'actions',
-    width: 200,
-    render: (text, record) => (
-      <Button type="primary" size="small" onClick={() => handleUpdate(record)}>
-        Update
-      </Button>
-    ),
+    title: 'Address',
+    dataIndex: 'address',
   },
 ];
-
 const data = [
-  // Örnek veri
   {
     key: '1',
-    returnMapCode: 'RMC001',
-    institutionReturnCode: 'IRC001',
-    institutionReturnText: 'Institution Text 1',
-    bankReturnCode: 'BRC001',
-    bankReturnText: 'Bank Text 1',
-    returnType: 'ERROR',
-    isReversible: true,
+    name: 'John Brown',
+    age: 32,
+    address: 'New York No. 1 Lake Park',
   },
-  // Diğer veri örnekleri...
+  {
+    key: '2',
+    name: 'Jim Green',
+    age: 42,
+    address: 'London No. 1 Lake Park',
+  },
+  {
+    key: '3',
+    name: 'Joe Black',
+    age: 32,
+    address: 'Sidney No. 1 Lake Park',
+  },
+  {
+    key: '4',
+    name: 'Disabled User',
+    age: 99,
+    address: 'Sidney No. 1 Lake Park',
+  },
 ];
 
-const ReturnMapServiceParametersTable = () => {
-  const returnMapData = useSelector((state) => state.returnMap.list);
-  const [columns, setColumns] = useState(columnsData);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-
-  const onChange = (selectedRowKeys, selectedRows) => {
-    console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows: ', selectedRows);
-    setSelectedRowKeys(selectedRowKeys);
-  };
-
-  const handleUpdate = (record) => {
-    console.log('Updating record:', record);
-    // Burada güncelleme işlemini gerçekleştirin
-  };
-
-  return (
-    <Table
-      rowSelection={{
-        selectedRowKeys: selectedRowKeys,
-        onChange: onChange,
-      }}
-      columns={columns}
-      dataSource={returnMapData} // `data` yerine `dataSource` kullanın
-      pagination={{ showTotal: false }}
-      title={() => (
-        <TableHeader
-          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
-        />
-      )}
-      locale={{ emptyText: 'Herhangi bir veri yok.' }} // `emptyText` bu şekilde kullanın
-      onResize={(event, { element, size, handle }, index) => {
-        console.log('event, { element, size, handle }', event, { element, size, handle });
-        if (size.width) {
-          setColumns(prevColumns => {
-            const nextColumns = [...prevColumns];
-            nextColumns[index] = {
-              ...nextColumns[index],
-              width: size.width,
-            };
-            return nextColumns;
-          });
-        }
-      }}
-      onRow={(record, index) => ({
-        onClick: () => {
-          console.log('onRowClick', record, index);
-        },
-      })}
-    />
-  );
+// rowSelection object indicates the need for row selection
+const rowSelection = {
+  onChange: (selectedRowKeys, selectedRows) => {
+    console.log(
+      `selectedRowKeys: ${selectedRowKeys}`,
+      'selectedRows: ',
+      selectedRows
+    );
+  },
+  getCheckboxProps: record => ({
+    disabled: record.name === 'Disabled User', // Column configuration not to be checked
+    name: record.name,
+  }),
 };
 
-export default ReturnMapServiceParametersTable;
+<Table rowSelection={rowSelection} columns={columns} data={data} />;
