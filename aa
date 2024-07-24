@@ -1,65 +1,145 @@
-public class BillPaymentProcessInputTest {
+java.lang.IllegalArgumentException: No enum constant com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod.CREDIT_CARD
 
-    private BillPaymentProcessInput billPaymentProcessInput;
 
-    @Mock
-    private AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO;
 
-    @Mock
-    private CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO;
 
-    @Mock
-    private CashPaymentMethodDetailDTO cashPaymentMethodDetailDTO;
+public class BillPaymentReverseProcessInput extends ProcessExecutionInput {
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        billPaymentProcessInput = new BillPaymentProcessInput(EnumProcessCode.BILL_PAYMENT);
-    }
+	public BillPaymentReverseProcessInput() {
+		super(EnumProcessCode.PAYMENT_CANCEL);
+	}
 
-    @Test
-    public void testSetBillProvisionId() {
-        Long billProvisionId = 123L;
-        billPaymentProcessInput.setBillProvisionId(billProvisionId);
-        assertEquals(billProvisionId, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.BILL_PROVISION_ID.getKey()));
-    }
+	public void setContractNumber(Long contractNumber) {
+		dataPack.put(ProcessDataPackKey.CONTRACT_NO.getKey(), contractNumber);
+	}
 
-    @Test
-    public void testSetPaymentAmount() {
-        BigDecimal paymentAmount = BigDecimal.valueOf(100.50);
-        billPaymentProcessInput.setPaymentAmount(paymentAmount);
-        assertEquals(paymentAmount, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.PAYMENT_AMOUNT.getKey()));
-    }
+	public void setBillId(Long billId) {
+		dataPack.put(ProcessDataPackKey.BILL_ID.getKey(), billId);
+	}
 
-    @Test
-    public void testSetCurrency() {
-        String currency = "USD";
-        billPaymentProcessInput.setCurrency(currency);
-        assertEquals(currency, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.CURRENCY.getKey()));
-    }
 
-    @Test
-    public void testSetPaymentMethodType() {
-        String paymentMethodType = "CREDIT_CARD";
-        billPaymentProcessInput.setPaymentMethodType(paymentMethodType);
-        assertEquals(EnumPaymentMethod.valueOf(paymentMethodType), billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.PAYMENT_METHOD_TYPE.getKey()));
-    }
-
-    @Test
-    public void testSetAccountPaymentMethodDetail() {
-        billPaymentProcessInput.setAccountPaymentMethodDetail(accountPaymentMethodDetailDTO);
-        assertEquals(accountPaymentMethodDetailDTO, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.ACCOUNT_PAYMENT_METHOD_DETAIL.getKey()));
-    }
-
-    @Test
-    public void testSetCreditCardPaymentMethodDetail() {
-        billPaymentProcessInput.setCreditCardPaymentMethodDetail(creditCardPaymentMethodDetailDTO);
-        assertEquals(creditCardPaymentMethodDetailDTO, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.CREDIT_CARD_PAYMENT_METHOD_DETAIL.getKey()));
-    }
-
-    @Test
-    public void testSetCashPaymentMethodDetail() {
-        billPaymentProcessInput.setCashPaymentMethodDetail(cashPaymentMethodDetailDTO);
-        assertEquals(cashPaymentMethodDetailDTO, billPaymentProcessInput.getDataPack().get(ProcessDataPackKey.CASH_PAYMENT_METHOD_DETAIL.getKey()));
-    }
 }
+
+
+public class QueryBillProcessInput extends ProcessExecutionInput {
+
+	public QueryBillProcessInput() {
+		super(EnumProcessCode.QUERY_BILLS);
+	}
+
+	public void setCustomerNo(Long customerNo) {
+		dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), customerNo);
+	}
+
+	public void setIdentityNo(Long identityNo) {
+		dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), identityNo);
+	}
+
+	public void setTaxOfficeNo(String taxNo) {
+		dataPack.put(ProcessDataPackKey.TAX_ID.getKey(), taxNo);
+	}
+
+	public void setSubscriberNo(String subscriberNo) {
+		dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), subscriberNo);
+	}
+
+	public void setSubscriberNoPartList(List<SubscriberNoPartRequestDTO> subscriberNoPartList) {
+		dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
+	}
+
+	public void setCurrency(String currency) {
+		dataPack.put(ProcessDataPackKey.CURRENCY.getKey(), currency);
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Service
+@RequiredArgsConstructor
+public class ProcessServiceImpl implements ProcessService {
+
+	private final ProcessChannelService processChannelService;
+	private final InstitutionService institutionService;
+	private final InstitutionDebtTypeService institutionDebtTypeService;
+
+	@Override
+	@Cacheable(value = "getInstitutionForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionDTO getInstitutionForProcess(String productCode, String institutionCode) {
+		if (StringUtils.isAnyEmpty(productCode, institutionCode)) {
+			return null;
+		}
+
+		return institutionService.getInstitution(productCode, institutionCode);
+	}
+
+	@Override
+	@Cacheable(value = "getInstitutionChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionChannelDTO getInstitutionChannelForProcess(Long institutionDebtTypeId, String channelCode) {
+		if (institutionDebtTypeId == null || StringUtils.isEmpty(channelCode)) {
+			return null;
+		}
+
+		return institutionService.getInstitutionChannel(institutionDebtTypeId, channelCode);
+	}
+
+	@Override
+	@Cacheable(value = "getProcessChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public ProcessChannelDTO getProcessChannel(String code, String channelCode) {
+		if (StringUtils.isEmpty(code) || StringUtils.isEmpty(channelCode)) {
+			return null;
+		}
+
+		return processChannelService.findProcessChannel(code, channelCode);
+	}
+
+	@Override
+	@Cacheable(value = "getInstitutionProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionProcessDTO getInstitutionProcess(String productCode, String institutionCode, String code) {
+		if (StringUtils.isAnyEmpty(productCode, institutionCode, code)) {
+			return null;
+		}
+
+		return institutionService.getInstitutionProcess(productCode, institutionCode, code);
+	}
+
+	@Override
+	@Cacheable(value = "getInstitutionChannelProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionChannelProcessDTO getInstitutionChannelProcess(Long institutionDebtTypeId,
+			String processCode, String channelCode) {
+		if (institutionDebtTypeId == null || StringUtils.isAnyEmpty(processCode, channelCode)) {
+			return null;
+		}
+
+		return institutionService.getInstitutionChannelProcess(institutionDebtTypeId, processCode, channelCode);
+	}
+
+	@Override
+	@Cacheable(value = "getInstitutionDebtTypeForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionDebtTypeDTO getInstitutionDebtTypeForProcess(String productCode, String institutionCode,Long institutionDebtTypeId) {
+		if(institutionDebtTypeId != null) {
+			return institutionDebtTypeService.getDebtType(institutionDebtTypeId);
+		}
+		if(!StringUtils.isAnyEmpty(productCode,institutionCode)){
+			return institutionDebtTypeService.getDefaultDebtType(productCode,institutionCode);
+		}
+		return null;
+	}
+}
+
