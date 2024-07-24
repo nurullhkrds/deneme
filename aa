@@ -1,8 +1,3 @@
-import React, { useState } from 'react';
-import { Table } from 'ykb-ui'; // 'ykb-ui' yerine kullandığınız table kütüphanesini import edin
-import { useSelector } from 'react-redux';
-import TableHeader from './TableHeader'; // 'TableHeader' dosyanızın doğru yolu
-
 const columns = [
   {
     title: 'Return Map Code',
@@ -34,31 +29,36 @@ const columns = [
     render: value => (value ? 'Yes' : 'No'),
   },
 ];
+const rowSelection = {
+  getCheckboxProps: record => ({
+    disabled: record.name === 'a5',
+  }),
+};
 
 function ReturnMapServiceParametersTable() {
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const returnMapData = useSelector((state) => state.returnMap.list);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-  const onChange = (newSelectedRowKeys) => {
-    setSelectedRowKeys(prevSelectedRowKeys => {
-      // Yeni seçilen anahtarları mevcut anahtarlarla birleştirir
-      return [
-        ...prevSelectedRowKeys,
-        ...newSelectedRowKeys.filter(key => !prevSelectedRowKeys.includes(key))
-      ];
-    });
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log(
+      'selectedRowKeys:',
+      selectedRowKeys,
+      'selectedRows: ',
+      selectedRows
+    );
+
+    setSelectedRowKeys(selectedRowKeys);
   };
+
 
   return (
     <Table
       rowSelection={{
-        selectedRowKeys, // Seçilen anahtarları burada kullanın
-        onChange, // Seçim değişikliklerini burada işleyin
-        getCheckboxProps: record => ({
-          disabled: record.disabled, // Seçilemez olan kayıtlar için bir koşul ekleyebilirsiniz
-        }),
+        getCheckboxProps: rowSelection.getCheckboxProps,
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
       }}
-      dataSource={returnMapData} // data yerine dataSource kullanın
+      data={returnMapData} // 'data' yerine 'dataSource' kullanın
       columns={columns}
       pagination={{ showTotal: false }}
       title={() => (
@@ -66,8 +66,7 @@ function ReturnMapServiceParametersTable() {
           extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
         />
       )}
-      locale={{ emptyText: 'Herhangi bir veri yok.' }}
-      rowKey="key" // Benzersiz anahtarları belirtin
+      locale={{ emptyText: 'Herhangi bir veri yok.' }} // 'emptyText' bu şekilde kullanın
       onRow={(record, index) => ({
         onClick: () => {
           console.log('onRowClick', record, index);
@@ -78,3 +77,213 @@ function ReturnMapServiceParametersTable() {
 }
 
 export default ReturnMapServiceParametersTable;
+
+
+
+"const columns = [
+  {
+    title: 'Parent Title',
+    data: 'asd',
+    children: [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        sortable: true,
+        filter: true,
+        filterMultiple: true,
+        sorter: (a, b) => {
+          var nameA = a.name.toUpperCase(); // ignore upper and lowercase
+          var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          // names must be equal
+          return 0;
+        },
+      },
+      {
+        title: 'Age',
+        dataIndex: 'age',
+        type: 'number',
+        sortable: true,
+      },
+      {
+        title: 'Iban',
+        dataIndex: 'iban',
+        type: 'iban',
+        render: data => {
+          let arr = data.split(',');
+          if (!data) return;
+          return (
+            <Tooltip
+              placement="left"
+              overlay={arr.map(item => {
+                return (
+                  <span>
+                    {item}
+                    <br />
+                  </span>
+                );
+              })}>
+              <span>
+                {data.length > 80 ? data.slice(0, 80) + ' ...' : data}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        title: 'Currency',
+        dataIndex: 'currency',
+        type: 'currency',
+        currencyType: 'USD',
+      },
+      {
+        title: 'Date',
+        dataIndex: 'birthdate',
+        type: 'date',
+        onCell: (record, index) => ({
+          onClick(e) {
+            console.log('Click cell', ` row ${index}`, record, e.target);
+          },
+        }),
+      },
+      {
+        title: 'Time',
+        dataIndex: 'recordtime',
+        type: 'time',
+      },
+      {
+        title: 'Date Time',
+        dataIndex: 'lastmodified',
+        type: 'datetime',
+      },
+    ],
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'detail',
+      handler: (record, event) => {
+        console.log('detail click:', record);
+      },
+    },
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'edit',
+      hidden: record => {
+        return record.key % 2 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
+      disabled: true,
+    },
+  },
+  {
+    dataIndex: 'custom2',
+    type: {
+      action: 'delete',
+      disabled: record => {
+        return record.key % 3 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+    },
+  },
+];
+
+const data = [];
+for (let i = 0; i < 100; i++) {
+  data.push({
+    key: i,
+    name: `a${i}`,
+    age: 42,
+    iban: `TR100006400000124122142141`,
+    birthdate: '22-11-2017',
+    recordtime: '12:55',
+    currency: 100.5,
+    lastmodified: '22-11-2017 15:55:22',
+  });
+}
+
+const rowSelection = {
+  getCheckboxProps: record => ({
+    disabled: record.name === 'a5',
+  }),
+};
+
+const TableExample = () => {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([0, 1, 2, 3, 4]);
+
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log(
+      'selectedRowKeys:',
+      selectedRowKeys,
+      'selectedRows: ',
+      selectedRows
+    );
+
+    setSelectedRowKeys(selectedRowKeys);
+  };
+
+  return (
+    <Table
+      rowSelection={{
+        getCheckboxProps: rowSelection.getCheckboxProps,
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
+      }}
+      data={data}
+      columns={columns}
+      pagination={{ showTotal: false }}
+      title={
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      }
+      footer={() => (
+        <React.Fragment>
+          <Row>
+            <Col xs={24}>
+              <p
+                style={{
+                  margin: '0',
+                  height: '30px',
+                  lineHeight: '30px',
+                }}>
+                Lorem ipsum dolor sit amet
+                <Button size="small" className="right-floated">
+                  Button 1
+                </Button>
+              </p>
+            </Col>
+          </Row>
+        </React.Fragment>
+      )}
+      emptyText={() => {
+        return (
+          <React.Fragment>
+            Yeni eklemek için
+            <Button link="#">tıklayınız.</Button>
+          </React.Fragment>
+        );
+      }}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
+    />
+  );
+};
+
+<TableExample />;"
