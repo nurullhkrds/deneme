@@ -1,66 +1,4 @@
-const columns = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-  },
-  {
-    title: 'Age',
-    dataIndex: 'age',
-  },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-  },
-];
-const data = [
-  {
-    key: '1',
-    name: 'John Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-  },
-  {
-    key: '2',
-    name: 'Jim Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-  },
-  {
-    key: '3',
-    name: 'Joe Black',
-    age: 32,
-    address: 'Sidney No. 1 Lake Park',
-  },
-  {
-    key: '4',
-    name: 'Disabled User',
-    age: 99,
-    address: 'Sidney No. 1 Lake Park',
-  },
-];
 
-// rowSelection object indicates the need for row selection
-const rowSelection = {
-  onChange: (selectedRowKeys, selectedRows) => {
-    console.log(
-      `selectedRowKeys: ${selectedRowKeys}`,
-      'selectedRows: ',
-      selectedRows
-    );
-  },
-  getCheckboxProps: record => ({
-    disabled: record.name === 'Disabled User', // Column configuration not to be checked
-    name: record.name,
-  }),
-};
-
-<Table rowSelection={rowSelection} columns={columns} data={data} />;
-
-
-bu örnek bir component...
-
-
-"
 const columnsData = [
   {
     title: 'Return Map Code',
@@ -112,10 +50,7 @@ const columnsData = [
     render: value => (value ? 'Yes' : 'No'),
     resizable: true,
   },
-
 ];
-
-
 
 const ReturnMapServiceParametersTable = () => {
   const returnMapData = useSelector((state) => state.returnMap.list);
@@ -130,15 +65,18 @@ const ReturnMapServiceParametersTable = () => {
       );
     },
     getCheckboxProps: record => ({
-      disabled: record.name === 'Disabled User', // Column configuration not to be checked
-      name: record.name,
+      disabled: record.returnMapCode === 'Disabled Code', // Örneğe uygun olarak düzenlendi
     }),
   };
 
-
   return (
-    <Table rowSelection={rowSelection} columns={columns} data={returnMapData} />
+    <Table
+      rowSelection={rowSelection}
+      columns={columns}
+      dataSource={returnMapData} // dataSource olarak değiştirildi
+      rowKey="key" // Key özelliği eklenmiş olabilir, eklenmeli
+    />
   );
 };
 
-export default ReturnMapServiceParametersTable;" bu da benim componentim...
+export default ReturnMapServiceParametersTable;
