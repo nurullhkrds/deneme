@@ -1,0 +1,59 @@
+import React, { useState } from "react";
+import { Button, Modal } from "ykb-ui"; // Ensure you import Modal from the correct library
+
+const ReturnMapServiceParameters = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const showModal = () => {
+    setModalVisible(true);
+  };
+
+  const handleOk = () => {
+    setModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setModalVisible(false);
+  };
+
+  return (
+    <>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch callApi={callApi} />
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable />
+        </Col>
+      </Row>
+      <Row style={{ marginTop: "25px" }}>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <Button onClick={showModal}>Ekle</Button>
+          <Button>Güncelle</Button>
+          <Button>Kopyala</Button>
+        </Col>
+      </Row>
+
+      <Modal
+        title="Add New Return Map"
+        visible={modalVisible}
+        onClose={handleCancel}
+        footer={[
+          <Button key="cancel" onClick={handleCancel}>
+            Cancel
+          </Button>,
+          <Button key="ok" type="primary" onClick={handleOk}>
+            Save
+          </Button>,
+        ]}
+      >
+        {/* Place your form here */}
+        <div>Form content goes here...</div>
+      </Modal>
+    </>
+  );
+};
+
+export default ReturnMapServiceParameters;
