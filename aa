@@ -1,42 +1,4 @@
-import React, { useState } from "react";
-import { Button, Modal } from "ykb-ui"; // Ensure you import Modal from the correct library
-
-const ReturnMapServiceParameters = () => {
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const showModal = () => {
-    setModalVisible(true);
-  };
-
-  const handleOk = () => {
-    setModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setModalVisible(false);
-  };
-
-  return (
-    <>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersSearch callApi={callApi} />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <ReturnMapServiceParametersTable />
-        </Col>
-      </Row>
-      <Row style={{ marginTop: "25px" }}>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Button onClick={showModal}>Ekle</Button>
-          <Button>Güncelle</Button>
-          <Button>Kopyala</Button>
-        </Col>
-      </Row>
-
-      <Modal
+<Modal
         title="Add New Return Map"
         visible={modalVisible}
         onClose={handleCancel}
@@ -49,11 +11,100 @@ const ReturnMapServiceParameters = () => {
           </Button>,
         ]}
       >
-        {/* Place your form here */}
-        <div>Form content goes here...</div>
+        <Form layout="vertical">
+          <Form.Item label="Return Map Code">
+            <Input
+              name="returnMapCode"
+              value={formValues.returnMapCode}
+              onChange={handleInputChange}
+            />
+          </Form.Item>
+          <Form.Item label="Institution Return Code">
+            <Input
+              name="institutionReturnCode"
+              value={formValues.institutionReturnCode}
+              onChange={handleInputChange}
+            />
+          </Form.Item>
+          <Form.Item label="Institution Return Text">
+            <Input
+              name="institutionReturnText"
+              value={formValues.institutionReturnText}
+              onChange={handleInputChange}
+            />
+          </Form.Item>
+          <Form.Item label="Bank Return Code">
+            <Input
+              name="bankReturnCode"
+              value={formValues.bankReturnCode}
+              onChange={handleInputChange}
+            />
+          </Form.Item>
+          <Form.Item label="Bank Return Text">
+            <Input
+              name="bankReturnText"
+              value={formValues.bankReturnText}
+              onChange={handleInputChange}
+            />
+          </Form.Item>
+          <Form.Item label="Return Type">
+            <Select
+              value={formValues.returnType}
+              onChange={(value) => handleSelectChange(value, 'returnType')}
+            >
+              <Option value="ERROR">Error</Option>
+              <Option value="SUCCESS">Success</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="Is Reversible">
+            <Select
+              value={formValues.isReversible ? "true" : "false"}
+              onChange={(value) => handleSelectChange(value === "true", 'isReversible')}
+            >
+              <Option value="true">True</Option>
+              <Option value="false">False</Option>
+            </Select>
+          </Form.Item>
+        </Form>
       </Modal>
-    </>
-  );
-};
 
-export default ReturnMapServiceParameters;
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [formValues, setFormValues] = useState({
+    returnMapCode: '',
+    institutionReturnCode: '',
+    institutionReturnText: '',
+    bankReturnCode: '',
+    bankReturnText: '',
+    returnType: 'SUCCESS', // Default value
+    isReversible: true, // Default value
+  });
+
+  const showModal = () => {
+    setModalVisible(true);
+  };
+
+  const handleOk = () => {
+    // Handle form submission
+    console.log("Form submitted with values:", formValues);
+    setModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setModalVisible(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (value, field) => {
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      [field]: value,
+    }));
+  };
