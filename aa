@@ -34,14 +34,9 @@ function ReturnMapServiceParametersTable() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const returnMapData = useSelector((state) => state.returnMap.list);
 
-  const onChange = (selectedRowKeys, selectedRows) => {
-    console.log(
-      'selectedRowKeys:',
-      selectedRowKeys,
-      'selectedRows: ',
-      selectedRows
-    );
-    setSelectedRowKeys(selectedRowKeys);
+  const onChange = (newSelectedRowKeys, selectedRows) => {
+    console.log('selectedRowKeys:', newSelectedRowKeys, 'selectedRows:', selectedRows);
+    setSelectedRowKeys(newSelectedRowKeys);
   };
 
   return (
@@ -49,8 +44,11 @@ function ReturnMapServiceParametersTable() {
       rowSelection={{
         selectedRowKeys: selectedRowKeys,
         onChange: onChange,
+        getCheckboxProps: record => ({
+          disabled: record.disabled, // Özel olarak hangi satırların seçilemeyeceğini belirtebilirsiniz
+        }),
       }}
-      dataSource={returnMapData} // 'data' yerine 'dataSource' kullanın
+      data={returnMapData}
       columns={columns}
       pagination={{ showTotal: false }}
       title={() => (
