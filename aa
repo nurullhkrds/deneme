@@ -11,3 +11,10 @@
 
 
 bu benim bff tarafı FeignClient tarafım... 
+{
+    "exceptionData": {
+        "applicationName": "PAYMENTS.BILL.bill-bff",
+        "errorCode": -999,
+        "errorMessage": "[400] during [GET] to [http://PAYMENTS.BILL.bill-transaction/returnMaps/search?returnMapCode=abccc] [AdapterReturnMapClient#searchReturnMaps(String,String,String)]: []",
+        "traceId": null
+    },
