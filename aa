@@ -1,10 +1,3 @@
-  const handleOk = async () => {
-    await setModalVisible(false);
-    await console.log(data)
-    await dispatch(sendcreateReturnMapRequest(callApi, data))
-
-  };
-
 export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest) => {
   const endpoint = "returnMaps/createReturnMap";
   try {
@@ -20,9 +13,25 @@ export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest
   }
 };
 
-Uncaught (in promise) Error: Actions must be plain objects. Instead, the actual type was: 'Promise'. You may need to add middleware to your store setup to handle dispatching other values, such as 'redux-thunk' to handle dispatching functions. See https://redux.js.org/tutorials/fundamentals/part-4-store#middleware and https://redux.js.org/tutorials/fundamentals/part-6-async-logic#using-the-redux-thunk-middleware for examples.
-    at dispatch (redux.js:275:1)
-    at serializableStateInvariantMiddleware.ts:171:1
-    at index.js:20:1
-    at immutableStateInvariantMiddleware.ts:253:1
-    at handleOk (ReturnMapServiceParameters.js:43:1)
+
+const handleOk = () => {
+    setModalVisible(false);
+    sendcreateReturnMapRequest(callApi, data)
+
+  };
+
+
+
+export const sendSearchReturnMapRequest = async (callApi, filters) => {
+  const endpoint = 'returnMaps/search';
+  const criteria = filters ?? {};
+  const url = buildQueryString(endpoint, criteria);
+  try {
+    return await callApi({
+      method: 'GET',
+      endpoint: url,
+    });
+  } catch (ex) {
+    arrangeExMessageAndThrowEx(ex);
+  }
+};
