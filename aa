@@ -1,8 +1,83 @@
-  rowSelection={{
-        ...rowSelection, // rowSelection ayarlarını doğru şekilde kullanın
-        selectedRowKeys: selectedRowKeys, // selectedRowKeys'ı ekleyin
-        onChange: (keys, rows) => {
-          setSelectedRowKeys(keys);
-          console.log('Row selection changed:', keys, rows);
-        },
+const columnsData = [
+  {
+    title: 'Name',
+    dataIndex: 'name',
+    key: 'name',
+    width: 200,
+    resizable: true, // if resizable is enabled, width must be mandatory and number must be
+    render: text => (
+      <a href="#" onClick={e => e.preventDefault()}>
+        {text}
+      </a>
+    ),
+  },
+  {
+    title: 'Age',
+    dataIndex: 'age',
+    key: 'age',
+    width: 200,
+  },
+  {
+    title: 'Address',
+    dataIndex: 'address',
+    key: 'address',
+    width: 200,
+  },
+  {
+    title: 'Action',
+    key: 'action',
+    width: 200,
+    render: (text, record) => (
+      <Button type="primary" size="small">
+        Invite {record.name}
+      </Button>
+    ),
+  },
+];
+
+const data = [
+  {
+    key: '1',
+    name: 'John Brown',
+    age: 32,
+    address: 'New York No. 1 Lake Park',
+    tags: ['nice', 'developer'],
+  },
+  {
+    key: '2',
+    name: 'Jim Green',
+    age: 42,
+    address: 'London No. 1 Lake Park',
+    tags: ['loser'],
+  },
+];
+
+const ResizableTable = props => {
+  const [columns, setColumns] = useState(columnsData);
+
+  return (
+    <Table
+      rowSelection={{}}
+      columns={columns}
+      data={data}
+      onResize={(event, { element, size, handle }, index) => {
+        console.log('event, { element, size, handle }', event, {
+          element,
+          size,
+          handle,
+        });
+        if (size.width) {
+          setColumns(prevColumns => {
+            const nextColumns = [...columns];
+            nextColumns[index - 1] = {
+              ...nextColumns[index - 1],
+              width: size.width,
+            };
+            return nextColumns;
+          });
+        }
       }}
+    />
+  );
+};
+<ResizableTable />;
