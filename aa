@@ -1,4 +1,5 @@
-  {
-            selectedIds.length > 0 &&  ? 
-          }
-          <Button onClick={showModal2}>Kopyala</Button>
+{
+  selectedIds.length > 0 && (
+    <Button onClick={showModal2}>Kopyala</Button>
+  )
+}
