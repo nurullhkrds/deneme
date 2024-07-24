@@ -1,5 +1,4 @@
-  useEffect(() => {
-    // selectedData'dan her bir verinin id'sini alıp copyIds'e atıyoruz
-    const ids = selectedData.map(item => item.id);
-    setCopyIds(ids);
-  }, [selectedData]);
+  // Extract only IDs from selectedRows
+      const selectedIds = selectedRows.map(row => row.id);
+      // Dispatch the IDs to Redux store
+      dispatch(setSelectedReturnMapList(selectedIds));
