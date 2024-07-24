@@ -1,33 +1,38 @@
-ublic class BillPaymentReverseProcessInputTest {
+public class ProcessUtil {
 
-    private BillPaymentReverseProcessInput input;
+	private static final String APP_NAME = BillTransactionConstant.APP_NAME;
 
-    @BeforeEach
-    public void setUp() {
-        input = new BillPaymentReverseProcessInput();
-    }
+	public static boolean isTimeBetweenWorkingHour(LocalTime time, LocalTime start, LocalTime end) {
+		if (start == null || end == null) {
+			return false;
+		}
 
-    @Test
-    public void testConstructor() {
-        // Test edilecek constructor'ın doğru EnumProcessCode'u kullanıp kullanmadığını kontrol edin
-        assertEquals(EnumProcessCode.PAYMENT_CANCEL, input.getProcessCode(), "Constructor should initialize with PAYMENT_CANCEL");
-    }
+		return time.isAfter(start) && time.isBefore(end);
+	}
 
-    @Test
-    public void testSetContractNumber() {
-        Long contractNumber = 12345L;
-        input.setContractNumber(contractNumber);
+	public static String formatWorkingTime(LocalTime time) {
+		if (time == null) {
+			return "";
+		}
 
-        // ProcessDataPackKey.CONTRACT_NO.getKey() değerinin doğru olduğunu varsayıyorum
-        assertEquals(contractNumber, input.getDataPack().get(ProcessDataPackKey.CONTRACT_NO.getKey()), "Contract number should be set correctly");
-    }
+		return DateTimeFormatter.ofPattern("HH:mm:ss").format(time);
+	}
 
-    @Test
-    public void testSetBillId() {
-        Long billId = 67890L;
-        input.setBillId(billId);
+	public static void validateCondition(boolean condition, EnumBillResult error) throws BillException {
+		BillValidationUtil.validateCondition(condition, error, APP_NAME);
+	}
 
-        // ProcessDataPackKey.BILL_ID.getKey() değerinin doğru olduğunu varsayıyorum
-        assertEquals(billId, input.getDataPack().get(ProcessDataPackKey.BILL_ID.getKey()), "Bill ID should be set correctly");
-    }
+	public static void validateConditionWithArgs(boolean condition, EnumBillResult error, Object... args)
+			throws BillException {
+		BillValidationUtil.validateConditionWithArgs(APP_NAME, condition, error, args);
+	}
+	
+	public static void raiseBillException(EnumBillResult result) throws BillException {
+		BillValidationUtil.throwBillException(APP_NAME, result);
+	}
+	
+	public static void raiseBillException(Exception ex) throws BillException {
+		BillValidationUtil.throwBillException(APP_NAME, ex);
+	}
+
 }
