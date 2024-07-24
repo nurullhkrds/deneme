@@ -1,6 +1,24 @@
- @Test
+import static org.powermock.api.mockito.PowerMockito.*;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ ProcessUtil.class, BillValidationUtil.class })
+public class ProcessUtilTest {
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        mockStatic(BillValidationUtil.class);
+    }
+
+    @Test
     public void testValidateCondition() throws BillException {
-        // Mock BillValidationUtil
         BillValidationUtil mockUtil = mock(BillValidationUtil.class);
         ProcessUtil spyUtil = spy(new ProcessUtil());
         doNothing().when(mockUtil).validateCondition(anyBoolean(), any(), anyString());
@@ -11,7 +29,6 @@
 
     @Test
     public void testValidateConditionWithArgs() throws BillException {
-        // Mock BillValidationUtil
         BillValidationUtil mockUtil = mock(BillValidationUtil.class);
         ProcessUtil spyUtil = spy(new ProcessUtil());
         doNothing().when(mockUtil).validateConditionWithArgs(anyString(), anyBoolean(), any(), any());
@@ -22,7 +39,6 @@
 
     @Test
     public void testRaiseBillExceptionWithResult() throws BillException {
-        // Mock BillValidationUtil
         BillValidationUtil mockUtil = mock(BillValidationUtil.class);
         ProcessUtil spyUtil = spy(new ProcessUtil());
         doNothing().when(mockUtil).throwBillException(anyString(), (EnumBillResult) any());
@@ -33,7 +49,6 @@
 
     @Test
     public void testRaiseBillExceptionWithException() throws BillException {
-        // Mock BillValidationUtil
         BillValidationUtil mockUtil = mock(BillValidationUtil.class);
         ProcessUtil spyUtil = spy(new ProcessUtil());
         doNothing().when(mockUtil).throwBillException(anyString(), (EnumBillResult) any());
@@ -41,7 +56,5 @@
         Exception ex = new Exception("Test Exception");
         ProcessUtil.raiseBillException(ex);
         verify(mockUtil).throwBillException(BillTransactionConstant.APP_NAME, ex);
-    }org.mockito.exceptions.base.MockitoException: 
-Cannot mock/spy class com.ykb.payments.bill.common.util.BillValidationUtil
-Mockito cannot mock/spy because :
- - final class
+    }
+}
