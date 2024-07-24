@@ -1,76 +1,107 @@
-package com.ykb.payments.bill.web;
-import com.ykb.architecture.micro.error.exception.MicroException;
-import com.ykb.payments.bill.common.utilities.DataResult;
-import com.ykb.payments.bill.common.utilities.Result;
-import com.ykb.payments.bill.transaction.client.AdapterReturnMapClient;
-import com.ykb.payments.bill.transaction.model.dto.ReturnMapDTO;
-import com.ykb.payments.bill.transaction.model.request.CopyForIdsAndDataRequest;
-import com.ykb.payments.bill.transaction.model.request.CreateReturnMapRequest;
-import com.ykb.payments.bill.transaction.model.request.UpdateReturnMapRequest;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import static com.ykb.payments.bill.common.constant.UrlConstants.RETURN_MAP_PATH;
+import React, { useEffect, useMemo, useState } from 'react';
+import { Table, TableHeader, Tooltip, Button, Row, Col } from 'ykb-ui';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSelectedReturnMapList } from '../../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
 
 
-@Tag(name = "Management ReturnMap BFF Controller")
-@RequestMapping(RETURN_MAP_PATH)
-@RestController
-public class ReturnMapController {
 
-    private final AdapterReturnMapClient adapterReturnMapClient;
+const columns = [
+  {
+    title: 'Return Map Code',
+    dataIndex: 'returnMapCode',
+    key: 'returnMapCode',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Institution Return Code',
+    dataIndex: 'institutionReturnCode',
+    key: 'institutionReturnCode',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Institution Return Text',
+    dataIndex: 'institutionReturnText',
+    key: 'institutionReturnText',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Bank Return Code',
+    dataIndex: 'bankReturnCode',
+    key: 'bankReturnCode',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Bank Return Text',
+    dataIndex: 'bankReturnText',
+    key: 'bankReturnText',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Return Type',
+    dataIndex: 'returnType',
+    key: 'returnType',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Is Reversible',
+    dataIndex: 'isReversible',
+    key: 'isReversible',
+    width: 200,
+    render: value => (value ? 'Evet' : 'Hayır'),
+    resizable: true,
+  },
+  {
+    dataIndex: 'custom',
+    type: {
+      action: 'edit',
+      hidden: record => {
+        return record.key % 2 === 0;
+      },
+      handler: (record, event) => {
+        console.log('icon-click:', record);
+      },
+      title: 'Edit Edit Edit', // UX Note: do not use unless it is explicitly requested by requirements
+      disabled: true,
+    },
+  },
+];
 
-    @Autowired
-    public ReturnMapController(AdapterReturnMapClient adapterReturnMapClient) {
-        this.adapterReturnMapClient = adapterReturnMapClient;
-    }
+const ReturnMapServiceParametersTable = () => {
+  const returnMapData = useSelector((state) => state.returnMap.list);
 
-    @Schema(description = "Get ReturnMaps By ReturnMapCode")
-    @GetMapping("/getAllByReturnMapCode")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAllByReturnMapCode(@RequestParam String returnMapCode) {
-        DataResult<List<ReturnMapDTO>> result = adapterReturnMapClient.getAllByReturnMapCode(returnMapCode);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
+  const dispatch = useDispatch()
+  const dataWithKeys = useMemo(
+    () => returnMapData.map((item, index) => ({ ...item, key: index + 1 })),
+    [returnMapData]
+  );
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      console.log(
+        `selectedRowKeys: ${selectedRowKeys}`,
+        'selectedRows: ',
+        selectedRows
+      );
 
-    @GetMapping("/getAll")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAll() {
-        DataResult<List<ReturnMapDTO>> result = adapterReturnMapClient.getAll();
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
 
-    @PostMapping("/createReturnMap")
-    public ResponseEntity<DataResult<ReturnMapDTO>> createReturnMap(
-            @RequestBody CreateReturnMapRequest request)
-            throws MicroException {
-        DataResult<ReturnMapDTO> result = adapterReturnMapClient.createReturnMap(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
 
-    @PutMapping("/updateReturnMap")
-    public ResponseEntity<DataResult<ReturnMapDTO>> updateReturnMap(
-            @RequestBody UpdateReturnMapRequest request)
-            throws MicroException {
-        DataResult<ReturnMapDTO> result = adapterReturnMapClient.updateReturnMap(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
+      const selectedIds = selectedRows.map(row => row.id);
+      dispatch(setSelectedReturnMapList(selectedIds));
+    },
+    getCheckboxProps: record => ({
+      disabled: record.name === 'Disabled User',
+      name: record.name,
+    }),
+  };
 
-    @PostMapping("/copy")
-    public ResponseEntity<Result> copyReturnMaps(@RequestBody CopyForIdsAndDataRequest request) {
-        Result result = adapterReturnMapClient.copyReturnMaps(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
+  return (
+    <Table rowSelection={rowSelection} columns={columns} data={dataWithKeys} />
+  );
+};
 
-    @GetMapping("/search")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
-            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
-            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
-            @RequestParam(required = false) @Parameter(name = "institutionCode") String institutionErrorCode) {
-        DataResult<List<ReturnMapDTO>> searhResult = adapterReturnMapClient.searchReturnMaps(returnMapCode,bankReturnCode,institutionErrorCode);
-        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
-    }
-
-}
+export default ReturnMapServiceParametersTable;
