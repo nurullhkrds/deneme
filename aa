@@ -1,42 +1,48 @@
-   @Transactional
-    public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
-        try {
-            List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
-            List<ReturnMap> copiedReturnMaps = new ArrayList<>();
+@Transactional
+public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
+    try {
+        List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
+        List<ReturnMap> copiedReturnMaps = new ArrayList<>();
 
-            for (ReturnMap original : returnMapsToCopy) {
-                ReturnMap copied = new ReturnMap();
+        for (ReturnMap original : returnMapsToCopy) {
+            ReturnMap copied = new ReturnMap();
 
-                copied.setReturnMapCode(
-                        request.getReturnMapCode() != null ? request.getReturnMapCode() : original.getReturnMapCode()
-                );
-                copied.setInstitutionReturnCode(
-                        request.getInstitutionReturnCode() != null ? request.getInstitutionReturnCode() : original.getInstitutionReturnCode()
-                );
-                copied.setInstitutionReturnText(
-                        request.getInstitutionReturnText() != null ? request.getInstitutionReturnText() : original.getInstitutionReturnText()
-                );
-                copied.setBankReturnCode(
-                        request.getBankReturnCode() != null ? request.getBankReturnCode() : original.getBankReturnCode()
-                );
-                copied.setBankReturnText(
-                        request.getBankReturnText() != null ? request.getBankReturnText() : original.getBankReturnText()
-                );
-                copied.setReturnType(
-                        request.getReturnType() != null ? EnumReturnType.valueOf(request.getReturnType()) : original.getReturnType()
-                );
+            copied.setReturnMapCode(
+                isNotBlank(request.getReturnMapCode()) ? request.getReturnMapCode() : original.getReturnMapCode()
+            );
+            copied.setInstitutionReturnCode(
+                isNotBlank(request.getInstitutionReturnCode()) ? request.getInstitutionReturnCode() : original.getInstitutionReturnCode()
+            );
+            copied.setInstitutionReturnText(
+                isNotBlank(request.getInstitutionReturnText()) ? request.getInstitutionReturnText() : original.getInstitutionReturnText()
+            );
+            copied.setBankReturnCode(
+                isNotBlank(request.getBankReturnCode()) ? request.getBankReturnCode() : original.getBankReturnCode()
+            );
+            copied.setBankReturnText(
+                isNotBlank(request.getBankReturnText()) ? request.getBankReturnText() : original.getBankReturnText()
+            );
+            
+            // Handle Enum conversion with blank or null string
+            copied.setReturnType(
+                isNotBlank(request.getReturnType()) ? EnumReturnType.valueOf(request.getReturnType()) : original.getReturnType()
+            );
 
-                copied.setIsReversible(
-                        request.getIsReversible() != null ? request.getIsReversible() : original.getIsReversible()
-                );
+            copied.setIsReversible(
+                request.getIsReversible() != null ? request.getIsReversible() : original.getIsReversible()
+            );
 
-                copiedReturnMaps.add(copied);
-            }
-
-            returnMapRepository.saveAll(copiedReturnMaps);
-            return new SuccessResult("Copy successful", 200);
-
-        } catch (Exception e) {
-            return new ErrorResult("Error! " + e.getMessage(), 400);
+            copiedReturnMaps.add(copied);
         }
+
+        returnMapRepository.saveAll(copiedReturnMaps);
+        return new SuccessResult("Copy successful", 200);
+
+    } catch (Exception e) {
+        return new ErrorResult("Error! " + e.getMessage(), 400);
     }
+}
+
+private boolean isNotBlank(String value) {
+    return value != null && !value.trim().isEmpty();
+}
