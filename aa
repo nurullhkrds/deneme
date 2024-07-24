@@ -1,60 +1,44 @@
-import static org.powermock.api.mockito.PowerMockito.*;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ ProcessUtil.class, BillValidationUtil.class })
-public class ProcessUtilTest {
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        mockStatic(BillValidationUtil.class);
-    }
-
     @Test
-    public void testValidateCondition() throws BillException {
-        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
-        ProcessUtil spyUtil = spy(new ProcessUtil());
-        doNothing().when(mockUtil).validateCondition(anyBoolean(), any(), anyString());
+    public void testGetInstitutionDebtTypeForProcess() {
+        String productCode = "product1";
+        String institutionCode = "inst1";
+        Long institutionDebtTypeId = 1L;
+        InstitutionDebtTypeDTO expectedDTO = new InstitutionDebtTypeDTO();
+        when(institutionDebtTypeService.getDebtType(institutionDebtTypeId)).thenReturn(expectedDTO);
+        when(institutionDebtTypeService.getDefaultDebtType(productCode, institutionCode)).thenReturn(expectedDTO);
 
-        ProcessUtil.validateCondition(true, EnumBillResult.SUCCESS);
-        verify(mockUtil).validateCondition(true, EnumBillResult.SUCCESS, BillTransactionConstant.APP_NAME);
+        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess(productCode, institutionCode, institutionDebtTypeId);
+        assertEquals(expectedDTO, result);
+
+        result = processServiceImpl.getInstitutionDebtTypeForProcess(productCode, institutionCode, null);
+        assertEquals(expectedDTO, result);
+
+        result = processServiceImpl.getInstitutionDebtTypeForProcess(null, institutionCode, institutionDebtTypeId);
+        assertNull(result);
+
+        result = processServiceImpl.getInstitutionDebtTypeForProcess(productCode, null, institutionDebtTypeId);
+        assertNull(result);
+
+        result = processServiceImpl.getInstitutionDebtTypeForProcess(null, null, institutionDebtTypeId);
+        assertNull(result);
+
+        result = processServiceImpl.getInstitutionDebtTypeForProcess(null, null, null);
+        assertNull(result);
     }
 
-    @Test
-    public void testValidateConditionWithArgs() throws BillException {
-        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
-        ProcessUtil spyUtil = spy(new ProcessUtil());
-        doNothing().when(mockUtil).validateConditionWithArgs(anyString(), anyBoolean(), any(), any());
 
-        ProcessUtil.validateConditionWithArgs(true, EnumBillResult.SUCCESS, "arg1", "arg2");
-        verify(mockUtil).validateConditionWithArgs(BillTransactionConstant.APP_NAME, true, EnumBillResult.SUCCESS, "arg1", "arg2");
-    }
+actual:
+(com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO:
+    id: null
+  , institution: null
+  , debtType: null
+  , explanation: null
+  , isActive: null
+  , version: null
+  , updateDate: null
+  , updatedBy: null
+  , createDate: null
+  , createdBy: null
+)
 
-    @Test
-    public void testRaiseBillExceptionWithResult() throws BillException {
-        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
-        ProcessUtil spyUtil = spy(new ProcessUtil());
-        doNothing().when(mockUtil).throwBillException(anyString(), (EnumBillResult) any());
-
-        ProcessUtil.raiseBillException(EnumBillResult.BILL_REVERSE_PAYMENT_CHANNEL_DIFFERENT_ERROR);
-        verify(mockUtil).throwBillException(BillTransactionConstant.APP_NAME, EnumBillResult.BILL_REVERSE_PAYMENT_CHANNEL_DIFFERENT_ERROR);
-    }
-
-    @Test
-    public void testRaiseBillExceptionWithException() throws BillException {
-        BillValidationUtil mockUtil = mock(BillValidationUtil.class);
-        ProcessUtil spyUtil = spy(new ProcessUtil());
-        doNothing().when(mockUtil).throwBillException(anyString(), (EnumBillResult) any());
-
-        Exception ex = new Exception("Test Exception");
-        ProcessUtil.raiseBillException(ex);
-        verify(mockUtil).throwBillException(BillTransactionConstant.APP_NAME, ex);
-    }
-}
+expected:null
