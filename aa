@@ -1,98 +1,564 @@
-  {
-    exact: true,
-    processId: Pages.returnMapServiceParameters.processId,
-    path: Pages.returnMapServiceParameters.path,
-    component: asyncComponent(() => import('./pages/returnMapServiceParameter/ReturnMapServiceParametersWrapper')),
-    
-    // i18n: (lang) =>
-    //   import(
-    //     /* webpackMode: "lazy" */ `./i18n/returnMap/ReturnMap-${lang}.js`
-    //   ),
-      
-  },
-];
+import { useIntl, useShellCommunicator, withPermission } from "ykb-shell";
+import {
+  Row,
+  Col,
+  Button,
+  Select,
+  Form,
+  TextInput,
+  Notification,
+  Message,
+} from "ykb-ui";
+import ModalMode from "../../constant/ModalMode";
 
-// ReturnMapServiceParametersSearch.js
-import React, { Fragment, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { Button, Form, TextInput } from 'ykb-ui';
-import { fetchInstitutionsData } from '../../service/ApiService';
+import {
+  sendGetInstServiceParameterRequest,
+  sendSearchInstServiceParameterRequest,
+  sendSaveInstServiceParameterRequest,
+  sendUpdateInstServiceParameterRequest,
+  sendGetInstitutionsRequest,
+  sendDeleteInstServiceParameterRequest,
+} from "../../components/api/instServiceParameter/InstServiceParametersApi";
 
-const ReturnMapServiceParametersSearch = ({ callApi }) => {
-  const dispatch = useDispatch();
-  const [returnMapCode, setReturnMapCode] = useState('');
-  const [bankReturnCode, setBankReturnCode] = useState('');
-  const [institutionReturnCode, setInstitutionReturnCode] = useState('');
+const SecureButton = withPermission(Button);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target || {};
-    if (name === 'returnMapCode') {
-      setReturnMapCode(value);
-    } else if (name === 'bankReturnCode') {
-      setBankReturnCode(value);
-    } else if (name === 'institutionReturnCode') {
-      setInstitutionReturnCode(value);
+const InstServiceParameterDetailModalForm = (props) => {
+  const { callApi } = useShellCommunicator();
+
+  const formRef = useRef(null);
+  const { i18n } = useIntl();
+  const { InstServiceParameterDetailModalFormLocale } = i18n;
+
+  const mode = useSelector(
+    (state) => state.instServiceParameter.instServiceParameterDetailModal.mode
+  );
+
+  const selectedInstServiceParameterId = useSelector(
+    (state) =>
+      state.instServiceParameter.instServiceParameterDetailModal
+        .selectedInstServiceParameterId
+  );
+
+  const [instServParamGroupsData, setInstServParamGroupsData] = useState([]);
+  const [institutionsData, setInstitutionsData] = useState([]);
+
+  useEffect(() => {
+    debugger
+    fetchInstServParamGroupsData();
+    fetchInstitutionsData();
+  }, []);
+
+  const fetchInstitutionsData = async () => {
+    try {
+      let institutionsResponse = await sendGetInstitutionsRequest(callApi);
+      setInstitutionsData(institutionsResponse);
+    } catch (error) {
+      console.log("fetchInstitutionsData", error);
     }
   };
 
-  const handleSearch = () => {
-    const searchCriteria = {
-      returnMapCode,
-      bankReturnCode,
-      institutionReturnCode,
-    };
-    
-    // Tüm inputlar boşsa tüm verileri getirecek şekilde düzenleyelim
-    if (!returnMapCode && !bankReturnCode && !institutionReturnCode) {
-      // Eğer tüm inputlar boşsa, tüm verileri getirmek için arama yapalım
-      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
+  const fetchInstServParamGroupsData = async () => {
+    try {
+      let instServParamGroupsResponse = await sendSearchInstServiceParameterRequest(callApi);
+      const instServParamGroups = prepareInstServParamGroups(instServParamGroupsResponse);
+      setInstServParamGroupsData(instServParamGroups);
+    } catch (error) {
+      console.log("fetchInstServParamGroupsData", error);
+    }
+  };
+
+  const prepareInstServParamGroups = (instServParams) => {
+    let instServParamGroups = [];
+    let sortedInstServParams = instServParams?.sort((a, b) => a.id - b.id);
+    sortedInstServParams?.map((instServParamGroup) => {
+      instServParamGroups.push({
+        id: instServParamGroup.id,
+        institutionId: instServParamGroup.institutionId,
+        parameterGroupCode: instServParamGroup.parameterGroupCode,
+        parameterKey: instServParamGroup.parameterKey,
+        parameterValue: instServParamGroup.parameterValue,
+        description: instServParamGroup.description,
+      });
+    });
+    return instServParamGroups;
+  };
+
+  const mapInstitutionsSelectData = (institutions) => {
+    let selectData = [];
+    institutions?.sort((a, b) => a.id - b.id).map((institutions) => {
+      selectData.push({
+        value: institutions.id?.toString(),
+        label: institutions.name
+      });
+    });
+    return selectData;
+  };
+
+  useEffect(() => {
+    initFormDataForEntry();
+    initFormDataForViewAndEdit();
+  }, [mode, selectedInstServiceParameterId]);
+
+  const initFormDataForEntry = async () => {
+    const suitableStatus = [ModalMode.ENTRY.toString()];
+    if (!suitableStatus.includes(mode)) {
+      return;
+    }
+    if (formRef.current) {
+      formRef.current.setFieldsValue({
+        id: "",
+        institutionId: "",
+        parameterGroupCode: "",
+        parameterKey: "",
+        parameterValue: "",
+        description:"",
+        isActive: "",
+      });
+    }
+  };
+
+  const mapGetInstServiceParameterResponseToFormData = (instServiceParameterResponse) => {
+    try {
+      return {
+        id: instServiceParameterResponse.id.toString(),
+        institutionId: instServiceParameterResponse.institutionId?.toString(),
+        parameterKey: instServiceParameterResponse.parameterKey?.toString(),
+        parameterGroupCode: instServiceParameterResponse.parameterGroupCode?.toString(),
+        parameterValue: instServiceParameterResponse.parameterValue?.toString(),
+        description:instServiceParameterResponse.description.toString(),
+        isActive: instServiceParameterResponse.isActive?.toString(),
+      };
+    } catch (error) {
+      console.log("mapGetInstServiceParameterResponseToFormData", error);
+    }
+  };
+
+  const initFormDataForViewAndEdit = async () => {
+    const suitableStatus = [
+      ModalMode.VIEW.toString(),
+      ModalMode.EDIT.toString(),
+      ModalMode.DELETE.toString(),
+    ];
+    if (!suitableStatus.includes(mode)) {
+      return;
+    }
+
+    if (!selectedInstServiceParameterId) {
+      return;
+    }
+
+    try {
+      props.setSpinning({
+        status: true,
+        text: "Lütfen Bekleyiniz...",
+      });
+
+      let instServiceParameterResponse = await sendGetInstServiceParameterRequest(
+        callApi,
+        selectedInstServiceParameterId
+      );
+
+      const formData = mapGetInstServiceParameterResponseToFormData(instServiceParameterResponse);
+      if (formRef.current) {
+        formRef.current.setFieldsValue(formData);
+      }
+
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+    } catch (ex) {
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+      console.log("initFormDataForViewAndEdit", ex.message);
+      Notification.error(ex.message, 3);
+    }
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    formRef.current.validateFields(null, (error, values) => {
+      if (!error) {
+        if (ModalMode.ENTRY.toString() === mode) {
+          onSave(values);
+        } else if (ModalMode.EDIT.toString() === mode) {
+          onUpdate(values);
+        } else if (ModalMode.DELETE.toString() === mode) {
+          onDelete(values);
+        } else {
+          console.log(
+            "[InstServiceParameterDetailModalForm] -> (onSubmit) : Unknown Modal Mode !!!"
+          );
+        }
+      }
+    });
+  };
+
+  const onSave = async (formData) => {
+    try {
+      props.setSpinning({
+        status: true,
+        text: "Lütfen Bekleyiniz...",
+      });
+
+      const newInstServiceParameter = {
+        id: selectedInstServiceParameterId,
+        institutionId: formData.institutionId,
+        groupCode: formData.parameterGroupCode,
+        key: formData.parameterKey,
+        value: formData.parameterValue,
+        description:formData.description,
+        isActive: formData.isActive,
+      };
+
+      await sendSaveInstServiceParameterRequest(callApi, newInstServiceParameter);
+
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+
+      Notification.success(
+        InstServiceParameterDetailModalFormLocale.messages.insertSuccessMessage
+      );
+
+      props.handleOk();
+    } catch (ex) {
+      console.log("sendSaveInstServiceParameterRequest", ex.message);
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+      Notification.error(ex.message, 3);
+      props.handleClose();
+    }
+  };
+
+  const onUpdate = async (formData) => {
+    try {
+      props.setSpinning({
+        status: true,
+        text: "Lütfen Bekleyiniz...",
+      });
+
+      const newInstServiceParameter = {
+        id: selectedInstServiceParameterId,
+        institutionId: formData.institutionId,
+        groupCode: formData.parameterGroupCode,
+        key: formData.parameterKey,
+        value: formData.parameterValue,
+        description:formData.description,
+        isActive: formData.isActive,
+      };
+
+      await sendUpdateInstServiceParameterRequest(callApi, selectedInstServiceParameterId, newInstServiceParameter);
+
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+
+      Notification.success(
+        InstServiceParameterDetailModalFormLocale.messages.updateSuccessMessage
+      );
+
+      props.handleOk();
+    } catch (ex) {
+      console.log("sendUpdateInstServiceParameterRequest", ex.message);
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+      Notification.error(ex.message, 3);
+      props.handleClose();
+    }
+  };
+
+  const onDelete = async (formData) => {
+    try {
+      props.setSpinning({
+        status: true,
+        text: "Lütfen Bekleyiniz...",
+      });
+
+      Message.warning({
+        title: 'Uyarı',
+        content: InstServiceParameterDetailModalFormLocale.messages.deleteWarningMessage,
+        onClose: () => {
+          console.log('onClose');
+        },
+        onOk: () => {
+          sendDeleteInstServiceParameterRequest(callApi, selectedInstServiceParameterId);
+
+          props.setSpinning({
+            status: true,
+            text: "Lütfen Bekleyiniz...",
+          });
+
+          Notification.success(
+            InstServiceParameterDetailModalFormLocale.messages.deleteSuccessMessage
+          );
+          props.handleOk();
+        },
+      });
+    } catch (ex) {
+      console.log("sendUpdateInstServiceParameterRequest", ex.message);
+      props.setSpinning({
+        status: false,
+        text: null,
+      });
+      Notification.error(ex.message, 3);
+      props.handleClose();
+    }
+
+  };
+
+
+
+  const renderModalFormFooterButtons = () => {
+    const buttonsForEntryOrEdit = (
+      <>
+        <Button onClick={props.handleClose}>
+          {InstServiceParameterDetailModalFormLocale.cancelButton}
+        </Button>
+        <SecureButton
+          onClick={onSubmit}
+          type="primary"
+          permission="instServiceParameterCancelBtn"
+        >
+          {InstServiceParameterDetailModalFormLocale.submitButton}
+        </SecureButton>
+      </>
+    );
+
+    if (
+      [ModalMode.ENTRY.toString(), ModalMode.EDIT.toString()].includes(mode)
+    ) {
+      return buttonsForEntryOrEdit;
     } else {
-      dispatch(fetchInstitutionsData(dispatch, callApi, searchCriteria));
+      return <></>;
     }
   };
 
-  const handleReset = () => {
-    setReturnMapCode('');
-    setBankReturnCode('');
-    setInstitutionReturnCode('');
-    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
+  const renderDeleteModalFormButton = () => {
+    const buttonForDelete = (
+      <>
+        <Button onClick={props.handleClose}>
+          {InstServiceParameterDetailModalFormLocale.cancelButton}
+        </Button>
+        <Button
+          onClick={onSubmit}
+          type="danger"
+          permission="instServiceParameterCancelBtn"
+        >
+          {InstServiceParameterDetailModalFormLocale.deleteButton}
+        </Button>
+      </>
+    );
+
+    if (
+      [ModalMode.DELETE.toString()].includes(mode)
+    ) {
+      return buttonForDelete;
+    } else {
+      return <></>;
+    }
   };
 
   return (
-    <Fragment>
-      <Form>
-        <Form.Item label="ReturnMap Kodu">
-          <TextInput
-            name="returnMapCode"
-            value={returnMapCode}
-            onChange={handleInputChange}
+    <React.Fragment>
+      <Form ref={formRef}>
+        <Form.Item
+          label={
+            InstServiceParameterDetailModalFormLocale.institutionId
+              .label
+          }
+          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+        >
+          <Select
+            name="institutionId"
+            data={
+              institutionsData &&
+              mapInstitutionsSelectData(institutionsData)
+            }
+            allowClear
+
+            disabled={[
+              ModalMode.VIEW.toString(),
+              ModalMode.EDIT.toString(),
+            ].includes(mode)}
           />
         </Form.Item>
-        <Form.Item label="Banka Kodu">
+        <Form.Item
+          label={InstServiceParameterDetailModalFormLocale.parameterGroupCode.label}
+          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+        >
           <TextInput
-            name="bankReturnCode"
-            value={bankReturnCode}
-            onChange={handleInputChange}
+            name="parameterGroupCode"
+            validation={[{ required: true }]}
+            disabled={ModalMode.VIEW.toString() === mode}
+            allowClear
           />
         </Form.Item>
-        <Form.Item label="Kurum Kodu">
+        <Form.Item
+          label={InstServiceParameterDetailModalFormLocale.parameterKey.label}
+          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+        >
           <TextInput
-            name="institutionReturnCode"
-            value={institutionReturnCode}
-            onChange={handleInputChange}
+            name="parameterKey"
+            validation={[{ required: true }]}
+            disabled={ModalMode.VIEW.toString() === mode}
+            allowClear
           />
         </Form.Item>
-     
+        <Form.Item
+          label={InstServiceParameterDetailModalFormLocale.parameterValue.label}
+          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+        >
+          <TextInput
+            name="parameterValue"
+            validation={[{ required: true }]}
+            disabled={ModalMode.VIEW.toString() === mode}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item
+          label={InstServiceParameterDetailModalFormLocale.description.label}
+          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+        >
+          <TextInput
+            name="description"
+            validation={[{ required: true }]}
+            disabled={ModalMode.VIEW.toString() === mode}
+            allowClear
+          />
+        </Form.Item>
+        <Form.Item
+          label={InstServiceParameterDetailModalFormLocale.status.label}
+          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+        >
+          <Select
+            name="isActive"
+            allowClear
+            validation={[{ required: true }]}
+            data={[
+              {
+                value: "true",
+                label:
+                  InstServiceParameterDetailModalFormLocale.status.options.active,
+              },
+              {
+                value: "false",
+                label:
+                  InstServiceParameterDetailModalFormLocale.status.options
+                    .passive,
+              },
+            ]}
+          />
+        </Form.Item>
+        <Form.Item colSpan={{ span: 24 }}>
+          <Row>
+            <Col>
+              <div className="footer pull-right">
+                {renderModalFormFooterButtons()}
+              </div>
+            </Col>
+            <Col>
+              <div className="footer pull-right">
+                {renderDeleteModalFormButton()}
+              </div>
+            </Col>
+          </Row>
+        </Form.Item>
       </Form>
-      <Button onClick={handleSearch}>Search</Button>
-      <Button
-        type="secondary"
-        onClick={handleReset}
-      >
-        Reset
-      </Button>
-    </Fragment>
+    </React.Fragment>
   );
 };
 
-export default ReturnMapServiceParametersSearch;
+InstServiceParameterDetailModalForm.propTypes = {
+  handleOk: PropTypes.func.isRequired,
+  handleClose: PropTypes.func.isRequired,
+  handleDelete: PropTypes.func.isRequired,
+  setSpinning: PropTypes.func.isRequired,
+};
+
+export default InstServiceParameterDetailModalForm;
+
+const lang = {
+  institutionId: {
+    label: "Kurum Adı",
+  },
+  parameterGroupCode: {
+    label: "Grup Kodu",
+  },
+  parameterKey: {
+    label: "Anahtar",
+  },
+  parameterValue: {
+    label: "Değer",
+  },
+  description: {
+    label: "Açıklama"
+  },
+  status: {
+    label: "Statü",
+    options: {
+      active: "Aktif",
+      passive: "Pasif",
+    },
+  },
+  messages: {
+    insertSuccessMessage: "Kurum servis parametresi tanımı başarılı şekilde tamamlanmıştır.",
+    updateSuccessMessage:
+      "Kurum servis parametresi tanımı başarılı şekilde güncellenmiştir.",
+    deleteWarningMessage: "Kurum servis parametresini silmek üzeresiniz. Silme işlemini tamamlamak için 'Tamam'a tıklayınız.",
+    deleteSuccessMessage: "Kurum servis parametresi başarılı bir şekilde silinmiştir.",
+  },
+  closeButton: "KAPAT",
+  cancelButton: "VAZGEÇ",
+  submitButton: "KAYDET",
+  deleteButton: "SİL",
+  okButton: "TAMAM",
+};
+
+export default lang;
+ ve const lang = {
+  institutionId: {
+    label: "Institution Name",
+  },
+  parameterGroupCode: {
+    label: "Group Code",
+  },
+  parameterKey: {
+    label: "Key",
+  },
+  parameterValue: {
+    label: "Value",
+  },
+  description: {
+    label: "Description"
+  },
+  status: {
+    label: "Status",
+    options: {
+      active: "Active",
+      passive: "Passive",
+    },
+  },
+  messages: {
+    insertSuccessMessage: "Institution service parameter definition created successfully.",
+    updateSuccessMessage:
+      "Institution service parameter definition updated successfully.",
+    deleteWarningMessage: "You are about to delete selected institution service parameter. Click 'Ok' button to continue.",
+    deleteSuccessMessage:"Institution service parameter deleted successfully."
+  },
+  closeButton: "CLOSE",
+  cancelButton: "CANCEL",
+  submitButton: "SUBMIT",
+  deleteButton: "DELETE",
+  okButton: "OK",
+};
+
+export default lang;
