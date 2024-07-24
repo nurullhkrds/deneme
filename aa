@@ -1,51 +1,42 @@
-import {
-  buildQueryString,
-  arrangeExMessageAndThrowEx,
-} from "../../../utils/ApiCallUtils";
+   @Transactional
+    public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
+        try {
+            List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
+            List<ReturnMap> copiedReturnMaps = new ArrayList<>();
 
-export const sendSearchReturnMapRequest = async (callApi, filters) => {
-  const endpoint = 'returnMaps/search';
-  const criteria = filters ?? {};
-  const url = buildQueryString(endpoint, criteria);
-  try {
-    return await callApi({
-      method: 'GET',
-      endpoint: url,
-    });
-  } catch (ex) {
-    arrangeExMessageAndThrowEx(ex);
-  }
-};
+            for (ReturnMap original : returnMapsToCopy) {
+                ReturnMap copied = new ReturnMap();
 
+                copied.setReturnMapCode(
+                        request.getReturnMapCode() != null ? request.getReturnMapCode() : original.getReturnMapCode()
+                );
+                copied.setInstitutionReturnCode(
+                        request.getInstitutionReturnCode() != null ? request.getInstitutionReturnCode() : original.getInstitutionReturnCode()
+                );
+                copied.setInstitutionReturnText(
+                        request.getInstitutionReturnText() != null ? request.getInstitutionReturnText() : original.getInstitutionReturnText()
+                );
+                copied.setBankReturnCode(
+                        request.getBankReturnCode() != null ? request.getBankReturnCode() : original.getBankReturnCode()
+                );
+                copied.setBankReturnText(
+                        request.getBankReturnText() != null ? request.getBankReturnText() : original.getBankReturnText()
+                );
+                copied.setReturnType(
+                        request.getReturnType() != null ? EnumReturnType.valueOf(request.getReturnType()) : original.getReturnType()
+                );
 
-export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest) => {
-  const endpoint = "returnMaps/createReturnMap";
+                copied.setIsReversible(
+                        request.getIsReversible() != null ? request.getIsReversible() : original.getIsReversible()
+                );
 
-  try {
-    return await callApi({
-      method: "POST",
-      endpoint: endpoint,
-      body: createReturnMapRequest,
-      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
-    });
-  } catch (ex) {
-    console.error('API error:', ex);
-    throw ex; // Hataları üst bileşene fırlat
-  }
-};
+                copiedReturnMaps.add(copied);
+            }
 
-export const sendCopyReturnMapRequest = async (callApi, copyReturnMapRequest) => {
-  const endpoint = "returnMaps/copy";
-  try {
-    return await callApi({
-      method: "POST",
-      endpoint: endpoint,
-      body: copyReturnMapRequest,
-      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
-    });
-  } catch (ex) {
-    console.error('API error:', ex);
-    throw ex; // Hataları üst bileşene fırlat
-  }
-};
+            returnMapRepository.saveAll(copiedReturnMaps);
+            return new SuccessResult("Copy successful", 200);
 
+        } catch (Exception e) {
+            return new ErrorResult("Error! " + e.getMessage(), 400);
+        }
+    }
