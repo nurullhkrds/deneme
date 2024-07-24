@@ -1,1 +1,5 @@
-  const selectedData = useSelector((state) => state.returnMap.selectedList);
+  useEffect(() => {
+    // selectedData'dan her bir verinin id'sini alıp copyIds'e atıyoruz
+    const ids = selectedData.map(item => item.id);
+    setCopyIds(ids);
+  }, [selectedData]);
