@@ -1,3 +1,26 @@
+// apiUtils.js
+import { sendSearchReturnMapRequest } from '../components/api/returnMapServiceParameter/ReturnMapServiceParametersApi';
+import { setReturnMapList, setSpinning, setError } from '../redux/slices/returnMapServiceParameter/returnMapServiceParameterSlice';
+
+export const fetchInstitutionsData = (callApi, searchCriteria) => async (dispatch) => {
+  dispatch(setSpinning(true));
+  try {
+    let response = await sendSearchReturnMapRequest(callApi, searchCriteria);
+    dispatch(setReturnMapList(response.data));
+  } catch (error) {
+    dispatch(setError(error));
+    console.error("fetchInstitutionsData", error);
+  } finally {
+    dispatch(setSpinning(false));
+  }
+};
+
+
+import React, { Fragment, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { Button, Form, TextInput } from 'ykb-ui';
+import { fetchInstitutionsData } from '../../utils/apiUtils'; // Yardımcı fonksiyonu import et
+
 const ReturnMapServiceParametersSearch = ({ callApi }) => {
   const dispatch = useDispatch();
   const [searchCriteria, setSearchCriteria] = useState({
@@ -15,12 +38,12 @@ const ReturnMapServiceParametersSearch = ({ callApi }) => {
   };
 
   const handleSearch = () => {
-    dispatch(fetchInstitutionsData(dispatch, callApi, searchCriteria)());
+    dispatch(fetchInstitutionsData(callApi, searchCriteria));
   };
 
   return (
     <Fragment>
-      <Form onClick={handleSearch}>
+      <Form>
         <Form.Item label="ReturnMap Kodu">
           <TextInput
             name="returnMapCode"
@@ -45,9 +68,7 @@ const ReturnMapServiceParametersSearch = ({ callApi }) => {
             allowClear
           />
         </Form.Item>
-        
-      </Form>
-      <Button onClick={handleSearch}>Search</Button>
+        <Button type="primary" onClick={handleSearch}>Search</Button>
         <Button
           type="secondary"
           onClick={() => {
@@ -56,11 +77,12 @@ const ReturnMapServiceParametersSearch = ({ callApi }) => {
               bankReturnCode: '',
               institutionReturnCode: '',
             });
-            dispatch(fetchInstitutionsData(dispatch, callApi, {})());
+            dispatch(fetchInstitutionsData(callApi, {}));
           }}
         >
           Reset
         </Button>
+      </Form>
     </Fragment>
   );
 };
