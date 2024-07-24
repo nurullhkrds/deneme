@@ -55,3 +55,90 @@ const rowSelection = {
 };
 
 <Table rowSelection={rowSelection} columns={columns} data={data} />;
+
+
+bu örnek bir component...
+
+
+"
+const columnsData = [
+  {
+    title: 'Return Map Code',
+    dataIndex: 'returnMapCode',
+    key: 'returnMapCode',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Institution Return Code',
+    dataIndex: 'institutionReturnCode',
+    key: 'institutionReturnCode',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Institution Return Text',
+    dataIndex: 'institutionReturnText',
+    key: 'institutionReturnText',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Bank Return Code',
+    dataIndex: 'bankReturnCode',
+    key: 'bankReturnCode',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Bank Return Text',
+    dataIndex: 'bankReturnText',
+    key: 'bankReturnText',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Return Type',
+    dataIndex: 'returnType',
+    key: 'returnType',
+    width: 200,
+    resizable: true,
+  },
+  {
+    title: 'Is Reversible',
+    dataIndex: 'isReversible',
+    key: 'isReversible',
+    width: 200,
+    render: value => (value ? 'Yes' : 'No'),
+    resizable: true,
+  },
+
+];
+
+
+
+const ReturnMapServiceParametersTable = () => {
+  const returnMapData = useSelector((state) => state.returnMap.list);
+  const [columns, setColumns] = useState(columnsData);
+
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      console.log(
+        `selectedRowKeys: ${selectedRowKeys}`,
+        'selectedRows: ',
+        selectedRows
+      );
+    },
+    getCheckboxProps: record => ({
+      disabled: record.name === 'Disabled User', // Column configuration not to be checked
+      name: record.name,
+    }),
+  };
+
+
+  return (
+    <Table rowSelection={rowSelection} columns={columns} data={returnMapData} />
+  );
+};
+
+export default ReturnMapServiceParametersTable;" bu da benim componentim...
