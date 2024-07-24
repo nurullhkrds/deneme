@@ -1,91 +1,12 @@
-The above error occurred in one of your React components:
-    in div (created by styled.div)
-    in styled.div (created by Context.Consumer)
-    in div (created by styled.div)
-    in styled.div (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Col)
-    in Col (created by Styled(Col))
-    in Styled(Col) (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Item)
-    in Item (at ReturnMapServiceParameters.js:98)
-    in div (created by styled.div)
-    in styled.div (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Row)
-    in Row (created by Context.Consumer)
-    in form (created by styled.form)
-    in styled.form (created by Context.Consumer)
-    in FormProvider (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Form)
-    in Form (created by Form(Form))
-    in Form(Form) (at ReturnMapServiceParameters.js:97)
-    in div (created by Container)
-    in div (created by Dialog)
-    in div (created by Dialog)
-    in div (created by LazyRenderBox)
-    in LazyRenderBox (created by Dialog)
-    in AnimateChild (created by Animate)
-    in Animate (created by Dialog)
-    in div (created by Dialog)
-    in div (created by Dialog)
-    in Dialog (created by PortalWrapper)
-    in Portal (created by PortalWrapper)
-    in PortalWrapper (created by _default)
-    in _default (created by Container)
-    in Container (created by Styled(Container))
-    in Styled(Container) (created by Context.Consumer)
-    in me (created by Context.Consumer)
-    in ModalProvider (created by Context.Consumer)
-    in YkbUiThemeConsumer (created by Modal)
-    in div (created by Modal)
-    in Modal (at ReturnMapServiceParameters.js:84)
-    in ReturnMapServiceParameters (at ReturnMapServiceParametersWrapper.js:10)
-    in Provider (at ReturnMapServiceParametersWrapper.js:9)
-    in ReturnMapServiceParametersWrapper (created by AsyncComponent)
-    in AsyncComponent (created by _class)
-    in ExternalDataContextProvider (created by _class)
-    in _class (created by SparxPage)
-    in ShellCommunicatorProvider (created by SparxPage)
-    in PermissionProvider (created by SparxPage)
-    in IntlProvider (created by SparxPage)
-    in SparxPage (created by Route)
-    in Route (created by RouteCreator)
-    in div (created by RouteCreator)
-    in Router (created by MemoryRouter)
-    in MemoryRouter (created by RouteCreator)
-    in div (created by RouteCreator)
-    in RouteCreator
-    in Le (created by YkbUiThemeProvider)
-    in YkbUiThemeProvider
-    in me
+import React, { useState, useEffect } from 'react';
+import { Button, Modal, Form, Input, Select } from 'ykb-ui';
+import { useDispatch } from 'react-redux';
+import { fetchInstitutionsData } from './actions'; // Adjust import if needed
 
-React will try to recreate this component tree from scratch using the error boundary you provided, _class.
+const { Option } = Select;
 
-
-
-
-"const Option = Select.Option;
-
-const handleChange = value => {
-  console.log('selected', value);
-};
-
-<div style={{ width: '300px' }}>
-  <Select defaultValue="kate" onChange={handleChange}>
-    <Option value="Hubert">
-      Hubert Blaine Wolfeschlegelsteinhausenbergerdorff Sr
-    </Option>
-    <Option value="kate">Kate</Option>
-    <Option value="disabled" disabled>
-      Disabled
-    </Option>
-    <Option value="hurley">Hurley</Option>
-  </Select>
-</div>;" select için bu componentim var mesela....
-
-
-function ReturnMapServiceParameters() {
+const ReturnMapServiceParameters = () => {
   const dispatch = useDispatch();
-  const { callApi } = useShellCommunicator(); // Adjust this if needed
   const [modalVisible, setModalVisible] = useState(false);
   const [formValues, setFormValues] = useState({
     returnMapCode: '',
@@ -97,22 +18,17 @@ function ReturnMapServiceParameters() {
     isReversible: true, // Default value
   });
 
-  const Option = Select.Option;
-
-const handleChange = value => {
-  console.log('selected', value);
-};
   const showModal = () => {
     setModalVisible(true);
   };
 
-  const handleOk = () => {
-    // Handle form submission
-    console.log("Form submitted with values:", formValues);
+  const handleCancel = () => {
     setModalVisible(false);
   };
 
-  const handleCancel = () => {
+  const handleOk = () => {
+    console.log('Form submitted with values:', formValues);
+    // Add your API call or form submission logic here
     setModalVisible(false);
   };
 
@@ -132,8 +48,8 @@ const handleChange = value => {
   };
 
   useEffect(() => {
-    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-  }, [dispatch, callApi]);
+    dispatch(fetchInstitutionsData(dispatch, {})); // Adjust callApi if needed
+  }, [dispatch]);
 
   return (
     <>
@@ -147,7 +63,7 @@ const handleChange = value => {
           <ReturnMapServiceParametersTable />
         </Col>
       </Row>
-      <Row style={{ marginTop: "25px" }}>
+      <Row style={{ marginTop: '25px' }}>
         <Col xs={24} sm={24} md={24} lg={24}>
           <Button onClick={showModal}>Ekle</Button>
           <Button>Güncelle</Button>
@@ -215,8 +131,8 @@ const handleChange = value => {
           </Form.Item>
           <Form.Item label="Is Reversible">
             <Select
-              value={formValues.isReversible ? "true" : "false"}
-              onChange={(value) => handleSelectChange(value === "true", 'isReversible')}
+              value={formValues.isReversible ? 'true' : 'false'}
+              onChange={(value) => handleSelectChange(value === 'true', 'isReversible')}
             >
               <Option value="true">True</Option>
               <Option value="false">False</Option>
@@ -226,6 +142,6 @@ const handleChange = value => {
       </Modal>
     </>
   );
-}
+};
 
 export default ReturnMapServiceParameters;
