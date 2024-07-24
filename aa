@@ -1,15 +1,1 @@
-   const selectedIds = useSelector((state) => state.returnMap.selectedList);
-
-
- const copyData = {
-
-     ids:selectedIds,
-     returnMapCode:returnMapCode2,
-     institutionReturnCode:institutionReturnCode2,
-     institutionReturnText:institutionReturnText2,
-     bankReturnCode:bankReturnCode2,
-     bankReturnText:bankReturnText2,
-     returnType:returnType2,
-    isReversible:isReversible2,
-
-  }
+  const selectedIds = useSelector((state) => state.returnMap.selectedList.map(item => item.id));
