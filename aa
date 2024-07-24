@@ -33,7 +33,6 @@ const columns = [
 function ReturnMapServiceParametersTable() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const returnMapData = useSelector((state) => state.returnMap.list);
- 
 
   const onChange = (selectedRowKeys, selectedRows) => {
     console.log(
@@ -42,32 +41,24 @@ function ReturnMapServiceParametersTable() {
       'selectedRows: ',
       selectedRows
     );
-
     setSelectedRowKeys(selectedRowKeys);
   };
 
   return (
     <Table
       rowSelection={{
-        getCheckboxProps: record => ({
-          disabled: record.name === 'a5',
-        }),
         selectedRowKeys: selectedRowKeys,
         onChange: onChange,
       }}
-      data={returnMapData}
+      dataSource={returnMapData} // 'data' yerine 'dataSource' kullanın
       columns={columns}
       pagination={{ showTotal: false }}
-      title={
+      title={() => (
         <TableHeader
           extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
         />
-      }
-      emptyText={() => (
-        <React.Fragment>
-         Herhangi bir veri yok.
-        </React.Fragment>
       )}
+      locale={{ emptyText: 'Herhangi bir veri yok.' }} // 'emptyText' bu şekilde kullanın
       onRow={(record, index) => ({
         onClick: () => {
           console.log('onRowClick', record, index);
