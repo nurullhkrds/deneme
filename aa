@@ -1,37 +1,80 @@
-export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest) => {
-  const endpoint = "returnMaps/createReturnMap";
-  try {
-    return await callApi({
-      method: "POST",
-      endpoint: endpoint,
-      body: createReturnMapRequest,
-      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
-    });
-  } catch (ex) {
-    console.error('API error:', ex);
-    throw ex; // Hataları üst bileşene fırlat
-  }
-};
+const columns = [
+  {
+    title: 'Return Map Code',
+    dataIndex: 'returnMapCode',
+  },
+  {
+    title: 'Institution Return Code',
+    dataIndex: 'institutionReturnCode',
+  },
+  {
+    title: 'Institution Return Text',
+    dataIndex: 'institutionReturnText',
+  },
+  {
+    title: 'Bank Return Code',
+    dataIndex: 'bankReturnCode',
+  },
+  {
+    title: 'Bank Return Text',
+    dataIndex: 'bankReturnText',
+  },
+  {
+    title: 'Return Type',
+    dataIndex: 'returnType',
+  },
+  {
+    title: 'Is Reversible',
+    dataIndex: 'isReversible',
+    render: value => (value ? 'Yes' : 'No'),
+  },
+];
 
+function ReturnMapServiceParametersTable() {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const returnMapData = useSelector((state) => state.returnMap.list);
+ 
 
-const handleOk = () => {
-    setModalVisible(false);
-    sendcreateReturnMapRequest(callApi, data)
+  const onChange = (selectedRowKeys, selectedRows) => {
+    console.log(
+      'selectedRowKeys:',
+      selectedRowKeys,
+      'selectedRows: ',
+      selectedRows
+    );
 
+    setSelectedRowKeys(selectedRowKeys);
   };
 
+  return (
+    <Table
+      rowSelection={{
+        getCheckboxProps: record => ({
+          disabled: record.name === 'a5',
+        }),
+        selectedRowKeys: selectedRowKeys,
+        onChange: onChange,
+      }}
+      data={returnMapData}
+      columns={columns}
+      pagination={{ showTotal: false }}
+      title={
+        <TableHeader
+          extra={<TableHeader.GhostButton icon="round-plus" title="Create" />}
+        />
+      }
+      emptyText={() => (
+        <React.Fragment>
+         Herhangi bir veri yok.
+        </React.Fragment>
+      )}
+      onRow={(record, index) => ({
+        onClick: () => {
+          console.log('onRowClick', record, index);
+        },
+      })}
+    />
+  );
+}
 
-
-export const sendSearchReturnMapRequest = async (callApi, filters) => {
-  const endpoint = 'returnMaps/search';
-  const criteria = filters ?? {};
-  const url = buildQueryString(endpoint, criteria);
-  try {
-    return await callApi({
-      method: 'GET',
-      endpoint: url,
-    });
-  } catch (ex) {
-    arrangeExMessageAndThrowEx(ex);
-  }
-};
+export default ReturnMapServiceParametersTable;
