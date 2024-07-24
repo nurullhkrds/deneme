@@ -12,7 +12,7 @@ void shouldHandleGenericException() {
     makeReverseProvisionRequest.setTransactionId(inputDto.getChannelTransactionId());
     makeReverseProvisionRequest.setReverseDescriptionAppendix("İPTAL");
 
-    RuntimeException runtimeException = new RuntimeException("Test exception");
+    RuntimeException runtimeException = new RuntimeException();
 
     // Mock the behavior
     Mockito.when(provisionNextService.makeReverseProvision(Mockito.any(MakeReverseProvisionRequest.class)))
@@ -23,6 +23,4 @@ void shouldHandleGenericException() {
 
     // Then
     assertFalse(actualResult.isSuccess(), "Expected the result to be unsuccessful.");
-    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, actualResult.getError(), "Expected the error to be GENERIC_UNKNOWN_ERROR.");
-    verify(provisionNextService).makeReverseProvision(Mockito.any(MakeReverseProvisionRequest.class));
-}
+    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, actualResult.getError(), "Expected the error to be GENER
