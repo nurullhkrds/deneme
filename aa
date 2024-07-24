@@ -1,84 +1,76 @@
-// ReturnMapServiceParametersSearch.js
-import React, { Fragment, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { Button, Form, TextInput } from 'ykb-ui';
-import { fetchInstitutionsData } from '../../service/ApiService';
+package com.ykb.payments.bill.web;
+import com.ykb.architecture.micro.error.exception.MicroException;
+import com.ykb.payments.bill.common.utilities.DataResult;
+import com.ykb.payments.bill.common.utilities.Result;
+import com.ykb.payments.bill.transaction.client.AdapterReturnMapClient;
+import com.ykb.payments.bill.transaction.model.dto.ReturnMapDTO;
+import com.ykb.payments.bill.transaction.model.request.CopyForIdsAndDataRequest;
+import com.ykb.payments.bill.transaction.model.request.CreateReturnMapRequest;
+import com.ykb.payments.bill.transaction.model.request.UpdateReturnMapRequest;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import static com.ykb.payments.bill.common.constant.UrlConstants.RETURN_MAP_PATH;
 
-const ReturnMapServiceParametersSearch = ({ callApi }) => {
-  const dispatch = useDispatch();
-  const [returnMapCode, setReturnMapCode] = useState('');
-  const [bankReturnCode, setBankReturnCode] = useState('');
-  const [institutionReturnCode, setInstitutionReturnCode] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target || {};
-    if (name === 'returnMapCode') {
-      setReturnMapCode(value);
-    } else if (name === 'bankReturnCode') {
-      setBankReturnCode(value);
-    } else if (name === 'institutionReturnCode') {
-      setInstitutionReturnCode(value);
+@Tag(name = "Management ReturnMap BFF Controller")
+@RequestMapping(RETURN_MAP_PATH)
+@RestController
+public class ReturnMapController {
+
+    private final AdapterReturnMapClient adapterReturnMapClient;
+
+    @Autowired
+    public ReturnMapController(AdapterReturnMapClient adapterReturnMapClient) {
+        this.adapterReturnMapClient = adapterReturnMapClient;
     }
-  };
 
-  const handleSearch = () => {
-    const searchCriteria = {
-      returnMapCode,
-      bankReturnCode,
-      institutionReturnCode,
-    };
-    
-    // Tüm inputlar boşsa tüm verileri getirecek şekilde düzenleyelim
-    if (!returnMapCode && !bankReturnCode && !institutionReturnCode) {
-      // Eğer tüm inputlar boşsa, tüm verileri getirmek için arama yapalım
-      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-    } else {
-      dispatch(fetchInstitutionsData(dispatch, callApi, searchCriteria));
+    @Schema(description = "Get ReturnMaps By ReturnMapCode")
+    @GetMapping("/getAllByReturnMapCode")
+    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAllByReturnMapCode(@RequestParam String returnMapCode) {
+        DataResult<List<ReturnMapDTO>> result = adapterReturnMapClient.getAllByReturnMapCode(returnMapCode);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
     }
-  };
 
-  const handleReset = () => {
-    setReturnMapCode('');
-    setBankReturnCode('');
-    setInstitutionReturnCode('');
-    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-  };
+    @GetMapping("/getAll")
+    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAll() {
+        DataResult<List<ReturnMapDTO>> result = adapterReturnMapClient.getAll();
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
 
-  return (
-    <Fragment>
-      <Form>
-        <Form.Item label="ReturnMap Kodu">
-          <TextInput
-            name="returnMapCode"
-            value={returnMapCode}
-            onChange={handleInputChange}
-          />
-        </Form.Item>
-        <Form.Item label="Banka Kodu">
-          <TextInput
-            name="bankReturnCode"
-            value={bankReturnCode}
-            onChange={handleInputChange}
-          />
-        </Form.Item>
-        <Form.Item label="Kurum Kodu">
-          <TextInput
-            name="institutionReturnCode"
-            value={institutionReturnCode}
-            onChange={handleInputChange}
-          />
-        </Form.Item>
-     
-      </Form>
-      <Button onClick={handleSearch}>Search</Button>
-      <Button
-        type="secondary"
-        onClick={handleReset}
-      >
-        Reset
-      </Button>
-    </Fragment>
-  );
-};
+    @PostMapping("/createReturnMap")
+    public ResponseEntity<DataResult<ReturnMapDTO>> createReturnMap(
+            @RequestBody CreateReturnMapRequest request)
+            throws MicroException {
+        DataResult<ReturnMapDTO> result = adapterReturnMapClient.createReturnMap(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
 
-export default ReturnMapServiceParametersSearch;
+    @PutMapping("/updateReturnMap")
+    public ResponseEntity<DataResult<ReturnMapDTO>> updateReturnMap(
+            @RequestBody UpdateReturnMapRequest request)
+            throws MicroException {
+        DataResult<ReturnMapDTO> result = adapterReturnMapClient.updateReturnMap(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+    @PostMapping("/copy")
+    public ResponseEntity<Result> copyReturnMaps(@RequestBody CopyForIdsAndDataRequest request) {
+        Result result = adapterReturnMapClient.copyReturnMaps(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
+            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
+            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
+            @RequestParam(required = false) @Parameter(name = "institutionCode") String institutionErrorCode) {
+        DataResult<List<ReturnMapDTO>> searhResult = adapterReturnMapClient.searchReturnMaps(returnMapCode,bankReturnCode,institutionErrorCode);
+        return ResponseEntity.status(searhResult.getStatusCode()).body(searhResult);
+    }
+
+}
