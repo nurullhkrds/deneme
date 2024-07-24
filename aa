@@ -1,25 +1,21 @@
-  const handleOk = () => {
-    setModalVisible(false);
-    sendcreateReturnMapRequest(callApi, createRequest).then(
-      dispatch(fetchInstitutionsData(dispatch, callApi, {}))
-    )
-    Notification.success('success message', 5);
+const handleOk = () => {
+  // Modal'ı kapat
+  setModalVisible(false);
 
+  // API isteğini yap
+  sendcreateReturnMapRequest(callApi, createRequest)
+    .then(() => {
+      // Başarılı olduğunda state'i güncelle
+      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
 
-  };
-
-export const sendcreateReturnMapRequest = async (callApi, createReturnMapRequest) => {
-  const endpoint = "returnMaps/createReturnMap";
-
-  try {
-    return await callApi({
-      method: "POST",
-      endpoint: endpoint,
-      body: createReturnMapRequest,
-      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
+      // Başarı mesajını göster
+      Notification.success('Success message', 5);
+    })
+    .catch(error => {
+      // Hata durumunda gerekli işlemleri yap
+      console.error('Error creating return map:', error);
+      // Hata mesajını kullanıcıya gösterebilirsiniz
+      Notification.error('Error creating return map', 5);
     });
-  } catch (ex) {
-    console.error('API error:', ex);
-    throw ex; // Hataları üst bileşene fırlat
-  }
 };
+      notifyErrors: true, // Bu şekilde hata mesajlarını kullanıcıya gösterebilirsiniz
