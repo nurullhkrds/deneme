@@ -1,34 +1,126 @@
-const handleOk = () => {
-    setModalVisible(false);
-    sendCreateReturnMapRequest(callApi, {
-      returnMapCode,
-      institutionReturnCode,
-      institutionReturnText,
-      bankReturnCode,
-      bankReturnText,
-      returnType,
-      isReversible
-    }).then(() => {
-      dispatch(fetchInstitutionsData(callApi, {}));
-    }).catch(err => {
-      console.error("Error creating return map:", err);
-    });
-  };
-
-  const handleOk2 = () => {
-    setModalVisible2(false);
-    sendCopyReturnMapRequest(callApi, {
-      ids: selectedIds,
-      returnMapCode: returnMapCode2,
-      institutionReturnCode: institutionReturnCode2,
-      institutionReturnText: institutionReturnText2,
-      bankReturnCode: bankReturnCode2,
-      bankReturnText: bankReturnText2,
-      returnType: returnType2,
-      isReversible: isReversible2
-    }).then(() => {
-      dispatch(fetchInstitutionsData(callApi, {}));
-    }).catch(err => {
-      console.error("Error copying return map:", err);
-    });
-  };
+fetchInstitutionsData Error: callApi is not a function
+    at arrangeExMessageAndThrowEx (ApiCallUtils.js:9:1)
+    at sendSearchReturnMapRequest (ReturnMapServiceParametersApi.js:16:1)
+    at ApiService.js:7:1
+    at index.js:16:1
+    at immutableStateInvariantMiddleware.ts:253:1
+    at handleOk (ReturnMapServiceParameters.js:70:1)
+    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
+    at Object.t (react-dom.development.min.js:1:2630)
+    at g (react-dom.development.min.js:1:3531)
+    at react-dom.development.min.js:1:3888
+    at x (react-dom.development.min.js:1:3938)
+    at react-dom.development.min.js:1:30937
+    at ua (react-dom.development.min.js:1:30998)
+    at ca (react-dom.development.min.js:1:31080)
+    at la (react-dom.development.min.js:1:30744)
+    at da (react-dom.development.min.js:1:31152)
+    at wa (react-dom.development.min.js:1:31859)
+    at ka (react-dom.development.min.js:1:32316)
+    at tt (react-dom.development.min.js:1:234444)
+    at react-dom.development.min.js:1:32628
+    at xa (react-dom.development.min.js:1:32658)
+    at li (react-dom.development.min.js:1:37872)
+    at ii (react-dom.development.min.js:1:37249)
+    at unstable_runWithPriority (react.development.js:2685:14)
+    at ff (react-dom.development.min.js:1:104577)
+    at Je (react-dom.development.min.js:1:234107)
+    at react-dom.development.min.js:1:36881
+    at react-dom.development.min.js:1:36917
+console.<computed> @ index.js:1
+console.<computed> @ index.js:1
+(anonymous) @ ApiService.js:11
+await in (anonymous) (async)
+(anonymous) @ index.js:16
+(anonymous) @ immutableStateInvariantMiddleware.ts:253
+handleOk @ ReturnMapServiceParameters.js:70
+e @ react-dom.development.min.js:1
+t @ react-dom.development.min.js:1
+g @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+x @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+ua @ react-dom.development.min.js:1
+ca @ react-dom.development.min.js:1
+la @ react-dom.development.min.js:1
+da @ react-dom.development.min.js:1
+wa @ react-dom.development.min.js:1
+ka @ react-dom.development.min.js:1
+tt @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+xa @ react-dom.development.min.js:1
+li @ react-dom.development.min.js:1
+ii @ react-dom.development.min.js:1
+unstable_runWithPriority @ react.development.js:2685
+ff @ react-dom.development.min.js:1
+Je @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+Show 3 more frames
+Show less
+VM1234:1  Uncaught (in promise) SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Promise.then (async)
+callApi @ callApi.js:229
+callApi @ ShellCommunicator.js:45
+(anonymous) @ ApiService.js:5
+(anonymous) @ index.js:16
+(anonymous) @ immutableStateInvariantMiddleware.ts:253
+handleOk @ ReturnMapServiceParameters.js:70
+e @ react-dom.development.min.js:1
+t @ react-dom.development.min.js:1
+g @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+x @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+ua @ react-dom.development.min.js:1
+ca @ react-dom.development.min.js:1
+la @ react-dom.development.min.js:1
+da @ react-dom.development.min.js:1
+wa @ react-dom.development.min.js:1
+ka @ react-dom.development.min.js:1
+tt @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+xa @ react-dom.development.min.js:1
+li @ react-dom.development.min.js:1
+ii @ react-dom.development.min.js:1
+unstable_runWithPriority @ react.development.js:2685
+ff @ react-dom.development.min.js:1
+Je @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+Show 3 more frames
+Show less
+VM1235:1  Uncaught (in promise) SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Promise.then (async)
+callApi @ callApi.js:229
+callApi @ ShellCommunicator.js:45
+(anonymous) @ ApiService.js:10
+await in (anonymous) (async)
+(anonymous) @ index.js:16
+(anonymous) @ immutableStateInvariantMiddleware.ts:253
+handleOk @ ReturnMapServiceParameters.js:70
+e @ react-dom.development.min.js:1
+t @ react-dom.development.min.js:1
+g @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+x @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+ua @ react-dom.development.min.js:1
+ca @ react-dom.development.min.js:1
+la @ react-dom.development.min.js:1
+da @ react-dom.development.min.js:1
+wa @ react-dom.development.min.js:1
+ka @ react-dom.development.min.js:1
+tt @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+xa @ react-dom.development.min.js:1
+li @ react-dom.development.min.js:1
+ii @ react-dom.development.min.js:1
+unstable_runWithPriority @ react.development.js:2685
+ff @ react-dom.development.min.js:1
+Je @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+(anonymous) @ react-dom.development.min.js:1
+Show 3 more frames
+Show less
+VM1236:1  Uncaught (in promise) SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
