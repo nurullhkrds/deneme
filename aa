@@ -1,5 +1,98 @@
-{
-  selectedIds.length > 0 && (
-    <Button onClick={showModal2}>Kopyala</Button>
-  )
-}
+  {
+    exact: true,
+    processId: Pages.returnMapServiceParameters.processId,
+    path: Pages.returnMapServiceParameters.path,
+    component: asyncComponent(() => import('./pages/returnMapServiceParameter/ReturnMapServiceParametersWrapper')),
+    
+    // i18n: (lang) =>
+    //   import(
+    //     /* webpackMode: "lazy" */ `./i18n/returnMap/ReturnMap-${lang}.js`
+    //   ),
+      
+  },
+];
+
+// ReturnMapServiceParametersSearch.js
+import React, { Fragment, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { Button, Form, TextInput } from 'ykb-ui';
+import { fetchInstitutionsData } from '../../service/ApiService';
+
+const ReturnMapServiceParametersSearch = ({ callApi }) => {
+  const dispatch = useDispatch();
+  const [returnMapCode, setReturnMapCode] = useState('');
+  const [bankReturnCode, setBankReturnCode] = useState('');
+  const [institutionReturnCode, setInstitutionReturnCode] = useState('');
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target || {};
+    if (name === 'returnMapCode') {
+      setReturnMapCode(value);
+    } else if (name === 'bankReturnCode') {
+      setBankReturnCode(value);
+    } else if (name === 'institutionReturnCode') {
+      setInstitutionReturnCode(value);
+    }
+  };
+
+  const handleSearch = () => {
+    const searchCriteria = {
+      returnMapCode,
+      bankReturnCode,
+      institutionReturnCode,
+    };
+    
+    // Tüm inputlar boşsa tüm verileri getirecek şekilde düzenleyelim
+    if (!returnMapCode && !bankReturnCode && !institutionReturnCode) {
+      // Eğer tüm inputlar boşsa, tüm verileri getirmek için arama yapalım
+      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
+    } else {
+      dispatch(fetchInstitutionsData(dispatch, callApi, searchCriteria));
+    }
+  };
+
+  const handleReset = () => {
+    setReturnMapCode('');
+    setBankReturnCode('');
+    setInstitutionReturnCode('');
+    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
+  };
+
+  return (
+    <Fragment>
+      <Form>
+        <Form.Item label="ReturnMap Kodu">
+          <TextInput
+            name="returnMapCode"
+            value={returnMapCode}
+            onChange={handleInputChange}
+          />
+        </Form.Item>
+        <Form.Item label="Banka Kodu">
+          <TextInput
+            name="bankReturnCode"
+            value={bankReturnCode}
+            onChange={handleInputChange}
+          />
+        </Form.Item>
+        <Form.Item label="Kurum Kodu">
+          <TextInput
+            name="institutionReturnCode"
+            value={institutionReturnCode}
+            onChange={handleInputChange}
+          />
+        </Form.Item>
+     
+      </Form>
+      <Button onClick={handleSearch}>Search</Button>
+      <Button
+        type="secondary"
+        onClick={handleReset}
+      >
+        Reset
+      </Button>
+    </Fragment>
+  );
+};
+
+export default ReturnMapServiceParametersSearch;
