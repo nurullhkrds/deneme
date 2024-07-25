@@ -1,62 +1,21 @@
-const ReturnMapServiceParametersSearch = ({ callApi }) => {
-  const dispatch = useDispatch();
-
-  const [returnMapCode, setReturnMapCode] = useState('');
-  const [bankReturnCode, setBankReturnCode] = useState('');
-  const [institutionReturnCode, setInstitutionReturnCode] = useState('');
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target || {};
-    if (name === 'returnMapCode') {
-      setReturnMapCode(value);
-    } else if (name === 'bankReturnCode') {
-      setBankReturnCode(value);
-    } else if (name === 'institutionReturnCode') {
-      setInstitutionReturnCode(value);
-    }
-  };
-
-  const handleSearch = () => {
-    const searchCriteria = {
-      returnMapCode,
-      bankReturnCode,
-      institutionReturnCode,
-    };
-
-    if (!returnMapCode && !bankReturnCode && !institutionReturnCode) {
-      dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-    } else {
-      dispatch(fetchInstitutionsData(dispatch, callApi, searchCriteria));
-    }
-  };
-
-  const handleReset = () => {
-
-    setReturnMapCode('');
-    setBankReturnCode('');
-    setInstitutionReturnCode('');
-    dispatch(fetchInstitutionsData(dispatch, callApi, {}));
-  };
-
-  return (
-    <Fragment>
-      <Form  >
+   <Fragment>
+      <Form ref={ref} >
         <Form.Item label="ReturnMap Kodu">
-          <TextInput
+          <input
             name="returnMapCode"
             value={returnMapCode}
             onChange={handleInputChange}
           />
         </Form.Item>
         <Form.Item label="Banka Kodu">
-          <TextInput
+          <input
             name="bankReturnCode"
             value={bankReturnCode}
             onChange={handleInputChange}
           />
         </Form.Item>
         <Form.Item label="Kurum Kodu">
-          <TextInput
+          <input
             name="institutionReturnCode"
             value={institutionReturnCode}
             onChange={handleInputChange}
