@@ -1,28 +1,92 @@
-@Override
-	public PaymentDTO insertPayment(PaymentDTO paymentDTO) {
-		Payment paymentEntity = paymentRepository.save(paymentMapper.toEntity(paymentDTO));
-		return paymentMapper.toDTO(paymentEntity);
-	}
 
-	@Override
-	public PaymentDTO getPayment(Long id, Long contractNo) {
-		Optional<Payment> payment = paymentRepository.findByIdAndContractNo(id, contractNo);
-		if (payment.isEmpty()) {
-			return null;
-		}
+    @Test
+    void insertPayment_shouldReturnPaymentDTO_whenPaymentEntityIsSavedSuccessfully() {
+        // Given
+        PaymentDTO paymentDTO = new PaymentDTO();
+        Payment paymentEntity = new Payment();
+        Payment savedPaymentEntity = new Payment();
 
-		return paymentMapper.toDTO(payment.get());
-	}
+        when(paymentMapper.toEntity(paymentDTO)).thenReturn(paymentEntity);
+        when(paymentRepository.save(paymentEntity)).thenReturn(savedPaymentEntity);
+        when(paymentMapper.toDTO(savedPaymentEntity)).thenReturn(paymentDTO);
 
-	@Override
-	@Transactional
-	public void updateStatus(EnumBillStatu status, Long id, Long contractNo) {
-		paymentRepository.updateStatus(status.getValue(), id, contractNo);
-	}
+        // When
+        PaymentDTO actualPaymentDTO = paymentService.insertPayment(paymentDTO);
 
-	@Override
-	public PaymentCancelDTO insertPaymentCancel(PaymentCancelDTO paymentCancelDTO) {
-		PaymentCancel paymentCancelEntity = paymentCancelRepository
-				.save(paymentCancelMapper.toEntity(paymentCancelDTO));
-		return paymentCancelMapper.toDTO(paymentCancelEntity);
-	}
+        // Then
+        assertEquals(paymentDTO, actualPaymentDTO);
+        verify(paymentMapper).toEntity(paymentDTO);
+        verify(paymentRepository).save(paymentEntity);
+        verify(paymentMapper).toDTO(savedPaymentEntity);
+    }
+
+    @Test
+    void getPayment_shouldReturnPaymentDTO_whenPaymentExists() {
+        // Given
+        Long id = 1L;
+        Long contractNo = 123L;
+        PaymentDTO paymentDTO = new PaymentDTO();
+        Payment paymentEntity = new Payment();
+
+        when(paymentRepository.findByIdAndContractNo(id, contractNo)).thenReturn(Optional.of(paymentEntity));
+        when(paymentMapper.toDTO(paymentEntity)).thenReturn(paymentDTO);
+
+        // When
+        PaymentDTO actualPaymentDTO = paymentService.getPayment(id, contractNo);
+
+        // Then
+        assertEquals(paymentDTO, actualPaymentDTO);
+        verify(paymentRepository).findByIdAndContractNo(id, contractNo);
+        verify(paymentMapper).toDTO(paymentEntity);
+    }
+
+    @Test
+    void getPayment_shouldReturnNull_whenPaymentDoesNotExist() {
+        // Given
+        Long id = 1L;
+        Long contractNo = 123L;
+
+        when(paymentRepository.findByIdAndContractNo(id, contractNo)).thenReturn(Optional.empty());
+
+        // When
+        PaymentDTO actualPaymentDTO = paymentService.getPayment(id, contractNo);
+
+        // Then
+        assertNull(actualPaymentDTO);
+        verify(paymentRepository).findByIdAndContractNo(id, contractNo);
+    }
+
+    @Test
+    void updateStatus_shouldUpdatePaymentStatusSuccessfully() {
+        // Given
+        EnumBillStatu status = EnumBillStatu.PAID;
+        Long id = 1L;
+        Long contractNo = 123L;
+
+        // When
+        paymentService.updateStatus(status, id, contractNo);
+
+        // Then
+        verify(paymentRepository).updateStatus(status.getValue(), id, contractNo);
+    }
+
+    @Test
+    void insertPaymentCancel_shouldReturnPaymentCancelDTO_whenPaymentCancelEntityIsSavedSuccessfully() {
+        // Given
+        PaymentCancelDTO paymentCancelDTO = new PaymentCancelDTO();
+        PaymentCancel paymentCancelEntity = new PaymentCancel();
+        PaymentCancel savedPaymentCancelEntity = new PaymentCancel();
+
+        when(paymentCancelMapper.toEntity(paymentCancelDTO)).thenReturn(paymentCancelEntity);
+        when(paymentCancelRepository.save(paymentCancelEntity)).thenReturn(savedPaymentCancelEntity);
+        when(paymentCancelMapper.toDTO(savedPaymentCancelEntity)).thenReturn(paymentCancelDTO);
+
+        // When
+        PaymentCancelDTO actualPaymentCancelDTO = paymentService.insertPaymentCancel(paymentCancelDTO);
+
+        // Then
+        assertEquals(paymentCancelDTO, actualPaymentCancelDTO);
+        verify(paymentCancelMapper).toEntity(paymentCancelDTO);
+        verify(paymentCancelRepository).save(paymentCancelEntity);
+        verify(paymentCancelMapper).toDTO(savedPaymentCancelEntity);
+    }
