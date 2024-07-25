@@ -1,49 +1,119 @@
-@Service
-@RequiredArgsConstructor
-public class ProvisionServiceImpl implements ProvisionService {
-	
-	private final ProvisionRepository provisionRepository;
-	private final ProvisionMapper provisionMapper;
-	
-	@Override
-	public ProvisionDTO getProvisionRecord(Long id) {
-		Optional<Provision> entity = provisionRepository.findById(id);
-		if (entity.isPresent()){
-			return provisionMapper.toDTO(entity.get());
-		}
-		return null;
-	}
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-	@Override
-	@Transactional
-	public List<ProvisionDTO>  createProvisions(List<ProvisionDTO> provisionDTOList) {
-		List<Provision> provisionList = provisionRepository.saveAll(provisionMapper.toEntityList(provisionDTOList));
-		return provisionMapper.toDTOList(provisionList);
-	}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Transactional;
 
-	@Override
-	@Transactional
-	public void updateCommissionData(String commissionData, Long id) {
-		provisionRepository.updateCommissionData(commissionData, id);
-		
-	}
+import java.util.*;
 
-	@Override
-	@Transactional
-	public void invalidateNotPaidProvisions(Long institutionDebtTypeId, String subscriberNo) {
-		Optional<List<Provision>>  opProvisionList = provisionRepository.findBynDebtTypeIdAndSubscriberNoWitLock(institutionDebtTypeId,subscriberNo);
-		if(opProvisionList.isPresent()){
-			opProvisionList.get().forEach(provision -> provision.setStatus(EnumProvisionStatus.CANCELLED));
-			//TODO:EntityManager Refresh degerlendir
-			provisionRepository.saveAll(opProvisionList.get());
-		}
+@ExtendWith(MockitoExtension.class)
+class ProvisionServiceImplTest {
 
-	}
+    @Mock
+    private ProvisionRepository provisionRepository;
 
-	@Override
-	public void updateProvision(ProvisionDTO provisionDTO) {
-		Provision entity = provisionMapper.toEntity(provisionDTO);
-		provisionRepository.save(entity);
-	}
+    @Mock
+    private ProvisionMapper provisionMapper;
 
+    @InjectMocks
+    private ProvisionServiceImpl provisionService;
+
+    private Provision provision;
+    private ProvisionDTO provisionDTO;
+
+    @BeforeEach
+    void setUp() {
+        provision = new Provision();
+        provisionDTO = new ProvisionDTO();
+    }
+
+    @Test
+    void getProvisionRecord_ShouldReturnDTO_WhenEntityExists() {
+        Long id = 1L;
+        when(provisionRepository.findById(id)).thenReturn(Optional.of(provision));
+        when(provisionMapper.toDTO(provision)).thenReturn(provisionDTO);
+
+        ProvisionDTO result = provisionService.getProvisionRecord(id);
+
+        assertNotNull(result);
+        assertEquals(provisionDTO, result);
+    }
+
+    @Test
+    void getProvisionRecord_ShouldReturnNull_WhenEntityDoesNotExist() {
+        Long id = 1L;
+        when(provisionRepository.findById(id)).thenReturn(Optional.empty());
+
+        ProvisionDTO result = provisionService.getProvisionRecord(id);
+
+        assertNull(result);
+    }
+
+    @Test
+    @Transactional
+    void createProvisions_ShouldReturnDTOList_WhenValidDTOListProvided() {
+        List<ProvisionDTO> provisionDTOList = Collections.singletonList(provisionDTO);
+        List<Provision> provisionList = Collections.singletonList(provision);
+        when(provisionMapper.toEntityList(provisionDTOList)).thenReturn(provisionList);
+        when(provisionRepository.saveAll(provisionList)).thenReturn(provisionList);
+        when(provisionMapper.toDTOList(provisionList)).thenReturn(provisionDTOList);
+
+        List<ProvisionDTO> result = provisionService.createProvisions(provisionDTOList);
+
+        assertNotNull(result);
+        assertEquals(provisionDTOList, result);
+    }
+
+    @Test
+    @Transactional
+    void updateCommissionData_ShouldCallRepositoryUpdate() {
+        String commissionData = "newCommissionData";
+        Long id = 1L;
+
+        provisionService.updateCommissionData(commissionData, id);
+
+        verify(provisionRepository).updateCommissionData(commissionData, id);
+    }
+
+    @Test
+    @Transactional
+    void invalidateNotPaidProvisions_ShouldUpdateStatus_WhenProvisionsFound() {
+        Long institutionDebtTypeId = 1L;
+        String subscriberNo = "subscriberNo";
+        List<Provision> provisions = Arrays.asList(provision);
+        when(provisionRepository.findBynDebtTypeIdAndSubscriberNoWitLock(institutionDebtTypeId, subscriberNo))
+                .thenReturn(Optional.of(provisions));
+
+        provisionService.invalidateNotPaidProvisions(institutionDebtTypeId, subscriberNo);
+
+        provisions.forEach(p -> assertEquals(EnumProvisionStatus.CANCELLED, p.getStatus()));
+        verify(provisionRepository).saveAll(provisions);
+    }
+
+    @Test
+    @Transactional
+    void invalidateNotPaidProvisions_ShouldNotUpdateStatus_WhenNoProvisionsFound() {
+        Long institutionDebtTypeId = 1L;
+        String subscriberNo = "subscriberNo";
+        when(provisionRepository.findBynDebtTypeIdAndSubscriberNoWitLock(institutionDebtTypeId, subscriberNo))
+                .thenReturn(Optional.empty());
+
+        provisionService.invalidateNotPaidProvisions(institutionDebtTypeId, subscriberNo);
+
+        verify(provisionRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void updateProvision_ShouldSaveEntity() {
+        when(provisionMapper.toEntity(provisionDTO)).thenReturn(provision);
+
+        provisionService.updateProvision(provisionDTO);
+
+        verify(provisionRepository).save(provision);
+    }
 }
