@@ -1,70 +1,28 @@
-@Test
-public void testPerformCommission_Success() throws Exception {
-    // Prepare mock objects
-    ProvisionDTO provisionDTO = new ProvisionDTO();
-    provisionDTO.setInstitutionDebtTypeId(123L);
-    provisionDTO.setCustomerNo(123L);
 
-    InstitutionDebtTypeDTO debtTypeDTO = new InstitutionDebtTypeDTO();
-    debtTypeDTO.setInstitution(new InstitutionDTO());
-    debtTypeDTO.getInstitution().setProduct(new ProductDTO());
-    debtTypeDTO.getInstitution().getProduct().setCode("productCode");
-    debtTypeDTO.getInstitution().setInstitutionCode("institutionCode");
+	    private RequestCommissionInformation prepareCommissionInformationReqForCreditCard(CommissionServiceRequestDTO commissionServiceRequestDTO) {
 
-    InstitutionPymMethodWebDTO pymMethodDTO = new InstitutionPymMethodWebDTO();
-    pymMethodDTO.setExpenseCode("expenseCode");
-    pymMethodDTO.setExpenseAccountNo("accountNo");
-    pymMethodDTO.setExpenseType(EnumExpenseType.FROM_CUSTOMER.getValue());
+	        RequestCommissionInformation requestCommissionInformation = new RequestCommissionInformation();
+	        
+	        requestCommissionInformation.setAccountingType(CREDIT_CARD);
+	        requestCommissionInformation.setAccountNo(null);
+	        requestCommissionInformation.setAccountCurrency(null);
+	        requestCommissionInformation.setTransactionAmount(commissionServiceRequestDTO.getPaymentAmount());
+	        requestCommissionInformation.setTransactionCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
 
-    ResponseCommissionInformation responseCommissionInformation = new ResponseCommissionInformation();
-    // Mock the behavior of services
-    when(provisionService.getProvisionRecord(any())).thenReturn(provisionDTO);
-    when(institutionDebtTypeService.getDebtType(any())).thenReturn(debtTypeDTO);
-    when(instPaymentMethodService.getInstitutionExpenseCode(any(), any(), any(), any(), any())).thenReturn(pymMethodDTO);
-    when(commissionService.inquireCommission(any())).thenReturn(responseCommissionInformation);
+	        requestCommissionInformation.setChannelCode(commissionServiceRequestDTO.getChannelCode());
+	        requestCommissionInformation.setBranch(BRANCH_CODE_925);
+	        requestCommissionInformation.setUserCode(USER_CODE_INT001);
 
-    // Prepare request DTO
-    CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
-    requestDTO.setBillProvisionId(123L);
-    requestDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT.getValue());
-    requestDTO.setPaymentAmount(BigDecimal.TEN);
-    requestDTO.setPaymentCurrency("TRY");
-    requestDTO.setChannelCode("channelCode");
-    requestDTO.setAccountBranchCode("branchCode");
+	        List<CommissionInputDetailApiDTO> commissionInputDetailApiDTOList = new ArrayList<>();
 
-    // Call the method under test
-    ResponseCommissionInformation result = paymentCommissionServiceImpl.performCommission(requestDTO);
+	        CommissionInputDetailApiDTO commissionInputDetailApiDTO = new CommissionInputDetailApiDTO();
+	        commissionInputDetailApiDTO.setOperationCode(commissionServiceRequestDTO.getExpenseCode());
+	        commissionInputDetailApiDTO.setCommissionCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
 
-    // Verify the result
-    assertEquals(responseCommissionInformation, result);
-    verify(provisionService).updateCommissionData(anyString(), anyLong());
-}
+	        commissionInputDetailApiDTOList.add(commissionInputDetailApiDTO);
 
-@Test
-public void testPerformCommission_NoInstitutionPaymentMethod() throws Exception {
-    // Prepare mock objects
-    ProvisionDTO provisionDTO = new ProvisionDTO();
-    provisionDTO.setInstitutionDebtTypeId(123L);
+	        requestCommissionInformation.setCommissionInputDetailApiDTOList(commissionInputDetailApiDTOList);
 
-    InstitutionDebtTypeDTO debtTypeDTO = new InstitutionDebtTypeDTO();
-    debtTypeDTO.setInstitution(new InstitutionDTO());
-    debtTypeDTO.getInstitution().setProduct(new ProductDTO());
-    debtTypeDTO.getInstitution().getProduct().setCode("productCode");
-    debtTypeDTO.getInstitution().setInstitutionCode("institutionCode");
+	        return requestCommissionInformation;
 
-    // Mock the behavior of services
-    when(provisionService.getProvisionRecord(any())).thenReturn(provisionDTO);
-    when(institutionDebtTypeService.getDebtType(any())).thenReturn(debtTypeDTO);
-    when(instPaymentMethodService.getInstitutionExpenseCode(any(), any(), any(), any(), any())).thenReturn(null);
-
-    // Prepare request DTO
-    CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
-    requestDTO.setBillProvisionId(123L);
-    requestDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT.getValue());
-
-    // Call the method under test
-    ResponseCommissionInformation result = paymentCommissionServiceImpl.performCommission(requestDTO);
-
-    // Verify the result
-    assertNull(result);
-}
+	    }
