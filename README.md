@@ -1,29 +1,12 @@
-@Transactional
-public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
-    try {
-        List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
-        System.out.println("Found return maps: " + returnMapsToCopy.size());  // Debugging line
-
-        List<ReturnMap> copiedReturnMaps = new ArrayList<>();
-
-        for (ReturnMap original : returnMapsToCopy) {
-            ReturnMap copied = new ReturnMap();
-            copied.setReturnMapCode(request.getReturnMapCode());
-            copied.setInstitutionReturnCode(original.getInstitutionReturnCode());
-            copied.setInstitutionReturnText(original.getInstitutionReturnText());
-            copied.setBankReturnCode(original.getBankReturnCode());
-            copied.setBankReturnText(original.getBankReturnText());
-            copied.setReturnType(original.getReturnType());
-            copied.setIsReversible(original.getIsReversible());
-            copiedReturnMaps.add(copied);
-        }
-
-        System.out.println("Copied return maps count: " + copiedReturnMaps.size());  // Debugging line
-
-        returnMapRepository.saveAll(copiedReturnMaps);
-        return new SuccessResult("copy successful", 200);
-
-    } catch (Exception e) {
-        return new ErrorResult("Error! " + e.getMessage(), 400);
-    }
-}
+  <div>
+            <Form style={{display:'flex',}}>
+              <Form.Item label="ReturnMap Kodu">
+                <input
+                  name="returnMapCode2"
+                  value={returnMapCode2}
+                  onChange={handleReturnMapCode2}
+                  style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%', }}
+                />
+              </Form.Item>
+            </Form>
+          </div>
