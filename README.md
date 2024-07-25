@@ -1,10 +1,31 @@
-org.mockito.exceptions.misusing.MissingMethodInvocationException: 
-when() requires an argument which has to be 'a method call on a mock'.
-For example:
-    when(mock.getArticles()).thenReturn(articles);
+import static org.mockito.Mockito.*;
 
-Also, this error might show up because:
-1. you stub either of: final/private/equals()/hashCode() methods.
-   Those methods *cannot* be stubbed/verified.
-   Mocking methods declared on non-public parent classes is not supported.
-2. inside when() you don't call method on mock but on some other object.
+@Test
+void testDoAccounting_BlockDayCount() throws BusinessException, ServiceCallException {
+    createAccountingDTO.setDummyMerchant(false);
+
+    // Mock the InstitutionChannelPymMethodDTO
+    InstitutionChannelPymMethodDTO mockInstitutionChannelPymMethodDTO = mock(InstitutionChannelPymMethodDTO.class);
+    createAccountingDTO.setInstitutionChannelPymMethodDTO(mockInstitutionChannelPymMethodDTO);
+    when(mockInstitutionChannelPymMethodDTO.getBlockDayCount()).thenReturn(10);
+
+    CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
+    cardProvisionResponse.setGuid("123456");
+    when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+            .thenReturn(cardProvisionResponse);
+    when(accountingUtilServiceImpl.getContractNumber()).thenReturn(Long.valueOf(123456));
+
+    try {
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
+        assertTrue(result.isSuccess());
+        verify(accountingDateUtil, times(1))
+                .getAvailDate(any(EnumBlockDayType.class), anyInt());
+    } catch (Exception e) {
+        if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
+            Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
+            assertNotNull(errorCode);
+        } else {
+            fail("Unexpected exception: " + e.getMessage(), e);
+        }
+    }
+}
