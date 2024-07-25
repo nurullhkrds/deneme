@@ -1,32 +1,25 @@
-@Test
-void testDoAccounting_BlockDayCount() throws BusinessException, ServiceCallException {
-    createAccountingDTO.setDummyMerchant(false);
+org.opentest4j.AssertionFailedError: Unexpected exception: Cannot invoke "Object.getClass()" because the return value of "java.lang.Exception.getCause()" is null
 
-    // Mock the InstitutionChannelPymMethodDTO
-    InstitutionChannelPymMethodDTO mockInstitutionChannelPymMethodDTO = mock(InstitutionChannelPymMethodDTO.class);
-    createAccountingDTO.setInstitutionChannelPymMethodDTO(mockInstitutionChannelPymMethodDTO);
-    when(mockInstitutionChannelPymMethodDTO.getBlockDayCount()).thenReturn(10);
-    when(mockInstitutionChannelPymMethodDTO.getBlockDayStrategyCode()).thenReturn(EnumBlockDayStrategyCode.CHANNEL);
+ @Test
+    void testDoAccounting_GLAccountingFailure() throws BusinessException, ServiceCallException {
+        createAccountingDTO.setDummyMerchant(true);
+        CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
+        cardProvisionResponse.setGuid("123456");
+        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+                .thenReturn(cardProvisionResponse);
 
-    CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
-    cardProvisionResponse.setGuid("123456");
-    when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-            .thenReturn(cardProvisionResponse);
-    when(accountingUtilServiceImpl.getContractNumber()).thenReturn(Long.valueOf(123456));
-    when(accountingDateUtil.getAvailDate(any(EnumBlockDayType.class), anyInt()))
-            .thenReturn(LocalDate.now());
+        doThrow(new RuntimeException("GL Accounting Failed")).when(provisionNextService).makeProvision(any(MakeProvisionRequest.class));
 
-    try {
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-        assertTrue(result.isSuccess());
-        verify(accountingDateUtil, times(1))
-                .getAvailDate(any(EnumBlockDayType.class), anyInt());
-    } catch (Exception e) {
-        if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
-            Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
-            assertNotNull(errorCode);
-        } else {
-            fail("Unexpected exception: " + e.getMessage(), e);
+        try {
+            CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
+            assertFalse(result.isSuccess());
+            assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
+        } catch (Exception e) {
+            if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
+                Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
+                assertNotNull(errorCode);
+            } else {
+                fail("Unexpected exception: " + e.getMessage(), e);
+            }
         }
     }
-}
