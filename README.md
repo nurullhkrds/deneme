@@ -1,155 +1,122 @@
-@Service
-@RequiredArgsConstructor
-public class PaymentCommissionServiceImpl implements PaymentCommissionService{
-	
-	    private final InstitutionPaymentMethodService instPaymentMethodService;
-	    
-	    private final InstitutionDebtTypeService institutionDebtTypeService;	  	  
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-	    private final CommissionService commissionService;	    
-	    
-	    private final ProvisionService provisionService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-	    public static final String YTL_CURRENCY = "YTL";
-	    public static final String TL_CURRENCY = "TL";
-	    public static final String TRY_CURRENCY = "TRY";
-	    public static final String USER_CODE_INT001 = "INT001";
-	    public static final String BRANCH_CODE_925 = "925";
-	    public static final String CREDIT_CARD = "CREDIT_CARD";
-	    
+public class PaymentCommissionServiceImplTest {
 
-		@Override
-		public ResponseCommissionInformation performCommission(CommissionServiceRequestDTO commissionServiceRequestDTO)
-				throws MicroException {
+    @Mock
+    private InstitutionPaymentMethodService instPaymentMethodService;
 
-			try {
+    @Mock
+    private InstitutionDebtTypeService institutionDebtTypeService;
 
-				ProvisionDTO provisionRecord = provisionService
-						.getProvisionRecord(commissionServiceRequestDTO.getBillProvisionId());
+    @Mock
+    private CommissionService commissionService;
 
-				InstitutionDebtTypeDTO debtType = institutionDebtTypeService
-						.getDebtType(provisionRecord.getInstitutionDebtTypeId());
+    @Mock
+    private ProvisionService provisionService;
 
-				InstitutionPymMethodWebDTO institutionPymMethod = instPaymentMethodService.getInstitutionExpenseCode(
-						debtType.getInstitution().getProduct().getCode(),
-						debtType.getInstitution().getInstitutionCode(),
-						commissionServiceRequestDTO.getPaymentMethod(),
-						provisionRecord.getInstitutionDebtTypeId(), commissionServiceRequestDTO.getChannelCode());
+    @InjectMocks
+    private PaymentCommissionServiceImpl paymentCommissionServiceImpl;
 
-				if(institutionPymMethod == null || StringUtils.isEmpty(institutionPymMethod.getExpenseCode())){
-					return null;
-				}
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-				commissionServiceRequestDTO.setExpenseCode(institutionPymMethod.getExpenseCode());
+    @Test
+    public void testPerformCommission_Success() throws Exception {
+        // Prepare mock objects
+        ProvisionDTO provisionDTO = new ProvisionDTO();
+        provisionDTO.setInstitutionDebtTypeId("debtTypeId");
+        provisionDTO.setCustomerNo("customerNo");
 
-				if (institutionPymMethod.getExpenseType().equals(EnumExpenseType.FROM_CUSTOMER.getValue())) {
-					commissionServiceRequestDTO.setAccountNo(institutionPymMethod.getExpenseAccountNo());
-				}
+        InstitutionDebtTypeDTO debtTypeDTO = new InstitutionDebtTypeDTO();
+        debtTypeDTO.setInstitution(new InstitutionDTO());
+        debtTypeDTO.getInstitution().setProduct(new ProductDTO());
+        debtTypeDTO.getInstitution().getProduct().setCode("productCode");
+        debtTypeDTO.getInstitution().setInstitutionCode("institutionCode");
 
-				RequestCommissionInformation requestCommissionInformation = prepareRequestCommissionInformation(
-						commissionServiceRequestDTO);
+        InstitutionPymMethodWebDTO pymMethodDTO = new InstitutionPymMethodWebDTO();
+        pymMethodDTO.setExpenseCode("expenseCode");
+        pymMethodDTO.setExpenseAccountNo("accountNo");
+        pymMethodDTO.setExpenseType(EnumExpenseType.FROM_CUSTOMER.getValue());
 
-				requestCommissionInformation.setClientNo(provisionRecord.getCustomerNo());
+        ResponseCommissionInformation responseCommissionInformation = new ResponseCommissionInformation();
+        // Mock the behavior of services
+        when(provisionService.getProvisionRecord(any())).thenReturn(provisionDTO);
+        when(institutionDebtTypeService.getDebtType(any())).thenReturn(debtTypeDTO);
+        when(instPaymentMethodService.getInstitutionExpenseCode(any(), any(), any(), any(), any())).thenReturn(pymMethodDTO);
+        when(commissionService.inquireCommission(any())).thenReturn(responseCommissionInformation);
 
-				ResponseCommissionInformation responseCommissionInformation = commissionService
-						.inquireCommission(requestCommissionInformation);
+        // Prepare request DTO
+        CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
+        requestDTO.setBillProvisionId("billProvisionId");
+        requestDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT.getValue());
+        requestDTO.setPaymentAmount(100.0);
+        requestDTO.setPaymentCurrency("TRY");
+        requestDTO.setChannelCode("channelCode");
+        requestDTO.setAccountBranchCode("branchCode");
 
-				ObjectMapper objectMapper = new ObjectMapper();
+        // Call the method under test
+        ResponseCommissionInformation result = paymentCommissionServiceImpl.performCommission(requestDTO);
 
-				String commissionData = objectMapper.writeValueAsString(responseCommissionInformation);
+        // Verify the result
+        assertEquals(responseCommissionInformation, result);
+        verify(provisionService).updateCommissionData(anyString(), anyString());
+    }
 
-				provisionService.updateCommissionData(commissionData, commissionServiceRequestDTO.getBillProvisionId());
+    @Test
+    public void testPerformCommission_NoInstitutionPaymentMethod() throws Exception {
+        // Prepare mock objects
+        ProvisionDTO provisionDTO = new ProvisionDTO();
+        provisionDTO.setInstitutionDebtTypeId("debtTypeId");
 
-				return responseCommissionInformation;
+        InstitutionDebtTypeDTO debtTypeDTO = new InstitutionDebtTypeDTO();
+        debtTypeDTO.setInstitution(new InstitutionDTO());
+        debtTypeDTO.getInstitution().setProduct(new ProductDTO());
+        debtTypeDTO.getInstitution().getProduct().setCode("productCode");
+        debtTypeDTO.getInstitution().setInstitutionCode("institutionCode");
 
-			} catch (Exception ex) {
-				throw new BillException(BillTransactionConstant.APP_NAME, EnumBillResult.BILL_EXPENSE_INQUIRY_ERROR);
-			}
+        // Mock the behavior of services
+        when(provisionService.getProvisionRecord(any())).thenReturn(provisionDTO);
+        when(institutionDebtTypeService.getDebtType(any())).thenReturn(debtTypeDTO);
+        when(instPaymentMethodService.getInstitutionExpenseCode(any(), any(), any(), any(), any())).thenReturn(null);
 
-		}
+        // Prepare request DTO
+        CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
+        requestDTO.setBillProvisionId("billProvisionId");
+        requestDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT.getValue());
 
-		private RequestCommissionInformation prepareRequestCommissionInformation(
-				CommissionServiceRequestDTO commissionServiceRequestDTO) throws MicroException {
-			
-			BillValidationUtil.validateCondition(
-					Arrays.asList(EnumPaymentMethod.ACCOUNT.getValue(), EnumPaymentMethod.CARD.getValue(),EnumPaymentMethod.PREPAIDCARD.getValue(),EnumPaymentMethod.CASH.getValue())
-							.contains(commissionServiceRequestDTO.getPaymentMethod()),
-					EnumBillResult.PAYMENT_METHOD_NOT_SUPPORTED, BillTransactionConstant.APP_NAME);
+        // Call the method under test
+        ResponseCommissionInformation result = paymentCommissionServiceImpl.performCommission(requestDTO);
 
-			if (EnumPaymentMethod.ACCOUNT.getValue().equals(commissionServiceRequestDTO.getPaymentMethod())) {
-				return prepareCommissionInformationReqForAccount(commissionServiceRequestDTO);
-			}
-			if(EnumPaymentMethod.CARD.getValue().equals(commissionServiceRequestDTO.getPaymentMethod()) || EnumPaymentMethod.PREPAIDCARD.getValue().equals(commissionServiceRequestDTO.getPaymentMethod())) {
-				return prepareCommissionInformationReqForCreditCard(commissionServiceRequestDTO);
-			} else {
-	            //TODO: CASH;
-				return null;
-	        }
-		}
+        // Verify the result
+        assertNull(result);
+    }
 
-	    private RequestCommissionInformation prepareCommissionInformationReqForAccount(CommissionServiceRequestDTO commissionServiceRequestDTO) {
+    @Test
+    public void testPerformCommission_Exception() throws Exception {
+        // Mock the behavior of services to throw an exception
+        when(provisionService.getProvisionRecord(any())).thenThrow(new RuntimeException());
 
-	        RequestCommissionInformation requestCommissionInformation = new RequestCommissionInformation();
+        // Prepare request DTO
+        CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
+        requestDTO.setBillProvisionId("billProvisionId");
 
-	        requestCommissionInformation.setAccountingType(EnumPaymentMethod.ACCOUNT.getValue());
-	        requestCommissionInformation.setAccountNo(commissionServiceRequestDTO.getAccountNo());
-	        requestCommissionInformation.setAccountCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
-	        requestCommissionInformation.setTransactionAmount(commissionServiceRequestDTO.getPaymentAmount());
-	        requestCommissionInformation.setTransactionCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
-
-	        requestCommissionInformation.setChannelCode(commissionServiceRequestDTO.getChannelCode());
-	        requestCommissionInformation.setBranch(commissionServiceRequestDTO.getAccountBranchCode());
-	        requestCommissionInformation.setUserCode(USER_CODE_INT001);
-
-	        List<CommissionInputDetailApiDTO> commissionInputDetailApiDTOList = new ArrayList<>();
-
-	        CommissionInputDetailApiDTO commissionInputDetailApiDTO = new CommissionInputDetailApiDTO();
-	        commissionInputDetailApiDTO.setCommissionAccountNo(commissionServiceRequestDTO.getAccountNo());
-	        commissionInputDetailApiDTO.setOperationCode(commissionServiceRequestDTO.getExpenseCode());
-	        commissionInputDetailApiDTO.setCommissionCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
-
-	        commissionInputDetailApiDTOList.add(commissionInputDetailApiDTO);
-
-	        requestCommissionInformation.setCommissionInputDetailApiDTOList(commissionInputDetailApiDTOList);
-
-	        return requestCommissionInformation;
-
-	    }
-
-	    private RequestCommissionInformation prepareCommissionInformationReqForCreditCard(CommissionServiceRequestDTO commissionServiceRequestDTO) {
-
-	        RequestCommissionInformation requestCommissionInformation = new RequestCommissionInformation();
-	        
-	        requestCommissionInformation.setAccountingType(CREDIT_CARD);
-	        requestCommissionInformation.setAccountNo(null);
-	        requestCommissionInformation.setAccountCurrency(null);
-	        requestCommissionInformation.setTransactionAmount(commissionServiceRequestDTO.getPaymentAmount());
-	        requestCommissionInformation.setTransactionCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
-
-	        requestCommissionInformation.setChannelCode(commissionServiceRequestDTO.getChannelCode());
-	        requestCommissionInformation.setBranch(BRANCH_CODE_925);
-	        requestCommissionInformation.setUserCode(USER_CODE_INT001);
-
-	        List<CommissionInputDetailApiDTO> commissionInputDetailApiDTOList = new ArrayList<>();
-
-	        CommissionInputDetailApiDTO commissionInputDetailApiDTO = new CommissionInputDetailApiDTO();
-	        commissionInputDetailApiDTO.setOperationCode(commissionServiceRequestDTO.getExpenseCode());
-	        commissionInputDetailApiDTO.setCommissionCurrency(currencyConverter(commissionServiceRequestDTO.getPaymentCurrency()));
-
-	        commissionInputDetailApiDTOList.add(commissionInputDetailApiDTO);
-
-	        requestCommissionInformation.setCommissionInputDetailApiDTOList(commissionInputDetailApiDTOList);
-
-	        return requestCommissionInformation;
-
-	    }
-	    
-	    public static String currencyConverter(String currency) {
-	        if (currency == null || currency.equals(TL_CURRENCY) || currency.equals(TRY_CURRENCY)) {
-	            return YTL_CURRENCY;
-	        }
-	        return currency;
-	    }
-
-
+        // Call the method under test and expect an exception
+        try {
+            paymentCommissionServiceImpl.performCommission(requestDTO);
+        } catch (BillException e) {
+            assertEquals(EnumBillResult.BILL_EXPENSE_INQUIRY_ERROR, e.getBillResult());
+        }
+    }
 }
