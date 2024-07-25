@@ -1,93 +1,111 @@
-@Component
-@ConditionalOnExpression("${rabbitmq.enabled:false} and ${rabbitmq.services.billtransaction-rabbitmq.enabled:false}")
-@RequiredArgsConstructor
-public class BillEventConsumer {
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-	private final PaymentService paymentService;
-	
-    private final PaymentNotificationService paymentNotificationService;
-    
-    private static final Logger logger = LoggerFactory.getLogger(BillEventConsumer.class);
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 
+@ExtendWith(MockitoExtension.class)
+public class BillEventConsumerTest {
 
-	@RabbitListener(queues = "${rabbitmq.services.billtransaction-rabbitmq.queues.paymentNotificationEvent.name}", containerFactory = "paymentNotificationRabbitListenerContainerFactory")
-	public void onMessage(final PaymentNotificationEvent paymentNotificationEvent) throws Exception {
+    @Mock
+    private PaymentService paymentService;
 
-		try {
-			RequestContextHolder.setRequestAttributes(new CustomRequestScopeAttribute());
+    @Mock
+    private PaymentNotificationService paymentNotificationService;
 
-			NotifyPaymentProcessOutput result = paymentService.notifyPayment(paymentNotificationEvent);
+    @InjectMocks
+    private BillEventConsumer billEventConsumer;
 
-			if (!Arrays.asList(EnumBillResult.SUCCESS, EnumBillResult.BILL_PAYMENT_NOTIFICATION_ALREADY_NOTIFIED)
-					.contains(result.getResult())) {
-				// tekrar denesin
-				throw new RuntimeException("Notification is unsuccessfull");
-			}
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(billEventConsumer, "logger", mock(Logger.class));
+    }
 
-		} finally {
-			RequestContextHolder.resetRequestAttributes();
-		}
+    @Test
+    void testOnMessagePaymentNotificationEventSuccess() throws Exception {
+        PaymentNotificationEvent event = new PaymentNotificationEvent();
+        NotifyPaymentProcessOutput output = new NotifyPaymentProcessOutput();
+        output.setResult(EnumBillResult.SUCCESS);
 
-	}
+        when(paymentService.notifyPayment(any(PaymentNotificationEvent.class))).thenReturn(output);
 
-	@RabbitListener(queues = "${rabbitmq.services.billtransaction-rabbitmq.queues.paymentCancelNotificationEvent.name}", containerFactory = "paymentCancelNotificationRabbitListenerContainerFactory")
-	public void onMessage(final PaymentCancelNotificationEvent event) throws Exception {
+        billEventConsumer.onMessage(event);
 
-		try {
-			RequestContextHolder.setRequestAttributes(new CustomRequestScopeAttribute());
+        verify(paymentService).notifyPayment(any(PaymentNotificationEvent.class));
+    }
 
-			NotifyPaymentCancelProcessOutput result = paymentService.notifyPaymentCancel(event);
+    @Test
+    void testOnMessagePaymentNotificationEventFailure() throws Exception {
+        PaymentNotificationEvent event = new PaymentNotificationEvent();
+        NotifyPaymentProcessOutput output = new NotifyPaymentProcessOutput();
+        output.setResult(EnumBillResult.FAILURE);
 
-			if (!Arrays.asList(EnumBillResult.SUCCESS, EnumBillResult.BILL_PAYMENT_NOTIFICATION_ALREADY_NOTIFIED)
-					.contains(result.getResult())) {
-				// tekrar denesin
-				throw new RuntimeException("Notification is unsuccessfull");
-			}
+        when(paymentService.notifyPayment(any(PaymentNotificationEvent.class))).thenReturn(output);
 
-		} finally {
-			RequestContextHolder.resetRequestAttributes();
-		}
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            billEventConsumer.onMessage(event);
+        });
 
-	}
-	
-	@RabbitListener(queues = "${rabbitmq.services.billtransaction-rabbitmq.queues.creditCardProvisionACKEvent.name}", containerFactory = "creditCardProvisionACKRabbitListenerContainerFactory")
-	public void processCreditCardProvisionACKMessage(final CreditCardProvisionACKEventDTO event)
-			throws BusinessException, JsonProcessingException {
+        assertEquals("Notification is unsuccessfull", exception.getMessage());
+    }
 
-		try {
+    @Test
+    void testOnMessagePaymentCancelNotificationEventSuccess() throws Exception {
+        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
+        NotifyPaymentCancelProcessOutput output = new NotifyPaymentCancelProcessOutput();
+        output.setResult(EnumBillResult.SUCCESS);
 
-			RequestContextHolder.setRequestAttributes(new CustomRequestScopeAttribute());
+        when(paymentService.notifyPaymentCancel(any(PaymentCancelNotificationEvent.class))).thenReturn(output);
 
-			paymentNotificationService.sendAckForCreditCardProvision(event.getPaymentId(),event.getPaymentNotificationId(), Boolean.FALSE);
+        billEventConsumer.onMessage(event);
 
-			logger.info("Processed credit card provision ack message. Payment Id: '{}'", event.getPaymentId());
+        verify(paymentService).notifyPaymentCancel(any(PaymentCancelNotificationEvent.class));
+    }
 
-		} catch (Exception ex) {
-			LogUtils.logError(logger, "Error occurred while processing received credit card provision ack message."
-					+ " Exception Detail: '{}'", ExceptionUtils.getStackTrace(ex));
-			throw ex;
-		}
+    @Test
+    void testOnMessagePaymentCancelNotificationEventFailure() throws Exception {
+        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
+        NotifyPaymentCancelProcessOutput output = new NotifyPaymentCancelProcessOutput();
+        output.setResult(EnumBillResult.FAILURE);
 
-	}
-	
-	@RabbitListener(queues = "${rabbitmq.services.billtransaction-rabbitmq.queues.creditCardProvisionReverseEvent.name}", containerFactory = "creditCardReverseProvisionRabbitListenerContainerFactory")
-	public void processCreditCardProvisionReverseMessage(final CreditCardProvisionReverseEventDTO event)
-			throws BusinessException, JsonProcessingException {
+        when(paymentService.notifyPaymentCancel(any(PaymentCancelNotificationEvent.class))).thenReturn(output);
 
-		try {
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            billEventConsumer.onMessage(event);
+        });
 
-			RequestContextHolder.setRequestAttributes(new CustomRequestScopeAttribute());
+        assertEquals("Notification is unsuccessfull", exception.getMessage());
+    }
 
-			paymentNotificationService.creditCardReverseProvision(event.getPaymentId(),event.getPaymentNotificationId(),event.getPaymentCancelId(),Boolean.FALSE);
+    @Test
+    void testProcessCreditCardProvisionACKMessage() throws BusinessException, JsonProcessingException {
+        CreditCardProvisionACKEventDTO event = new CreditCardProvisionACKEventDTO();
+        event.setPaymentId("123");
+        event.setPaymentNotificationId("456");
 
-			logger.info("Processed credit card reverse provision message. Payment Cancel Id: '{}'", event.getPaymentCancelId());
+        billEventConsumer.processCreditCardProvisionACKMessage(event);
 
-		} catch (Exception ex) {
-			LogUtils.logError(logger, "Error occurred while processing received credit card reverse provision ack message."
-					+ " Exception Detail: '{}'", ExceptionUtils.getStackTrace(ex));
-			throw ex;
-		}
+        verify(paymentNotificationService).sendAckForCreditCardProvision("123", "456", Boolean.FALSE);
+    }
 
-	}
+    @Test
+    void testProcessCreditCardProvisionReverseMessage() throws BusinessException, JsonProcessingException {
+        CreditCardProvisionReverseEventDTO event = new CreditCardProvisionReverseEventDTO();
+        event.setPaymentId("123");
+        event.setPaymentNotificationId("456");
+        event.setPaymentCancelId("789");
+
+        billEventConsumer.processCreditCardProvisionReverseMessage(event);
+
+        verify(paymentNotificationService).creditCardReverseProvision("123", "456", "789", Boolean.FALSE);
+    }
 }
