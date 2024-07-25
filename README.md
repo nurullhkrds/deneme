@@ -1,4 +1,4 @@
-    @Transactional
+  @Transactional
     public Result copyReturnMaps(CopyForIdsAndDataRequest request) {
         try{
             List<ReturnMap> returnMapsToCopy = returnMapRepository.findAllById(request.getIds());
@@ -6,7 +6,7 @@
 
             for (ReturnMap original : returnMapsToCopy) {
                 ReturnMap copied = new ReturnMap();
-                copied.setReturnMapCode(original.getReturnMapCode() );
+                copied.setReturnMapCode(request.getReturnMapCode());
                 copied.setInstitutionReturnCode(original.getInstitutionReturnCode());
                 copied.setInstitutionReturnText(original.getInstitutionReturnText());
                 copied.setBankReturnCode(original.getBankReturnCode());
@@ -21,7 +21,7 @@
 
         }
         catch (Exception e){
-           return new ErrorResult("Error! "+e.getMessage(),400);
+            return new ErrorResult("Error! "+e.getMessage(),400);
         }
 
     }
