@@ -1,27 +1,87 @@
-@Converter(autoApply = true)
-public class EnumReturnTypeConverter extends TypeAdapter<EnumReturnType>
-		implements AttributeConverter<EnumReturnType, String> {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-	@Override
-	public String convertToDatabaseColumn(EnumReturnType returnType) {
-		return returnType != null ? returnType.getValue() : null;
-	}
+import java.io.IOException;
 
-	@Override
-	public EnumReturnType convertToEntityAttribute(String dbValue) {
-		return EnumReturnType.getReturnType(dbValue);
-	}
+import javax.persistence.Converter;
 
-	@Override
-	public void write(JsonWriter out, EnumReturnType tokenStatu) throws IOException {
-		if (tokenStatu != null) {
-			out.jsonValue(tokenStatu.getValue());
-		}
-	}
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
-	@Override
-	public EnumReturnType read(JsonReader in) throws IOException {
-		return EnumReturnType.getReturnType(in.nextString());
-	}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
+public class EnumReturnTypeConverterTest {
+
+    private EnumReturnTypeConverter converter;
+
+    @Mock
+    private JsonWriter jsonWriter;
+
+    @Mock
+    private JsonReader jsonReader;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        converter = new EnumReturnTypeConverter();
+    }
+
+    @Test
+    public void testConvertToDatabaseColumn_withValidEnum() {
+        EnumReturnType returnType = EnumReturnType.SOME_ENUM_VALUE;
+        String dbValue = converter.convertToDatabaseColumn(returnType);
+        assertEquals("some_enum_value", dbValue); // replace with actual value
+    }
+
+    @Test
+    public void testConvertToDatabaseColumn_withNull() {
+        String dbValue = converter.convertToDatabaseColumn(null);
+        assertNull(dbValue);
+    }
+
+    @Test
+    public void testConvertToEntityAttribute_withValidDbValue() {
+        String dbValue = "some_enum_value"; // replace with actual value
+        EnumReturnType returnType = converter.convertToEntityAttribute(dbValue);
+        assertEquals(EnumReturnType.SOME_ENUM_VALUE, returnType); // replace with actual enum
+    }
+
+    @Test
+    public void testConvertToEntityAttribute_withNull() {
+        EnumReturnType returnType = converter.convertToEntityAttribute(null);
+        assertNull(returnType);
+    }
+
+    @Test
+    public void testWrite_withValidEnum() throws IOException {
+        EnumReturnType returnType = EnumReturnType.SOME_ENUM_VALUE; // replace with actual enum
+        doNothing().when(jsonWriter).jsonValue(returnType.getValue());
+        converter.write(jsonWriter, returnType);
+        verify(jsonWriter, times(1)).jsonValue(returnType.getValue());
+    }
+
+    @Test
+    public void testWrite_withNull() throws IOException {
+        doNothing().when(jsonWriter).nullValue();
+        converter.write(jsonWriter, null);
+        verify(jsonWriter, times(1)).nullValue();
+    }
+
+    @Test
+    public void testRead_withValidValue() throws IOException {
+        String jsonValue = "some_enum_value"; // replace with actual value
+        when(jsonReader.nextString()).thenReturn(jsonValue);
+        EnumReturnType returnType = converter.read(jsonReader);
+        assertEquals(EnumReturnType.SOME_ENUM_VALUE, returnType); // replace with actual enum
+    }
+
+    @Test
+    public void testRead_withNullValue() throws IOException {
+        when(jsonReader.nextString()).thenReturn(null);
+        EnumReturnType returnType = converter.read(jsonReader);
+        assertNull(returnType);
+    }
 }
