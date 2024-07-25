@@ -1,11 +1,94 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.dto.PaymentCancelDTO.getCreatedBy()" because the return value of "com.ykb.payments.bill.transaction.payment.model.BillPaymentCancelEvent.getCancelRecord()" is null
-java.lang.NullPointerException: Cannot invoke "org.springframework.context.ApplicationContext.getBean(java.lang.Class)" because "com.ykb.payments.bill.common.util.SpringUtil.appContext" is null
-rg.mockito.exceptions.misusing.UnnecessaryStubbingException: 
-Unnecessary stubbings detected.
-Clean & maintainable test code requires zero unnecessary code.
-Following stubbings are unnecessary (click to navigate to relevant line of code):
-  1. -> at com.ykb.payments.bill.transaction.payment.event.PaymentEventListenerTest.setUp(PaymentEventListenerTest.java:49)
-  2. -> at com.ykb.payments.bill.transaction.payment.event.PaymentEventListenerTest.setUp(PaymentEventListenerTest.java:50)
-Please remove unnecessary stubbings or use 'lenient' strictness. More info: javad
-java.lang.NullPointerException: Cannot invoke "org.springframework.context.ApplicationContext.getBean(java.lang.Class)" because "com.ykb.payments.bill.common.util.SpringUtil.appContext" is null
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.ProductDTO.getCode()" because the return value of "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getProduct()" is null
+@ExtendWith(MockitoExtension.class)
+public class PaymentEventListenerTest {
+
+    @Mock
+    private PaymentNotificationEventProducer paymentNotificationEventProducer;
+
+    @Mock
+    private LimitationService limitationService;
+
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @InjectMocks
+    private PaymentEventListener paymentEventListener;
+
+    private BillPaymentEvent billPaymentEvent;
+    private BillPaymentCancelEvent billPaymentCancelEvent;
+    private CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO;
+    private CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO;
+    private NotifyPaymentLimitationRequest notifyPaymentLimitationRequest;
+    private NotifyInquiryLimitationRequest notifyInquiryLimitationRequest;
+
+    @BeforeEach
+    void setUp() {
+        // Mock event objects
+        billPaymentEvent = mock(BillPaymentEvent.class);
+        BillPaymentCancelDTO cancelRecord = mock(BillPaymentCancelDTO.class);
+        when(billPaymentCancelEvent.getCancelRecord()).thenReturn(cancelRecord);
+
+        PaymentDTO paymentDTO = mock(PaymentDTO.class);
+        InstitutionDTO institutionDTO = mock(InstitutionDTO.class);
+        ProductDTO productDTO = mock(ProductDTO.class);
+
+        when(billPaymentEvent.getPaymentDTO()).thenReturn(paymentDTO);
+        when(billPaymentEvent.getInstitutionDTO()).thenReturn(institutionDTO);
+        when(institutionDTO.getProduct()).thenReturn(productDTO);
+
+        // Mock necessary methods and behaviors
+        when(paymentDTO.getCreatedBy()).thenReturn("testUser");
+        when(paymentDTO.getBranchCode()).thenReturn("branch123");
+        when(paymentDTO.getChannelCode()).thenReturn("channel456");
+        when(paymentDTO.getChannelSessionId()).thenReturn("session789");
+        when(paymentDTO.getChannelTransactionId()).thenReturn("txn123");
+        when(paymentDTO.getInstitutionId()).thenReturn(1L);
+        when(institutionDTO.getInstitutionCode()).thenReturn("instCode");
+        when(productDTO.getCode()).thenReturn("prodCode");
+
+        // Mock application context
+        SpringUtil.appContext = applicationContext;
+        when(applicationContext.getBean(LimitationService.class)).thenReturn(limitationService);
+    }
+
+    @Test
+    void testOnPaymentCreatedNotificationEvent() {
+        paymentEventListener.onPaymentCreatedNotificationEvent(billPaymentEvent);
+
+        verify(paymentNotificationEventProducer, times(1)).sendPaymentNotificationEvent(any(PaymentNotificationEvent.class));
+    }
+
+    @Test
+    void testOnPaymentCancelCreatedNotificationEvent() {
+        paymentEventListener.onPaymentCancelCreatedNotificationEvent(billPaymentCancelEvent);
+
+        verify(paymentNotificationEventProducer, times(1)).sendPaymentCancelNotificationEvent(any(PaymentCancelNotificationEvent.class));
+    }
+
+    @Test
+    void testOnCreditCardProvisionACKEvent() {
+        paymentEventListener.onCreditCardProvisionACKEvent(creditCardProvisionACKEventDTO);
+
+        verify(paymentNotificationEventProducer, times(1)).sendCreditCardProvisionACKEvent(any(CreditCardProvisionACKEventDTO.class));
+    }
+
+    @Test
+    void testOnCreditCardProvisionReverseEvent() {
+        paymentEventListener.onCreditCardProvisionReverseEvent(creditCardProvisionReverseEventDTO);
+
+        verify(paymentNotificationEventProducer, times(1)).sendCreditCardProvisionReverseEvent(any(CreditCardProvisionReverseEventDTO.class));
+    }
+
+    @Test
+    void testOnNotifyPaymentLimitation() {
+        paymentEventListener.onNotifyPaymentLimitation(notifyPaymentLimitationRequest);
+
+        verify(limitationService, times(1)).notifyPaymentLimitation(any(NotifyPaymentLimitationRequest.class));
+    }
+
+    @Test
+    void testOnNotifyInquiryLimitation() {
+        paymentEventListener.onNotifyPaymentLimitation(notifyInquiryLimitationRequest);
+
+        verify(limitationService, times(1)).notifyInquiryLimitation(any(NotifyInquiryLimitationRequest.class));
+    }
+}
