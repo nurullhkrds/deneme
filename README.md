@@ -14,7 +14,7 @@ void testDoAccounting_GLAccountingFailure() throws BusinessException, ServiceCal
         assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
     } catch (RuntimeException e) {
         if (e.getCause() != null) {
-            if (e.getCause().getClass().equals(ServiceCallException.class)) {
+            if (e.getCause() instanceof ServiceCallException) {
                 Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
                 assertNotNull(errorCode);
             } else {
@@ -23,7 +23,5 @@ void testDoAccounting_GLAccountingFailure() throws BusinessException, ServiceCal
         } else {
             fail("Unexpected exception with null cause: " + e.getMessage(), e);
         }
-    } catch (Exception e) {
-        fail("Unexpected checked exception: " + e.getMessage(), e);
     }
 }
