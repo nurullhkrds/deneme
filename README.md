@@ -1,77 +1,24 @@
- @Test
-    void testDoAccounting_SuccessfulRealMerchant() {
-        createAccountingDTO.setDummyMerchant(false);
-        CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
-        cardProvisionResponse.setGuid("123456");
-        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-                .thenReturn(cardProvisionResponse);
-        when(accountingUtilServiceImpl.getContractNumber()).thenReturn(123456L);
-
-        try {
-            CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-            assertTrue(result.isSuccess());
-            assertEquals(123456L, result.getContractNo());
-        } catch (Exception e) {
-            if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
-                Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
-                assertNotNull(errorCode);
-            } else {
-                fail("Unexpected exception: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    @Test
-    void testDoAccounting_CardProvisionFailure() {
-        createAccountingDTO.setDummyMerchant(true);
-        doThrow(new RuntimeException("Provision Failed")).when(cardProvisionService).doProvision(any(CardProvisionRequest.class));
-
-        try {
-            CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-            assertFalse(result.isSuccess());
-            assertEquals(EnumBillResult.BILL_CREDIT_CARD_PROVISION_ERROR, result.getError());
-        } catch (Exception e) {
-            if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
-                Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
-                assertNotNull(errorCode);
-            } else {
-                fail("Unexpected exception: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    @Test
-    void testDoAccounting_GLAccountingFailure() {
-        createAccountingDTO.setDummyMerchant(true);
-        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-                .thenReturn(new CardProvisionResponse("guid123"));
-
-        doThrow(new RuntimeException("GL Accounting Failed")).when(provisionNextService).makeProvision(any(MakeProvisionRequest.class));
-
-        try {
-            CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-            assertFalse(result.isSuccess());
-            assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-        } catch (Exception e) {
-            if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
-                Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
-                assertNotNull(errorCode);
-            } else {
-                fail("Unexpected exception: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    @Test
-    void testDoAccounting_BlockDayCount() {
+org.mockito.exceptions.misusing.WrongTypeOfReturnValue: 
+Integer cannot be returned by getContractNumber()
+getContractNumber() should return Long
+***
+If you're unsure why you're getting above error read on.
+Due to the nature of the syntax above problem might occur because:
+1. This exception *might* occur in wrongly written multi-threaded tests.
+   Please refer to Mockito FAQ on limitations of concurrency testing.
+2. A spy is stubbed using when(spy.foo()).then() syntax. It is safer to stub spies - 
+   - with doReturn|Throw() family of methods. More in javadocs for Mockito.spy() method.   @Test
+    void testDoAccounting_BlockDayCount() throws BusinessException, ServiceCallException {
         createAccountingDTO.setDummyMerchant(false);
 
         InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = createAccountingDTO.getInstitutionChannelPymMethodDTO();
         institutionChannelPymMethodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.CHANNEL);
         when(institutionChannelPymMethodDTO.getBlockDayCount()).thenReturn(10);
 
+        CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
+        cardProvisionResponse.setGuid("123456");
         when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-                .thenReturn(new CardProvisionResponse("guid123"));
+                .thenReturn(cardProvisionResponse);
         when(accountingUtilServiceImpl.getContractNumber()).thenReturn(123456L);
 
         try {
