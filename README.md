@@ -1,50 +1,10 @@
-  @Test
-    void parseSubscriberNoIntoParts_shouldReturnResponse_whenDebtTypeIDIsNull() {
-        // Given
-        ParseSubscriberNoIntoPartsRequest request = new ParseSubscriberNoIntoPartsRequest();
-        request.setDebtTypeID(null);
-        request.setProductCode("productCode");
-        request.setInstitutionCode("institutionCode");
-        request.setSubscriberNo("subscriberNo");
+org.mockito.exceptions.misusing.MissingMethodInvocationException: 
+when() requires an argument which has to be 'a method call on a mock'.
+For example:
+    when(mock.getArticles()).thenReturn(articles);
 
-        List<InstitutionUserIntfDTO> defaultUserInterface = Collections.singletonList(new InstitutionUserIntfDTO());
-        List<SubsrciberNoPartResponseWebDTO> parsedParts = Collections.singletonList(new SubsrciberNoPartResponseWebDTO());
-
-        when(institutionUserIntService.getDefaultUserInterface("productCode", "institutionCode"))
-                .thenReturn(defaultUserInterface);
-        when(SubscriberNumberUtils.parseSubscriberNoIntoParts(defaultUserInterface, "subscriberNo"))
-                .thenReturn(parsedParts);
-
-        // When
-        ParseSubscriberNoIntoPartsResponse actualResponse = paymentService.parseSubscriberNoIntoParts(request);
-
-        // Then
-        assertNotNull(actualResponse);
-        assertEquals(parsedParts, actualResponse.getSubsrciberNoPartResponseWebDTO());
-        verify(institutionUserIntService).getDefaultUserInterface("productCode", "institutionCode");
-        verify(SubscriberNumberUtils).parseSubscriberNoIntoParts(defaultUserInterface, "subscriberNo");
-    }
-
-    @Test
-    void parseSubscriberNoIntoParts_shouldReturnResponse_whenDebtTypeIDIsNotNull() {
-        // Given
-        ParseSubscriberNoIntoPartsRequest request = new ParseSubscriberNoIntoPartsRequest();
-        request.setDebtTypeID(1L);
-        request.setSubscriberNo("subscriberNo");
-
-        List<InstitutionUserIntfDTO> userInterface = Collections.singletonList(new InstitutionUserIntfDTO());
-        List<SubsrciberNoPartResponseWebDTO> parsedParts = Collections.singletonList(new SubsrciberNoPartResponseWebDTO());
-
-        when(institutionUserIntService.getUserInterface(1L)).thenReturn(userInterface);
-        when(SubscriberNumberUtils.parseSubscriberNoIntoParts(userInterface, "subscriberNo"))
-                .thenReturn(parsedParts);
-
-        // When
-        ParseSubscriberNoIntoPartsResponse actualResponse = paymentService.parseSubscriberNoIntoParts(request);
-
-        // Then
-        assertNotNull(actualResponse);
-        assertEquals(parsedParts, actualResponse.getSubsrciberNoPartResponseWebDTO());
-        verify(institutionUserIntService).getUserInterface(1L);
-        verify(SubscriberNumberUtils).parseSubscriberNoIntoParts(userInterface, "subscriberNo");
-    }
+Also, this error might show up because:
+1. you stub either of: final/private/equals()/hashCode() methods.
+   Those methods *cannot* be stubbed/verified.
+   Mocking methods declared on non-public parent classes is not supported.
+2. inside when() you don't call method on mock but on some other object.
