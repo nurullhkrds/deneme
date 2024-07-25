@@ -1,31 +1,42 @@
-@AllArgsConstructor
-@JsonAdapter(EnumAccountingSourceConverter.class)
-@ToString
-public enum EnumAccountingSource {
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-	PAYMENT("PAYMENT", "Muhasabe biz tarafından gerceklesmis"),
-	MERCHANT("MERCHANT", "Muhasebe üye iş yeri ekibi tarafından gerçekleşmiş");
+class EnumAccountingSourceTest {
 
-	@Getter
-	@JsonValue
-	private final String value;
-	@Getter
-	@JsonValue
-	private final String description;
+    @Test
+    void testParse() {
+        // Test for valid value
+        EnumAccountingSource result = EnumAccountingSource.parse("PAYMENT");
+        assertNotNull(result);
+        assertEquals(EnumAccountingSource.PAYMENT, result);
 
-	private static final Map<String, EnumAccountingSource> paramaters;
+        // Test for another valid value
+        result = EnumAccountingSource.parse("MERCHANT");
+        assertNotNull(result);
+        assertEquals(EnumAccountingSource.MERCHANT, result);
 
-	static {
-		paramaters = new LinkedHashMap<>();
+        // Test for invalid value
+        result = EnumAccountingSource.parse("INVALID");
+        assertNull(result);
+    }
 
-		for (EnumAccountingSource each : EnumAccountingSource.values()) {
-			paramaters.put(each.value, each);
-		}
+    @Test
+    void testSerialization() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        
+        // Test for PAYMENT enum
+        String paymentJson = objectMapper.writeValueAsString(EnumAccountingSource.PAYMENT);
+        assertEquals("\"PAYMENT\"", paymentJson);
 
-	}
+        // Test for MERCHANT enum
+        String merchantJson = objectMapper.writeValueAsString(EnumAccountingSource.MERCHANT);
+        assertEquals("\"MERCHANT\"", merchantJson);
+    }
 
-	@JsonCreator
-	public static EnumAccountingSource parse(String value) {
-		return paramaters.get(value);
-	}
+    @Test
+    void testToString() {
+        assertEquals("EnumAccountingSource(value=PAYMENT, description=Muhasabe biz tarafından gerceklesmis)", EnumAccountingSource.PAYMENT.toString());
+        assertEquals("EnumAccountingSource(value=MERCHANT, description=Muhasebe üye iş yeri ekibi tarafından gerçekleşmiş)", EnumAccountingSource.MERCHANT.toString());
+    }
 }
