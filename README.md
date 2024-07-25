@@ -1,291 +1,296 @@
-@Service
-@RequiredArgsConstructor
-public class PaymentServiceImpl implements PaymentService {
-	private final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
+@RunWith(MockitoJUnitRunner.class)
+public class PaymentServiceImplTest {
 
-	private static final String SUCCESS = "S";
+    @InjectMocks
+    private PaymentServiceImpl paymentService;
 
-	private final ProcessManager processManager;
-	private final ProcessExecutionMapper processExecutionMapper;
-	private final RequestContext requestContext;
-	private final PaymentRepository paymentRepository;
-	private final PaymentCancelRepository paymentCancelRepository;
-	private final PaymentMapper paymentMapper;
-	private final PaymentCancelMapper paymentCancelMapper;
-	private final InstitutionService institutionService;
-	private final BillPaymentRestFacade billPaymentRestFacade;
-	private final InstitutionUserIntService institutionUserIntService;
-	private final ChannelService channelService;
+    @Mock
+    private ProcessManager processManager;
 
-	@Override
-	public QueryBillsResponse queryBills(QueryBillsRequest getQueryBillsRequest) throws MicroException {
-		QueryBillProcessInput queryBillProcessInput = processExecutionMapper
-				.toQueryBillProcessInput(getQueryBillsRequest);
+    @Mock
+    private ProcessExecutionMapper processExecutionMapper;
 
-		// Mapper'a koyamama sebebimiz session olmayan ortamlardan da process
-		// başlatalabilir. (Batch ile çalışan)
-		queryBillProcessInput.setChannelSessionId(requestContext.getChannelSessionId());
-		queryBillProcessInput.setChannelTransactionId(requestContext.getChannelTransactionId());
+    @Mock
+    private RequestContext requestContext;
 
-		QueryBillsProcessOutput queryBillProcessOutput = (QueryBillsProcessOutput) processManager
-				.executeProcess(queryBillProcessInput);
-		return processExecutionMapper.toQueryBillsResponse(queryBillProcessOutput);
-	}
+    @Mock
+    private PaymentRepository paymentRepository;
 
-	@Override
-	public GetCustomerPaidBillListResponse getCustomerPaidBillList(GetCustomerPaidBillListRequest request)
-			throws MicroException {
+    @Mock
+    private PaymentCancelRepository paymentCancelRepository;
 
-		List<PaidBillResponseWebDTO> microBillList = getBillList(request);
-		List<PaidBillResponseWebDTO> harmoniBillList = getHarmoniBillList(request);
-		List<PaidBillResponseWebDTO> combinedBillList = new ArrayList<>();
+    @Mock
+    private PaymentMapper paymentMapper;
 
-		combinedBillList.addAll(microBillList);
-		combinedBillList.addAll(harmoniBillList);
+    @Mock
+    private PaymentCancelMapper paymentCancelMapper;
 
-		BillValidationUtil.validateCondition(!CollectionUtils.isEmpty(combinedBillList),
-				EnumBillResult.PAID_BILL_NOT_FOUND_ERROR, BillTransactionConstant.APP_NAME);
+    @Mock
+    private InstitutionService institutionService;
 
-		GetCustomerPaidBillListResponse response = new GetCustomerPaidBillListResponse();
-		response.setBillList(combinedBillList);
+    @Mock
+    private BillPaymentRestFacade billPaymentRestFacade;
 
-		return response;
-	}
+    @Mock
+    private InstitutionUserIntService institutionUserIntService;
 
-	private List<PaidBillResponseWebDTO> getHarmoniBillList(GetCustomerPaidBillListRequest request) {
+    @Mock
+    private ChannelService channelService;
 
-		List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
+    @Test
+    public void queryBills_ShouldReturnQueryBillsResponse() throws MicroException {
+        // Arrange
+        QueryBillsRequest request = new QueryBillsRequest();
+        QueryBillProcessInput processInput = new QueryBillProcessInput();
+        QueryBillsProcessOutput processOutput = new QueryBillsProcessOutput();
+        QueryBillsResponse expectedResponse = new QueryBillsResponse();
 
-		ResponseGetCustomerPaidBillList harmoniResponse = billPaymentRestFacade
-				.getCustomerPaidBillList(request.getCustomerNo());
+        when(processExecutionMapper.toQueryBillProcessInput(request)).thenReturn(processInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
+        when(processManager.executeProcess(processInput)).thenReturn(processOutput);
+        when(processExecutionMapper.toQueryBillsResponse(processOutput)).thenReturn(expectedResponse);
 
-		if (SUCCESS.equals(harmoniResponse.getStatus())) {
-			List<HmnPaidBillDTO> hmnPaidBillList = harmoniResponse.getBillDTOList();
-			harmoniBillList = hmnPaidBillList.stream().map(paymentMapper::toPaidBillResponseWebDTO).toList();
-		}
+        // Act
+        QueryBillsResponse actualResponse = paymentService.queryBills(request);
 
-		return harmoniBillList;
+        // Assert
+        assertEquals(expectedResponse, actualResponse);
+        verify(processManager).executeProcess(processInput);
+    }
 
-	}
+    @Test
+    public void getCustomerPaidBillList_ShouldReturnCombinedBillList() throws MicroException {
+        // Arrange
+        GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+        List<PaidBillResponseWebDTO> microBillList = new ArrayList<>();
+        List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
+        List<PaidBillResponseWebDTO> combinedBillList = new ArrayList<>();
 
-	private List<PaidBillResponseWebDTO> getBillList(GetCustomerPaidBillListRequest request) {
+        when(paymentRepository.findCustomerPaidBillList(any(), any(), any(), any())).thenReturn(new ArrayList<>());
+        when(billPaymentRestFacade.getCustomerPaidBillList(any())).thenReturn(new ResponseGetCustomerPaidBillList(SUCCESS, new ArrayList<>()));
 
-		List<PaidBillResponseWebDTO> microBillList;
-		List<Payment> customerPaidBillList = paymentRepository.findCustomerPaidBillList(LocalDate.now(),
-				request.getCustomerNo(), EnumBillStatu.PAID.getValue(),request.getProductCode());
+        // Act
+        GetCustomerPaidBillListResponse response = paymentService.getCustomerPaidBillList(request);
 
-		// TODO: burada kanal kodu için aynı muhasebe grubundakilerini filtreleyelimm
+        // Assert
+        assertNotNull(response);
+        assertEquals(combinedBillList, response.getBillList());
+    }
 
-		ChannelDTO requestChannel = channelService.findChannelByChannelCode(request.getChannelCode());
+    @Test
+    public void doBillPayment_ShouldReturnDoBillPaymentResponse() throws MicroException {
+        // Arrange
+        DoBillPaymentRequest request = new DoBillPaymentRequest();
+        BillPaymentProcessInput processInput = new BillPaymentProcessInput();
+        BillPaymentProcessOutput processOutput = new BillPaymentProcessOutput();
+        DoBillPaymentResponse expectedResponse = new DoBillPaymentResponse();
 
-		microBillList = customerPaidBillList.stream().map(paymentMapper::toDTO)
-				.filter(f -> channelService.areChannelsTheSameAccountingGroup(requestChannel,
-						channelService.findChannelByChannelCode(f.getChannelCode())))
-				.map(bill -> paymentMapper.toPaidBillResponseWebDTO(bill,
-						institutionService.getInstitutionById(bill.getInstitutionId())))
-				.toList();
-		return microBillList;
+        when(processExecutionMapper.toBillPaymentProcessInput(request)).thenReturn(processInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
+        when(processManager.executeProcess(processInput)).thenReturn(processOutput);
+        when(processOutput.getBillId()).thenReturn("billId");
+        when(processOutput.getContractNo()).thenReturn("contractNo");
 
-	}
+        // Act
+        DoBillPaymentResponse actualResponse = paymentService.doBillPayment(request);
 
-	@Override
-	public DoBillPaymentResponse doBillPayment(DoBillPaymentRequest doBillPaymentRequest) throws MicroException {
+        // Assert
+        assertEquals(expectedResponse, actualResponse);
+        verify(processManager).executeProcess(processInput);
+    }
 
-		BillPaymentProcessInput billPaymentProcessInput = processExecutionMapper
-				.toBillPaymentProcessInput(doBillPaymentRequest);
-		billPaymentProcessInput.setChannelSessionId(requestContext.getChannelSessionId());
-		billPaymentProcessInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-		BillPaymentProcessOutput billPaymentProcessOutput = (BillPaymentProcessOutput) processManager
-				.executeProcess(billPaymentProcessInput);
-		DoBillPaymentResponse doBillPaymentResponse = new DoBillPaymentResponse();
-		doBillPaymentResponse.setBillId(billPaymentProcessOutput.getBillId());
-		doBillPaymentResponse.setContractNumber(billPaymentProcessOutput.getContractNo());
-		return doBillPaymentResponse;
-	}
+    @Test
+    public void cancelBillPayment_ShouldReturnCancelBillPaymentResponse() throws MicroException {
+        // Arrange
+        CancelBillPaymentRequest request = new CancelBillPaymentRequest();
+        BillPaymentReverseProcessInput processInput = new BillPaymentReverseProcessInput();
+        CancelBillPaymentResponse expectedResponse = new CancelBillPaymentResponse();
 
-	@Override
-	public CancelBillPaymentResponse cancelBillPayment(CancelBillPaymentRequest cancelBillPaymentRequest)
-			throws MicroException {
-		BillPaymentReverseProcessInput billPaymentReverseProcessInput = processExecutionMapper
-				.toBillPaymentReverseProcessInput(cancelBillPaymentRequest);
-		billPaymentReverseProcessInput.setChannelSessionId(requestContext.getChannelSessionId());
-		billPaymentReverseProcessInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-		processManager.executeProcess(billPaymentReverseProcessInput);
-		CancelBillPaymentResponse cancelBillPaymentResponse = new CancelBillPaymentResponse();
-		return cancelBillPaymentResponse;
-	}
+        when(processExecutionMapper.toBillPaymentReverseProcessInput(request)).thenReturn(processInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
 
-	@Override
-	public PaymentDTO insertPayment(PaymentDTO paymentDTO) {
-		Payment paymentEntity = paymentRepository.save(paymentMapper.toEntity(paymentDTO));
-		return paymentMapper.toDTO(paymentEntity);
-	}
+        // Act
+        CancelBillPaymentResponse actualResponse = paymentService.cancelBillPayment(request);
 
-	@Override
-	public PaymentDTO getPayment(Long id, Long contractNo) {
-		Optional<Payment> payment = paymentRepository.findByIdAndContractNo(id, contractNo);
-		if (payment.isEmpty()) {
-			return null;
-		}
+        // Assert
+        assertNotNull(actualResponse);
+        verify(processManager).executeProcess(processInput);
+    }
 
-		return paymentMapper.toDTO(payment.get());
-	}
+    @Test
+    public void insertPayment_ShouldReturnPaymentDTO() {
+        // Arrange
+        PaymentDTO paymentDTO = new PaymentDTO();
+        Payment paymentEntity = new Payment();
 
-	@Override
-	@Transactional
-	public void updateStatus(EnumBillStatu status, Long id, Long contractNo) {
-		paymentRepository.updateStatus(status.getValue(), id, contractNo);
-	}
+        when(paymentMapper.toEntity(paymentDTO)).thenReturn(paymentEntity);
+        when(paymentRepository.save(paymentEntity)).thenReturn(paymentEntity);
+        when(paymentMapper.toDTO(paymentEntity)).thenReturn(paymentDTO);
 
-	@Override
-	public PaymentCancelDTO insertPaymentCancel(PaymentCancelDTO paymentCancelDTO) {
-		PaymentCancel paymentCancelEntity = paymentCancelRepository
-				.save(paymentCancelMapper.toEntity(paymentCancelDTO));
-		return paymentCancelMapper.toDTO(paymentCancelEntity);
-	}
+        // Act
+        PaymentDTO actualDTO = paymentService.insertPayment(paymentDTO);
 
-	@Override
-	public ParseSubscriberNoIntoPartsResponse parseSubscriberNoIntoParts(ParseSubscriberNoIntoPartsRequest request) {
-		ParseSubscriberNoIntoPartsResponse response = new ParseSubscriberNoIntoPartsResponse();
-		List<InstitutionUserIntfDTO> institutionUserIntfDTOList;
-		if (request.getDebtTypeID() == null) {
-			institutionUserIntfDTOList = institutionUserIntService.getDefaultUserInterface(request.getProductCode(),
-					request.getInstitutionCode());
-		} else {
-			institutionUserIntfDTOList = institutionUserIntService.getUserInterface(request.getDebtTypeID());
-		}
-		List<SubsrciberNoPartResponseWebDTO> subscriberNoIntoPartList = SubscriberNumberUtils
-				.parseSubscriberNoIntoParts(institutionUserIntfDTOList, request.getSubscriberNo());
-		response.setSubsrciberNoPartResponseWebDTO(subscriberNoIntoPartList);
-		return response;
-	}
+        // Assert
+        assertEquals(paymentDTO, actualDTO);
+    }
 
-	@Override
-	public Payment findPaymentByIdWithLock(Long paymentId) {
-		if (paymentId == null) {
-			return null;
-		}
+    @Test
+    public void getPayment_ShouldReturnPaymentDTO() {
+        // Arrange
+        Long id = 1L;
+        Long contractNo = 123L;
+        Payment payment = new Payment();
+        PaymentDTO paymentDTO = new PaymentDTO();
 
-		Optional<Payment> findById = paymentRepository.findByIdWithLock(paymentId);
+        when(paymentRepository.findByIdAndContractNo(id, contractNo)).thenReturn(Optional.of(payment));
+        when(paymentMapper.toDTO(payment)).thenReturn(paymentDTO);
 
-		return findById.isPresent() ? findById.get() : null;
-	}
+        // Act
+        PaymentDTO actualDTO = paymentService.getPayment(id, contractNo);
 
-	@Override
-	@Transactional
-	public void updatePayment(Payment payment) {
-		paymentRepository.save(payment);
-	}
+        // Assert
+        assertEquals(paymentDTO, actualDTO);
+    }
 
-	@Override
-	public PaymentDTO getPayment(Long paymentId) {
-		if (paymentId == null) {
-			return null;
-		}
+    @Test
+    @Transactional
+    public void updateStatus_ShouldUpdateStatus() {
+        // Arrange
+        EnumBillStatu status = EnumBillStatu.PAID;
+        Long id = 1L;
+        Long contractNo = 123L;
 
-		Optional<Payment> payment = paymentRepository.findById(paymentId);
+        // Act
+        paymentService.updateStatus(status, id, contractNo);
 
-		return payment.isPresent() ? paymentMapper.toDTO(payment.get()) : null;
-	}
+        // Assert
+        verify(paymentRepository).updateStatus(status.getValue(), id, contractNo);
+    }
 
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public NotifyPaymentProcessOutput notifyPayment(PaymentNotificationEvent event) throws MicroException {
-		NotifyPaymentProcessInput processInput = new NotifyPaymentProcessInput();
-		processInput.setAgentCode("SYSTEM");
-		processInput.setBranchCode("925");
-		processInput.setChannelCode(EnumChannel.SYSTEM.getValue());
-		processInput.setChannelSessionId(event.getChannelSessionId());
-		processInput.setChannelTransactionId(event.getChannelTransactionId());
-		processInput.setProductCode(event.getProductCode());
-		processInput.setInstitutionCode(event.getInstitutionCode());
-		processInput.setPaymentNotificationId(event.getPaymentNotificationId());
+    @Test
+    public void insertPaymentCancel_ShouldReturnPaymentCancelDTO() {
+        // Arrange
+        PaymentCancelDTO paymentCancelDTO = new PaymentCancelDTO();
+        PaymentCancel paymentCancelEntity = new PaymentCancel();
 
-		return (NotifyPaymentProcessOutput) processManager.executeProcess(processInput);
-	}
+        when(paymentCancelMapper.toEntity(paymentCancelDTO)).thenReturn(paymentCancelEntity);
+        when(paymentCancelRepository.save(paymentCancelEntity)).thenReturn(paymentCancelEntity);
+        when(paymentCancelMapper.toDTO(paymentCancelEntity)).thenReturn(paymentCancelDTO);
 
-	@Override
-	public PaymentCancelDTO getPaymentCancel(Long paymentId) {
-		if (paymentId == null) {
-			return null;
-		}
-		Optional<PaymentCancel> paymentCancel = paymentCancelRepository.findByPaymentId(paymentId);
-		return paymentCancel.isPresent() ? paymentCancelMapper.toDTO(paymentCancel.get()) : null;
-	}
+        // Act
+        PaymentCancelDTO actualDTO = paymentService.insertPaymentCancel(paymentCancelDTO);
 
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public NotifyPaymentCancelProcessOutput notifyPaymentCancel(PaymentCancelNotificationEvent event) throws MicroException {
-		NotifyPaymentCancelProcessInput processInput = new NotifyPaymentCancelProcessInput();
-		processInput.setAgentCode("SYSTEM");
-		processInput.setBranchCode("925");
-		processInput.setChannelCode(EnumChannel.SYSTEM.getValue());
-		processInput.setChannelSessionId(event.getChannelSessionId());
-		processInput.setChannelTransactionId(event.getChannelTransactionId());
-		processInput.setProductCode(event.getProductCode());
-		processInput.setInstitutionCode(event.getInstitutionCode());
-		processInput.setPaymentNotificationId(event.getPaymentNotificationId());
-		
-		return (NotifyPaymentCancelProcessOutput) processManager.executeProcess(processInput);
-	}
+        // Assert
+        assertEquals(paymentCancelDTO, actualDTO);
+    }
 
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public NotifyPaymentResponse notifyPayment(NotifyPaymentRequest request) throws MicroException {
-		
-		NotifyPaymentProcessInput processInput = new NotifyPaymentProcessInput();
-		processInput.setAgentCode(request.getAgentCode());
-		processInput.setBranchCode(request.getOperatingBranchCode());
-		processInput.setChannelCode(request.getChannelCode());
-		processInput.setChannelSessionId(requestContext.getChannelSessionId());
-		processInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-		processInput.setProductCode(request.getProductCode());
-		processInput.setInstitutionCode(request.getInstitutionCode());
-		processInput.setPaymentNotificationId(request.getPaymentNotificationId());
+    @Test
+    public void parseSubscriberNoIntoParts_ShouldReturnParsedParts() {
+        // Arrange
+        ParseSubscriberNoIntoPartsRequest request = new ParseSubscriberNoIntoPartsRequest();
+        List<InstitutionUserIntfDTO> institutionUserIntfDTOList = new ArrayList<>();
+        List<SubsrciberNoPartResponseWebDTO> parsedParts = new ArrayList<>();
 
-		NotifyPaymentProcessOutput executeProcess = (NotifyPaymentProcessOutput) processManager.executeProcess(processInput);
-		
-		return paymentMapper.toNotifyPaymentResponse(executeProcess);
-	}
+        when(institutionUserIntService.getDefaultUserInterface(any(), any())).thenReturn(institutionUserIntfDTOList);
+        when(SubscriberNumberUtils.parseSubscriberNoIntoParts(institutionUserIntfDTOList, request.getSubscriberNo())).thenReturn(parsedParts);
 
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public NotifyPaymentCancelResponse notifyPaymentCancel(NotifyPaymentCancelRequest request) throws MicroException {
-		NotifyPaymentCancelProcessInput processInput = new NotifyPaymentCancelProcessInput();
-		processInput.setAgentCode(request.getAgentCode());
-		processInput.setBranchCode(request.getOperatingBranchCode());
-		processInput.setChannelCode(request.getChannelCode());
-		processInput.setChannelSessionId(requestContext.getChannelSessionId());
-		processInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-		processInput.setProductCode(request.getProductCode());
-		processInput.setInstitutionCode(request.getInstitutionCode());
-		processInput.setPaymentNotificationId(request.getPaymentNotificationId());
-		
-		NotifyPaymentCancelProcessOutput executeProcess = (NotifyPaymentCancelProcessOutput) processManager.executeProcess(processInput);
-		
-		return paymentMapper.toNotifyPaymentCancelResponse(executeProcess);
-	}
+        // Act
+        ParseSubscriberNoIntoPartsResponse response = paymentService.parseSubscriberNoIntoParts(request);
 
-	@Override
-	public List<HmnPaidBillDTO> getMicroBillList(GetCustomerPaidBillListRequest request) throws MicroException{
-		List<PaidBillResponseWebDTO> paidBillResponseWebDTOList = getBillList(request);
-		return paymentMapper.toHmnPaidBillDTOList(paidBillResponseWebDTOList);
-	}
+        // Assert
+        assertNotNull(response);
+        assertEquals(parsedParts, response.getSubsrciberNoPartResponseWebDTO());
+    }
 
-	@Override
-	public CountDTO getReconCount(boolean isPayment,
-								  Date reconciliationDate,
-								  String productCode,
-								  String institutionCode) throws MicroException {
-		InstitutionDTO institutionDTO = institutionService.getInstitution(productCode,institutionCode);
-		return paymentRepository.getReconCount(institutionDTO.getId(),reconciliationDate,isPayment ? EnumBillStatu.PAID.getValue() :EnumBillStatu.CANCELLED.getValue() );
-	}
+    @Test
+    public void findPaymentByIdWithLock_ShouldReturnPayment() {
+        // Arrange
+        Long paymentId = 1L;
+        Payment payment = new Payment();
 
-	@Override
-	public List<HmnPaidBillDTO> getReconDetail(boolean isPayment, Date reconciliationDate, String productCode, String institutionCode) throws MicroException {
-		InstitutionDTO institutionDTO =institutionService.getInstitution(productCode,institutionCode);
-		List<Payment> payments = paymentRepository.getReconDetail(institutionDTO.getId(),reconciliationDate,isPayment ? EnumBillStatu.PAID.getValue() :EnumBillStatu.CANCELLED.getValue() );
-		return paymentMapper.toHmnRecoDetailDTOList(payments);
-	}
+        when(paymentRepository.findByIdWithLock(paymentId)).thenReturn(Optional.of(payment));
 
+        // Act
+        Payment actualPayment = paymentService.findPaymentByIdWithLock(paymentId);
+
+        // Assert
+        assertNotNull(actualPayment);
+    }
+
+    @Test
+    @Transactional
+    public void updatePayment_ShouldSavePayment() {
+        // Arrange
+        Payment payment = new Payment();
+
+        // Act
+        paymentService.updatePayment(payment);
+
+        // Assert
+        verify(paymentRepository).save(payment);
+    }
+
+    @Test
+    public void getPayment_ShouldReturnPaymentDTO() {
+        // Arrange
+        Long paymentId = 1L;
+        Payment payment = new Payment();
+        PaymentDTO paymentDTO = new PaymentDTO();
+
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
+        when(paymentMapper.toDTO(payment)).thenReturn(paymentDTO);
+
+        // Act
+        PaymentDTO actualDTO = paymentService.getPayment(paymentId);
+
+        // Assert
+        assertEquals(paymentDTO, actualDTO);
+    }
+
+    @Test
+    @Transactional(rollbackFor = Exception.class)
+    public void notifyPayment_ShouldReturnNotifyPaymentResponse() throws MicroException {
+        // Arrange
+        NotifyPaymentRequest request = new NotifyPaymentRequest();
+        NotifyPaymentProcessInput processInput = new NotifyPaymentProcessInput();
+        NotifyPaymentProcessOutput processOutput = new NotifyPaymentProcessOutput();
+        NotifyPaymentResponse expectedResponse = new NotifyPaymentResponse();
+
+        when(processExecutionMapper.toNotifyPaymentProcessInput(request)).thenReturn(processInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
+        when(processManager.executeProcess(processInput)).thenReturn(processOutput);
+        when(paymentMapper.toNotifyPaymentResponse(processOutput)).thenReturn(expectedResponse);
+
+        // Act
+        NotifyPaymentResponse actualResponse = paymentService.notifyPayment(request);
+
+        // Assert
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    @Transactional(rollbackFor = Exception.class)
+    public void processPayment_ShouldReturnProcessPaymentResponse() throws MicroException {
+        // Arrange
+        ProcessPaymentRequest request = new ProcessPaymentRequest();
+        ProcessPaymentProcessInput processInput = new ProcessPaymentProcessInput();
+        ProcessPaymentProcessOutput processOutput = new ProcessPaymentProcessOutput();
+        ProcessPaymentResponse expectedResponse = new ProcessPaymentResponse();
+
+        when(processExecutionMapper.toProcessPaymentProcessInput(request)).thenReturn(processInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
+        when(processManager.executeProcess(processInput)).thenReturn(processOutput);
+        when(paymentMapper.toProcessPaymentResponse(processOutput)).thenReturn(expectedResponse);
+
+        // Act
+        ProcessPaymentResponse actualResponse = paymentService.processPayment(request);
+
+        // Assert
+        assertEquals(expectedResponse, actualResponse);
+    }
 }
