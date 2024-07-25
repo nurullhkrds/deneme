@@ -1,18 +1,20 @@
-    @Test
-    public void testIsFomOperationEnabled_WhenFeatureValueIsYes() {
-        InstitutionDTO institution = new InstitutionDTO();
-        ProductDTO productDTO=new ProductDTO();
-        productDTO.setCode("123");
-        institution.setProduct(new ProductDTO());
-        institution.setInstitutionCode("123");
-        institution.getProduct().setFomCheckFlag(false);
+@Test
+public void testIsFomOperationEnabled_WhenFeatureValueIsYes() {
+    // Verileri hazırlayın
+    InstitutionDTO institution = new InstitutionDTO();
+    ProductDTO productDTO = new ProductDTO();
+    productDTO.setCode("123"); // Product kodunu ayarlayın
+    institution.setProduct(productDTO); // ProductDTO'yu institution'a ekleyin
+    institution.setInstitutionCode("123"); // Institution kodunu ayarlayın
+    institution.getProduct().setFomCheckFlag(false); // FomCheckFlag'ı false olarak ayarlayın
 
-        when(institutionFeatureService.getFeatureValue(EnumFeatureCode.FOM_CHECK_ENABLED, institution.getInstitutionCode(), productDTO.getCode()))
-                .thenReturn(EnumYesNo.YES.getValue());
+    // Mock davranışını ayarlayın
+    when(institutionFeatureService.getFeatureValue(EnumFeatureCode.FOM_CHECK_ENABLED, institution, productDTO))
+            .thenReturn(EnumYesNo.YES.getValue());
 
-        boolean result = paymentUtilImpl.isFomOperationEnabled(institution);
+    // Metodu test edin
+    boolean result = paymentUtilImpl.isFomOperationEnabled(institution);
 
-        assertTrue(result, "mesaj");
-    }org.opentest4j.AssertionFailedError: mesaj ==> 
-Expected :true
-Actual   :false
+    // Sonuç doğrulama
+    assertTrue(result, "Fom operation should be enabled when feature value is 'YES'");
+}
