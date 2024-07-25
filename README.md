@@ -20,7 +20,10 @@ class EnumAccountingSourceTest {
         result = EnumAccountingSource.parse("INVALID");
         assertNull(result);
     }
-
+com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Problem with definition of [AnnotedClass com.ykb.payments.bill.transaction.payment.enums.EnumAccountingSource]: Multiple 'as-value' properties defined ([field com.ykb.payments.bill.transaction.payment.enums.EnumAccountingSource#value] vs [field com.ykb.payments.bill.transaction.payment.enums.EnumAccountingSource#description])
+org.opentest4j.AssertionFailedError: 
+Expected :EnumAccountingSource(value=PAYMENT, description=Muhasabe biz tarafından gerceklesmis)
+Actual   :EnumAccountingSource.PAYMENT(value=PAYMENT, description=Muhasabe biz tarafından gerceklesmis)
     @Test
     void testSerialization() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
