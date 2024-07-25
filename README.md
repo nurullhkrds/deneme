@@ -1,25 +1,40 @@
-public class ProcessConstantTest {
+@Mapper(componentModel = "spring")
+public interface ProcessExecutionMapper {
 
-    @Test
-    public void shouldReturnProcessClassList() {
-        List<Class<? extends IProcess>> expectedClassList = List.of(
-            QueryBillsProcess.class,
-            BillPaymentProcess.class,
-            BillPaymentReverseProcess.class,
-            NotifyPaymentProcess.class,
-            NotifyPaymentCancelProcess.class
-        );
 
-        List<Class<? extends IProcess>> actualClassList = ProcessConstant.getProcessClassList();
-        
-        assertIterableEquals(expectedClassList, actualClassList);
-    }
+	ProcessExecutionMapper INSTANCE = Mappers.getMapper(ProcessExecutionMapper.class);
 
-    @Test
-    public void shouldHaveCorrectProcessParameterKeys() {
-        assertEquals("CHANNEL_CODE", ProcessConstant.ProcessParameterKey.KEY_CHANNEL_CODE);
-        assertEquals("START_TIME", ProcessConstant.ProcessParameterKey.KEY_START_TIME);
-        assertEquals("FINISH_TIME", ProcessConstant.ProcessParameterKey.KEY_FINISH_TIME);
-        assertEquals("ID", ProcessConstant.ProcessParameterKey.KEY_ID);
-    }
+	@Mapping(target = "branchCode", source = "operatingBranchCode")
+	@Mapping(target = "institutionDebtTypeId", source = "debtTypeID")
+	QueryBillProcessInput toQueryBillProcessInput(QueryBillsRequest queryBillsRequest);
+
+	QueryBillsResponse toQueryBillsResponse(QueryBillsProcessOutput queryBillsProcessOutput);
+	
+	@AfterMapping
+	default void afterToGetQueryBillsResponse(@MappingTarget final QueryBillsResponse queryBillsResponse,
+			QueryBillsProcessOutput queryBillsProcessOutput) {
+		if (CollectionUtils.isEmpty(queryBillsProcessOutput.getProvisionDTOList())) {
+			return;
+		}
+		queryBillsResponse
+				.setSubscriberName(queryBillsProcessOutput.getProvisionDTOList().get(0).getSubscriberName());
+		queryBillsResponse.setBillList(queryBillsProcessOutput.getProvisionDTOList().stream().map(provisionDTO -> {
+			QueriedBillResponseWebDTO queriedBillResponseWebDTO = new QueriedBillResponseWebDTO();
+			queriedBillResponseWebDTO.setBillNo(provisionDTO.getBillNo());
+			queriedBillResponseWebDTO.setBillAmount(provisionDTO.getAmount());
+			queriedBillResponseWebDTO.setBillDueDate(provisionDTO.getBillDueDate());
+			queriedBillResponseWebDTO.setCurrency(provisionDTO.getCurrency().getValue());
+			queriedBillResponseWebDTO.setBillTerm(provisionDTO.getBillTerm());
+			queriedBillResponseWebDTO.setBillProvisionId(provisionDTO.getId().toString());
+			queriedBillResponseWebDTO.setExplanation(provisionDTO.getExplanation());
+			queriedBillResponseWebDTO.setPayable(provisionDTO.getIsPayable());
+			return queriedBillResponseWebDTO;
+		}).toList());
+	}
+	@Mapping(target = "branchCode", source = "operatingBranchCode")
+	BillPaymentProcessInput toBillPaymentProcessInput(DoBillPaymentRequest doBillPaymentRequest);
+
+	@Mapping(target = "branchCode", source = "operatingBranchCode")
+	BillPaymentReverseProcessInput toBillPaymentReverseProcessInput (CancelBillPaymentRequest cancelBillPaymentRequest);
+
 }
