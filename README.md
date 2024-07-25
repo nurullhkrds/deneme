@@ -1,1 +1,1 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.common.enums.EnumCurrencyCode.getValue()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getCurrency()" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getName()" because the return value of "com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO.getInstitution()" is null
