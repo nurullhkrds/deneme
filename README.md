@@ -12,7 +12,7 @@ void testDoAccounting_GLAccountingFailure() throws BusinessException, ServiceCal
         CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
         assertFalse(result.isSuccess());
         assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
         if (e.getCause() != null) {
             if (e.getCause().getClass().equals(ServiceCallException.class)) {
                 Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
@@ -21,7 +21,9 @@ void testDoAccounting_GLAccountingFailure() throws BusinessException, ServiceCal
                 fail("Unexpected exception cause: " + e.getCause().getClass().getName(), e);
             }
         } else {
-            fail("Unexpected exception: " + e.getMessage(), e);
+            fail("Unexpected exception with null cause: " + e.getMessage(), e);
         }
+    } catch (Exception e) {
+        fail("Unexpected checked exception: " + e.getMessage(), e);
     }
 }
