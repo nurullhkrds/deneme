@@ -1,37 +1,27 @@
+@Converter(autoApply = true)
+public class EnumAccountingSourceConverter extends TypeAdapter<EnumAccountingSource> implements AttributeConverter <EnumAccountingSource,String> {
 
-    @Test
-    void testParse() {
-        // Test for valid value
-        EnumAccountingSource result = EnumAccountingSource.parse("PAYMENT");
-        assertNotNull(result);
-        assertEquals(EnumAccountingSource.PAYMENT, result);
+	@Override
+	public String convertToDatabaseColumn(EnumAccountingSource attribute) {
+		return (attribute==null) ? null : attribute.getValue();
+	}
 
-        // Test for another valid value
-        result = EnumAccountingSource.parse("MERCHANT");
-        assertNotNull(result);
-        assertEquals(EnumAccountingSource.MERCHANT, result);
+	@Override
+	public EnumAccountingSource convertToEntityAttribute(String dbData) {
+		return (dbData == null) ? null : EnumAccountingSource.parse(dbData);
+	}
 
-        // Test for invalid value
-        result = EnumAccountingSource.parse("INVALID");
-        assertNull(result);
-    }
+	@Override
+	public void write(JsonWriter out, EnumAccountingSource value) throws IOException {
+		if (value != null) {
+			out.jsonValue(value.getValue());
+		}
+		
+	}
 
-    @Test
-    void testSerialization() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        
-        // Test for PAYMENT enum
-        String paymentJson = objectMapper.writeValueAsString(EnumAccountingSource.PAYMENT);
-        assertTrue(paymentJson.contains("PAYMENT")); // Adjusted to check if "PAYMENT" is part of the serialized string
+	@Override
+	public EnumAccountingSource read(JsonReader in) throws IOException {
+		return EnumAccountingSource.parse(in.nextString());
+	}
 
-        // Test for MERCHANT enum
-        String merchantJson = objectMapper.writeValueAsString(EnumAccountingSource.MERCHANT);
-        assertTrue(merchantJson.contains("MERCHANT")); // Adjusted to check if "MERCHANT" is part of the serialized string
-    }
-
-    @Test
-    void testToString() {
-        // Adjusted expected values to match the enum's toString output
-        assertEquals("EnumAccountingSource(value=PAYMENT, description=Muhasabe biz tarafından gerceklesmis)", EnumAccountingSource.PAYMENT.toString());
-        assertEquals("EnumAccountingSource(value=MERCHANT, description=Muhasebe üye iş yeri ekibi tarafından gerçekleşmiş)", EnumAccountingSource.MERCHANT.toString());
-    }
+}
