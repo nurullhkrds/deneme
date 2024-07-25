@@ -1,53 +1,28 @@
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+@Converter(autoApply = true)
+public class EnumPaymentNotificationStatuConverter extends TypeAdapter<EnumPaymentNotificationStatu>
+		implements AttributeConverter<EnumPaymentNotificationStatu, String> {
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+	@Override
+	public String convertToDatabaseColumn(EnumPaymentNotificationStatu attribute) {
+		return attribute == null ? null : attribute.getValue();
+	}
 
-import org.junit.jupiter.api.Test;
+	@Override
+	public EnumPaymentNotificationStatu convertToEntityAttribute(String dbData) {
+		return (dbData == null) ? null : EnumPaymentNotificationStatu.parse(dbData);
+	}
 
-public class EnumAccountingSourceConverterTest {
+	@Override
+	public void write(JsonWriter out, EnumPaymentNotificationStatu value) throws IOException {
+		if (value != null) {
+			out.jsonValue(value.getValue());
+		}
 
-    private final EnumAccountingSourceConverter converter = new EnumAccountingSourceConverter();
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(EnumAccountingSource.class, converter)
-            .create();
+	}
 
-    @Test
-    public void testConvertToDatabaseColumn() {
-        // Test a non-null value
-        EnumAccountingSource source = EnumAccountingSource.SOME_ENUM_VALUE;
-        String dbData = converter.convertToDatabaseColumn(source);
-        assertEquals(source.getValue(), dbData);
+	@Override
+	public EnumPaymentNotificationStatu read(JsonReader in) throws IOException {
+		return EnumPaymentNotificationStatu.parse(in.nextString());
+	}
 
-        // Test a null value
-        dbData = converter.convertToDatabaseColumn(null);
-        assertNull(dbData);
-    }
-
-    @Test
-    public void testConvertToEntityAttribute() {
-        // Test a non-null value
-        String dbData = EnumAccountingSource.SOME_ENUM_VALUE.getValue();
-        EnumAccountingSource source = converter.convertToEntityAttribute(dbData);
-        assertEquals(EnumAccountingSource.SOME_ENUM_VALUE, source);
-
-        // Test a null value
-        source = converter.convertToEntityAttribute(null);
-        assertNull(source);
-    }
-
-    @Test
-    public void testSerialize() {
-        EnumAccountingSource source = EnumAccountingSource.SOME_ENUM_VALUE;
-        String json = gson.toJson(source);
-        assertEquals("\"" + source.getValue() + "\"", json);
-    }
-
-    @Test
-    public void testDeserialize() {
-        String json = "\"" + EnumAccountingSource.SOME_ENUM_VALUE.getValue() + "\"";
-        EnumAccountingSource source = gson.fromJson(json, EnumAccountingSource.class);
-        assertEquals(EnumAccountingSource.SOME_ENUM_VALUE, source);
-    }
 }
