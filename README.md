@@ -1,43 +1,9 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-public class PaymentCommissionServiceImplTest {
-
-    @Mock
-    private InstitutionPaymentMethodService instPaymentMethodService;
-
-    @Mock
-    private InstitutionDebtTypeService institutionDebtTypeService;
-
-    @Mock
-    private CommissionService commissionService;
-
-    @Mock
-    private ProvisionService provisionService;
-
-    @InjectMocks
-    private PaymentCommissionServiceImpl paymentCommissionServiceImpl;
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
-    @Test
+   @Test
     public void testPerformCommission_Success() throws Exception {
         // Prepare mock objects
         ProvisionDTO provisionDTO = new ProvisionDTO();
-        provisionDTO.setInstitutionDebtTypeId("debtTypeId");
-        provisionDTO.setCustomerNo("customerNo");
+        provisionDTO.setInstitutionDebtTypeId(123L);
+        provisionDTO.setCustomerNo(123L);
 
         InstitutionDebtTypeDTO debtTypeDTO = new InstitutionDebtTypeDTO();
         debtTypeDTO.setInstitution(new InstitutionDTO());
@@ -59,9 +25,9 @@ public class PaymentCommissionServiceImplTest {
 
         // Prepare request DTO
         CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
-        requestDTO.setBillProvisionId("billProvisionId");
+        requestDTO.setBillProvisionId(123L);
         requestDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT.getValue());
-        requestDTO.setPaymentAmount(100.0);
+        requestDTO.setPaymentAmount(BigDecimal.TEN);
         requestDTO.setPaymentCurrency("TRY");
         requestDTO.setChannelCode("channelCode");
         requestDTO.setAccountBranchCode("branchCode");
@@ -71,14 +37,14 @@ public class PaymentCommissionServiceImplTest {
 
         // Verify the result
         assertEquals(responseCommissionInformation, result);
-        verify(provisionService).updateCommissionData(anyString(), anyString());
+        verify(provisionService).updateCommissionData(anyString(), Long.valueOf(anyString()));
     }
 
     @Test
     public void testPerformCommission_NoInstitutionPaymentMethod() throws Exception {
         // Prepare mock objects
         ProvisionDTO provisionDTO = new ProvisionDTO();
-        provisionDTO.setInstitutionDebtTypeId("debtTypeId");
+        provisionDTO.setInstitutionDebtTypeId(123L);
 
         InstitutionDebtTypeDTO debtTypeDTO = new InstitutionDebtTypeDTO();
         debtTypeDTO.setInstitution(new InstitutionDTO());
@@ -93,7 +59,7 @@ public class PaymentCommissionServiceImplTest {
 
         // Prepare request DTO
         CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
-        requestDTO.setBillProvisionId("billProvisionId");
+        requestDTO.setBillProvisionId(123L);
         requestDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT.getValue());
 
         // Call the method under test
@@ -101,22 +67,20 @@ public class PaymentCommissionServiceImplTest {
 
         // Verify the result
         assertNull(result);
-    }
-
-    @Test
-    public void testPerformCommission_Exception() throws Exception {
-        // Mock the behavior of services to throw an exception
-        when(provisionService.getProvisionRecord(any())).thenThrow(new RuntimeException());
-
-        // Prepare request DTO
-        CommissionServiceRequestDTO requestDTO = new CommissionServiceRequestDTO();
-        requestDTO.setBillProvisionId("billProvisionId");
-
-        // Call the method under test and expect an exception
-        try {
-            paymentCommissionServiceImpl.performCommission(requestDTO);
-        } catch (BillException e) {
-            assertEquals(EnumBillResult.BILL_EXPENSE_INQUIRY_ERROR, e.getBillResult());
-        }
-    }
 }
+
+
+java.lang.NumberFormatException: For input string: ""
+
+org.mockito.exceptions.misusing.UnfinishedVerificationException: 
+Missing method call for verify(mock) here:
+-> at com.ykb.payments.bill.transaction.payment.service.PaymentCommissionServiceImplTest.testPerformCommission_Success(PaymentCommissionServiceImplTest.java:92)
+
+Example of correct verification:
+    verify(mock).doSomething()
+
+Also, this error might show up because you verify either of: final/private/equals()/hashCode() methods.
+Those methods *cannot* be stubbed/verified.
+Mocking methods declared on non-public parent classes is not supported.
+
+
