@@ -1,104 +1,50 @@
-ExtendWith(MockitoExtension.class)
-public class PaymentEventListenerTest {
+@Service
+@RequiredArgsConstructor
+public class PaymentFacadeImpl implements  PaymentFacade{
 
-    @Mock
-    private PaymentNotificationEventProducer paymentNotificationEventProducer;
+    private final PaymentService paymentService;
+    private final SubscriberService subscriberService;
+    private final InstitutionFeatureService institutionFeatureService;
+    private final BillPaymentRestFacade billPaymentRestFacade;
 
-    @Mock
-    private LimitationService limitationService;
 
-    @Mock
-    private ApplicationContext applicationContext;
-
-    @Mock
-    private SpringUtil springUtil;
-
-    @InjectMocks
-    private PaymentEventListener paymentEventListener;
-
-    private BillPaymentEvent billPaymentEvent;
-    private BillPaymentCancelEvent billPaymentCancelEvent;
-    private CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO;
-    private CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO;
-    private NotifyPaymentLimitationRequest notifyPaymentLimitationRequest;
-    private NotifyInquiryLimitationRequest notifyInquiryLimitationRequest;
-
-    @BeforeEach
-    void setUp() {
-        // SpringUtil appContext ayarlaması
-        when(springUtil.getApplicationContext()).thenReturn(applicationContext);
-        when(applicationContext.getBean(LimitationService.class)).thenReturn(limitationService);
-
-        // Mock event objects
-        billPaymentEvent = mock(BillPaymentEvent.class);
-        billPaymentCancelEvent = mock(BillPaymentCancelEvent.class);
-        creditCardProvisionACKEventDTO = mock(CreditCardProvisionACKEventDTO.class);
-        creditCardProvisionReverseEventDTO = mock(CreditCardProvisionReverseEventDTO.class);
-        notifyPaymentLimitationRequest = mock(NotifyPaymentLimitationRequest.class);
-        notifyInquiryLimitationRequest = mock(NotifyInquiryLimitationRequest.class);
-
-        // Mock necessary methods and behaviors
-        PaymentDTO paymentDTO = mock(PaymentDTO.class);
-        InstitutionDTO institutionDTO = mock(InstitutionDTO.class);
-        ProductDTO productDTO = mock(ProductDTO.class);
-        BillPaymentCancelDTO cancelRecord = mock(BillPaymentCancelDTO.class);
-
-        when(billPaymentEvent.getPaymentDTO()).thenReturn(paymentDTO);
-        when(billPaymentEvent.getInstitutionDTO()).thenReturn(institutionDTO);
-        when(institutionDTO.getProduct()).thenReturn(productDTO);
-        when(billPaymentCancelEvent.getCancelRecord()).thenReturn(cancelRecord);
-
-        // Mock DTO methods
-        when(paymentDTO.getCreatedBy()).thenReturn("testUser");
-        when(paymentDTO.getBranchCode()).thenReturn("branch123");
-        when(paymentDTO.getChannelCode()).thenReturn("channel456");
-        when(paymentDTO.getChannelSessionId()).thenReturn("session789");
-        when(paymentDTO.getChannelTransactionId()).thenReturn("txn123");
-        when(paymentDTO.getInstitutionId()).thenReturn(1L);
-        when(institutionDTO.getInstitutionCode()).thenReturn("instCode");
-        when(productDTO.getCode()).thenReturn("prodCode");
-        when(cancelRecord.getCreatedBy()).thenReturn("cancelUser");
+    @Override
+    public QueryBillsResponse queryBills(QueryBillsRequest queryBillsRequest) throws MicroException {
+        if(isMicroInstitution(queryBillsRequest.getProductCode(),queryBillsRequest.getInstitutionCode())){
+            return paymentService.queryBills(queryBillsRequest);
+        }
+        return billPaymentRestFacade.queryBills(queryBillsRequest);
     }
 
-    @Test
-    void testOnPaymentCreatedNotificationEvent() {
-        paymentEventListener.onPaymentCreatedNotificationEvent(billPaymentEvent);
-
-        verify(paymentNotificationEventProducer, times(1)).sendPaymentNotificationEvent(any(PaymentNotificationEvent.class));
+    @Override
+    public DoBillPaymentResponse doBillPayment(DoBillPaymentRequest doBillPaymentRequest) throws MicroException {
+        if(isMicroInstitution(doBillPaymentRequest.getProductCode(),doBillPaymentRequest.getInstitutionCode())){
+            return paymentService.doBillPayment(doBillPaymentRequest);
+        }
+        return billPaymentRestFacade.doBillPayment(doBillPaymentRequest);
     }
 
-    @Test
-    void testOnPaymentCancelCreatedNotificationEvent() {
-        paymentEventListener.onPaymentCancelCreatedNotificationEvent(billPaymentCancelEvent);
-
-        verify(paymentNotificationEventProducer, times(1)).sendPaymentCancelNotificationEvent(any(PaymentCancelNotificationEvent.class));
+    @Override
+    public CancelBillPaymentResponse cancelBillPayment(CancelBillPaymentRequest cancelBillPaymentRequest) throws MicroException {
+        if(isMicroInstitution(cancelBillPaymentRequest.getProductCode(),cancelBillPaymentRequest.getInstitutionCode())){
+            return paymentService.cancelBillPayment(cancelBillPaymentRequest);
+        }
+        return billPaymentRestFacade.cancelBillPayment(cancelBillPaymentRequest);
     }
 
-    @Test
-    void testOnCreditCardProvisionACKEvent() {
-        paymentEventListener.onCreditCardProvisionACKEvent(creditCardProvisionACKEventDTO);
-
-        verify(paymentNotificationEventProducer, times(1)).sendCreditCardProvisionACKEvent(any(CreditCardProvisionACKEventDTO.class));
+    @Override
+    public GetBillPaymentExpenseResponseDTO getBillPaymentExpense(GetBillPaymentExpenseRequestDTO subscriberValidationRequestDTO) throws MicroException {
+        if(isMicroInstitution(subscriberValidationRequestDTO.getProductCode(),subscriberValidationRequestDTO.getInstitutionCode())){
+            return subscriberService.getBillPaymentExpense(subscriberValidationRequestDTO);
+        }
+        return billPaymentRestFacade.getBillPaymentExpense(subscriberValidationRequestDTO);
     }
 
-    @Test
-    void testOnCreditCardProvisionReverseEvent() {
-        paymentEventListener.onCreditCardProvisionReverseEvent(creditCardProvisionReverseEventDTO);
-
-        verify(paymentNotificationEventProducer, times(1)).sendCreditCardProvisionReverseEvent(any(CreditCardProvisionReverseEventDTO.class));
-    }
-
-    @Test
-    void testOnNotifyPaymentLimitation() {
-        paymentEventListener.onNotifyPaymentLimitation(notifyPaymentLimitationRequest);
-
-        verify(limitationService, times(1)).notifyPaymentLimitation(any(NotifyPaymentLimitationRequest.class));
-    }
-
-    @Test
-    void testOnNotifyInquiryLimitation() {
-        paymentEventListener.onNotifyPaymentLimitation(notifyInquiryLimitationRequest);
-
-        verify(limitationService, times(1)).notifyInquiryLimitation(any(NotifyInquiryLimitationRequest.class));
+    private boolean isMicroInstitution(String product,String institution ){
+        String featureValue = institutionFeatureService.getFeatureValue(EnumFeatureCode.MICRO_INSTITUTION,institution,product);
+        if(featureValue != null && featureValue.equals(EnumYesNo.YES.getValue())){
+            return  true;
+        }
+        return false;
     }
 }
