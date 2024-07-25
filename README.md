@@ -1,26 +1,51 @@
-	@Override
-	public DoBillPaymentResponse doBillPayment(DoBillPaymentRequest doBillPaymentRequest) throws MicroException {
+   @Test
+    void doBillPayment_shouldReturnDoBillPaymentResponse_whenProcessManagerExecutesSuccessfully() throws MicroException {
+        // Given
+        DoBillPaymentRequest request = new DoBillPaymentRequest();
+        BillPaymentProcessInput processInput = new BillPaymentProcessInput();
+        BillPaymentProcessOutput processOutput = new BillPaymentProcessOutput();
+        DoBillPaymentResponse expectedResponse = new DoBillPaymentResponse();
 
-		BillPaymentProcessInput billPaymentProcessInput = processExecutionMapper
-				.toBillPaymentProcessInput(doBillPaymentRequest);
-		billPaymentProcessInput.setChannelSessionId(requestContext.getChannelSessionId());
-		billPaymentProcessInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-		BillPaymentProcessOutput billPaymentProcessOutput = (BillPaymentProcessOutput) processManager
-				.executeProcess(billPaymentProcessInput);
-		DoBillPaymentResponse doBillPaymentResponse = new DoBillPaymentResponse();
-		doBillPaymentResponse.setBillId(billPaymentProcessOutput.getBillId());
-		doBillPaymentResponse.setContractNumber(billPaymentProcessOutput.getContractNo());
-		return doBillPaymentResponse;
-	}
+        processOutput.setBillId("12345");
+        processOutput.setContractNo("contract123");
+        expectedResponse.setBillId("12345");
+        expectedResponse.setContractNumber("contract123");
 
-	@Override
-	public CancelBillPaymentResponse cancelBillPayment(CancelBillPaymentRequest cancelBillPaymentRequest)
-			throws MicroException {
-		BillPaymentReverseProcessInput billPaymentReverseProcessInput = processExecutionMapper
-				.toBillPaymentReverseProcessInput(cancelBillPaymentRequest);
-		billPaymentReverseProcessInput.setChannelSessionId(requestContext.getChannelSessionId());
-		billPaymentReverseProcessInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-		processManager.executeProcess(billPaymentReverseProcessInput);
-		CancelBillPaymentResponse cancelBillPaymentResponse = new CancelBillPaymentResponse();
-		return cancelBillPaymentResponse;
-	}
+        when(processExecutionMapper.toBillPaymentProcessInput(request)).thenReturn(processInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
+        when(processManager.executeProcess(processInput)).thenReturn(processOutput);
+
+        // When
+        DoBillPaymentResponse actualResponse = paymentService.doBillPayment(request);
+
+        // Then
+        assertEquals(expectedResponse.getBillId(), actualResponse.getBillId());
+        assertEquals(expectedResponse.getContractNumber(), actualResponse.getContractNumber());
+        verify(processExecutionMapper).toBillPaymentProcessInput(request);
+        verify(requestContext).getChannelSessionId();
+        verify(requestContext).getChannelTransactionId();
+        verify(processManager).executeProcess(processInput);
+    }
+
+    @Test
+    void cancelBillPayment_shouldReturnCancelBillPaymentResponse_whenProcessManagerExecutesSuccessfully() throws MicroException {
+        // Given
+        CancelBillPaymentRequest request = new CancelBillPaymentRequest();
+        BillPaymentReverseProcessInput reverseProcessInput = new BillPaymentReverseProcessInput();
+        CancelBillPaymentResponse expectedResponse = new CancelBillPaymentResponse();
+
+        when(processExecutionMapper.toBillPaymentReverseProcessInput(request)).thenReturn(reverseProcessInput);
+        when(requestContext.getChannelSessionId()).thenReturn("sessionId");
+        when(requestContext.getChannelTransactionId()).thenReturn("transactionId");
+
+        // When
+        CancelBillPaymentResponse actualResponse = paymentService.cancelBillPayment(request);
+
+        // Then
+        assertEquals(expectedResponse, actualResponse);
+        verify(processExecutionMapper).toBillPaymentReverseProcessInput(request);
+        verify(requestContext).getChannelSessionId();
+        verify(requestContext).getChannelTransactionId();
+        verify(processManager).executeProcess(reverseProcessInput);
+    }
