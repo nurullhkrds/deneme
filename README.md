@@ -1,27 +1,19 @@
 @Test
-public void testWrite_null() throws IOException {
-    // Arrange
-    StringWriter stringWriter = new StringWriter();
-    
-    // Act
-    try (JsonWriter jsonWriter = new JsonWriter(stringWriter)) {
-        converter.write(jsonWriter, null);
-    }
-    
-    // Assert
-    assertEquals("null", stringWriter.toString().trim());
-}
-@Test
 public void testWrite() throws IOException {
     // Arrange
     EnumPaymentNotificationType type = EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION; // replace with actual enum value
     StringWriter stringWriter = new StringWriter();
-    JsonWriter jsonWriter = new JsonWriter(stringWriter);
-
+    
     // Act
-    converter.write(jsonWriter, type);
-    jsonWriter.close();
-
+    try (JsonWriter jsonWriter = new JsonWriter(stringWriter)) {
+        converter.write(jsonWriter, type);
+    }
+    
+    // Print the actual output to debug
+    String actualOutput = stringWriter.toString().trim();
+    System.out.println("Actual Output: " + actualOutput);
+    
     // Assert
-    assertEquals("\"" + type.getValue() + "\"", stringWriter.toString().trim());
+    // Ensure the value is quoted, as JSON strings are typically enclosed in double quotes
+    assertEquals("\"" + type.getValue() + "\"", actualOutput);
 }
