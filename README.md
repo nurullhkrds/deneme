@@ -1,15 +1,25 @@
-public final class ProcessConstant {
+public class ProcessConstantTest {
 
-	public static List<Class<? extends IProcess>> getProcessClassList() {
-		return List.of(QueryBillsProcess.class, BillPaymentProcess.class, BillPaymentReverseProcess.class,
-				NotifyPaymentProcess.class, NotifyPaymentCancelProcess.class);
-	}
+    @Test
+    public void shouldReturnProcessClassList() {
+        List<Class<? extends IProcess>> expectedClassList = List.of(
+            QueryBillsProcess.class,
+            BillPaymentProcess.class,
+            BillPaymentReverseProcess.class,
+            NotifyPaymentProcess.class,
+            NotifyPaymentCancelProcess.class
+        );
 
-	public static class ProcessParameterKey {
-		public static final String KEY_CHANNEL_CODE = "CHANNEL_CODE";
-		public static final String KEY_START_TIME = "START_TIME";
-		public static final String KEY_FINISH_TIME = "FINISH_TIME";
-		public static final String KEY_ID = "ID";
-	}
+        List<Class<? extends IProcess>> actualClassList = ProcessConstant.getProcessClassList();
+        
+        assertIterableEquals(expectedClassList, actualClassList);
+    }
 
+    @Test
+    public void shouldHaveCorrectProcessParameterKeys() {
+        assertEquals("CHANNEL_CODE", ProcessConstant.ProcessParameterKey.KEY_CHANNEL_CODE);
+        assertEquals("START_TIME", ProcessConstant.ProcessParameterKey.KEY_START_TIME);
+        assertEquals("FINISH_TIME", ProcessConstant.ProcessParameterKey.KEY_FINISH_TIME);
+        assertEquals("ID", ProcessConstant.ProcessParameterKey.KEY_ID);
+    }
 }
