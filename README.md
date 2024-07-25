@@ -1,93 +1,64 @@
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
+@Test
+void testDoAccounting_CardProvisionGuidNull() {
+    createAccountingDTO.setDummyMerchant(true);
+    CardProvisionResponse response = new CardProvisionResponse();
+    response.setGuid(null);
+    when(cardProvisionService.doProvision(any(CardProvisionRequest.class))).thenReturn(response);
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import static org.junit.jupiter.api.Assertions.*;
+    CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
 
-@ExtendWith(MockitoExtension.class)
-public class CardProvisionServiceImplTest {
+    assertFalse(result.isSuccess());
+    assertEquals(EnumBillResult.BILL_CREDIT_CARD_PROVISION_ERROR, result.getError());
+}
 
-    @Mock
-    private SwtSwitchIntegrationService cardProvisionService;
+@Test
+void testDoAccounting_CardProvisionThrowsException() {
+    createAccountingDTO.setDummyMerchant(true);
+    when(cardProvisionService.doProvision(any(CardProvisionRequest.class))).thenThrow(new RuntimeException());
 
-    @Mock
-    private ProvisionNextService provisionNextService;
+    CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
 
-    @Mock
-    private AccountingUtilServiceImpl accountingUtilServiceImpl;
+    assertFalse(result.isSuccess());
+    assertEquals(EnumBillResult.BILL_CREDIT_CARD_PROVISION_ERROR, result.getError());
+}
 
-    @Mock
-    private AccountingUtil accountingDateUtil;
+@Test
+void testDoAccounting_GLAccountingThrowsException() {
+    createAccountingDTO.setDummyMerchant(true);
+    when(cardProvisionService.doProvision(any(CardProvisionRequest.class))).thenReturn(new CardProvisionResponse());
+    when(provisionNextService.makeProvision(any(MakeProvisionRequest.class))).thenThrow(new RuntimeException());
 
-    @InjectMocks
-    private CardProvisionServiceImpl cardProvisionServiceImpl;
+    CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
 
-    private CreateAccountingDTO createAccountingDTO;
-    private CreateAccountingResultDTO createAccountingResultDTO;
+    assertFalse(result.isSuccess());
+    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, result.getError());
+}
 
-    @BeforeEach
-    void setUp() {
-        createAccountingDTO = new CreateAccountingDTO();
-        // Set up createAccountingDTO with necessary test data
-    }
+@Test
+void testHandleException() {
+    CreateAccountingResultDTO resultDTO = new CreateAccountingResultDTO();
+    cardProvisionServiceImpl.handleException(12345L, resultDTO);
 
-    @Test
-    void testDoAccounting_SuccessfulDummyMerchant() {
-        createAccountingDTO.setDummyMerchant(true);
-        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-                .thenReturn(new CardProvisionResponse(/* success response */));
+    assertFalse(resultDTO.isSuccess());
+    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+}
 
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
+@Test
+void testGetBlockDayCount() {
+    InstitutionChannelPymMethodDTO methodDTO = new InstitutionChannelPymMethodDTO();
+    InstitutionChnnlPymMthdPscDTO pscDTO = new InstitutionChnnlPymMthdPscDTO();
 
-        assertTrue(result.isSuccess());
-        // Add more assertions as needed
-        verify(accountingUtilServiceImpl, times(1)).getContractNumber();
-    }
+    methodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.DAILY);
+    when(pscDTO.getBlockDayCount(anyInt())).thenReturn(5);
+    int blockDayCount = cardProvisionServiceImpl.getBlockDayCount(methodDTO, pscDTO);
+    assertEquals(5, blockDayCount);
 
-    @Test
-    void testDoAccounting_SuccessfulRealMerchant() {
-        createAccountingDTO.setDummyMerchant(false);
-        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-                .thenReturn(new CardProvisionResponse(/* success response */));
-        when(accountingUtilServiceImpl.getContractNumber()).thenReturn(123456L);
+    methodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.CHANNEL);
+    when(methodDTO.getBlockDayCount()).thenReturn(10);
+    blockDayCount = cardProvisionServiceImpl.getBlockDayCount(methodDTO, pscDTO);
+    assertEquals(10, blockDayCount);
 
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-
-        assertTrue(result.isSuccess());
-        assertEquals(123456L, result.getContractNo());
-    }
-
-    @Test
-    void testDoAccounting_CardProvisionFailure() {
-        createAccountingDTO.setDummyMerchant(true);
-        doThrow(new RuntimeException()).when(cardProvisionService).doProvision(any(CardProvisionRequest.class));
-
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-
-        assertFalse(result.isSuccess());
-        // Add more assertions as needed
-    }
-
-    @Test
-    void testDoAccounting_GLAccountingFailure() {
-        createAccountingDTO.setDummyMerchant(true);
-        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
-                .thenReturn(new CardProvisionResponse(/* success response */));
-        doThrow(new RuntimeException()).when(provisionNextService).makeProvision(any(MakeProvisionRequest.class));
-
-        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
-
-        assertFalse(result.isSuccess());
-        // Add more assertions as needed
-    }
-
-    // Add more tests for different scenarios
+    methodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.NO_VALOR);
+    blockDayCount = cardProvisionServiceImpl.getBlockDayCount(methodDTO, pscDTO);
+    assertEquals(0, blockDayCount);
 }
