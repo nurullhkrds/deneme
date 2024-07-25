@@ -1,10 +1,7 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.process.payment.BillPaymentReverseProcessInput.setChannelSessionId(String)" because "billPaymentReverseProcessInput" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.response.ResponseGetCustomerPaidBillList.getStatus()" because "harmoniResponse" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.process.query.QueryBillProcessInput.setChannelSessionId(String)" because "queryBillProcessInput" is null
+org.opentest4j.AssertionFailedError: expected: not <null>
+java.lang.IllegalStateException: Failed to retrieve PlatformTransactionManager for @Transactional test: [DefaultTestContext@d325518 testClass = PaymentServiceImplTest, testInstance = com.ykb.payments.bill.transaction.payment.service.PaymentServiceImplTest@3b481bf5, testMethod = testUpdateStatus@PaymentServiceImplTest, testException = [null], mergedContextConfiguration = [MergedContextConfiguration@2233cac0 testClass = PaymentServiceImplTest, locations = '{}', classes = '{}', contextInitializerClasses = '[]', activeProfiles = '{}', propertySourceLocations = '{}', propertySourceProperties = '{}', contextCustomizers = set[org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@5ab9b447, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@6bb7cce7, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.autoconfigure.actuate.metrics.MetricsExportContextCustomizerFactory$DisableMetricExportContextCustomizer@1bf0f6f6, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@0, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizerFactory$Customizer@5d10455d], contextLoader = 'org.springframework.test.context.support.DelegatingSmartContextLoader', parent = [null]], attributes = map['org.springframework.test.context.event.ApplicationEventsTestExecutionListener.recordApplicationEvents' -> false, 'org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener.mocks' -> org.mockito.internal.configuration.InjectingAnnotationEngine$$Lambda$4java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.process.payment.BillPaymentProcessInput.setChannelSessionId(String)" because "billPaymentProcessInput" is null
+78/0x0000000801371ce0@67fb5025]]
+org.opentest4j.AssertionFailedError: expected: not <null>
