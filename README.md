@@ -1,133 +1,266 @@
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+@Getter
+@Setter
+public abstract class AbstractProcess implements IProcess {
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
-import static org.junit.Assert.*;
+	protected ProcessExecutionOutput executionOutput;
+	protected ProcessChannelDTO processChannel;
+	protected ProcessLogDTO logDTO;
+	protected InstitutionDTO institution;
+	protected InstitutionDebtTypeDTO institutionDebtType;
+	protected InstitutionChannelDTO institutionChannel;
+	protected InstitutionProcessDTO institutionProcess;
+	protected InstitutionChannelProcessDTO institutionChannelProcess;
 
-@RunWith(MockitoJUnitRunner.class)
-public class NotifyPaymentProcessTest {
+	protected String channelSessionId;
+	protected String channelTransactionId;
 
-    @Mock
-    private PaymentService paymentService;
+	protected String channelCode;
+	protected String agentCode;
+	protected String branchCode;
 
-    @Mock
-    private PaymentNotificationService paymentNotificationService;
+	protected String productCode;
+	protected String institutionCode;
+	// Null gelmesi durumunda default debt type olcak.
+	protected Long institutionDebtTypeId;
 
-    @Mock
-    private AdapterService adapterService;
+	protected ProcessService processService;
+	private EnumProcessCode processCode;
+	protected EnumBillResult error = null;
 
-    @Mock
-    private InstitutionFeatureService institutionFeatureService;
+	protected Map<String, Object> dataPack;
+	private ProcessStepHandler stepHandler;
 
-    @InjectMocks
-    private NotifyPaymentProcess notifyPaymentProcess;
+	//Notify process de hata alması durumunda güncelleme yapsın istiyoruz
+	protected Boolean shouldRaiseExceptionOnABillError = true;
+	
+	@Override
+	public void beforeExecuteProcess() throws BillException {
+		String logPrefix = "\t[PM-BE] ";
 
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
+		/**
+		 * Process kanalda tanımlı mı ?
+		 */
+		addStepLog(logPrefix + "process channel found checking");
+		ProcessUtil.validateConditionWithArgs(processChannel != null, EnumBillResult.PROCESS_CHANNEL_NOT_FOUND,
+				channelCode);
+		addStepLog(logPrefix + "process channel found checked.");
 
-    @Test
-    public void testGatherData() throws BillException {
-        NotifyPaymentProcess.GatherData gatherDataStep = notifyPaymentProcess.new GatherData();
+		/**
+		 * process kanalda aktif mi ?
+		 */
+		addStepLog(logPrefix + "process channel activate checking.");
+		ProcessUtil.validateConditionWithArgs(processChannel.getIsActive(), EnumBillResult.PROCESS_CHANNEL_NOT_ACTIVE,
+				channelCode);
+		addStepLog(logPrefix + "process channel activate checked.");
 
-        when(institutionFeatureService.getFeatureValue(any(), any(), any())).thenReturn("3");
+		/**
+		 * process kanal calisma saat aralığı
+		 */
+		addStepLog(logPrefix + "process channel working time checking.");
+		ProcessUtil.validateConditionWithArgs(
+				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), processChannel.getWorkingStartTime(),
+						processChannel.getWorkingFinishTime()),
+				EnumBillResult.PROCESS_CHANNEL_WORKING_TIME_ERROR,
+				ProcessUtil.formatWorkingTime(processChannel.getWorkingStartTime()),
+				ProcessUtil.formatWorkingTime(processChannel.getWorkingFinishTime()), channelCode);
+		addStepLog(logPrefix + "process channel working time checked.");
 
-        gatherDataStep.executeStep();
+		/**
+		 * Kurum tanımı var mı ?
+		 */
+		addStepLog(logPrefix + "institution found checking.");
+		ProcessUtil.validateCondition(institution != null, EnumBillResult.INSTITUTION_NOT_FOUND);
+		addStepLog(logPrefix + "institution found checked.");
 
-        assertNotNull(notifyPaymentProcess.notificationTryCount);
-        assertNotNull(notifyPaymentProcess.paymentNotificationService);
-        assertNotNull(notifyPaymentProcess.paymentService);
-        assertNotNull(notifyPaymentProcess.adapterService);
-    }
+		/**
+		 * Kurum aktif mi
+		 */
+		addStepLog(logPrefix + "institution active checking.");
+		ProcessUtil.validateCondition(institution.getIsActive(), EnumBillResult.INSTITUTION_NOT_ACTIVE);
+		addStepLog(logPrefix + "institution active checked.");
 
-    @Test
-    public void testFetchPaymentNotificationRecordWithLock() throws BillException {
-        NotifyPaymentProcess.FetchPaymentNotificationRecordWithLock step = notifyPaymentProcess.new FetchPaymentNotificationRecordWithLock();
+		/**
+		 * Kurumun process tanımı var mı ?
+		 */
+		addStepLog(logPrefix + "institution process found checking.");
+		ProcessUtil.validateCondition(institutionProcess != null, EnumBillResult.INSTITUTION_PROCESS_NOT_FOUND);
+		addStepLog(logPrefix + "institution process found checked.");
 
-        PaymentNotification mockNotification = new PaymentNotification();
-        mockNotification.setNotificationType(EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION);
-        mockNotification.setNotificationStatus(EnumPaymentNotificationStatu.ERROR);
-        mockNotification.setRetryCount(0);
-        when(paymentNotificationService.findPaymentNotificationWithLock(anyLong())).thenReturn(mockNotification);
+		/**
+		 * Kurumun process'i aktif mi ?
+		 */
+		addStepLog(logPrefix + "institution process activate checking.");
+		ProcessUtil.validateCondition(institutionProcess.getIsActive(),
+				EnumBillResult.INSTITUTION_PROCESS_NOT_ACTIVE);
+		addStepLog(logPrefix + "institution process activate checked.");
 
-        notifyPaymentProcess.paymentNotificationId = 1L;
-        step.executeStep();
+		/**
+		 * Kurumun kanalında process tanımı var mı ?
+		 */
+		addStepLog(logPrefix + "institution process channel found checking.");
+		ProcessUtil.validateConditionWithArgs(institutionChannelProcess != null,
+				EnumBillResult.INSTITUTION_PROCESS_CHANNEL_NOT_FOUND, channelCode);
+		addStepLog(logPrefix + "institution process channel found checked.");
 
-        assertNotNull(notifyPaymentProcess.paymentNotification);
-    }
+		/**
+		 * Kurumun kanalında process tanımı aktif mi ?
+		 */
+		addStepLog(logPrefix + "institution process channel activate checking.");
+		ProcessUtil.validateConditionWithArgs(institutionChannelProcess.getIsActive(),
+				EnumBillResult.INSTITUTION_PROCESS_CHANNEL_NOT_ACTIVE, channelCode);
+		addStepLog(logPrefix + "institution process channel activate checked.");
 
-    @Test
-    public void testFetchPaymentRecordWithLock() throws BillException {
-        NotifyPaymentProcess.FetchPaymentRecordWithLock step = notifyPaymentProcess.new FetchPaymentRecordWithLock();
+		/**
+		 * Kurumun kanalında tanımlı processin calisma saat araliginda mi ?
+		 */
+		addStepLog(logPrefix + "institution process channel working time checking.");
+		ProcessUtil.validateConditionWithArgs(
+				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), institutionChannelProcess.getWorkingStartTime(),
+						institutionChannelProcess.getWorkingFinishTime()),
+				EnumBillResult.INSTITUTION_PROCESS_CHANNEL_WORKING_TIME_ERROR,
+				ProcessUtil.formatWorkingTime(institutionChannelProcess.getWorkingStartTime()),
+				ProcessUtil.formatWorkingTime(institutionChannelProcess.getWorkingFinishTime()), channelCode);
+		addStepLog(logPrefix + "institution process channel working time checked.");
 
-        Payment mockPayment = new Payment();
-        when(paymentService.findPaymentByIdWithLock(anyLong())).thenReturn(mockPayment);
+		/**
+		 * Kurumunun kanal tanımı var mı ?
+		 */
+		addStepLog(logPrefix + "institution channel found checking.");
+		ProcessUtil.validateCondition(institutionChannel != null, EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND);
+		addStepLog(logPrefix + "institution channel found checked.");
 
-        notifyPaymentProcess.paymentId = 1L;
-        step.executeStep();
+		/**
+		 * Kurumun kanal tanımı aktif mi
+		 */
+		addStepLog(logPrefix + "institution channel active checking.");
+		ProcessUtil.validateCondition(institutionChannel.getIsActive(),
+				EnumBillResult.INSTITUTION_CHANNEL_NOT_ACTIVE);
+		addStepLog(logPrefix + "institution channel active checked.");
 
-        assertNotNull(notifyPaymentProcess.payment);
-    }
+		/**
+		 * Kurumun kanal çalışma aralığında mı
+		 */
+		addStepLog(logPrefix + "institution channel working time checking.");
+		ProcessUtil.validateConditionWithArgs(
+				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), institutionChannel.getWorkingStartTime(),
+						institutionChannel.getWorkingFinishTime()),
+				EnumBillResult.INSTITUTION_WORKING_TIME_ERROR,
+				ProcessUtil.formatWorkingTime(institutionChannel.getWorkingStartTime()),
+				ProcessUtil.formatWorkingTime(institutionChannel.getWorkingFinishTime()), channelCode);
+		addStepLog(logPrefix + "institution channel working time checked.");
 
-    @Test
-    public void testCallInstitutionExternalService() throws BillException {
-        NotifyPaymentProcess.CallInstitutionExternalService step = notifyPaymentProcess.new CallInstitutionExternalService();
+		/**
+		 * Kurum borç tipi tanımlı mı
+		 */
+		addStepLog(logPrefix + "institution debt type found checking.");
+		ProcessUtil.validateCondition(institutionDebtType != null, EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_FOUND);
+		addStepLog(logPrefix + "institution debt type found checked.");
 
-        NotifyPaymentAdapterResponse mockResponse = new NotifyPaymentAdapterResponse();
-        mockResponse.setStatus(BillPaymentsConsts.RESPONSE_STATUS.SUCCESS);
-        when(adapterService.notifyPayment(any(), any(), any())).thenReturn(mockResponse);
+		/**
+		 * kurum borç tipi aktif mi?
+		 */
+		addStepLog(logPrefix + "institution debt type active checking.");
+		ProcessUtil.validateConditionWithArgs(institutionDebtType.getIsActive(),
+				EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_ACTIVE, institutionDebtTypeId);
+		addStepLog(logPrefix + "institution debt type active checked.");
+	}
 
-        Payment mockPayment = new Payment();
-        mockPayment.setCreateDate(LocalDateTime.now());
-        mockPayment.setInstitutionDebtTypeId(1L);
-        notifyPaymentProcess.payment = mockPayment;
+	@Override
+	public void afterExecuteProcess() throws BillException {
+		boolean errorIsNotNullAndNotSuccess = this.error != null && !EnumBillResult.SUCCESS.equals(error);
+		if (errorIsNotNullAndNotSuccess && shouldRaiseExceptionOnABillError) {
+			ProcessUtil.raiseBillException(error);
+		}
 
-        step.executeStep();
+		prepareExecutionOutput();
+		String responseData1 = logDTO.getResponseData1();
+		responseData1 = responseData1.concat("\n------OUTPUT-------\n").concat(executionOutput.toString());
+		logDTO.setResponseData1(responseData1);
+		logDTO.setResultCode(errorIsNotNullAndNotSuccess ? error.getCode().toString() : EnumBillResult.SUCCESS.getCode().toString());
+		logDTO.setResultText(errorIsNotNullAndNotSuccess ? error.getExplanation().toString() : EnumBillResult.SUCCESS.getExplanation());
+		logDTO.setReturnType(errorIsNotNullAndNotSuccess ? EnumLoggingResultType.ERROR.getExplanation() : EnumLoggingResultType.SUCCESS.getExplanation());
+	}
 
-        assertNotNull(notifyPaymentProcess.notifyPaymentResponse);
-    }
+	@Override
+	public void initProcess(ProcessExecutionInput input, ProcessLogDTO logDTO) {
+		this.logDTO = logDTO;
+		stepHandler = new ProcessStepHandler();
 
-    @Test
-    public void testUpdatePaymentNotificationRecord() throws BillException {
-        NotifyPaymentProcess.UpdatePaymentNotificationRecord step = notifyPaymentProcess.new UpdatePaymentNotificationRecord();
+		processCode = input.getProcessCode();
+		productCode = input.getProductCode();
+		institutionCode = input.getInstitutionCode();
 
-        NotifyPaymentAdapterResponse mockResponse = new NotifyPaymentAdapterResponse();
-        mockResponse.setStatus(BillPaymentsConsts.RESPONSE_STATUS.SUCCESS);
-        notifyPaymentProcess.notifyPaymentResponse = mockResponse;
+		channelSessionId = input.getChannelSessionId();
+		channelTransactionId = input.getChannelTransactionId();
+		channelCode = input.getChannelCode();
+		agentCode = input.getAgentCode();
+		branchCode = input.getBranchCode();
+		institutionDebtTypeId = input.getInstitutionDebtTypeId();
 
-        PaymentNotification mockNotification = new PaymentNotification();
-        notifyPaymentProcess.paymentNotification = mockNotification;
+		processChannel = processService.getProcessChannel(processCode.getCode(), channelCode);
+		institution = processService.getInstitutionForProcess(productCode, institutionCode);
 
-        step.executeStep();
 
-        verify(paymentNotificationService).updatePaymentNotification(any(PaymentNotification.class));
-    }
+		institutionDebtType = processService.getInstitutionDebtTypeForProcess(productCode, institutionCode,institutionDebtTypeId);
+		institutionDebtTypeId = institutionDebtType.getId() ;
+		institutionChannel = processService.getInstitutionChannelForProcess(institutionDebtTypeId, channelCode);
+		institutionProcess = processService.getInstitutionProcess(productCode, institutionCode, processCode.getCode());
+		institutionChannelProcess = processService.getInstitutionChannelProcess(institutionDebtTypeId,
+				processCode.getCode(), channelCode);
 
-    @Test
-    public void testUpdatePaymentRecord() throws BillException {
-        NotifyPaymentProcess.UpdatePaymentRecord step = notifyPaymentProcess.new UpdatePaymentRecord();
+		// TODO: deep copy olmasına dikkat et
+		dataPack = new HashMap<>(input.getDataPack());
+		logDTO.setInstitutionId(institution != null ? institution.getId() : null);
+		logDTO.setInstitutionDebtTypeId(institutionDebtTypeId != null ? institutionDebtTypeId : null);
+	}
 
-        NotifyPaymentAdapterResponse mockResponse = new NotifyPaymentAdapterResponse();
-        NotifiedBillAdapterDTO notifiedBill = new NotifiedBillAdapterDTO();
-        mockResponse.setStatus(BillPaymentsConsts.RESPONSE_STATUS.SUCCESS);
-        mockResponse.setNotifiedBill(notifiedBill);
-        notifyPaymentProcess.notifyPaymentResponse = mockResponse;
+	@Override
+	public ProcessExecutionOutput getProcessExecutionOutput() throws BillException {
+		return this.executionOutput;
+	}
 
-        Payment mockPayment = new Payment();
-        notifyPaymentProcess.payment = mockPayment;
+	private class ProcessStepHandler {
 
-        step.executeStep();
+		private List<ProcessStep> flowList;
 
-        verify(paymentService).updatePayment(any(Payment.class));
-    }
+		private ProcessStepHandler() {
+			this.flowList = new ArrayList<>();
+		}
 
-    // Diğer dahili sınıfların testleri de benzer şekilde yazılabilir.
+		private void addFlow(ProcessStep step) {
+			flowList.add(step);
+		}
+
+		private void executeFlow() throws BillException {
+
+			for (ProcessStep step : flowList) {
+				if (error == null || error.equals(EnumBillResult.SUCCESS)) {
+					addStepLog("\t\t[PM-EP]" + step.getStepName() + " started.");
+					step.executeStep();
+					addStepLog("\t\t[PM-EP]" + step.getStepName() + " finished.");
+				} else {
+					addStepLog("\t[PM-EP]-[ERROR_STATE: - "+ error.getCode().toString() + "]"+ step.getStepName());
+				}
+			}
+
+		}
+	}
+
+	private void addStepLog(String log) {
+		LogUtil.appendProcessLog(logDTO, log);
+	}
+
+	protected void addProcessStep(ProcessStep step) {
+		this.stepHandler.addFlow(step);
+	}
+
+	protected void executeSteps() throws BillException {
+		this.stepHandler.executeFlow();
+	}
+
+	protected  boolean isOnlineProcess(){
+		return  institutionProcess.getIsOnline();
+	}
+	
+	protected abstract void prepareExecutionOutput();
 }
