@@ -1,31 +1,132 @@
-public class ReturnMapCriteria {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
-    public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
-        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
-            if (returnMapCode == null || returnMapCode.isEmpty()) {
-                return cb.conjunction();
-            }
-            return cb.equal(root.get("returnMapCode"), returnMapCode);
-        };
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.jpa.domain.Specification;
+
+public class ReturnMapCriteriaTest {
+
+    @Mock
+    private Root<ReturnMap> root;
+    
+    @Mock
+    private CriteriaQuery<?> query;
+    
+    @Mock
+    private CriteriaBuilder cb;
+    
+    @Mock
+    private Predicate predicate;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    public static Specification<ReturnMap> hasBankErrorCode(String bankReturnCode) {
-        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
-            if (bankReturnCode == null || bankReturnCode.isEmpty()) {
-                return cb.conjunction();
-            }
-            return cb.equal(root.get("bankReturnCode"), bankReturnCode);
-        };
+    @Test
+    public void testHasReturnMapCode_withValidCode() {
+        String returnMapCode = "validCode";
+        when(cb.equal(root.get("returnMapCode"), returnMapCode)).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasReturnMapCode(returnMapCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
     }
 
-    public static Specification<ReturnMap> hasInstitutionErrorCode(String institutionReturnCode) {
-        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
-            if (institutionReturnCode == null || institutionReturnCode.isEmpty()) {
-                return cb.conjunction();
-            }
-            return cb.equal(root.get("institutionReturnCode"), institutionReturnCode);
-        };
+    @Test
+    public void testHasReturnMapCode_withNullCode() {
+        String returnMapCode = null;
+        when(cb.conjunction()).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasReturnMapCode(returnMapCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
     }
 
+    @Test
+    public void testHasReturnMapCode_withEmptyCode() {
+        String returnMapCode = "";
+        when(cb.conjunction()).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasReturnMapCode(returnMapCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
+
+    @Test
+    public void testHasBankErrorCode_withValidCode() {
+        String bankReturnCode = "validCode";
+        when(cb.equal(root.get("bankReturnCode"), bankReturnCode)).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
+
+    @Test
+    public void testHasBankErrorCode_withNullCode() {
+        String bankReturnCode = null;
+        when(cb.conjunction()).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
+
+    @Test
+    public void testHasBankErrorCode_withEmptyCode() {
+        String bankReturnCode = "";
+        when(cb.conjunction()).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
+
+    @Test
+    public void testHasInstitutionErrorCode_withValidCode() {
+        String institutionReturnCode = "validCode";
+        when(cb.equal(root.get("institutionReturnCode"), institutionReturnCode)).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
+
+    @Test
+    public void testHasInstitutionErrorCode_withNullCode() {
+        String institutionReturnCode = null;
+        when(cb.conjunction()).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
+
+    @Test
+    public void testHasInstitutionErrorCode_withEmptyCode() {
+        String institutionReturnCode = "";
+        when(cb.conjunction()).thenReturn(predicate);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(predicate, result);
+    }
 }
