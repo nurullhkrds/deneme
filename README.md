@@ -1,87 +1,11 @@
-import static org.mockito.Mockito.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-@ExtendWith(MockitoExtension.class)
-public class PaymentEventListenerTest {
-
-    @Mock
-    private PaymentNotificationEventProducer paymentNotificationEventProducer;
-
-    @Mock
-    private LimitationService limitationService;
-
-    @InjectMocks
-    private PaymentEventListener paymentEventListener;
-
-    private BillPaymentEvent billPaymentEvent;
-    private BillPaymentCancelEvent billPaymentCancelEvent;
-    private CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO;
-    private CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO;
-    private NotifyPaymentLimitationRequest notifyPaymentLimitationRequest;
-    private NotifyInquiryLimitationRequest notifyInquiryLimitationRequest;
-
-    @BeforeEach
-    void setUp() {
-        // Mock event objects
-        billPaymentEvent = mock(BillPaymentEvent.class);
-        billPaymentCancelEvent = mock(BillPaymentCancelEvent.class);
-        creditCardProvisionACKEventDTO = mock(CreditCardProvisionACKEventDTO.class);
-        creditCardProvisionReverseEventDTO = mock(CreditCardProvisionReverseEventDTO.class);
-        notifyPaymentLimitationRequest = mock(NotifyPaymentLimitationRequest.class);
-        notifyInquiryLimitationRequest = mock(NotifyInquiryLimitationRequest.class);
-
-        // Mock other necessary methods and behaviors
-        when(billPaymentEvent.getPaymentDTO()).thenReturn(mock(PaymentDTO.class));
-        when(billPaymentEvent.getInstitutionDTO()).thenReturn(mock(InstitutionDTO.class));
-    }
-
-    @Test
-    void testOnPaymentCreatedNotificationEvent() {
-        paymentEventListener.onPaymentCreatedNotificationEvent(billPaymentEvent);
-
-        verify(paymentNotificationEventProducer, times(1)).sendPaymentNotificationEvent(any(PaymentNotificationEvent.class));
-    }
-
-    @Test
-    void testOnPaymentCancelCreatedNotificationEvent() {
-        paymentEventListener.onPaymentCancelCreatedNotificationEvent(billPaymentCancelEvent);
-
-        verify(paymentNotificationEventProducer, times(1)).sendPaymentCancelNotificationEvent(any(PaymentCancelNotificationEvent.class));
-    }
-
-    @Test
-    void testOnCreditCardProvisionACKEvent() {
-        paymentEventListener.onCreditCardProvisionACKEvent(creditCardProvisionACKEventDTO);
-
-        verify(paymentNotificationEventProducer, times(1)).sendCreditCardProvisionACKEvent(any(CreditCardProvisionACKEventDTO.class));
-    }
-
-    @Test
-    void testOnCreditCardProvisionReverseEvent() {
-        paymentEventListener.onCreditCardProvisionReverseEvent(creditCardProvisionReverseEventDTO);
-
-        verify(paymentNotificationEventProducer, times(1)).sendCreditCardProvisionReverseEvent(any(CreditCardProvisionReverseEventDTO.class));
-    }
-
-    @Test
-    void testOnNotifyPaymentLimitation() {
-        paymentEventListener.onNotifyPaymentLimitation(notifyPaymentLimitationRequest);
-
-        verify(limitationService, times(1)).notifyPaymentLimitation(any(NotifyPaymentLimitationRequest.class));
-    }
-
-    @Test
-    void testOnNotifyInquiryLimitation() {
-        paymentEventListener.onNotifyPaymentLimitation(notifyInquiryLimitationRequest);
-
-        verify(limitationService, times(1)).notifyInquiryLimitation(any(NotifyInquiryLimitationRequest.class));
-    }
-}
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.dto.PaymentCancelDTO.getCreatedBy()" because the return value of "com.ykb.payments.bill.transaction.payment.model.BillPaymentCancelEvent.getCancelRecord()" is null
+java.lang.NullPointerException: Cannot invoke "org.springframework.context.ApplicationContext.getBean(java.lang.Class)" because "com.ykb.payments.bill.common.util.SpringUtil.appContext" is null
+rg.mockito.exceptions.misusing.UnnecessaryStubbingException: 
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at com.ykb.payments.bill.transaction.payment.event.PaymentEventListenerTest.setUp(PaymentEventListenerTest.java:49)
+  2. -> at com.ykb.payments.bill.transaction.payment.event.PaymentEventListenerTest.setUp(PaymentEventListenerTest.java:50)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javad
+java.lang.NullPointerException: Cannot invoke "org.springframework.context.ApplicationContext.getBean(java.lang.Class)" because "com.ykb.payments.bill.common.util.SpringUtil.appContext" is null
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.ProductDTO.getCode()" because the return value of "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getProduct()" is null
