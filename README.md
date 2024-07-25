@@ -1,57 +1,49 @@
-  @Test
-    @Transactional
-    void notifyPaymentCancel_shouldReturnNotifyPaymentCancelResponse() throws MicroException {
-        // Given
-        NotifyPaymentCancelRequest request = new NotifyPaymentCancelRequest();
-        request.setAgentCode("agentCode");
-        request.setOperatingBranchCode("branchCode");
-        request.setChannelCode("channelCode");
-        request.setProductCode("productCode");
-        request.setInstitutionCode("institutionCode");
-        request.setPaymentNotificationId("paymentNotificationId");
+@Service
+@RequiredArgsConstructor
+public class ProvisionServiceImpl implements ProvisionService {
+	
+	private final ProvisionRepository provisionRepository;
+	private final ProvisionMapper provisionMapper;
+	
+	@Override
+	public ProvisionDTO getProvisionRecord(Long id) {
+		Optional<Provision> entity = provisionRepository.findById(id);
+		if (entity.isPresent()){
+			return provisionMapper.toDTO(entity.get());
+		}
+		return null;
+	}
 
-        NotifyPaymentCancelProcessInput processInput = new NotifyPaymentCancelProcessInput();
-        processInput.setAgentCode(request.getAgentCode());
-        processInput.setBranchCode(request.getOperatingBranchCode());
-        processInput.setChannelCode(request.getChannelCode());
-        processInput.setChannelSessionId(requestContext.getChannelSessionId());
-        processInput.setChannelTransactionId(requestContext.getChannelTransactionId());
-        processInput.setProductCode(request.getProductCode());
-        processInput.setInstitutionCode(request.getInstitutionCode());
-        processInput.setPaymentNotificationId(request.getPaymentNotificationId());
+	@Override
+	@Transactional
+	public List<ProvisionDTO>  createProvisions(List<ProvisionDTO> provisionDTOList) {
+		List<Provision> provisionList = provisionRepository.saveAll(provisionMapper.toEntityList(provisionDTOList));
+		return provisionMapper.toDTOList(provisionList);
+	}
 
-        NotifyPaymentCancelProcessOutput processOutput = new NotifyPaymentCancelProcessOutput();
-        NotifyPaymentCancelResponse notifyPaymentCancelResponse = new NotifyPaymentCancelResponse();
+	@Override
+	@Transactional
+	public void updateCommissionData(String commissionData, Long id) {
+		provisionRepository.updateCommissionData(commissionData, id);
+		
+	}
 
-        // Mocking the requestContext to return specific values
-        when(requestContext.getChannelSessionId()).thenReturn("channelSessionId");
-        when(requestContext.getChannelTransactionId()).thenReturn("channelTransactionId");
+	@Override
+	@Transactional
+	public void invalidateNotPaidProvisions(Long institutionDebtTypeId, String subscriberNo) {
+		Optional<List<Provision>>  opProvisionList = provisionRepository.findBynDebtTypeIdAndSubscriberNoWitLock(institutionDebtTypeId,subscriberNo);
+		if(opProvisionList.isPresent()){
+			opProvisionList.get().forEach(provision -> provision.setStatus(EnumProvisionStatus.CANCELLED));
+			//TODO:EntityManager Refresh degerlendir
+			provisionRepository.saveAll(opProvisionList.get());
+		}
 
-        // Mocking the processManager to return the processOutput
-        when(processManager.executeProcess(any(NotifyPaymentCancelProcessInput.class)))
-                .thenReturn(processOutput);
+	}
 
-        // Mocking the paymentMapper to return the NotifyPaymentCancelResponse
-        when(paymentMapper.toNotifyPaymentCancelResponse(processOutput))
-                .thenReturn(notifyPaymentCancelResponse);
+	@Override
+	public void updateProvision(ProvisionDTO provisionDTO) {
+		Provision entity = provisionMapper.toEntity(provisionDTO);
+		provisionRepository.save(entity);
+	}
 
-        // When
-        NotifyPaymentCancelResponse result = paymentService.notifyPaymentCancel(request);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(notifyPaymentCancelResponse, result);
-        verify(processManager).executeProcess(argThat(input -> {
-            // Check if all fields of the input match
-            assertEquals(processInput.getAgentCode(), input.getAgentCode());
-            assertEquals(processInput.getBranchCode(), input.getBranchCode());
-            assertEquals(processInput.getChannelCode(), input.getChannelCode());
-            assertEquals(processInput.getChannelSessionId(), input.getChannelSessionId());
-            assertEquals(processInput.getChannelTransactionId(), input.getChannelTransactionId());
-            assertEquals(processInput.getProductCode(), input.getProductCode());
-            assertEquals(processInput.getInstitutionCode(), input.getInstitutionCode());
-            assertEquals(processInput.getPaymentNotificationId(), input.getPaymentNotificationId());
-            return true;
-        }));
-        verify(paymentMapper).toNotifyPaymentCancelResponse(processOutput);
-    }
+}
