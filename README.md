@@ -1,31 +1,17 @@
- useEffect(() => {
-    if (formRef.current) {
-      const {
-        returnMapCode,
-        institutionReturnCode,
-        institutionReturnText,
-        bankReturnCode,
-        bankReturnText,
-        isReversible,
-        returnType,
-      } = returnMapOneData || {};
+@Service
+@RequiredArgsConstructor
+public class AccountingDataLookupServiceImpl implements  AccountingDataLookupService{
 
-      formRef.current.setFieldsValue({
-        returnMapCode: returnMapCode || '',
-        institutionReturnCode: institutionReturnCode || '',
-        institutionReturnText: institutionReturnText || '',
-        bankReturnCode: bankReturnCode || '',
-        bankReturnText: bankReturnText || '',
-        isReversible: isReversible || false,
-        returnType: returnType || '',
-      });
+    private final AccountingDataLookUpServiceClient  accountingDataLookUpServiceClient;
 
-      setReturnMapCode(returnMapCode || '');
-      setInstitutionReturnCode(institutionReturnCode || '');
-      setInstitutionReturnText(institutionReturnText || '');
-      setBankReturnCode(bankReturnCode || '');
-      setBankReturnText(bankReturnText || '');
-      setIsReversible(isReversible || false);
-      setReturnType(returnType || '');
+
+    @Override
+    public Date getNextBusinessDate(Date firstDate, Integer workDayCount) {
+        RequestGetGlobalNextBusinessDate requestGetGlobalNextBusinessDate = new RequestGetGlobalNextBusinessDate();
+        requestGetGlobalNextBusinessDate.setFirstDate(firstDate);
+        requestGetGlobalNextBusinessDate.setWorkDayCount(workDayCount);
+        requestGetGlobalNextBusinessDate.setCountry(EnumCountry.TURKEY.getCode());
+        ResponseGetGlobalNextBusinessDate responseGetGlobalNextBusinessDate = accountingDataLookUpServiceClient.getGlobalNextBusinessDate(requestGetGlobalNextBusinessDate);
+        return responseGetGlobalNextBusinessDate.getRealDate();
     }
-  }, [returnMapOneData]);
+}
