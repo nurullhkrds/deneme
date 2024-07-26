@@ -1,17 +1,48 @@
-@Service
-@RequiredArgsConstructor
-public class AccountingDataLookupServiceImpl implements  AccountingDataLookupService{
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-    private final AccountingDataLookUpServiceClient  accountingDataLookUpServiceClient;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import java.util.Date;
 
+public class AccountingDataLookupServiceImplTest {
 
-    @Override
-    public Date getNextBusinessDate(Date firstDate, Integer workDayCount) {
-        RequestGetGlobalNextBusinessDate requestGetGlobalNextBusinessDate = new RequestGetGlobalNextBusinessDate();
-        requestGetGlobalNextBusinessDate.setFirstDate(firstDate);
-        requestGetGlobalNextBusinessDate.setWorkDayCount(workDayCount);
-        requestGetGlobalNextBusinessDate.setCountry(EnumCountry.TURKEY.getCode());
-        ResponseGetGlobalNextBusinessDate responseGetGlobalNextBusinessDate = accountingDataLookUpServiceClient.getGlobalNextBusinessDate(requestGetGlobalNextBusinessDate);
-        return responseGetGlobalNextBusinessDate.getRealDate();
+    @Mock
+    private AccountingDataLookUpServiceClient accountingDataLookUpServiceClient;
+
+    @InjectMocks
+    private AccountingDataLookupServiceImpl accountingDataLookupService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetNextBusinessDate() {
+        // Arrange
+        Date firstDate = new Date();
+        Integer workDayCount = 5;
+        Date expectedDate = new Date(firstDate.getTime() + (5 * 24 * 60 * 60 * 1000L)); // Example expected date
+
+        RequestGetGlobalNextBusinessDate request = new RequestGetGlobalNextBusinessDate();
+        request.setFirstDate(firstDate);
+        request.setWorkDayCount(workDayCount);
+        request.setCountry(EnumCountry.TURKEY.getCode());
+
+        ResponseGetGlobalNextBusinessDate response = new ResponseGetGlobalNextBusinessDate();
+        response.setRealDate(expectedDate);
+
+        when(accountingDataLookUpServiceClient.getGlobalNextBusinessDate(any(RequestGetGlobalNextBusinessDate.class))).thenReturn(response);
+
+        // Act
+        Date actualDate = accountingDataLookupService.getNextBusinessDate(firstDate, workDayCount);
+
+        // Assert
+        assertEquals(expectedDate, actualDate);
+        verify(accountingDataLookUpServiceClient, times(1)).getGlobalNextBusinessDate(any(RequestGetGlobalNextBusinessDate.class));
     }
 }
