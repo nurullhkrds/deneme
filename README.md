@@ -1,32 +1,80 @@
-  const selectedRowKeys = useSelector((state) => state.returnMap.selectedRowKeys);
-const rowSelection = {
-    selectedRowKeys,
-    onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      const selectedIds = selectedRows.map(row => row.id);
-      dispatch(setSelectedReturnMapList(selectedIds));
-      dispatch(setSelectedRowKeys(selectedRowKeys));
-    },
-    getCheckboxProps: record => ({
-      disabled: record.name === 'Disabled User',
-      name: record.name,
-    }),
-  };
+  const formRef = React.useRef(null);
+  useEffect(() => {
+    if (formRef.current) {
+      formRef.current.setFieldsValue(returnMapOneData);
+      setReturnMapCode(returnMapOneData.returnMapCode)
+      setInstitutionReturnCode(returnMapOneData.institutionReturnCode)
+      setInstitutionReturnText(returnMapOneData.institutionReturnText)
+      setBankReturnText(returnMapOneData.bankReturnText)
+      setBankReturnCode(returnMapOneData.bankReturnCode)
+      setIsReversible(returnMapOneData.isReversible)
+      setReturnType(returnMapOneData.returnType)
+    }
+  }, [returnMapOneData]);
 
 
-  const handleOk2 = () => {
-    setModalVisible2(false);
+ <div>
+            <Form ref={formRef}>
+              <Form.Item label="ReturnMap Kodu">
+                <input
+                  name="returnMapCode"
+                  value={returnMapCode}
+                  onChange={handleReturnMapCode}
+                  style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+                />
+              </Form.Item>
 
-    sendCopyReturnMapRequest(callApi, copyRequest)
-      .then(() => {
-        dispatch(fetchInstitutionsData(dispatch, callApi, returnMapCode2));
-        dispatch(resetSelectedRowKeys()); // selectedRowKeys'i sıfırla
-        Notification.success('Kopyalama Başarılı', 3);
-      })
-      .catch(error => {
-        console.error('Error creating return map:', error);
-        Notification.error('Hatalı Kopyalama', 3);
-      });
+              <Form.Item label="Kurum Kodu">
+                <input
+                  name="institutionReturnCode"
+                  value={institutionReturnCode}
+                  onChange={handleInstitutionReturnCode}
+                  style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+                />
+              </Form.Item>
+              <Form.Item label="Kurum Metni">
+                <input
+                  name="institutionReturnText"
+                  value={institutionReturnText}
+                  onChange={handleInstitutionReturnText}
+                  style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+                />
+              </Form.Item>
+              <Form.Item label="Banka Kodu">
+                <input
+                  name="bankReturnCode"
+                  value={bankReturnCode}
+                  onChange={handleBankReturnCode}
+                  style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+                />
+              </Form.Item>
+              <Form.Item label="Banka Metni">
+                <input
+                  name="bankReturnText"
+                  value={bankReturnText}
+                  onChange={handleBankReturnText}
+                  style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+                />
+              </Form.Item>
 
-    setReturnMapCode2("");
-  };
+              <Form.Item label="Geri Dönüş Tipi">
+                <Select defaultValue={returnType}
+
+                  value={returnType}
+                  onChange={handleSelectReturnType}>
+                  <Option value="SUCCESS">
+                    Başarılı
+                  </Option>
+                  <Option value="ERROR" >
+                    Başarısız
+                  </Option>
+                </Select>
+              </Form.Item>
+              <Form.Item >
+                <Checkbox textLabel="Geri Dönüşüm" checked={isReversible} onChange={handleSelectReversible} />
+              </Form.Item>
+            </Form>
+          </div>
+        </Modal>
+
+      </section>
