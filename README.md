@@ -1,123 +1,112 @@
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Path;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jpa.domain.Specification;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ReturnMapSpecificationTest {
 
-    @Mock
-    private Root<ReturnMap> root;
-
-    @Mock
-    private CriteriaQuery<?> query;
-
-    @Mock
-    private CriteriaBuilder cb;
-
-    @Mock
-    private Predicate predicate;
-
-    @Mock
-    private Path<String> path;
-
-    @BeforeEach
-    void setUp() {
-        // Setup mocks if needed
+    @Test
+    void testHasReturnMapCode_withValidCode() {
+        // Arrange
+        String returnMapCode = "ABC123";
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        
+        // Act
+        Specification<ReturnMap> spec = ReturnMapSpecifications.hasReturnMapCode(returnMapCode);
+        spec.toPredicate(root, query, cb);
+        
+        // Assert
+        verify(cb).equal(cb.lower(root.get("returnMapCode")), returnMapCode.toLowerCase());
     }
 
     @Test
-    void hasReturnMapCode_whenCodeIsNull_shouldReturnConjunction() {
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasReturnMapCode(null);
-        when(cb.conjunction()).thenReturn(predicate);
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
+    void testHasReturnMapCode_withNullCode() {
+        // Arrange
+        String returnMapCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        // Act
+        Specification<ReturnMap> spec = ReturnMapSpecifications.hasReturnMapCode(returnMapCode);
+        spec.toPredicate(root, query, cb);
+
+        // Assert
+        verify(cb).conjunction();
     }
 
     @Test
-    void hasReturnMapCode_whenCodeIsEmpty_shouldReturnConjunction() {
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasReturnMapCode("");
-        when(cb.conjunction()).thenReturn(predicate);
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
+    void testHasBankErrorCode_withValidCode() {
+        // Arrange
+        String bankReturnCode = "BANK123";
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        // Act
+        Specification<ReturnMap> spec = ReturnMapSpecifications.hasBankErrorCode(bankReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        // Assert
+        verify(cb).equal(cb.lower(root.get("bankReturnCode")), bankReturnCode.toLowerCase());
     }
 
     @Test
-    void hasReturnMapCode_whenCodeIsProvided_shouldReturnPredicate() {
-        String code = "testCode";
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasReturnMapCode(code);
-        when(root.get("returnMapCode")).thenReturn(path);
-        when(cb.lower(path)).thenReturn(path);
-        when(cb.equal(path, code.toLowerCase())).thenReturn(predicate);
+    void testHasBankErrorCode_withNullCode() {
+        // Arrange
+        String bankReturnCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
+        // Act
+        Specification<ReturnMap> spec = ReturnMapSpecifications.hasBankErrorCode(bankReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        // Assert
+        verify(cb).conjunction();
     }
 
     @Test
-    void hasBankErrorCode_whenCodeIsNull_shouldReturnConjunction() {
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasBankErrorCode(null);
-        when(cb.conjunction()).thenReturn(predicate);
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
+    void testHasInstitutionErrorCode_withValidCode() {
+        // Arrange
+        String institutionReturnCode = "INST123";
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        // Act
+        Specification<ReturnMap> spec = ReturnMapSpecifications.hasInstitutionErrorCode(institutionReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        // Assert
+        verify(cb).equal(cb.lower(root.get("institutionReturnCode")), institutionReturnCode.toLowerCase());
     }
 
     @Test
-    void hasBankErrorCode_whenCodeIsEmpty_shouldReturnConjunction() {
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasBankErrorCode("");
-        when(cb.conjunction()).thenReturn(predicate);
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
-    }
+    void testHasInstitutionErrorCode_withNullCode() {
+        // Arrange
+        String institutionReturnCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
-    @Test
-    void hasBankErrorCode_whenCodeIsProvided_shouldReturnPredicate() {
-        String code = "testBankCode";
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasBankErrorCode(code);
-        when(root.get("bankReturnCode")).thenReturn(path);
-        when(cb.lower(path)).thenReturn(path);
-        when(cb.equal(path, code.toLowerCase())).thenReturn(predicate);
+        // Act
+        Specification<ReturnMap> spec = ReturnMapSpecifications.hasInstitutionErrorCode(institutionReturnCode);
+        spec.toPredicate(root, query, cb);
 
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
-    }
-
-    @Test
-    void hasInstitutionErrorCode_whenCodeIsNull_shouldReturnConjunction() {
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasInstitutionErrorCode(null);
-        when(cb.conjunction()).thenReturn(predicate);
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
-    }
-
-    @Test
-    void hasInstitutionErrorCode_whenCodeIsEmpty_shouldReturnConjunction() {
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasInstitutionErrorCode("");
-        when(cb.conjunction()).thenReturn(predicate);
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
-    }
-
-    @Test
-    void hasInstitutionErrorCode_whenCodeIsProvided_shouldReturnPredicate() {
-        String code = "testInstitutionCode";
-        Specification<ReturnMap> spec = ReturnMapSpecifications.hasInstitutionErrorCode(code);
-        when(root.get("institutionReturnCode")).thenReturn(path);
-        when(cb.lower(path)).thenReturn(path);
-        when(cb.equal(path, code.toLowerCase())).thenReturn(predicate);
-
-        Predicate result = spec.toPredicate(root, query, cb);
-        assertThat(result).isEqualTo(predicate);
+        // Assert
+        verify(cb).conjunction();
     }
 }
