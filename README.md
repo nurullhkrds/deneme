@@ -1,5 +1,7 @@
-    {
-            selectedIds.length > 0 && (
-              <Button  onClick={showModalCopy}>Sil</Button>
-            )
-          }
+{
+  selectedIds.length > 0 && (
+    <Button onClick={showModalCopy}>
+      {`(${selectedIds.length}) Sil`}
+    </Button>
+  )
+}
