@@ -1,87 +1,160 @@
-@RestController
-@RequestMapping("/returnMaps")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class ReturnMapController {
+import com.example.service.IReturnMapService;
+import com.example.controller.ReturnMapController;
+import com.example.dto.*;
+import com.example.context.RequestContext;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-    private final IReturnMapService returnMapService;
+import java.util.Arrays;
 
-    private static final String X_TRACE_ID = "x-trace-id";
-    private static final String X_SESSION_ID = "x-session-id";
-    private final RequestContext requestContext;
+public class ReturnMapControllerTest {
 
-    private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
-        requestContext.setChannelSessionId(channelSessionId);
-        requestContext.setChannelTransactionId(channelTransactionId);
-        requestContext.setAgentCode(webRequest.getAgentCode());
-        requestContext.setChannelCode(webRequest.getChannelCode());
-        requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
+    private MockMvc mockMvc;
+
+    @Mock
+    private IReturnMapService returnMapService;
+
+    @Mock
+    private RequestContext requestContext;
+
+    @InjectMocks
+    private ReturnMapController returnMapController;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(returnMapController).build();
     }
 
-    @GetMapping("/getAllByReturnMapCode")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAllByReturnMapCode(@RequestParam String returnMapCode) {
-        DataResult<List<ReturnMapDTO>> result = returnMapService.getAllByReturnMapCode(returnMapCode);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+    @Test
+    public void testGetAllByReturnMapCode() throws Exception {
+        DataResult<List<ReturnMapDTO>> dataResult = new DataResult<>(Arrays.asList(new ReturnMapDTO()), HttpStatus.OK.value());
+        
+        when(returnMapService.getAllByReturnMapCode(anyString())).thenReturn(dataResult);
+
+        mockMvc.perform(get("/returnMaps/getAllByReturnMapCode")
+                .param("returnMapCode", "code"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
+
+        verify(returnMapService, times(1)).getAllByReturnMapCode(anyString());
     }
 
+    @Test
+    public void testGetAll() throws Exception {
+        DataResult<List<ReturnMapDTO>> dataResult = new DataResult<>(Arrays.asList(new ReturnMapDTO()), HttpStatus.OK.value());
 
-    @GetMapping("/getAll")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> getAll() {
-        DataResult<List<ReturnMapDTO>> result = returnMapService.getAll();
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+        when(returnMapService.getAll()).thenReturn(dataResult);
+
+        mockMvc.perform(get("/returnMaps/getAll"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
+
+        verify(returnMapService, times(1)).getAll();
     }
 
-    @GetMapping("/getReturnMapById")
-    public ResponseEntity<DataResult<ReturnMapDTO>> getReturnMapById(@RequestParam Long returnMapCodeId) {
-        DataResult<ReturnMapDTO> result = returnMapService.getReturnMapById(returnMapCodeId);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+    @Test
+    public void testGetReturnMapById() throws Exception {
+        DataResult<ReturnMapDTO> dataResult = new DataResult<>(new ReturnMapDTO(), HttpStatus.OK.value());
+
+        when(returnMapService.getReturnMapById(anyLong())).thenReturn(dataResult);
+
+        mockMvc.perform(get("/returnMaps/getReturnMapById")
+                .param("returnMapCodeId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
+
+        verify(returnMapService, times(1)).getReturnMapById(anyLong());
     }
 
+    @Test
+    public void testCreateReturnMap() throws Exception {
+        CreateReturnMapRequest request = new CreateReturnMapRequest();
+        DataResult<ReturnMapDTO> dataResult = new DataResult<>(new ReturnMapDTO(), HttpStatus.CREATED.value());
 
-    @PostMapping("/createReturnMap")
-    public ResponseEntity<DataResult<ReturnMapDTO>> createReturnMap(
-            @RequestBody CreateReturnMapRequest request)
-            throws MicroException {
-        DataResult<ReturnMapDTO> result = returnMapService.createReturnMap(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+        when(returnMapService.createReturnMap(any(CreateReturnMapRequest.class))).thenReturn(dataResult);
+
+        mockMvc.perform(post("/returnMaps/createReturnMap")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ /* JSON representation of CreateReturnMapRequest */ }"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.CREATED.value()));
+
+        verify(returnMapService, times(1)).createReturnMap(any(CreateReturnMapRequest.class));
     }
 
+    @Test
+    public void testUpdateReturnMap() throws Exception {
+        UpdateReturnMapRequest request = new UpdateReturnMapRequest();
+        DataResult<ReturnMapDTO> dataResult = new DataResult<>(new ReturnMapDTO(), HttpStatus.OK.value());
 
-    @PutMapping("/updateReturnMap")
-    public ResponseEntity<DataResult<ReturnMapDTO>> updateReturnMap(
-            @RequestBody UpdateReturnMapRequest request)
-            throws MicroException {
-        DataResult<ReturnMapDTO> result = returnMapService.updateReturnMap(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+        when(returnMapService.updateReturnMap(any(UpdateReturnMapRequest.class))).thenReturn(dataResult);
+
+        mockMvc.perform(put("/returnMaps/updateReturnMap")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ /* JSON representation of UpdateReturnMapRequest */ }"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
+
+        verify(returnMapService, times(1)).updateReturnMap(any(UpdateReturnMapRequest.class));
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
-            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
-            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode,
-            @RequestParam(required = false) @Parameter(name = "institutionReturnCode") String institutionReturnCode) {
-        DataResult<List<ReturnMapDTO>> searchResult = returnMapService.searchReturnMaps(returnMapCode, bankReturnCode, institutionReturnCode);
-        return ResponseEntity.status(searchResult.getStatusCode()).body(searchResult);
+    @Test
+    public void testSearchReturnMaps() throws Exception {
+        DataResult<List<ReturnMapDTO>> dataResult = new DataResult<>(Arrays.asList(new ReturnMapDTO()), HttpStatus.OK.value());
+
+        when(returnMapService.searchReturnMaps(anyString(), anyString(), anyString())).thenReturn(dataResult);
+
+        mockMvc.perform(get("/returnMaps/search")
+                .param("returnMapCode", "code")
+                .param("bankReturnCode", "bankCode")
+                .param("institutionReturnCode", "instCode"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
+
+        verify(returnMapService, times(1)).searchReturnMaps(anyString(), anyString(), anyString());
     }
 
+    @Test
+    public void testDeleteReturnMaps() throws Exception {
+        DeleteIdsRequest request = new DeleteIdsRequest();
+        Result result = new Result(HttpStatus.OK.value());
 
+        when(returnMapService.deleteReturnMaps(any(DeleteIdsRequest.class))).thenReturn(result);
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<Result> deleteReturnMaps(@RequestBody DeleteIdsRequest request) {
-        Result result = returnMapService.deleteReturnMaps(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+        mockMvc.perform(delete("/returnMaps/delete")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ /* JSON representation of DeleteIdsRequest */ }"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
 
-
+        verify(returnMapService, times(1)).deleteReturnMaps(any(DeleteIdsRequest.class));
     }
 
-    @PostMapping("/copy")
-    public ResponseEntity<Result> copyReturnMaps(@RequestBody CopyForIdsAndDataRequest request) {
-        Result result = returnMapService.copyReturnMaps(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
+    @Test
+    public void testCopyReturnMaps() throws Exception {
+        CopyForIdsAndDataRequest request = new CopyForIdsAndDataRequest();
+        Result result = new Result(HttpStatus.OK.value());
 
+        when(returnMapService.copyReturnMaps(any(CopyForIdsAndDataRequest.class))).thenReturn(result);
 
+        mockMvc.perform(post("/returnMaps/copy")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ /* JSON representation of CopyForIdsAndDataRequest */ }"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()));
+
+        verify(returnMapService, times(1)).copyReturnMaps(any(CopyForIdsAndDataRequest.class));
     }
-
-
 }
