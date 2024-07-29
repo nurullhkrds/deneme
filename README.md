@@ -1,23 +1,26 @@
- @Override
-    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
-        Specification<ReturnMap> spec = Specification.where(null);
+   public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (returnMapCode == null || returnMapCode.isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(cb.lower(root.get("returnMapCode")), returnMapCode.toLowerCase());
+        };
+    }
 
-        if (returnMapCode != null && !returnMapCode.isEmpty()) {
-            spec = spec.and(ReturnMapCriteria.hasReturnMapCode(returnMapCode));
-        }
-        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
-            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
-        }
-        if (institutionReturnCode != null && !institutionReturnCode.isEmpty()) {
-            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode));
-        }
+    public static Specification<ReturnMap> hasBankErrorCode(String bankReturnCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (bankReturnCode == null || bankReturnCode.isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(cb.lower(root.get("bankReturnCode")), bankReturnCode.toLowerCase());
+        };
+    }
 
-        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
-        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
-
-        if (returnMapDTOList.isEmpty()) {
-            return new ErrorDataResult<>("Listed is empty", returnMapDTOList, 200);
-        }
-
-        return new SuccessDataResult<>("Result listed", returnMapDTOList, 200);
+    public static Specification<ReturnMap> hasInstitutionErrorCode(String institutionReturnCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (institutionReturnCode == null || institutionReturnCode.isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(cb.lower(root.get("institutionReturnCode")), institutionReturnCode.toLowerCase());
+        };
     }
