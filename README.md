@@ -12,3 +12,29 @@
 
 
       },
+
+
+export const sendDeleteReturnMapRequest = async (callApi, deleteReturnMapRequest) => {
+  const endpoint = "returnMaps/delete";
+
+  try {
+    return await callApi({
+      method: "DELETE",
+      endpoint: endpoint,
+      body: deleteReturnMapRequest,
+      notifyErrors: true,
+    });
+  } catch (ex) {
+    console.error('API error:', ex);
+    throw ex;
+  }
+};
+
+
+
+
+@Getter
+@Setter
+public class DeleteIdsRequest {
+    private List<Long> ids;
+}
