@@ -1,3 +1,4 @@
+
     @Test
     public void testCreateReturnMap() throws Exception {
         CreateReturnMapRequest request = new CreateReturnMapRequest();
@@ -6,9 +7,12 @@
 
         when(returnMapService.createReturnMap(any(CreateReturnMapRequest.class))).thenReturn(dataResult);
 
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/returnMaps/createReturnMap")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ /* JSON representation of CreateReturnMapRequest */ }"))
+                        .content(jsonRequest))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statusCode").value(HttpStatus.CREATED.value()))
                 .andExpect(jsonPath("$.success").value(true))
@@ -25,9 +29,12 @@
 
         when(returnMapService.updateReturnMap(any(UpdateReturnMapRequest.class))).thenReturn(dataResult);
 
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(put("/returnMaps/updateReturnMap")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ /* JSON representation of UpdateReturnMapRequest */ }"))
+                        .content(jsonRequest))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()))
                 .andExpect(jsonPath("$.success").value(true))
@@ -35,6 +42,7 @@
 
         verify(returnMapService, times(1)).updateReturnMap(any(UpdateReturnMapRequest.class));
     }
+
     @Test
     public void testCopyReturnMaps() throws Exception {
         CopyForIdsAndDataRequest request = new CopyForIdsAndDataRequest();
@@ -42,9 +50,12 @@
 
         when(returnMapService.copyReturnMaps(any(CopyForIdsAndDataRequest.class))).thenReturn(result);
 
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
         mockMvc.perform(post("/returnMaps/copy")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ /* JSON representation of CopyForIdsAndDataRequest */ }"))
+                        .content(jsonRequest))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()))
                 .andExpect(jsonPath("$.success").value(true))
