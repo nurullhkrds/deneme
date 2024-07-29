@@ -1,10 +1,11 @@
-
-    public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
+public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
         return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             if (returnMapCode == null || returnMapCode.isEmpty()) {
                 return cb.conjunction();
             }
-            return cb.equal(root.get("returnMapCode"), returnMapCode);
+            String pattern = "%" + returnMapCode.toLowerCase() + "%";
+            Expression<String> returnMapCodeField = cb.lower(root.get("returnMapCode"));
+            return cb.like(returnMapCodeField, pattern);
         };
     }
 
@@ -13,7 +14,9 @@
             if (bankReturnCode == null || bankReturnCode.isEmpty()) {
                 return cb.conjunction();
             }
-            return cb.equal(root.get("bankReturnCode"), bankReturnCode);
+            String pattern = "%" + bankReturnCode.toLowerCase() + "%";
+            Expression<String> bankErrorCodeField = cb.lower(root.get("bankReturnCode"));
+            return cb.like(bankErrorCodeField, pattern);
         };
     }
 
@@ -22,6 +25,8 @@
             if (institutionReturnCode == null || institutionReturnCode.isEmpty()) {
                 return cb.conjunction();
             }
-            return cb.equal(root.get("institutionReturnCode"), institutionReturnCode);
+            String pattern = "%" + institutionReturnCode.toLowerCase() + "%";
+            Expression<String> institutionErrorCodeField = cb.lower(root.get("institutionReturnCode"));
+            return cb.like(institutionErrorCodeField, pattern);
         };
     }
