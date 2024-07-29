@@ -1,3 +1,11 @@
+ const handleClickPromptCustomButtonText = (record) => {
+    Message.prompt({
+      title: 'Kayıt Silme',
+      content: 'Kaydı silmek istediğinize emin misiniz ?',
+      icon: <Icon name="warning-circle" colorType="warning" />,
+      onClose: () => {
+        console.log('onClose');
+      },
       onOk: () => {
         console.log('onOk');
         sendDeleteReturnMapRequest(callApi, {})
@@ -12,29 +20,10 @@
 
 
       },
-
-
-export const sendDeleteReturnMapRequest = async (callApi, deleteReturnMapRequest) => {
-  const endpoint = "returnMaps/delete";
-
-  try {
-    return await callApi({
-      method: "DELETE",
-      endpoint: endpoint,
-      body: deleteReturnMapRequest,
-      notifyErrors: true,
+      onCancel: () => {
+        console.log('onCancel');
+      },
+      okText: 'Evet',
+      cancelText: 'Vazgeç',
     });
-  } catch (ex) {
-    console.error('API error:', ex);
-    throw ex;
-  }
-};
-
-
-
-
-@Getter
-@Setter
-public class DeleteIdsRequest {
-    private List<Long> ids;
-}
+  };
