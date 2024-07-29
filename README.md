@@ -8,17 +8,21 @@
       },
       onOk: () => {
         console.log('onOk');
-        sendDeleteReturnMapRequest(callApi, {})
+
+        // record.id'yi kullanarak request oluşturuyoruz
+        const deleteReturnMapRequest = {
+          ids: [record.id]
+        };
+
+        sendDeleteReturnMapRequest(callApi, deleteReturnMapRequest)
           .then(() => {
-            dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode }));
+            dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: 'someCode' }));
             Notification.success('Silme Başarılı', 3);
           })
           .catch(error => {
             console.error('Error creating return map:', error);
             Notification.error('Hatalı silme işlemi !', 3);
           });
-
-
       },
       onCancel: () => {
         console.log('onCancel');
