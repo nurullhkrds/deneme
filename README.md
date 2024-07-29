@@ -1,4 +1,5 @@
- const handleClickPromptCustomButtonText = (record) => {
+  const handleClickPromptCustomButtonText = async (record) => {
+    const selectedData = await dispatch(fetchReturnMapById(dispatch, callApi, record.id));
     Message.prompt({
       title: 'Kayıt Silme',
       content: 'Kaydı silmek istediğinize emin misiniz ?',
@@ -9,14 +10,12 @@
       onOk: () => {
         console.log('onOk');
 
-        // record.id'yi kullanarak request oluşturuyoruz
         const deleteReturnMapRequest = {
           ids: [record.id]
         };
-
         sendDeleteReturnMapRequest(callApi, deleteReturnMapRequest)
           .then(() => {
-            dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: 'someCode' }));
+            dispatch(fetchReturnMapsData(dispatch, callApi, { selectedData.returnMapCode }));
             Notification.success('Silme Başarılı', 3);
           })
           .catch(error => {
