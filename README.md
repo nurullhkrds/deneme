@@ -1,4 +1,1 @@
-git rebase -i HEAD~3
-reword <commit_hash1> <commit_message1>
-reword <commit_hash2> <commit_message2>
-reword <commit_hash3> <commit_message3>
+<ba3-837e-cd6fa0bff52e}/SVROOT/Applications/react/bill-ui/.git/rebase-merge/git-rebase-todo[+] [unix] (16:09 30/07/2024)32,0-1 Bot                                                                                                                           
