@@ -1,8 +1,31 @@
-fatal: It seems that there is already a rebase-merge directory, and
-I wonder if you are in the middle of another rebase.  If that is the
-case, please try
-        git rebase (--continue | --abort | --skip)
-If that is not the case, please
-        rm -fr ".git/rebase-merge"
-and run me again.  I am stopping in case you still have something
-valuable there.
+ReturnMap Kayıt Ekleme 
+
+funcCode=showModalCreate            id=showModalCreate            bileşen tipi=Button
+funcCode=handleCancelForCreate      id=handleCancelForCreate      bileşen tipi=Button
+funcCode=handleOkForCreate          id=handleOkForCreate          bileşen tipi=Button
+
+-----------------------------------------------------------------
+ReturnMap Kayıt Güncelleme
+
+funcCode=handleEdit                 id=handleEdit                  bileşen tipi=Button
+funcCode=handleCancelForUpdate      id=handleCancelForUpdate       bileşen tipi=Button
+funcCode=handleOkForUpdate          id=handleOkForUpdate           bileşen tipi=Button
+-------------------------------------------------------------------
+ ReturnMap Kopyalama
+
+funcCode=showModalCopy                 id=showModalCopy             bileşen tipi=Button
+funcCode=handleCancelCopy              id=handleCancelCopy          bileşen tipi=Button
+funcCode=handleOkCopy                  id=handleOkCopy              bileşen tipi=Button
+------------------------------------------------------------------
+ReturnMap Tekli Kayıt Silme
+
+funcCode=handleClickOneDelete         id=handleClickOneDelete       bileşen tipi=Button
+------------------------------------------------------------------
+ReturnMap Çoklu Kayıt Silme
+funcCode=handleClickOneOrMultipleDelete id=handleClickOneOrMultipleDelete   bileşen tipi=Button
+-----------------------------------------------------------------------------
+ReturnMap Listeleme
+funcCode=handleSearch                 id=handleSearch              bileşen tipi=Button
+-----------------------------------------------------------
+ReturnMap Temizle
+funcCode=handleReset                  id=handleReset               bileşen tipi=Button
