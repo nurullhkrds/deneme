@@ -1,55 +1,44 @@
-import React, { useState } from 'react';
-import { Button, Modal, Message, Icon } from 'some-ui-library'; // UI kütüphanesini uygun şekilde içe aktarın
+ <Fragment>
+      <Form ref={ref} >
+        <Form.Item label="ReturnMap Kodu">
+          <input
+            name="returnMapCode"
+            value={returnMapCode}
+            onChange={handleInputChange}
+            style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%', }}
 
-const ModalExample = () => {
-  const [visible, setVisible] = useState(false);
 
-  const handleClickPromptCustomButtonText = () => {
-    Message.prompt({
-      title: 'prompt title',
-      content: 'prompt modal',
-      icon: <Icon name="warning-circle" colorType="warning" />,
-      onClose: () => {
-        console.log('onClose');
-      },
-      onOk: () => {
-        console.log('onOk');
-      },
-      onCancel: () => {
-        console.log('onCancel');
-      },
-      okText: 'Done',
-      cancelText: 'Return',
-    });
-  };
+          />
+        </Form.Item>
+        <Form.Item label="Banka Kodu">
+          <input
+            name="bankReturnCode"
+            value={bankReturnCode}
+            onChange={handleInputChange}
+            style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%', }}
 
-  const handleClose = () => {
-    setVisible(false);
-  };
+          />
+        </Form.Item>
+        <Form.Item label="Kurum Kodu">
+          <input
+            name="institutionReturnCode"
+            value={institutionReturnCode}
+            onChange={handleInputChange}
+            style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%', }}
 
-  return (
-    <>
-      <Button
-        onClick={handleClickPromptCustomButtonText}
-        type="primary"
-        style={{ margin: 8 }}
+          />
+        </Form.Item>
+
+      </Form>
+      <SecureButton permission="handleSearch" onClick={handleSearch}>
+        <IconBox name={"search"} />
+
+      </SecureButton>
+      <SecureButton
+        type="secondary"
+        permission="handleReset"
+        onClick={handleReset}
       >
-        custom button text prompt
-      </Button>
-
-      <Modal
-        visible={visible}
-        title="Title"
-        onClose={handleClose}
-      >
-        <h4>Text in a modal</h4>
-        <p>
-          Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-        </p>
-        <Button onClick={handleClose}>Close</Button>
-      </Modal>
-    </>
-  );
-};
-
-export default ModalExample;
+        Reset
+      </SecureButton>
+    </Fragment>
