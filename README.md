@@ -1,22 +1,12 @@
-@Test
-void testOnNotifyPaymentLimitation() {
-    // Mock the ApplicationContext and LimitationService
-    ApplicationContext appContext = mock(ApplicationContext.class);
-    LimitationService limitationService = mock(LimitationService.class);
+    @Test
+    void testOnNotifyInquiryLimitation() {
+        NotifyInquiryLimitationRequest request = mock(NotifyInquiryLimitationRequest.class);
 
-    // Set the appContext in SpringUtil
-    ReflectionTestUtils.setField(SpringUtil.class, "appContext", appContext);
-    when(appContext.getBean(LimitationService.class)).thenReturn(limitationService);
+        ReflectionTestUtils.setField(paymentEventListener, "limitationService", limitationService);
 
-    // Mock the request
-    NotifyPaymentLimitationRequest request = mock(NotifyPaymentLimitationRequest.class);
+        paymentEventListener.onNotifyPaymentLimitation(request);
 
-    // Inject limitationService directly into paymentEventListener for the sake of the test
-    ReflectionTestUtils.setField(paymentEventListener, "limitationService", limitationService);
+        verify(limitationService, times(1)).notifyInquiryLimitation(request);
+    }
 
-    // Call the method under test
-    paymentEventListener.onNotifyPaymentLimitation(request);
-
-    // Verify that the limitationService's method was called
-    verify(limitationService, times(1)).notifyPaymentLimitation(request);
-}
+java.lang.NullPointerException: Cannot invoke "org.springframework.context.ApplicationContext.getBean(java.lang.Class)" because "com.ykb.payments.bill.common.util.SpringUtil.appContext" is null
