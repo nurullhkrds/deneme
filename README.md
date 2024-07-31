@@ -1,13 +1,6 @@
-  @Test
-    public void testHarmoniToMicroChannel() {
-        String harmoniChannel = "WEB";
-        String expectedMicroChannel = "WEB_MICRO";
+org.mockito.exceptions.base.MockitoException: 
+The used MockMaker SubclassByteBuddyMockMaker does not support the creation of static mocks
 
-        try (MockedStatic<ChannelUtil> mockedChannelUtil = mockStatic(ChannelUtil.class)) {
-            mockedChannelUtil.when(() -> ChannelUtil.convertChannel(harmoniChannel)).thenReturn(expectedMicroChannel);
-
-            String result = mapper.harmoniToMicroChannel(harmoniChannel);
-
-            assertEquals(expectedMicroChannel, result);
-        }
-    }
+Mockito's inline mock maker supports static mocks based on the Instrumentation API.
+You can simply enable this mock mode, by placing the 'mockito-inline' artifact where you are currently using 'mockito-core'.
+Note that Mockito's inline mock maker is not supported on Android.
