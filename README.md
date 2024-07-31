@@ -1,6 +1,1 @@
-   @BeforeEach
-    public void setUp() {
-        // Initialize the hmnMicroPaymentMap with necessary values
-        BillTransactionConstant.hmnMicroPaymentMap = new HashMap<>();
-        BillTransactionConstant.hmnMicroPaymentMap.put("CARD", EnumPaymentMethod.CARD.getValue());
-    }
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.response.CreditCardPaymentInstumentDTO.getCardNumber()" because "hmnPaymentMethodInstrument" is null
