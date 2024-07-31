@@ -1,38 +1,52 @@
-@Component
-public class PaymentEventPublisher {
-
-    private ApplicationEventPublisher eventPublisher;
-        
-    @Autowired
-    public PaymentEventPublisher(ApplicationEventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
-    }
-    
-	public void findPublishPaymentEvent(PublishPaymentTypeDTO publishPaymentTypeDTO) {
-		Optional<PaymentNotificationDTO> findPaymentNotificationEvent = publishPaymentTypeDTO
-				.getInsertedPaymentNotificationDTOList().stream()
-				.filter(paymentNotificationType -> paymentNotificationType.getNotificationType().getValue()
-						.equals(EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION.getValue()))
-				.findFirst();
-
-		if (findPaymentNotificationEvent.isPresent()) {
-			publishPaymentNotificationEvent(publishPaymentTypeDTO.getPaymentDTO(),
-					publishPaymentTypeDTO.getInstitutionDTO(), findPaymentNotificationEvent.get().getId());
-
-		}
-
-		if (EnumProvisionType.CARD
-				.equals(publishPaymentTypeDTO.getPaymentDTO().getPaymentMethod().getProvisionType())) {
-			Optional<PaymentNotificationDTO> findProvisionACKEvent = publishPaymentTypeDTO
-					.getInsertedPaymentNotificationDTOList().stream()
-					.filter(paymentNotificationType -> paymentNotificationType.getNotificationType().getValue()
-							.equals(EnumPaymentNotificationType.CRD_PRVSN_ACK.getValue()))
-					.findFirst();
-
-			if (findProvisionACKEvent.isPresent()) {
-				publishCreditCardProvisionACKEvent(publishPaymentTypeDTO.getPaymentDTO().getId(),
-						findProvisionACKEvent.get().getId());
-			}
-
-		}
-	}
+@Getter
+@Setter
+public class PaymentDTO extends BaseTransactionalDTO {
+	
+	private Long id;
+	private Long institutionId;
+	private Long institutionDebtTypeId;
+	private String subscriberNo;
+	private LocalDate billDueDate;
+	private String billNo;
+	private Integer transactionOrderNo;
+	private BigDecimal amount;
+	private BigDecimal paymentAmount;
+	private EnumCurrencyCode currency;
+	private EnumBillStatu status;
+	private String subscriberName;
+	private Long provisionId;
+	private Long customerNo;
+	private Long identityNo;
+	private String taxId;
+	private EnumPaymentMethod paymentMethod;
+	private LocalDate paymentDate;
+	private LocalTime paymentTime;
+	private Long contractNo;
+	private BigDecimal expenseAmount;
+	private EnumExpenseType expenseType;
+	private String expenseAccountNo;
+	private String accountNo;
+	private String creditCardNo;	
+	private Boolean isBusinessCard;
+	private String provisionRequestId;
+	private Long oceanTransactionId;
+	private EnumAccountingSource accountingSources;
+	private LocalDate availableDate;
+	private String institutionAccountNo;
+	private Long commissionInquiryId;
+	private LocalDate billLoadDate;
+	private String billTerm;
+	private LocalDate billIssueDate;
+	private String explanation;
+	private String queryStan;
+	private String paymentStan;
+	private String cancelStan;
+	private String institutionQueryStan;
+	private String institutionPaymentStan;
+	private String institutionCancelStan;
+	private String additionalInfo1;
+	private String additionalInfo2;
+	private String additionalInfo3;
+	private String additionalInfo4;
+	private String additionalInfo5;
+}
