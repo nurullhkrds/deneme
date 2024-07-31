@@ -1,17 +1,6 @@
-    @Test
-    public void testToDoBillPaymentRequest() {
-        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
-        request.setPaymentSourceCode("CARD");
-        BalanceAccountPaymentInstrumentDTO balanceAccount = new BalanceAccountPaymentInstrumentDTO();
-        balanceAccount.setAccountCurrencyCode("USD");
-        request.setBalanceAccountPaymentInstrument(balanceAccount);
-
-        DoBillPaymentRequest result = mapper.toDoBillPaymentRequest(request);
-
-        assertNotNull(result);
-        assertEquals("USD", result.getCurrency());
+   @BeforeEach
+    public void setUp() {
+        // Initialize the hmnMicroPaymentMap with necessary values
+        BillTransactionConstant.hmnMicroPaymentMap = new HashMap<>();
+        BillTransactionConstant.hmnMicroPaymentMap.put("CARD", EnumPaymentMethod.CARD.getValue());
     }
-
-org.opentest4j.AssertionFailedError: 
-Expected :USD
-Actual   :YTL
