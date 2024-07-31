@@ -1,22 +1,143 @@
-@Test
-void testOnNotifyInquiryLimitation() {
-    // Mock the ApplicationContext and LimitationService
-    ApplicationContext appContext = mock(ApplicationContext.class);
-    LimitationService limitationService = mock(LimitationService.class);
+@Component
+public class PaymentEventPublisher {
 
-    // Set the appContext in SpringUtil
-    ReflectionTestUtils.setField(SpringUtil.class, "appContext", appContext);
-    when(appContext.getBean(LimitationService.class)).thenReturn(limitationService);
+    private ApplicationEventPublisher eventPublisher;
+        
+    @Autowired
+    public PaymentEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+    
+	public void findPublishPaymentEvent(PublishPaymentTypeDTO publishPaymentTypeDTO) {
+		Optional<PaymentNotificationDTO> findPaymentNotificationEvent = publishPaymentTypeDTO
+				.getInsertedPaymentNotificationDTOList().stream()
+				.filter(paymentNotificationType -> paymentNotificationType.getNotificationType().getValue()
+						.equals(EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION.getValue()))
+				.findFirst();
 
-    // Mock the request
-    NotifyInquiryLimitationRequest request = mock(NotifyInquiryLimitationRequest.class);
+		if (findPaymentNotificationEvent.isPresent()) {
+			publishPaymentNotificationEvent(publishPaymentTypeDTO.getPaymentDTO(),
+					publishPaymentTypeDTO.getInstitutionDTO(), findPaymentNotificationEvent.get().getId());
 
-    // Inject limitationService directly into paymentEventListener for the sake of the test
-    ReflectionTestUtils.setField(paymentEventListener, "limitationService", limitationService);
+		}
 
-    // Call the method under test
-    paymentEventListener.onNotifyPaymentLimitation(request);
+		if (EnumProvisionType.CARD
+				.equals(publishPaymentTypeDTO.getPaymentDTO().getPaymentMethod().getProvisionType())) {
+			Optional<PaymentNotificationDTO> findProvisionACKEvent = publishPaymentTypeDTO
+					.getInsertedPaymentNotificationDTOList().stream()
+					.filter(paymentNotificationType -> paymentNotificationType.getNotificationType().getValue()
+							.equals(EnumPaymentNotificationType.CRD_PRVSN_ACK.getValue()))
+					.findFirst();
 
-    // Verify that the limitationService's method was called
-    verify(limitationService, times(1)).notifyInquiryLimitation(request);
+			if (findProvisionACKEvent.isPresent()) {
+				publishCreditCardProvisionACKEvent(publishPaymentTypeDTO.getPaymentDTO().getId(),
+						findProvisionACKEvent.get().getId());
+			}
+
+		}
+	}
+	
+	public void findPublishPaymentEventV2(PublishPaymentTypeDTO publishPaymentTypeDTO) {
+		Map<EnumPaymentNotificationType, BiConsumer<PublishPaymentTypeDTO, PaymentNotificationDTO>> consumerMap = new HashMap<>();
+		consumerMap.put(EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION, this::publishPaymentNotificationEventV2);
+		consumerMap.put(EnumPaymentNotificationType.CRD_PRVSN_ACK, this::publishCreditCardProvisionACKEventV2);
+
+		publishPaymentTypeDTO.getInsertedPaymentNotificationDTOList()
+				.forEach(each -> consumerMap.get(each.getNotificationType()).accept(publishPaymentTypeDTO, each));
+
+	}
+	
+    public void publishPaymentNotificationEventV2(PublishPaymentTypeDTO publishPaymentTypeDTO, PaymentNotificationDTO notification) {
+    	BillPaymentEvent billPaymentEvent = new BillPaymentEvent();
+		billPaymentEvent.setPaymentDTO(publishPaymentTypeDTO.getPaymentDTO());
+		billPaymentEvent.setInstitutionDTO(publishPaymentTypeDTO.getInstitutionDTO());
+		billPaymentEvent.setPaymentNotificationId(notification.getId());
+		eventPublisher.publishEvent(billPaymentEvent);
+    }
+    
+    public void publishCreditCardProvisionACKEventV2(PublishPaymentTypeDTO publishPaymentTypeDTO, PaymentNotificationDTO notification) {
+        CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO = new CreditCardProvisionACKEventDTO();
+        creditCardProvisionACKEventDTO.setPaymentId(publishPaymentTypeDTO.getPaymentDTO().getId());
+        creditCardProvisionACKEventDTO.setPaymentNotificationId(notification.getId());
+        eventPublisher.publishEvent(creditCardProvisionACKEventDTO);
+    }
+	
+	
+	public void findPublishPaymentCancelEvent(PublishPaymentTypeDTO publishPaymentTypeDTO) {
+		Optional<PaymentNotificationDTO> findPaymentCancelNotificationEvent = publishPaymentTypeDTO
+				.getInsertedPaymentNotificationDTOList().stream()
+				.filter(paymentNotificationType -> paymentNotificationType.getNotificationType().getValue()
+						.equals(EnumPaymentNotificationType.INSTITUTION_CANCEL_NOTIFICATION.getValue()))
+				.findFirst();
+
+		if (findPaymentCancelNotificationEvent.isPresent()) {
+			publishPaymentCancelNotificationEvent(publishPaymentTypeDTO.getPaymentDTO(),
+					publishPaymentTypeDTO.getPaymentCancelDTO(), publishPaymentTypeDTO.getInstitutionDTO(),
+					findPaymentCancelNotificationEvent.get().getId());
+
+		}
+
+		if (EnumProvisionType.CARD
+				.equals(publishPaymentTypeDTO.getPaymentDTO().getPaymentMethod().getProvisionType())) {
+			Optional<PaymentNotificationDTO> findProvisionReverseEvent = publishPaymentTypeDTO
+					.getInsertedPaymentNotificationDTOList().stream()
+					.filter(paymentNotificationType -> paymentNotificationType.getNotificationType().getValue()
+							.equals(EnumPaymentNotificationType.RVRS_PROVISION.getValue()))
+					.findFirst();
+
+			if (findProvisionReverseEvent.isPresent()) {
+				publishCreditCardProvisionReverseEvent(publishPaymentTypeDTO.getPaymentDTO(),publishPaymentTypeDTO.getPaymentCancelDTO(),
+						findProvisionReverseEvent.get().getId());
+			}
+
+		}
+	}
+
+
+    public void publishPaymentNotificationEvent(PaymentDTO paymentDTO,
+    		InstitutionDTO institutionDTO,Long paymentNotificationID) {
+    	BillPaymentEvent billPaymentEvent = new BillPaymentEvent();
+		billPaymentEvent.setPaymentDTO(paymentDTO);
+		billPaymentEvent.setInstitutionDTO(institutionDTO);
+		billPaymentEvent.setPaymentNotificationId(paymentNotificationID);
+		eventPublisher.publishEvent(billPaymentEvent);
+    }
+
+	public void publishPaymentCancelNotificationEvent(PaymentDTO paymentDTO, PaymentCancelDTO paymentCancelDTO,InstitutionDTO institutionDTO,
+			Long paymentNotificationID) {
+		BillPaymentCancelEvent billPaymentCancelEvent = new BillPaymentCancelEvent();
+		billPaymentCancelEvent.setCancelledPayment(paymentDTO);
+		billPaymentCancelEvent.setCancelRecord(paymentCancelDTO);
+		billPaymentCancelEvent.setInstitution(institutionDTO);
+		billPaymentCancelEvent.setPaymentNotificationId(paymentNotificationID);
+
+		eventPublisher.publishEvent(billPaymentCancelEvent);
+	}
+    
+    public void publishCreditCardProvisionACKEvent(Long paymentId,Long paymentNotificationID) {
+        CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO = new CreditCardProvisionACKEventDTO();
+        creditCardProvisionACKEventDTO.setPaymentId(paymentId);
+        creditCardProvisionACKEventDTO.setPaymentNotificationId(paymentNotificationID);
+        eventPublisher.publishEvent(creditCardProvisionACKEventDTO);
+    }
+    
+    public void publishCreditCardProvisionReverseEvent(PaymentDTO paymentDTO,PaymentCancelDTO paymentCancelDTO, Long paymentNotificationID) {
+    	CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO = new CreditCardProvisionReverseEventDTO(); 
+    	creditCardProvisionReverseEventDTO.setPaymentId(paymentDTO.getId());
+    	creditCardProvisionReverseEventDTO.setPaymentCancelId(paymentCancelDTO.getId());
+    	creditCardProvisionReverseEventDTO.setPaymentNotificationId(paymentNotificationID);
+        eventPublisher.publishEvent(creditCardProvisionReverseEventDTO);
+        
+    }
+    
+    public void publishPaymentLimiationNotification(NotifyPaymentLimitationRequest notifyPaymentLimitationRequest) {    	
+        eventPublisher.publishEvent(notifyPaymentLimitationRequest);        
+    }    
+    
+    public void publishInquiryLimiationNotification(NotifyInquiryLimitationRequest notifyInquiryLimitationRequest) {    	
+        eventPublisher.publishEvent(notifyInquiryLimitationRequest);
+        
+    }
+    
+    
 }
