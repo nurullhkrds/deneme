@@ -1,154 +1,222 @@
-@Mapper(componentModel = "spring")
-public interface PaymentMapper {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-	PaymentMapper INSTANCE = Mappers.getMapper(PaymentMapper.class);
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 
-	@Mapping(source = "paymentTime", target = "paymentTime", dateFormat = "HH:mm:ss")
-	Payment toEntity(PaymentDTO dto);
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
-	@Mapping(source = "paymentTime", target = "paymentTime", dateFormat = "HH:mm:ss")
-	PaymentDTO toDTO(Payment entity);
+public class PaymentMapperTest {
 
-	@Mapping(source = "payment.id", target = "id")
-	@Mapping(source = "payment.explanation", target = "explanation")
-	@Mapping(source = "payment.accountNo", target = "accountNumber")
-	@Mapping(source = "payment.amount", target = "billAmount")
-	@Mapping(source = "payment.paymentAmount", target = "billRecalculatedAmount")
-	@Mapping(source = "payment.creditCardNo", target = "cardNumber")
-	@Mapping(source = "payment.contractNo", target = "contractNumber")
-	@Mapping(source = "payment.institutionDebtTypeId", target = "debtTypeId")
-	@Mapping(source = "institution.product.code", target = "productCode")
-	@Mapping(source = "payment.currency.value", target = "currency")
-	PaidBillResponseWebDTO toPaidBillResponseWebDTO(PaymentDTO payment, InstitutionDTO institution);
+    private PaymentMapper mapper = Mappers.getMapper(PaymentMapper.class);
 
-	@Mapping(source = "hmnPaidBill.paymentInformation.balanceAccountPaymentInstrument.accountNumber", target = "accountNumber")
-	@Mapping(source = "hmnPaidBill.paymentInformation.creditCardPaymentInstrument.cardNumber", target = "cardNumber")
-	@Mapping(source = "hmnPaidBill.paymentInformation.accountingContractNumber", target = "contractNumber")
-	@Mapping(source = "product", target = "productCode")
-	@Mapping(source = "institution", target = "institutionCode")
-	@Mapping(source = "billDueDate", target = "billDueDate", dateFormat = "yyyy-MM-dd")
-	PaidBillResponseWebDTO toPaidBillResponseWebDTO(HmnPaidBillDTO hmnPaidBill);
+    @Test
+    public void testToEntity() {
+        PaymentDTO dto = new PaymentDTO();
+        dto.setPaymentTime("12:34:56");
+        
+        Payment entity = mapper.toEntity(dto);
 
-	@Mapping(target = "additionalInfo1", ignore = true)
-	@Mapping(target = "additionalInfo2", ignore = true)
-	@Mapping(target = "additionalInfo3", ignore = true)
-	@Mapping(target = "additionalInfo4", ignore = true)
-	@Mapping(target = "additionalInfo5", ignore = true)
-	@Mapping(target = "additionalInfo6", ignore = true)
-	@Mapping(target = "additionalInfo7", ignore = true)
-	@Mapping(target = "additionalInfo8", ignore = true)
-	@Mapping(target = "additionalInfo9", ignore = true)
-	@Mapping(target = "currency", source = "payment.currency.value")
-	PaidBillAdapterDTO toPaidBillAdapterDTO(Payment payment);
+        assertNotNull(entity);
+        assertEquals("12:34:56", entity.getPaymentTime());
+    }
 
-	
-	
-	@Mapping(target = "channelSessionId", source = "paymentCancel.channelSessionId")
-	@Mapping(target = "channelTransactionId", source = "paymentCancel.channelTransactionId")
-	@Mapping(target = "id", source = "paymentCancel.id")
-	@Mapping(target = "branchCode", source = "paymentCancel.branchCode")
-	@Mapping(target = "channelCode", source = "paymentCancel.channelCode")
-	@Mapping(target = "additionalInfo1", ignore = true)
-	@Mapping(target = "additionalInfo2", ignore = true)
-	@Mapping(target = "additionalInfo3", ignore = true)
-	@Mapping(target = "additionalInfo4", ignore = true)
-	@Mapping(target = "additionalInfo5", ignore = true)
-	@Mapping(target = "additionalInfo6", ignore = true)
-	@Mapping(target = "additionalInfo7", ignore = true)
-	@Mapping(target = "additionalInfo8", ignore = true)
-	@Mapping(target = "additionalInfo9", ignore = true)
-	@Mapping(target = "cancelTime", source = "paymentCancel.createDate", qualifiedByName = "toCancelTime")
-	@Mapping(target = "currency", source = "payment.currency.value")
-	CancelledBillAdapterDTO toCancelledBillAdapterDTO(Payment payment, PaymentCancelDTO paymentCancel);
+    @Test
+    public void testToDTO() {
+        Payment entity = new Payment();
+        entity.setPaymentTime("12:34:56");
 
-	@Named("toCancelTime")
-	default String toCancelTime(LocalDateTime createDate) {
-		if (createDate == null) {
-			return "";
-		}
+        PaymentDTO dto = mapper.toDTO(entity);
 
-		return createDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-	}
+        assertNotNull(dto);
+        assertEquals("12:34:56", dto.getPaymentTime());
+    }
 
-	@Mapping(target = "returnCode", source = "result.code")
-	@Mapping(target = "returnMessage", source = "result.explanation")
-	NotifyPaymentResponse toNotifyPaymentResponse(NotifyPaymentProcessOutput processResult);
+    @Test
+    public void testToPaidBillResponseWebDTOFromPaymentAndInstitution() {
+        PaymentDTO payment = new PaymentDTO();
+        payment.setId(1L);
+        payment.setExplanation("Test Explanation");
+        payment.setAccountNo("12345");
+        payment.setAmount(100.0);
+        payment.setPaymentAmount(90.0);
+        payment.setCreditCardNo("67890");
+        payment.setContractNo("112233");
+        payment.setInstitutionDebtTypeId(1);
+        payment.setCurrency(new CurrencyDTO("USD"));
 
-	@Mapping(target = "returnCode", source = "result.code")
-	@Mapping(target = "returnMessage", source = "result.explanation")
-	NotifyPaymentCancelResponse toNotifyPaymentCancelResponse(NotifyPaymentCancelProcessOutput executeProcess);
+        InstitutionDTO institution = new InstitutionDTO();
+        ProductDTO product = new ProductDTO();
+        product.setCode("PROD123");
+        institution.setProduct(product);
 
+        PaidBillResponseWebDTO dto = mapper.toPaidBillResponseWebDTO(payment, institution);
 
-	@Mapping(target = "billDueDate", source = "paidBillResponseWebDTO.billDueDate", qualifiedByName = "toBillDueDate")
-	@Mapping(target = "product", source = "productCode")
-	@Mapping(target = "institution", source = "institutionCode")
-	@Mapping(target = "bankReferenceNo", source = "contractNumber")
-	@Mapping(target = "paymentInformation", source = "paidBillResponseWebDTO", qualifiedByName = "extractPaymentInformation")
-	HmnPaidBillDTO toHmnPaidBillDTO(PaidBillResponseWebDTO paidBillResponseWebDTO);
+        assertNotNull(dto);
+        assertEquals(1L, dto.getId());
+        assertEquals("Test Explanation", dto.getExplanation());
+        assertEquals("12345", dto.getAccountNumber());
+        assertEquals(100.0, dto.getBillAmount());
+        assertEquals(90.0, dto.getBillRecalculatedAmount());
+        assertEquals("67890", dto.getCardNumber());
+        assertEquals("112233", dto.getContractNumber());
+        assertEquals(1, dto.getDebtTypeId());
+        assertEquals("PROD123", dto.getProductCode());
+        assertEquals("USD", dto.getCurrency());
+    }
 
-	List<HmnPaidBillDTO> toHmnPaidBillDTOList(List<PaidBillResponseWebDTO> paidBillResponseWebDTO);
+    @Test
+    public void testToPaidBillResponseWebDTOFromHmnPaidBill() {
+        HmnPaidBillDTO hmnPaidBill = new HmnPaidBillDTO();
+        PaymentInformationDTO paymentInformation = new PaymentInformationDTO();
+        BalanceAccountPaymentInstrumentDTO balanceAccount = new BalanceAccountPaymentInstrumentDTO();
+        balanceAccount.setAccountNumber("12345");
+        paymentInformation.setBalanceAccountPaymentInstrument(balanceAccount);
+        CreditCardPaymentInstumentDTO creditCard = new CreditCardPaymentInstumentDTO();
+        creditCard.setCardNumber("67890");
+        paymentInformation.setCreditCardPaymentInstrument(creditCard);
+        paymentInformation.setAccountingContractNumber("112233");
+        hmnPaidBill.setPaymentInformation(paymentInformation);
+        hmnPaidBill.setProduct("PROD123");
+        hmnPaidBill.setInstitution("INST123");
+        hmnPaidBill.setBillDueDate(new Date());
 
+        PaidBillResponseWebDTO dto = mapper.toPaidBillResponseWebDTO(hmnPaidBill);
 
-	@Named("toBillDueDate")
-	default Date toBillDueDate(String billDueDate) {
-		return DateUtils.convertLocalDateToDate(DateUtils.parseLocalDate(billDueDate, DateUtils.DATE_FORMAT_YYYY_MM_DD_WITH_HYPHEN));
-	}
+        assertNotNull(dto);
+        assertEquals("12345", dto.getAccountNumber());
+        assertEquals("67890", dto.getCardNumber());
+        assertEquals("112233", dto.getContractNumber());
+        assertEquals("PROD123", dto.getProductCode());
+        assertEquals("INST123", dto.getInstitutionCode());
+        assertNotNull(dto.getBillDueDate());
+    }
 
-	@Named("extractPaymentInformation")
-	default PaymentInformationDTO extractPaymentInformation(PaidBillResponseWebDTO paidBillResponseWebDTO) {
-		PaymentInformationDTO paymentInformationDTO = new PaymentInformationDTO();
-		BalanceAccountPaymentInstrumentDTO balanceAccountPaymentInstrument = new BalanceAccountPaymentInstrumentDTO();
-		balanceAccountPaymentInstrument.setAccountCurrencyCode(paidBillResponseWebDTO.getCurrency());
-		if(paidBillResponseWebDTO.getAccountNumber() != null){
-			balanceAccountPaymentInstrument.setAccountNumber(paidBillResponseWebDTO.getAccountNumber());
-		}
-		paymentInformationDTO.setBalanceAccountPaymentInstrument(balanceAccountPaymentInstrument);
+    @Test
+    public void testToPaidBillAdapterDTO() {
+        Payment payment = new Payment();
+        payment.setCurrency(new CurrencyDTO("USD"));
 
-		CreditCardPaymentInstumentDTO creditCardPaymentInstrument = new CreditCardPaymentInstumentDTO();
-		creditCardPaymentInstrument.setCurrencyCode(paidBillResponseWebDTO.getCurrency());
-		if(paidBillResponseWebDTO.getCardNumber() != null){
-			creditCardPaymentInstrument.setCardNumber(paidBillResponseWebDTO.getCardNumber());
-		}
-		paymentInformationDTO.setCreditCardPaymentInstrument(creditCardPaymentInstrument);
-		paymentInformationDTO.setAccountingContractNumber(paidBillResponseWebDTO.getContractNumber());
-		return  paymentInformationDTO;
-	}
+        PaidBillAdapterDTO dto = mapper.toPaidBillAdapterDTO(payment);
 
+        assertNotNull(dto);
+        assertEquals("USD", dto.getCurrency());
+    }
 
-	@Mapping(target = "bankReferenceNo", source = "contractNo")
-	@Mapping(target = "paymentInformation", source = "payment", qualifiedByName = "extractPaymentInformationWithPayment")
-	@Mapping(target = "commissionAmount", source = "expenseAmount")
-	@Mapping(target = "currency",source = "payment.currency.value")
-	@Mapping(target = "status",source = "payment.status.hmnValue")
-	@Mapping(target = "billAmount",source = "amount")
-	@Mapping(target = "billRecalculatedAmount",source = "paymentAmount")
+    @Test
+    public void testToCancelledBillAdapterDTO() {
+        Payment payment = new Payment();
+        payment.setCurrency(new CurrencyDTO("USD"));
 
-	HmnPaidBillDTO toHmnRecoDetailDTO(Payment payment);
+        PaymentCancelDTO paymentCancel = new PaymentCancelDTO();
+        paymentCancel.setChannelSessionId("SESSION123");
+        paymentCancel.setChannelTransactionId("TRANS123");
+        paymentCancel.setId(1L);
+        paymentCancel.setBranchCode("BRANCH123");
+        paymentCancel.setChannelCode("CHANNEL123");
+        paymentCancel.setCreateDate(LocalDateTime.now());
 
-	List<HmnPaidBillDTO> toHmnRecoDetailDTOList(List<Payment> payments);
+        CancelledBillAdapterDTO dto = mapper.toCancelledBillAdapterDTO(payment, paymentCancel);
 
-	@Named("extractPaymentInformationWithPayment")
-	default PaymentInformationDTO extractPaymentInformationWithPayment(Payment payment) {
-		PaymentInformationDTO paymentInformationDTO = new PaymentInformationDTO();
-		paymentInformationDTO.setPaymentDate(DateUtils.convertLocalDateToDate(payment.getPaymentDate()));
-		BalanceAccountPaymentInstrumentDTO balanceAccountPaymentInstrument = new BalanceAccountPaymentInstrumentDTO();
-		balanceAccountPaymentInstrument.setAccountCurrencyCode(payment.getCurrency().getValue());
-		if(payment.getAccountNo() != null){
-			paymentInformationDTO.setPaymentSourceCode("H");
-			balanceAccountPaymentInstrument.setAccountNumber(payment.getAccountNo());
-		}
-		paymentInformationDTO.setBalanceAccountPaymentInstrument(balanceAccountPaymentInstrument);
+        assertNotNull(dto);
+        assertEquals("SESSION123", dto.getChannelSessionId());
+        assertEquals("TRANS123", dto.getChannelTransactionId());
+        assertEquals(1L, dto.getId());
+        assertEquals("BRANCH123", dto.getBranchCode());
+        assertEquals("CHANNEL123", dto.getChannelCode());
+        assertNotNull(dto.getCancelTime());
+        assertEquals("USD", dto.getCurrency());
+    }
 
-		CreditCardPaymentInstumentDTO creditCardPaymentInstrument = new CreditCardPaymentInstumentDTO();
-		creditCardPaymentInstrument.setCurrencyCode(payment.getCurrency().getValue());
-		if(payment.getCreditCardNo() != null){
-			paymentInformationDTO.setPaymentSourceCode("K");
-			creditCardPaymentInstrument.setCardNumber(payment.getCreditCardNo());
-		}
-		paymentInformationDTO.setCreditCardPaymentInstrument(creditCardPaymentInstrument);
-		paymentInformationDTO.setAccountingContractNumber(payment.getContractNo());
-		return  paymentInformationDTO;
-	}
+    @Test
+    public void testToNotifyPaymentResponse() {
+        NotifyPaymentProcessOutput result = new NotifyPaymentProcessOutput();
+        result.setCode("SUCCESS");
+        result.setExplanation("Transaction Successful");
 
+        NotifyPaymentResponse response = mapper.toNotifyPaymentResponse(result);
 
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getReturnCode());
+        assertEquals("Transaction Successful", response.getReturnMessage());
+    }
+
+    @Test
+    public void testToNotifyPaymentCancelResponse() {
+        NotifyPaymentCancelProcessOutput result = new NotifyPaymentCancelProcessOutput();
+        result.setCode("SUCCESS");
+        result.setExplanation("Cancellation Successful");
+
+        NotifyPaymentCancelResponse response = mapper.toNotifyPaymentCancelResponse(result);
+
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getReturnCode());
+        assertEquals("Cancellation Successful", response.getReturnMessage());
+    }
+
+    @Test
+    public void testToHmnPaidBillDTO() {
+        PaidBillResponseWebDTO paidBillResponseWebDTO = new PaidBillResponseWebDTO();
+        paidBillResponseWebDTO.setBillDueDate("2024-07-31");
+        paidBillResponseWebDTO.setProductCode("PROD123");
+        paidBillResponseWebDTO.setInstitutionCode("INST123");
+        paidBillResponseWebDTO.setContractNumber("112233");
+
+        HmnPaidBillDTO dto = mapper.toHmnPaidBillDTO(paidBillResponseWebDTO);
+
+        assertNotNull(dto);
+        assertNotNull(dto.getBillDueDate());
+        assertEquals("PROD123", dto.getProduct());
+        assertEquals("INST123", dto.getInstitution());
+        assertEquals("112233", dto.getBankReferenceNo());
+    }
+
+    @Test
+    public void testToHmnRecoDetailDTO() {
+        Payment payment = new Payment();
+        payment.setCurrency(new CurrencyDTO("USD"));
+        payment.setStatus(new StatusDTO("COMPLETED"));
+        payment.setAccountNo("12345");
+        payment.setCreditCardNo("67890");
+        payment.setContractNo("112233");
+        payment.setPaymentDate(LocalDateTime.now());
+
+        HmnPaidBillDTO dto = mapper.toHmnRecoDetailDTO(payment);
+
+        assertNotNull(dto);
+        assertEquals("USD", dto.getCurrency());
+        assertEquals("COMPLETED", dto.getStatus());
+        assertEquals("12345", dto.getPaymentInformation().getBalanceAccountPaymentInstrument().getAccountNumber());
+        assertEquals("67890", dto.getPaymentInformation().getCreditCardPaymentInstrument().getCardNumber());
+        assertEquals("112233", dto.getPaymentInformation().getAccountingContractNumber());
+        assertNotNull(dto.getPaymentInformation().getPaymentDate());
+    }
+
+    @Test
+    public void testToHmnRecoDetailDTOList() {
+        Payment payment = new Payment();
+        payment.setCurrency(new CurrencyDTO("USD"));
+        payment.setStatus(new StatusDTO("COMPLETED"));
+        payment.setAccountNo("12345");
+        payment.setCreditCardNo("67890");
+        payment.setContractNo("112233");
+        payment.setPaymentDate(LocalDateTime.now());
+
+        List<Payment> payments = List.of(payment);
+        List<HmnPaidBillDTO> dtoList = mapper.toHmnRecoDetailDTOList(payments);
+
+        assertNotNull(dtoList);
+        assertEquals(1, dtoList.size());
+
+        HmnPaidBillDTO dto = dtoList.get(0);
+        assertEquals("USD", dto.getCurrency());
+        assertEquals("COMPLETED", dto.getStatus());
+        assertEquals("12345", dto.getPaymentInformation().getBalanceAccountPaymentInstrument().getAccountNumber());
+        assertEquals("67890", dto.getPaymentInformation().getCreditCardPaymentInstrument().getCardNumber());
+        assertEquals("112233", dto.getPaymentInformation().getAccountingContractNumber());
+        assertNotNull(dto.getPaymentInformation().getPaymentDate());
+    }
 }
