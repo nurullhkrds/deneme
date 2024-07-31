@@ -1,44 +1,32 @@
-import com.ykb.payments.bill.transaction.payment.mapper.HarmoniMicroMapper;
-import com.ykb.payments.bill.transaction.payment.web.request.RequestHarmoniQueryBills;
-import com.ykb.payments.bill.transaction.payment.web.response.QueryBillsResponse;
-import com.ykb.payments.bill.transaction.payment.web.response.ResponseHarmoniQueryBills;
-import com.ykb.payments.bill.transaction.payment.web.response.SubsrciberNoPartResponseWebDTO;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-@ExtendWith(MockitoExtension.class)
-public class HarmoniMicroMapperTest {
-
-    @InjectMocks
-    private HarmoniMicroMapper mapper = Mappers.getMapper(HarmoniMicroMapper.class);
-
+java.lang.NullPointerException: Cannot invoke "java.time.LocalDate.atStartOfDay(java.time.ZoneId)" because the return value of "com.ykb.payments.bill.transaction.payment.web.response.QueriedBillResponseWebDTO.getBillDueDate()" is null
     @Test
     public void testToResponseHarmoniQueryBills() {
         QueryBillsResponse queryBillsResponse = new QueryBillsResponse();
         RequestHarmoniQueryBills harmoniRequest = new RequestHarmoniQueryBills();
 
-        // Set necessary fields for queryBillsResponse
+        SubsrciberNoPartResponseWebDTO dto1=new SubsrciberNoPartResponseWebDTO();
+        dto1.setPartKey("1234");
+        dto1.setPartNo(1);
+
+
+        SubsrciberNoPartResponseWebDTO dto2=new SubsrciberNoPartResponseWebDTO();
+        dto2.setPartKey("5678");
+        dto2.setPartNo(2);
+
+
+        SubsrciberNoPartResponseWebDTO dto3=new SubsrciberNoPartResponseWebDTO();
+        dto3.setPartKey("91011");
+        dto3.setPartNo(3);
+
         queryBillsResponse.setSubscriberNoPartList(List.of(
-                new SubsrciberNoPartResponseWebDTO(1, "1234"),
-                new SubsrciberNoPartResponseWebDTO(2, "5678"),
-                new SubsrciberNoPartResponseWebDTO(3, "91011")
+                dto1,dto2,dto3
         ));
 
-        // Populate the bill list
         queryBillsResponse.setBillList(List.of(
-                // Create and add necessary bill DTOs to the list
-                new HmnBaseBillDTO()
+                new QueriedBillResponseWebDTO()
         ));
 
         ResponseHarmoniQueryBills result = mapper.toResponseHarmoniQueryBills(queryBillsResponse, harmoniRequest);
 
         assertNotNull(result);
     }
-}
