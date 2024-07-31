@@ -1,15 +1,16 @@
     @Test
-    public void testExtractCurrency() {
-        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
-        BalanceAccountPaymentInstrumentDTO balanceAccount = new BalanceAccountPaymentInstrumentDTO();
-        balanceAccount.setAccountCurrencyCode("USD");
-        request.setBalanceAccountPaymentInstrument(balanceAccount);
-        request.setPaymentSourceCode("ACCOUNT");
+    public void testToHarmoniSubscriberNo1() {
+        SubsrciberNoPartResponseWebDTO dto1=new SubsrciberNoPartResponseWebDTO();
+        dto1.setPartKey("1234");
+        dto1.setPartNo(1);
 
-        String result = mapper.extractCurrency(request);
 
-        assertEquals("USD", result);
+        List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList = List.of(dto1);
+
+        String result = mapper.toHarmoniSubscriberNo1(subscriberNoPartList);
+
+        assertEquals("1234", result);
     }
 org.opentest4j.AssertionFailedError: 
-Expected :USD
-Actual   :YTL
+Expected :1234
+Actual   :null
