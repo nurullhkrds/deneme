@@ -1,82 +1,117 @@
-@Mapper(componentModel = "spring")
-public interface MicroHarmoniMapper {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    @Mapping(target = "product", source = "productCode")
-    @Mapping(target = "institution", source = "institutionCode")
-    @Mapping(target = "currencyCode",  source = "request", qualifiedByName = "extractCurrencyCode")
-    @Mapping(target = "subscriberNo1", source = "request.subscriberNoPartList", qualifiedByName = "toHarmoniSubscriberNo1")
-    @Mapping(target = "subscriberNo2", source = "request.subscriberNoPartList", qualifiedByName = "toHarmoniSubscriberNo2")
-    @Mapping(target = "subscriberNo3", source = "request.subscriberNoPartList", qualifiedByName = "toHarmoniSubscriberNo3")
-    @Mapping(target = "channelCode", source = "request.channelCode", qualifiedByName = "harmoniToMicroChannel")
-    RequestQueryBillsHmn toRequestQueryBillsHmn(QueryBillsRequest request);
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-    @Named("extractCurrencyCode")
-    default String extractCurrencyCode(QueryBillsRequest request) {
-        return StringUtils.isNotBlank(request.getCurrency()) && request.getCurrency().equals(EnumCurrencyCode.TURKISH_LIRA.getValue())
-                ? EnumCurrencyCode.TURKISH_LIRA_YTL.getValue() : request.getCurrency();
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class MicroHarmoniMapperTest {
+
+    @InjectMocks
+    private MicroHarmoniMapperImpl mapper = Mappers.getMapper(MicroHarmoniMapperImpl.class);
+
+    @Mock
+    private ChannelUtil channelUtil;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    @Named("toHarmoniSubscriberNo1")
-    default String toHarmoniSubscriberNo1(List<SubscriberNoPartRequestWebDTO> subscriberNoPartList) {
-        return subscriberNoPartList!=null && subscriberNoPartList.size() == 1 ? subscriberNoPartList.get(0).getPartValue(): null;
+    @Test
+    public void testToRequestQueryBillsHmn() {
+        QueryBillsRequest request = new QueryBillsRequest();
+        request.setCurrency("TRY");
+        request.setSubscriberNoPartList(Arrays.asList(new SubscriberNoPartRequestWebDTO("123")));
+
+        RequestQueryBillsHmn result = mapper.toRequestQueryBillsHmn(request);
+
+        assertNotNull(result);
+        assertEquals(EnumCurrencyCode.TURKISH_LIRA_YTL.getValue(), result.getCurrencyCode());
+        assertEquals("123", result.getSubscriberNo1());
+        assertNull(result.getSubscriberNo2());
+        assertNull(result.getSubscriberNo3());
     }
 
-    @Named("toHarmoniSubscriberNo2")
-    default String toHarmoniSubscriberNo2(List<SubscriberNoPartRequestWebDTO> subscriberNoPartList) {
-        return subscriberNoPartList!=null && subscriberNoPartList.size() == 2 ? subscriberNoPartList.get(1).getPartValue(): null;
+    @Test
+    public void testToQueryBillsResponse() {
+        ResponseQueryBillsHmn responseQueryBillsMicro = new ResponseQueryBillsHmn();
+        HmnQueriedBills bill = new HmnQueriedBills();
+        bill.setSubscriberNo("12345");
+        bill.setSubscriberName("John Doe");
+        bill.setBillNo("67890");
+        bill.setBillTerm("202107");
+        bill.setBillAmount("100.00");
+        bill.setBankReferenceNo("ref123");
+        bill.setPayable(EnumYesNo.YES.getValue());
+        bill.setBillDueDate("2021-08-01");
+        bill.setCurrency("TRY");
+        responseQueryBillsMicro.setBillList(Collections.singletonList(bill));
+
+        QueryBillsRequest queryBillsRequest = new QueryBillsRequest();
+        queryBillsRequest.setProductCode("PROD001");
+        queryBillsRequest.setInstitutionCode("INST001");
+        queryBillsRequest.setDebtTypeID("DEBT001");
+
+        QueryBillsResponse result = mapper.toQueryBillsResponse(responseQueryBillsMicro, queryBillsRequest);
+
+        assertNotNull(result);
+        assertEquals("12345", result.getSubscriberNo());
+        assertEquals("John Doe", result.getSubscriberName());
+        assertEquals(1, result.getBillList().size());
+        assertEquals("67890", result.getBillList().get(0).getBillNo());
     }
 
-    @Named("toHarmoniSubscriberNo3")
-    default String toHarmoniSubscriberNo3(List<SubscriberNoPartRequestWebDTO> subscriberNoPartList) {
-        return subscriberNoPartList!=null && subscriberNoPartList.size() == 3 ? subscriberNoPartList.get(2).getPartValue(): null;
+    @Test
+    public void testToRequestBillPaymentExpenseHmn() {
+        GetBillPaymentExpenseRequestDTO requestDTO = new GetBillPaymentExpenseRequestDTO();
+        // populate requestDTO as needed
+
+        RequestBillPaymentExpenseHmn result = mapper.toRequestBillPaymentExpenseHmn(requestDTO);
+
+        assertNotNull(result);
+        // perform additional assertions as needed
     }
 
-    @Named("harmoniToMicroChannel")
-    default String harmoniToMicroChannel(String channel) {
-        return ChannelUtil.convertToHarmoniChannel(channel);
+    @Test
+    public void testToGetBillPaymentExpenseResponseDTO() {
+        ResponseBillPaymentExpenseHmn responseHmn = new ResponseBillPaymentExpenseHmn();
+        // populate responseHmn as needed
+
+        GetBillPaymentExpenseResponseDTO result = mapper.toGetBillPaymentExpenseResponseDTO(responseHmn);
+
+        assertNotNull(result);
+        // perform additional assertions as needed
     }
 
-    @Mapping(target = "productCode",source = "queryBillsRequest.productCode")
-    @Mapping(target = "institutionCode",source = "queryBillsRequest.institutionCode")
-    @Mapping(target = "debtTypeID",source = "queryBillsRequest.debtTypeID")
-    @Mapping(target = "subscriberNo",source = "responseQueryBillsMicro", qualifiedByName = "extractSubscriberNo")
-    @Mapping(target = "subscriberName",source = "responseQueryBillsMicro", qualifiedByName = "extractSubscriberName")
-    @Mapping(target = "billList",source = "responseQueryBillsMicro", qualifiedByName = "extractBillList")
-    QueryBillsResponse toQueryBillsResponse(ResponseQueryBillsHmn responseQueryBillsMicro,QueryBillsRequest queryBillsRequest);
+    @Test
+    public void testToRequestPayBillHmn() {
+        DoBillPaymentRequest request = new DoBillPaymentRequest();
+        request.setChannelCode("WEB");
 
-    @Named("extractSubscriberNo")
-    default String extractSubscriberNo(ResponseQueryBillsHmn responseQueryBillsMicro) {
-        return  responseQueryBillsMicro.getBillList()!= null && !responseQueryBillsMicro.getBillList().isEmpty() ?  responseQueryBillsMicro.getBillList().get(0).getSubscriberNo() : null;
-    }
-    @Named("extractSubscriberName")
-    default String extractSubscriberName(ResponseQueryBillsHmn responseQueryBillsMicro) {
-        return  responseQueryBillsMicro.getBillList()!= null && !responseQueryBillsMicro.getBillList().isEmpty() ?  responseQueryBillsMicro.getBillList().get(0).getSubscriberName() : null;
-    }
-    @Named("extractBillList")
-    default List<QueriedBillResponseWebDTO>  extractBillList(ResponseQueryBillsHmn responseQueryBillsMicro) {
-        List<QueriedBillResponseWebDTO> billList = new ArrayList<>();
-        QueriedBillResponseWebDTO queriedBillResponseWebDTO;
-        for (HmnQueriedBills hmnQueriedBills : responseQueryBillsMicro.getBillList()) {
-            queriedBillResponseWebDTO = new QueriedBillResponseWebDTO();
-            queriedBillResponseWebDTO.setBillNo(hmnQueriedBills.getBillNo());
-            queriedBillResponseWebDTO.setBillTerm(hmnQueriedBills.getBillTerm());
-            queriedBillResponseWebDTO.setBillAmount(hmnQueriedBills.getBillAmount());
-            queriedBillResponseWebDTO.setBillProvisionId(hmnQueriedBills.getBankReferenceNo());
-            queriedBillResponseWebDTO.setPayable(StringUtils.isEmpty(hmnQueriedBills.getPayable()) || hmnQueriedBills.getPayable().equals(EnumYesNo.YES.getValue()) ?  true : false);
-            queriedBillResponseWebDTO.setBillDueDate(DateUtils.convertDateTOLocalDate(hmnQueriedBills.getBillDueDate()));
-            queriedBillResponseWebDTO.setCurrency(hmnQueriedBills.getCurrency());
-            billList.add(queriedBillResponseWebDTO);
-        }
-        return billList;
+        when(channelUtil.convertToHarmoniChannel(anyString())).thenReturn("HARMONI_WEB");
+
+        RequestPayBillHmn result = mapper.toRRequestPayBillHmn(request);
+
+        assertNotNull(result);
+        assertEquals("HARMONI_WEB", result.getChannelCode());
     }
 
+    @Test
+    public void testToResponsePayBillHmn() {
+        ResponsePayBillHmn responseHmn = new ResponsePayBillHmn();
+        // populate responseHmn as needed
 
-    RequestBillPaymentExpenseHmn toRequestBillPaymentExpenseHmn(GetBillPaymentExpenseRequestDTO getBillPaymentExpenseRequestDTO);
+        DoBillPaymentResponse result = mapper.toResponsePayBillHmn(responseHmn);
 
-    GetBillPaymentExpenseResponseDTO toGetBillPaymentExpenseResponseDTO(ResponseBillPaymentExpenseHmn responseBillPaymentExpenseHmn);
-
-    @Mapping(target = "channelCode", source = "request.channelCode", qualifiedByName = "harmoniToMicroChannel")
-    RequestPayBillHmn toRRequestPayBillHmn(DoBillPaymentRequest request);
-
-    DoBillPaymentResponse toResponsePayBillHmn(ResponsePayBillHmn responsePayBillHmn);
+        assertNotNull(result);
+        // perform additional assertions as needed
+    }
 }
