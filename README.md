@@ -1,266 +1,134 @@
-@Service
-@RequiredArgsConstructor
-public class ReceiptServiceImpl implements ReceiptService{
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    private final ReceiptApiService receiptService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-    @Override
-    public void printReceipt(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO )  {
+@ExtendWith(MockitoExtension.class)
+public class ReceiptServiceImplTest {
 
-        List<RequestApiReceiptDTO> printReceiptRequest = new ArrayList<>();
+    @Mock
+    private ReceiptApiService receiptService;
 
-        RequestApiReceiptDTO debitRequestApiReceiptDTO = prepareDebitRequestApiReceiptDTO(createAccountingDTO, createAccountingResultDTO);
-        printReceiptRequest.add(debitRequestApiReceiptDTO);
+    @InjectMocks
+    private ReceiptServiceImpl receiptServiceImpl;
 
-        if(!(createAccountingDTO.getPaymentMethodType().getProvisionType().equals(EnumProvisionType.CARD) && !createAccountingDTO.isDummyMerchant())){
-            RequestApiReceiptDTO creditRequestApiReceiptDTO = prepareCreditRequestApiReceiptDTO(createAccountingDTO, createAccountingResultDTO);
-            printReceiptRequest.add(creditRequestApiReceiptDTO);
-        }
+    private CreateAccountingDTO createAccountingDTO;
+    private CreateAccountingResultDTO createAccountingResultDTO;
 
-        receiptService.printReceipt(printReceiptRequest);
-
+    @BeforeEach
+    void setUp() {
+        createAccountingDTO = new CreateAccountingDTO();
+        createAccountingResultDTO = new CreateAccountingResultDTO();
+        
+        // Initialize createAccountingDTO and createAccountingResultDTO with necessary values
+        // Mock necessary sub-objects and set their properties
     }
 
-    private RequestApiReceiptDTO prepareDebitRequestApiReceiptDTO(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO)  {
+    @Test
+    void testPrintReceipt_withCredit() {
+        // Mocking the internal method calls
+        RequestApiReceiptDTO debitReceipt = new RequestApiReceiptDTO();
+        RequestApiReceiptDTO creditReceipt = new RequestApiReceiptDTO();
 
-        RequestApiReceiptDTO requestApiReceiptDTO = prepareReceiptDebitMaster(createAccountingDTO, createAccountingResultDTO);
+        doReturn(debitReceipt).when(receiptServiceImpl).prepareDebitRequestApiReceiptDTO(any(CreateAccountingDTO.class), any(CreateAccountingResultDTO.class));
+        doReturn(creditReceipt).when(receiptServiceImpl).prepareCreditRequestApiReceiptDTO(any(CreateAccountingDTO.class), any(CreateAccountingResultDTO.class));
 
-        requestApiReceiptDTO.setReceiptDetailList(prepareReceiptDebitDetails(createAccountingDTO, createAccountingResultDTO));
+        // Execute the method to be tested
+        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
 
-        return requestApiReceiptDTO;
+        // Verify that the receiptService.printReceipt method was called with correct arguments
+        verify(receiptService, times(1)).printReceipt(argThat(receipts -> receipts.contains(debitReceipt) && receipts.contains(creditReceipt)));
     }
 
+    @Test
+    void testPrintReceipt_withoutCredit() {
+        // Set up the condition to avoid credit receipt
+        when(createAccountingDTO.getPaymentMethodType().getProvisionType()).thenReturn(EnumProvisionType.CARD);
+        when(createAccountingDTO.isDummyMerchant()).thenReturn(true);
 
+        // Mocking the internal method calls
+        RequestApiReceiptDTO debitReceipt = new RequestApiReceiptDTO();
 
-    private RequestApiReceiptDTO prepareReceiptDebitMaster(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO) {
+        doReturn(debitReceipt).when(receiptServiceImpl).prepareDebitRequestApiReceiptDTO(any(CreateAccountingDTO.class), any(CreateAccountingResultDTO.class));
 
-        RequestApiReceiptDTO requestApiReceiptDTO = new RequestApiReceiptDTO();
+        // Execute the method to be tested
+        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
 
-
-        if (createAccountingDTO.getPaymentMethodType().getProvisionType().equals(EnumProvisionType.ACCOUNT)) {
-            AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = (AccountPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
-            requestApiReceiptDTO.setAccount(accountPaymentMethodDetailDTO.getAccountNo() + "    " + CommonUtils.currencyConverter(createAccountingDTO.getCurrency().getValue()));
-
-        } else if (createAccountingDTO.getPaymentMethodType().getProvisionType().equals(EnumProvisionType.CARD)) {
-            CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO = (CreditCardPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
-            requestApiReceiptDTO.setCreditCardNo(creditCardPaymentMethodDetailDTO.getCardNumber());
-        } else {
-           //TODO:CASH
-        }
-
-        requestApiReceiptDTO.setBranchCode(createAccountingDTO.getBranchCode());
-        requestApiReceiptDTO.setClientNo(createAccountingDTO.getProvisionDTO().getCustomerNo().intValue());
-        requestApiReceiptDTO.setCtype(AccountingConstant.C_TYPE);
-        requestApiReceiptDTO.setDtype(AccountingConstant.D_TYPE);
-        requestApiReceiptDTO.setProcessCode(createAccountingDTO.getInstitutionAccountingInfoDTO().getReceiptCode());
-
-        requestApiReceiptDTO.setProcessDate(CollectionUtils.isEmpty(createAccountingResultDTO.getPendingDetailList()) ? DateUtils.getCurrentDate() : createAccountingResultDTO.getPendingDetailList().get(0).getAccountingDate());
-        requestApiReceiptDTO.setProccessRelDate(DateUtils.findRelDayDiff(LocalDateTime.now()));
-        requestApiReceiptDTO.setValueDate(CollectionUtils.isEmpty(createAccountingResultDTO.getPendingDetailList()) ? LocalDate.now() : DateUtils.convertDateTOLocalDate(createAccountingResultDTO.getPendingDetailList().get(0).getAccountingDate()));
-
-        requestApiReceiptDTO.setContratNo(createAccountingResultDTO.getContractNo());
-        requestApiReceiptDTO.setAmount(createAccountingResultDTO.getTotalPaymentAmount().negate());
-        requestApiReceiptDTO.setUserCode(createAccountingDTO.getAgentCode());
-        requestApiReceiptDTO.setChannel(createAccountingDTO.getChannelCode());
-        requestApiReceiptDTO.setDescription(prepareDescription(createAccountingDTO));
-        requestApiReceiptDTO.setReverse("N");
-        requestApiReceiptDTO.setInvoiceNoFlag(Boolean.FALSE) ;
-        requestApiReceiptDTO.setProcessID(createAccountingDTO.getChannelTransactionId());
-        requestApiReceiptDTO.setBasilacak("Y");
-        requestApiReceiptDTO.setTransactionId(createAccountingDTO.getChannelTransactionId());
-        if(CollectionUtils.isEmpty(createAccountingResultDTO.getPendingDetailList())){
-            return requestApiReceiptDTO;
-        }
-        List<Long> pendingTransactionIdList = new ArrayList<>();
-        for (ProvisionDetailDTO provisionDetailDTO : createAccountingResultDTO.getPendingDetailList()) {
-            if (provisionDetailDTO.getAmount().compareTo(BigDecimal.ZERO)<0  && !provisionDetailDTO.isCommission()
-            && !provisionDetailDTO.isCommissionTax()) {
-                pendingTransactionIdList.add(provisionDetailDTO.getPendingTransactionDetailId());
-                break;
-            }
-        }
-        requestApiReceiptDTO.setPendingTransactionIdList(pendingTransactionIdList);
-
-        return requestApiReceiptDTO;
+        // Verify that the receiptService.printReceipt method was called with correct arguments
+        verify(receiptService, times(1)).printReceipt(argThat(receipts -> receipts.contains(debitReceipt) && receipts.size() == 1));
     }
 
+    @Test
+    void testPrepareDebitRequestApiReceiptDTO() {
+        RequestApiReceiptDTO result = receiptServiceImpl.prepareDebitRequestApiReceiptDTO(createAccountingDTO, createAccountingResultDTO);
 
-    private List<RequestReceiptDetailDTO> prepareReceiptDebitDetails(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO) {
+        // Add assertions to verify the result
+        assertNotNull(result);
+        assertNotNull(result.getReceiptDetailList());
+    }
 
+    @Test
+    void testPrepareReceiptDebitMaster() {
+        RequestApiReceiptDTO result = receiptServiceImpl.prepareReceiptDebitMaster(createAccountingDTO, createAccountingResultDTO);
+
+        // Add assertions to verify the result
+        assertNotNull(result);
+        assertNotNull(result.getAccount());
+        // Additional assertions based on expected results
+    }
+
+    @Test
+    void testPrepareReceiptDebitDetails() {
+        List<RequestReceiptDetailDTO> result = receiptServiceImpl.prepareReceiptDebitDetails(createAccountingDTO, createAccountingResultDTO);
+
+        // Add assertions to verify the result
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        // Additional assertions based on expected results
+    }
+
+    @Test
+    void testPrepareRequestReceiptDetailDTO() {
         List<RequestReceiptDetailDTO> receiptDetailList = new ArrayList<>();
+        receiptServiceImpl.prepareRequestReceiptDetailDTO(1, 2, EnumReceiptFieldType.COMPLETE_FIELD, EnumReceiptSourceType.BILL_AMOUNT, createAccountingDTO, createAccountingResultDTO, receiptDetailList);
 
-
-        if(EnumReceiptType.valueOf(createAccountingDTO.getInstitutionAccountingInfoDTO().getReceiptCode()).getEnumClass().equals(EnumPymBill.class))
-        {
-            for (EnumPymBill pymBill : EnumPymBill.values()) {
-                prepareRequestReceiptDetailDTO(pymBill.getLblFieldOrder(), pymBill.getValueFieldOrder(), pymBill.getReceiptFieldType(),
-                        pymBill.getSourceType(), createAccountingDTO, createAccountingResultDTO, receiptDetailList);
-            }
-        }
-
-        return receiptDetailList;
-
+        assertFalse(receiptDetailList.isEmpty());
+        assertEquals(2, receiptDetailList.size());
     }
 
-    private void prepareRequestReceiptDetailDTO(Integer lblFieldOrder, Integer valueFieldOrder, EnumReceiptFieldType receiptFieldType,
-            EnumReceiptSourceType sourceType,CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO,  List<RequestReceiptDetailDTO> receiptDetailList){
-        if (receiptFieldType.equals(EnumReceiptFieldType.ONLY_LABEL_FIELD) || receiptFieldType.equals(EnumReceiptFieldType.COMPLETE_FIELD)) {
-            RequestReceiptDetailDTO requestReceiptDetailDTO = new RequestReceiptDetailDTO();
-            requestReceiptDetailDTO.setContractNo(createAccountingResultDTO.getContractNo());
-            requestReceiptDetailDTO.setProcessCode(createAccountingDTO.getInstitutionAccountingInfoDTO().getReceiptCode());
-            requestReceiptDetailDTO.setFieldOrder(lblFieldOrder);
-            requestReceiptDetailDTO.setValue(sourceType.getCode());
-            receiptDetailList.add(requestReceiptDetailDTO);
-        }
-        if (receiptFieldType.equals(EnumReceiptFieldType.ONLY_VALUE_FIELD) || receiptFieldType.equals(EnumReceiptFieldType.COMPLETE_FIELD)) {
-            RequestReceiptDetailDTO requestReceiptDetailDTO = new RequestReceiptDetailDTO();
-            requestReceiptDetailDTO.setContractNo(createAccountingResultDTO.getContractNo());
-            requestReceiptDetailDTO.setProcessCode(createAccountingDTO.getInstitutionAccountingInfoDTO().getReceiptCode());
-            requestReceiptDetailDTO.setFieldOrder(valueFieldOrder);
-            String fieldValue = prepareFieldValue(sourceType, createAccountingDTO, createAccountingResultDTO);
-            requestReceiptDetailDTO.setValue(fieldValue);
-            if(sourceType.isNumeric()){
-                fieldValue = StringUtils.isEmpty(fieldValue) ? "0" : fieldValue;
-                requestReceiptDetailDTO.setFieldType("N");
-                requestReceiptDetailDTO.setAmttype("AMT");
-                fieldValue  = fieldValue.replace(".","");
-                requestReceiptDetailDTO.setNumericValue(new BigDecimal(fieldValue.replace(",",".")));
-            }
+    @Test
+    void testPrepareFieldValue() {
+        String fieldValue = receiptServiceImpl.prepareFieldValue(EnumReceiptSourceType.BILL_AMOUNT, createAccountingDTO, createAccountingResultDTO);
 
-            receiptDetailList.add(requestReceiptDetailDTO);
-        }
-
-
+        assertNotNull(fieldValue);
+        // Additional assertions based on expected results
     }
 
-    private String prepareFieldValue(EnumReceiptSourceType sourceType,CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO){
-        String fieldValue = null;
-        if(sourceType.equals(EnumReceiptSourceType.BILL_AMOUNT)) {
-            fieldValue = AccountingUtil.formatCurrency(createAccountingDTO.getPaymentAmount().negate().toString());
-        }else if(sourceType.equals(EnumReceiptSourceType.BILL_DUE_DATE)){
-            fieldValue = DateUtils.formatLocalDate(createAccountingDTO.getProvisionDTO().getBillDueDate(), DateUtils.DATE_FORMAT_DD_MM_YYYY_WITH_SLASH);
-        } else if(sourceType.equals(EnumReceiptSourceType.BILL_NO)){
-            fieldValue = createAccountingDTO.getProvisionDTO().getBillNo();
-        }else if(sourceType.equals(EnumReceiptSourceType.BILL_TERM)){
-            fieldValue = createAccountingDTO.getProvisionDTO().getBillTerm();
-        }else if(sourceType.equals(EnumReceiptSourceType.COMMISSION_AMOUNT)){
-            fieldValue = AccountingUtil.formatCurrency(createAccountingResultDTO.getCommissionAmount().negate().toString());
-        }else if(sourceType.equals(EnumReceiptSourceType.CREDIT_PAYMENT_SOURCE)){
-            if (createAccountingDTO.getPaymentMethodType().getProvisionType().equals(EnumProvisionType.ACCOUNT)) {
-                AccountPaymentMethodDetailDTO accountPaymentMethodDetailDTO = (AccountPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
-                fieldValue = accountPaymentMethodDetailDTO.getAccountNo();
-            } else if (createAccountingDTO.getPaymentMethodType().getProvisionType().equals(EnumProvisionType.CARD)) {
-                CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO = (CreditCardPaymentMethodDetailDTO) createAccountingDTO.getPaymentMethodDetailDTO();
-                fieldValue = creditCardPaymentMethodDetailDTO.getCardNumber();
-            }
-        }else if(sourceType.equals(EnumReceiptSourceType.INSTITUTION_NAME)){
-            fieldValue = createAccountingDTO.getInstitution().getName();
-        }else if(sourceType.equals(EnumReceiptSourceType.CURRENCY)){
-            fieldValue = CurrencyUtil.currencyConverter(createAccountingDTO.getCurrency().getValue());
-        }else if(sourceType.equals(EnumReceiptSourceType.PAYMENT_AMOUNT)){
-            fieldValue = AccountingUtil.formatCurrency(createAccountingDTO.getPaymentAmount().negate().toString());
-        }else if(sourceType.equals(EnumReceiptSourceType.SUBSCRIBER_NO)){
-            fieldValue = createAccountingDTO.getProvisionDTO().getSubscriberNo();
-        }else if(sourceType.equals(EnumReceiptSourceType.TOTAL_AMOUNT)){
-            fieldValue = AccountingUtil.formatCurrency(createAccountingResultDTO.getTotalPaymentAmount().negate().toString());
-        }
-        return fieldValue;
+    @Test
+    void testPrepareDescription() {
+        String description = receiptServiceImpl.prepareDescription(createAccountingDTO);
+
+        assertNotNull(description);
+        // Additional assertions based on expected results
     }
 
-    private String prepareDescription(CreateAccountingDTO createAccountingDTO) {
-        return createAccountingDTO.getInstitution().getName() + "-" + createAccountingDTO.getProvisionDTO().getSubscriberNo();
+    @Test
+    void testPrepareCreditRequestApiReceiptDTO() {
+        RequestApiReceiptDTO result = receiptServiceImpl.prepareCreditRequestApiReceiptDTO(createAccountingDTO, createAccountingResultDTO);
+
+        // Add assertions to verify the result
+        assertNotNull(result);
+        assertNotNull(result.getReceiptDetailList());
     }
-
-    private RequestApiReceiptDTO prepareCreditRequestApiReceiptDTO(CreateAccountingDTO createAccountingDTO, CreateAccountingResultDTO createAccountingResultDTO) {
-
-        RequestApiReceiptDTO requestApiReceiptDTO = new RequestApiReceiptDTO();
-        requestApiReceiptDTO.setTransactionId(createAccountingDTO.getChannelTransactionId());
-        requestApiReceiptDTO.setAccount(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo() + "    " + CommonUtils.currencyConverter(createAccountingDTO.getCurrency().getValue()));
-        requestApiReceiptDTO.setBranchCode(createAccountingDTO.getBranchCode());
-        requestApiReceiptDTO.setClientNo(createAccountingDTO.getInstitution().getCustomerNo().intValue());
-        requestApiReceiptDTO.setCtype(AccountingConstant.C_TYPE);
-        requestApiReceiptDTO.setDtype(AccountingConstant.D_TYPE);
-        requestApiReceiptDTO.setProcessCode(AccountingConstant.DKNTSABIT);
-        requestApiReceiptDTO.setProccessRelDate(DateUtils.findRelDayDiff(LocalDateTime.now()));
-        requestApiReceiptDTO.setContratNo(createAccountingResultDTO.getContractNo());
-        if(createAccountingResultDTO.getAvailableDate() != null) {
-                requestApiReceiptDTO.setEffectiveDate((int) DateUtils.findReldayDiff(createAccountingResultDTO.getAvailableDate()));
-        }
-
-        requestApiReceiptDTO.setValueDate(createAccountingResultDTO.getAvailableDate());
-        requestApiReceiptDTO.setProcessDate(CollectionUtils.isEmpty(createAccountingResultDTO.getPendingDetailList())? DateUtils.getCurrentDate(): createAccountingResultDTO.getPendingDetailList().get(1).getAccountingDate());
-        requestApiReceiptDTO.setAmount(createAccountingDTO.getPaymentAmount());
-        requestApiReceiptDTO.setUserCode(createAccountingDTO.getAgentCode());
-        requestApiReceiptDTO.setChannel(createAccountingDTO.getChannelCode().equals("1658")? "501" : createAccountingDTO.getChannelCode());
-        requestApiReceiptDTO.setDescription(prepareDescription(createAccountingDTO));
-        requestApiReceiptDTO.setReverse("N");
-        requestApiReceiptDTO.setInvoiceNoFlag(false);
-        requestApiReceiptDTO.setProcessID(createAccountingDTO.getChannelTransactionId());
-        requestApiReceiptDTO.setBasilacak("Y");
-
-        List<RequestReceiptDetailDTO> receiptDetailList = new ArrayList<>();
-
-        RequestReceiptDetailDTO accountNoLabel = new RequestReceiptDetailDTO();
-        accountNoLabel.setFieldOrder(499);
-        accountNoLabel.setValue(EnumReceiptSourceType.ACCOUNT_NO.getCode());
-        accountNoLabel.setProcessCode(AccountingConstant.DKNTSABIT);
-        accountNoLabel.setContractNo(createAccountingResultDTO.getContractNo());
-        receiptDetailList.add(accountNoLabel);
-
-        RequestReceiptDetailDTO accountNoValue = new RequestReceiptDetailDTO();
-        accountNoValue.setFieldOrder(999);
-        accountNoValue.setValue(createAccountingDTO.getInstitutionChnnlPymMthdAccDTO().getInstitutionAccountNo());
-        accountNoValue.setProcessCode(AccountingConstant.DKNTSABIT);
-        accountNoValue.setContractNo(createAccountingResultDTO.getContractNo());
-        receiptDetailList.add(accountNoValue);
-
-        RequestReceiptDetailDTO paymentAmountLabel = new RequestReceiptDetailDTO();
-        paymentAmountLabel.setFieldOrder(498);
-        paymentAmountLabel.setValue(EnumReceiptSourceType.PROCESS_AMOUNT.getCode());
-        paymentAmountLabel.setProcessCode(AccountingConstant.DKNTSABIT);
-        paymentAmountLabel.setContractNo(createAccountingResultDTO.getContractNo());
-        receiptDetailList.add(paymentAmountLabel);
-
-        RequestReceiptDetailDTO paymentAmountValue = new RequestReceiptDetailDTO();
-        paymentAmountValue.setFieldOrder(998);
-        paymentAmountValue.setFieldType("N");
-        paymentAmountValue.setAmttype("AMT");
-        paymentAmountValue.setValue(AccountingUtil.formatCurrency(createAccountingDTO.getPaymentAmount().toString()));
-        paymentAmountValue.setNumericValue(createAccountingDTO.getPaymentAmount());
-        paymentAmountValue.setProcessCode(AccountingConstant.DKNTSABIT);
-        paymentAmountValue.setContractNo(createAccountingResultDTO.getContractNo());
-        receiptDetailList.add(paymentAmountValue);
-
-        RequestReceiptDetailDTO paymentCurrencyLabel = new RequestReceiptDetailDTO();
-        paymentCurrencyLabel.setFieldOrder(497);
-        paymentCurrencyLabel.setValue(EnumReceiptSourceType.CURRENCY.getCode());
-        paymentCurrencyLabel.setProcessCode(AccountingConstant.DKNTSABIT);
-        paymentCurrencyLabel.setContractNo(createAccountingResultDTO.getContractNo());
-        receiptDetailList.add(paymentCurrencyLabel);
-
-        RequestReceiptDetailDTO paymentCurrencyValue = new RequestReceiptDetailDTO();
-        paymentCurrencyValue.setFieldOrder(997);
-        paymentCurrencyValue.setValue( CurrencyUtil.currencyConverter(createAccountingDTO.getCurrency().getValue()));
-        paymentCurrencyLabel.setProcessCode(AccountingConstant.DKNTSABIT);
-        paymentCurrencyLabel.setContractNo(createAccountingResultDTO.getContractNo());
-        receiptDetailList.add(paymentCurrencyValue);
-
-        requestApiReceiptDTO.setReceiptDetailList(receiptDetailList);
-        if(CollectionUtils.isEmpty(createAccountingResultDTO.getPendingDetailList())){
-            return requestApiReceiptDTO;
-        }
-        List<Long> pendingTransactionIdList = new ArrayList<>();
-        for (ProvisionDetailDTO provisionDetailDTO : createAccountingResultDTO.getPendingDetailList()) {
-            if (provisionDetailDTO.getAmount().compareTo(BigDecimal.ZERO)>0  && !provisionDetailDTO.isCommission()
-                    && !provisionDetailDTO.isCommissionTax()) {
-                pendingTransactionIdList.add(provisionDetailDTO.getPendingTransactionDetailId());
-                break;
-            }
-        }
-        requestApiReceiptDTO.setPendingTransactionIdList(pendingTransactionIdList);
-
-        return requestApiReceiptDTO;
-    }
-
 }
