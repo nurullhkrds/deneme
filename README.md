@@ -1,16 +1,16 @@
     @Test
-    public void testToHarmoniSubscriberNo1() {
-        SubsrciberNoPartResponseWebDTO dto1=new SubsrciberNoPartResponseWebDTO();
-        dto1.setPartKey("1234");
-        dto1.setPartNo(1);
+    public void testHarmoniToMicroChannel() {
+        String harmoniChannel = "WEB";
+        String expectedMicroChannel = "WEB_MICRO";
+        when(ChannelUtil.convertChannel(harmoniChannel)).thenReturn(expectedMicroChannel);
 
+        String result = mapper.harmoniToMicroChannel(harmoniChannel);
 
-        List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList = List.of(dto1);
-
-        String result = mapper.toHarmoniSubscriberNo1(subscriberNoPartList);
-
-        assertEquals("1234", result);
+        assertEquals(expectedMicroChannel, result);
     }
-org.opentest4j.AssertionFailedError: 
-Expected :1234
-Actual   :null
+
+Also, this error might show up because:
+1. you stub either of: final/private/equals()/hashCode() methods.
+   Those methods *cannot* be stubbed/verified.
+   Mocking methods declared on non-public parent classes is not supported.
+2. inside when() you don't call method on mock but on some other object.
