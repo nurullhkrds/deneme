@@ -1,15 +1,3 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
-
-import java.util.List;
-
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 public class PaymentEventPublisherTest {
 
@@ -33,12 +21,21 @@ public class PaymentEventPublisherTest {
 
     @Mock
     private PaymentMethod paymentMethod;
+    @Mock
+    private PaymentCancelDTO paymentCancelDTO;
 
     @BeforeEach
     public void setup() {
-        when(publishPaymentTypeDTO.getPaymentDTO()).thenReturn(paymentDTO);
-        when(publishPaymentTypeDTO.getInstitutionDTO()).thenReturn(institutionDTO);
-        when(paymentDTO.getPaymentMethod()).thenReturn(paymentMethod);
+        MockitoAnnotations.openMocks(this);
+        paymentDTO = new PaymentDTO();
+        institutionDTO = new InstitutionDTO();
+        paymentNotificationDTO = new PaymentNotificationDTO();
+        paymentCancelDTO = new PaymentCancelDTO();
+        publishPaymentTypeDTO = new PublishPaymentTypeDTO();
+        publishPaymentTypeDTO.setPaymentDTO(paymentDTO);
+        publishPaymentTypeDTO.setInstitutionDTO(institutionDTO);
+        publishPaymentTypeDTO.setInsertedPaymentNotificationDTOList(Collections.singletonList(paymentNotificationDTO));
+
     }
 
     @Test
@@ -56,7 +53,7 @@ public class PaymentEventPublisherTest {
         // Test for CRD_PRVSN_ACK
         when(paymentNotificationDTO.getNotificationType())
                 .thenReturn(EnumPaymentNotificationType.CRD_PRVSN_ACK);
-        when(paymentMethod.getProvisionType()).thenReturn(EnumProvisionType.CARD);
+        when(paymentMethod.getCode()).thenReturn(EnumPaymentMethod.CARD);
         when(publishPaymentTypeDTO.getInsertedPaymentNotificationDTOList())
                 .thenReturn(List.of(paymentNotificationDTO));
 
@@ -64,4 +61,3 @@ public class PaymentEventPublisherTest {
 
         verify(eventPublisher, times(1)).publishEvent(any(CreditCardProvisionACKEventDTO.class));
     }
-}
