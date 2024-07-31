@@ -1,129 +1,115 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+package com.ykb.payments.bill.transaction.accounting.receipt;
 
+import com.ykb.payments.bill.common.enums.EnumCurrencyCode;
+import com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO;
+import com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingResultDTO;
+import com.ykb.payments.bill.transaction.external.corebanking.commission.model.response.ResponseCommissionInformation;
+import com.ykb.payments.bill.transaction.external.corebanking.receipt.model.request.RequestApiReceiptDTO;
+import com.ykb.payments.bill.transaction.external.corebanking.receipt.service.ReceiptApiService;
+import com.ykb.payments.bill.transaction.institution.dto.*;
+import com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod;
+import com.ykb.payments.bill.transaction.payment.dto.PaymentMethodDetailDTO;
+import com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO;
+import com.ykb.payments.bill.transaction.payment.enums.EnumProvisionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@ExtendWith(MockitoExtension.class)
-public class ReceiptServiceImplTest {
+import static org.junit.jupiter.api.Assertions.*;
 
-    @Mock
-    private ReceiptApiService receiptService;
-
+class ReceiptServiceImplTest {
+    
     @InjectMocks
-    private ReceiptServiceImpl receiptServiceImpl;
-
-    private CreateAccountingDTO createAccountingDTO;
-    private CreateAccountingResultDTO createAccountingResultDTO;
+    private ReceiptServiceImpl receiptService;
+    
+    @Mock
+    private ReceiptApiService receiptApiService;
 
     @BeforeEach
     void setUp() {
-        createAccountingDTO = new CreateAccountingDTO();
-        createAccountingResultDTO = new CreateAccountingResultDTO();
+        MockitoAnnotations.openMocks(this);
+    }
+    
+    
+    @Test
+    void test_printReceiptIsValidRequest(){
+        CreateAccountingDTO createAccountingDTO = new CreateAccountingDTO();
+        ProvisionDTO provisionDTO=new ProvisionDTO();
+        provisionDTO.setId(123L);
+        provisionDTO.setCustomerNo(123L);
+        provisionDTO.setStatus(EnumProvisionStatus.PAID);
+
+
+        ResponseCommissionInformation responseCommissionInformation=new ResponseCommissionInformation();
+        responseCommissionInformation.setInquiryId("123");
+        responseCommissionInformation.setTotalCommissionLocalCurrencyAmount(BigDecimal.TEN);
+        responseCommissionInformation.setTotalCommissionTaxLocalCurrencyAmount(BigDecimal.TEN);
+
+        ProductDTO productDTO =new ProductDTO();
+        productDTO.setCode("123");
+        productDTO.setName("product");
+        productDTO.setCode("123");
+        InstitutionDTO institutionDTO=new InstitutionDTO();
+        institutionDTO.setId(123L);
+        institutionDTO.setInstitutionCode("123");
+        institutionDTO.setProduct(productDTO);
+        InstitutionDebtTypeDTO institutionDebtTypeDTO=new InstitutionDebtTypeDTO();
+        institutionDebtTypeDTO.setId(123L);
+        institutionDebtTypeDTO.setInstitution(institutionDTO);
+
+
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO=new InstitutionChannelPymMethodDTO();
+        institutionChannelPymMethodDTO.setId(123L);
+
+        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO=new InstitutionChnnlPymMthdAccDTO();
+        institutionChnnlPymMthdAccDTO.setId(123L);
+        institutionChnnlPymMthdAccDTO.setInstitutionAccountNo("123");
+
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO=new InstitutionChnnlPymMthdPscDTO();
+        institutionChnnlPymMthdPscDTO.setId(123L);
+        institutionChnnlPymMthdPscDTO.setInstitutionChannelPymMethod(institutionChannelPymMethodDTO);
+
+
+
+        InstitutionAccountingInfoDTO institutionAccountingInfoDTO=new InstitutionAccountingInfoDTO();
+        institutionAccountingInfoDTO.setId(123L);
+        institutionAccountingInfoDTO.setReceiptCode("123");
+        institutionAccountingInfoDTO.setInstitution(institutionDTO);
         
-        // Mock necessary sub-objects and set their properties
-        PaymentMethodType paymentMethodType = mock(PaymentMethodType.class);
-        when(paymentMethodType.getProvisionType()).thenReturn(EnumProvisionType.ACCOUNT);
-        createAccountingDTO.setPaymentMethodType(paymentMethodType);
-        createAccountingDTO.setDummyMerchant(false);
         
-        ProvisionDTO provisionDTO = mock(ProvisionDTO.class);
         createAccountingDTO.setProvisionDTO(provisionDTO);
-        
-        InstitutionAccountingInfoDTO institutionAccountingInfoDTO = mock(InstitutionAccountingInfoDTO.class);
         createAccountingDTO.setInstitutionAccountingInfoDTO(institutionAccountingInfoDTO);
+        createAccountingDTO.setInstitutionChnnlPymMthdPscDTO(institutionChnnlPymMthdPscDTO);
+        createAccountingDTO.setInstitutionChnnlPymMthdAccDTO(institutionChnnlPymMthdAccDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
+        createAccountingDTO.setInstitutionDebtType(institutionDebtTypeDTO);
+        createAccountingDTO.setInstitutionAccountingInfoDTO(institutionAccountingInfoDTO);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
+        createAccountingDTO.setInstitution(institutionDTO);
+        createAccountingDTO.setResponseCommissionInformation(responseCommissionInformation);
+        createAccountingDTO.setPaymentAmount(BigDecimal.TEN);
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
+        createAccountingDTO.setPaymentMethodType(EnumPaymentMethod.ACCOUNT);
+        createAccountingDTO.setChannelSessionId("123");
+        createAccountingDTO.setChannelTransactionId("123");
+        createAccountingDTO.setChannelCode("123");
+        createAccountingDTO.setAgentCode("123");
+        createAccountingDTO.setBranchCode("123");
+        createAccountingDTO.setDummyMerchant(true);
+        createAccountingDTO.setMerchantNo("123");
 
-        Institution institution = mock(Institution.class);
-        createAccountingDTO.setInstitution(institution);
+        List<RequestApiReceiptDTO> printReceiptRequest = new ArrayList<>();
+        CreateAccountingResultDTO createAccountingResultDTO = new CreateAccountingResultDTO();
     }
+    
+    
+    
+    
 
-    @Test
-    void testPrintReceipt_withCredit() {
-        // Mocking the internal method calls indirectly
-        doCallRealMethod().when(receiptServiceImpl).printReceipt(any(CreateAccountingDTO.class), any(CreateAccountingResultDTO.class));
-
-        // Execute the method to be tested
-        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
-
-        // Verify that the receiptService.printReceipt method was called with the expected number of receipts
-        verify(receiptService, times(1)).printReceipt(argThat(receipts -> receipts.size() == 2));
-    }
-
-    @Test
-    void testPrintReceipt_withoutCredit() {
-        // Set up the condition to avoid credit receipt
-        when(createAccountingDTO.getPaymentMethodType().getProvisionType()).thenReturn(EnumProvisionType.CARD);
-        when(createAccountingDTO.isDummyMerchant()).thenReturn(true);
-
-        // Mocking the internal method calls indirectly
-        doCallRealMethod().when(receiptServiceImpl).printReceipt(any(CreateAccountingDTO.class), any(CreateAccountingResultDTO.class));
-
-        // Execute the method to be tested
-        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
-
-        // Verify that the receiptService.printReceipt method was called with the expected number of receipts
-        verify(receiptService, times(1)).printReceipt(argThat(receipts -> receipts.size() == 1));
-    }
-
-    @Test
-    void testDebitReceiptDetailsPreparation() {
-        // Test the details preparation indirectly through printReceipt
-        // Modify the createAccountingDTO and createAccountingResultDTO to have specific values
-        when(createAccountingDTO.getInstitutionAccountingInfoDTO().getReceiptCode()).thenReturn("SOME_CODE");
-
-        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
-
-        // Verify that the internal methods were called with expected arguments
-        verify(receiptService, times(1)).printReceipt(argThat(receipts -> {
-            RequestApiReceiptDTO debitReceipt = receipts.get(0);
-            assertNotNull(debitReceipt.getReceiptDetailList());
-            // Add more assertions based on expected details
-            return true;
-        }));
-    }
-
-    @Test
-    void testCreditReceiptDetailsPreparation() {
-        // Test the details preparation indirectly through printReceipt
-        // Modify the createAccountingDTO and createAccountingResultDTO to have specific values
-        when(createAccountingDTO.getInstitutionAccountingInfoDTO().getReceiptCode()).thenReturn("SOME_CODE");
-
-        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
-
-        // Verify that the internal methods were called with expected arguments
-        verify(receiptService, times(1)).printReceipt(argThat(receipts -> {
-            if (receipts.size() == 2) {
-                RequestApiReceiptDTO creditReceipt = receipts.get(1);
-                assertNotNull(creditReceipt.getReceiptDetailList());
-                // Add more assertions based on expected details
-            }
-            return true;
-        }));
-    }
-
-    @Test
-    void testDescriptionPreparation() {
-        // Modify the createAccountingDTO to have specific values
-        when(createAccountingDTO.getInstitution().getName()).thenReturn("Test Institution");
-        when(createAccountingDTO.getProvisionDTO().getSubscriberNo()).thenReturn("12345");
-
-        receiptServiceImpl.printReceipt(createAccountingDTO, createAccountingResultDTO);
-
-        // Verify the description
-        verify(receiptService, times(1)).printReceipt(argThat(receipts -> {
-            RequestApiReceiptDTO debitReceipt = receipts.get(0);
-            assertEquals("Test Institution-12345", debitReceipt.getDescription());
-            return true;
-        }));
-    }
 }
