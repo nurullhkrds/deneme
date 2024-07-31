@@ -1,279 +1,271 @@
-package com.ykb.payments.bill.transaction.payment.mapper;
-
-import com.ykb.payments.bill.common.enums.EnumCurrencyCode;
-import com.ykb.payments.bill.common.enums.EnumYesNo;
-import com.ykb.payments.bill.common.util.ChannelUtil;
 import com.ykb.payments.bill.transaction.common.constant.BillTransactionConstant;
-import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.response.BalanceAccountPaymentInstrumentDTO;
-import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.response.CreditCardPaymentInstumentDTO;
+import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.response.*;
 import com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod;
+import com.ykb.payments.bill.transaction.payment.mapper.HarmoniMicroMapper;
 import com.ykb.payments.bill.transaction.payment.web.request.*;
 import com.ykb.payments.bill.transaction.payment.web.response.*;
 import com.ykb.payments.bill.transaction.subscriber.model.GetBillPaymentExpenseRequestDTO;
 import com.ykb.payments.bill.transaction.subscriber.model.GetBillPaymentExpenseResponseDTO;
-import org.apache.commons.lang3.StringUtils;
-import org.mapstruct.*;
-import org.springframework.util.CollectionUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.StringUtils;
 
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
-@Mapper(componentModel = "spring")
-public interface HarmoniMicroMapper {
-	
+import static org.junit.jupiter.api.Assertions.*;
 
-	
-	@Mapping(target = "agentCode", source = "requestSource.agentCode")
-	@Mapping(target = "channelCode", source = "requestSource.channelCode", qualifiedByName = "harmoniToMicroChannel")
-	@Mapping(target = "operatingBranchCode", source = "requestSource.operatingBranchCode", qualifiedByName = "extractOperatingBranchCode")
-	@Mapping(target = "institutionCode", source = "institution")
-	@Mapping(target = "productCode", source = "product")
-	@Mapping(target = "subscriberNo", source = "subscriberNo1")
-	@Mapping(target = "subscriberNoPartList", source = "request", qualifiedByName = "toSubscriberNoPartList")
-	@Mapping(target = "identityNo", source = "request", qualifiedByName = "extractIdentityNo")
-	public QueryBillsRequest toQueryBillRequest(RequestHarmoniQueryBills request);
+@ExtendWith(MockitoExtension.class)
+public class HarmoniMicroMapperTest {
 
-	@Named("extractIdentityNo")
-	public default Long extractIdentityNo(RequestHarmoniQueryBills request) {
-		if (StringUtils.isNotBlank(request.getIdentityNo()) ) {
-			return  Long.parseLong( request.getIdentityNo() );
-		}
-		return null;
-	}
-	@Mapping(target = "subscriberNo1", source = "queryBillsResponse.subscriberNoPartList", qualifiedByName = "toHarmoniSubscriberNo1")
-	@Mapping(target = "subscriberNo2", source = "queryBillsResponse.subscriberNoPartList", qualifiedByName = "toHarmoniSubscriberNo2")
-	@Mapping(target = "subscriberNo3", source = "queryBillsResponse.subscriberNoPartList", qualifiedByName = "toHarmoniSubscriberNo3")
-	public ResponseHarmoniQueryBills toResponseHarmoniQueryBills(QueryBillsResponse queryBillsResponse, RequestHarmoniQueryBills harmoniRequest);
+    @InjectMocks
+    private HarmoniMicroMapper mapper = Mappers.getMapper(HarmoniMicroMapper.class);
 
-	@Mapping(target = "agentCode", source = "coreServiceBaseDataDTO.agentCode")
-	@Mapping(target = "channelCode", source = "coreServiceBaseDataDTO.channelCode", qualifiedByName = "harmoniToMicroChannel")
-	@Mapping(target = "operatingBranchCode", source = "coreServiceBaseDataDTO.operatingBranchCode", qualifiedByName = "extractOperatingBranchCode")
-	@Mapping(target = "productCode", source = "product")
-	@Mapping(target = "institutionCode", source = "institution")
-	@Mapping(target = "billProvisionId", source = "provisionCode")
-	@Mapping(target = "paymentMethodType", source = "paymentSourceCode", qualifiedByName = "toMicroPaymentSource")
-	@Mapping(target = "accountPaymentMethodDetail", source = "request", qualifiedByName = "toAccountPaymentMethodDetail")
-	@Mapping(target = "cashPaymentMethodDetail", source = "request", qualifiedByName = "toCashPaymentMethodDetail")
-	@Mapping(target = "creditCardPaymentMethodDetail", source = "request", qualifiedByName = "toCartPaymentMethodDetail")
-	@Mapping(target = "currency", source = "request", qualifiedByName = "extractCurrency")
-	public DoBillPaymentRequest toDoBillPaymentRequest(RequestHarmoniDoBillPayment request);
-	
-	@Mapping(target = "contractNo", source = "contractNumber")
-	public ResponseHarmoniDoBillPaymentResultDTO toResponseHarmoniDoBillPaymentResultDTO(
-			DoBillPaymentResponse microResponse);
-	
-	@Mapping(target = "agentCode", source = "coreServiceBaseDataDTO.agentCode")
-	@Mapping(target = "channelCode", source = "coreServiceBaseDataDTO.channelCode", qualifiedByName = "harmoniToMicroChannel")
-	@Mapping(target = "operatingBranchCode", source = "coreServiceBaseDataDTO.operatingBranchCode", qualifiedByName = "extractOperatingBranchCode")
-	@Mapping(target = "contractNumber", source = "contractNo")
-	@Mapping(target = "institutionCode", source = "institution")
-	@Mapping(target = "productCode", source = "product")
-	public CancelBillPaymentRequest toCancelBillPaymentRequest(RequestHarmoniCancelBillPayment request);
-	
-	public ResponseHarmoniCancelBillPayment toResponseHarmoniCancelBillPayment(CancelBillPaymentResponse microResponse);
-	
-	@Mapping(target = "agentCode", source = "coreServiceBaseDataDTO.agentCode")
-	@Mapping(target = "channelCode", source = "coreServiceBaseDataDTO.channelCode", qualifiedByName = "harmoniToMicroChannel")
-	@Mapping(target = "operatingBranchCode", source = "coreServiceBaseDataDTO.operatingBranchCode")
-	@Mapping(target = "paymentMethod", source = "paymentSource", qualifiedByName = "toMicroPaymentSource")
-	@Mapping(target = "paymentAmount", source = "amount")
-	@Mapping(target = "paymentCurrency", source = "currency")
-	@Mapping(target = "cardNo", source = "creditCardNo")
-	@Mapping(target = "accountNo", source = "creditCardNo")
-	public GetBillPaymentExpenseRequestDTO toGetBillPaymentExpenseRequestDTO(
-			RequestHarmoniGetBillPaymentExpense request);
-	
-	@Mapping(target = "expenseAmount", source = "commissionAmount")
-	public ResponseHarmoniGetBillPaymentExpense toResponseHarmoniGetBillPaymentExpense(
-			GetBillPaymentExpenseResponseDTO microResponse);
-	
-	@Named("extractCurrency")
-	public default String extractCurrency(RequestHarmoniDoBillPayment request) {
-		String currency = "";
+    @Test
+    public void testToQueryBillRequest() {
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        request.setAgentCode("agent");
+        request.setChannelCode("channel");
+        request.setOperatingBranchCode("branch");
+        request.setInstitution("institution");
+        request.setProduct("product");
+        request.setSubscriberNo1("subNo1");
+        request.setIdentityNo("12345678901");
 
-		String microPaymentMethod = BillTransactionConstant.hmnMicroPaymentMap.get(request.getPaymentSourceCode());
+        QueryBillsRequest result = mapper.toQueryBillRequest(request);
 
-		if (EnumPaymentMethod.CARD.getValue().equals(microPaymentMethod) || EnumPaymentMethod.PREPAIDCARD.getValue().equals(microPaymentMethod)) {
+        assertEquals("agent", result.getAgentCode());
+        assertEquals("channel", result.getChannelCode());
+        assertEquals("branch", result.getOperatingBranchCode());
+        assertEquals("institution", result.getInstitutionCode());
+        assertEquals("product", result.getProductCode());
+        assertEquals("subNo1", result.getSubscriberNo());
+        assertEquals(Long.valueOf(12345678901L), result.getIdentityNo());
+    }
 
-			currency = request.getCreditCardPaymentInstrument().getCurrencyCode();
-		}
+    @Test
+    public void testExtractIdentityNo() {
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        request.setIdentityNo("12345678901");
 
-		else if (EnumPaymentMethod.ACCOUNT.getValue().equals(microPaymentMethod)) {
+        Long result = mapper.extractIdentityNo(request);
 
-			currency = request.getBalanceAccountPaymentInstrument().getAccountCurrencyCode();
-		}
-		currency = StringUtils.isEmpty(currency) ? EnumCurrencyCode.TURKISH_LIRA_YTL.getValue() : currency;
-		return currency;
-	}
-	
-	@Named("toCartPaymentMethodDetail")
-	public default CreditCardPaymentMethodDetailWebDTO toCartPaymentMethodDetail(RequestHarmoniDoBillPayment request) {
-		CreditCardPaymentMethodDetailWebDTO paymentMethodDetail = null;
+        assertEquals(Long.valueOf(12345678901L), result);
+    }
 
-		String microPaymentMethod = BillTransactionConstant.hmnMicroPaymentMap.get(request.getPaymentSourceCode());
+    @Test
+    public void testToResponseHarmoniQueryBills() {
+        QueryBillsResponse queryBillsResponse = new QueryBillsResponse();
+        RequestHarmoniQueryBills harmoniRequest = new RequestHarmoniQueryBills();
 
-		if (EnumPaymentMethod.CARD.getValue().equals(microPaymentMethod) || EnumPaymentMethod.PREPAIDCARD.getValue().equals(microPaymentMethod)) {
+        ResponseHarmoniQueryBills result = mapper.toResponseHarmoniQueryBills(queryBillsResponse, harmoniRequest);
 
-			CreditCardPaymentInstumentDTO hmnPaymentMethodInstrument =request.getCreditCardPaymentInstrument();
+        assertNotNull(result);
+    }
 
-			paymentMethodDetail = new CreditCardPaymentMethodDetailWebDTO();
-			paymentMethodDetail.setCardNumber(hmnPaymentMethodInstrument.getCardNumber());
-		}
+    @Test
+    public void testToDoBillPaymentRequest() {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        request.setPaymentSourceCode("CARD");
+        BalanceAccountPaymentInstrumentDTO balanceAccount = new BalanceAccountPaymentInstrumentDTO();
+        balanceAccount.setAccountCurrencyCode("USD");
+        request.setBalanceAccountPaymentInstrument(balanceAccount);
 
-		return paymentMethodDetail;
-	}
-	
-	@Named("toCashPaymentMethodDetail")
-	public default CashPaymentMethodDetailWebDTO toCashPaymentMethodDetail(RequestHarmoniDoBillPayment request) {
-		CashPaymentMethodDetailWebDTO paymentMethodDetail = null;
+        DoBillPaymentRequest result = mapper.toDoBillPaymentRequest(request);
 
-		String microPaymentMethod = BillTransactionConstant.hmnMicroPaymentMap.get(request.getPaymentSourceCode());
+        assertNotNull(result);
+        assertEquals("USD", result.getCurrency());
+    }
 
-		if (EnumPaymentMethod.CASH.getValue().equals(microPaymentMethod)) {
+    @Test
+    public void testToResponseHarmoniDoBillPaymentResultDTO() {
+        DoBillPaymentResponse microResponse = new DoBillPaymentResponse();
+        microResponse.setContractNumber("123456");
 
-			/*CashPaymentInstrumentDTO hmnPaymentMethodInstrument = new ObjectMapper()
-					.convertValue(request.getPaymentInstrument(), CashPaymentInstrumentDTO.class);
-			paymentMethodDetail = new CashPaymentMethodDetailWebDTO();
-			paymentMethodDetail.setDepositedAmount(hmnPaymentMethodInstrument.getDepositedAmount().toString());
-			paymentMethodDetail.setDepositeAccountNumber(hmnPaymentMethodInstrument.getDepositeAccountNumber());
-			paymentMethodDetail.setCoinPaybackAmount(hmnPaymentMethodInstrument.getCoinPaybackAmount());
-			paymentMethodDetail.setCoinPaybackAccountNumber(hmnPaymentMethodInstrument.getCoinPaybackAccountNumber());
-			paymentMethodDetail.setBanknotePaybackAmount(hmnPaymentMethodInstrument.getBanknotePaybackAmount());
-			paymentMethodDetail.setBanknotePaybackAccountNumber(hmnPaymentMethodInstrument.getBanknotePaybackAccountNumber());*/
-		}
+        ResponseHarmoniDoBillPaymentResultDTO result = mapper.toResponseHarmoniDoBillPaymentResultDTO(microResponse);
 
-		return paymentMethodDetail;
-	}
-		
-	
-	@Named("toAccountPaymentMethodDetail")
-	public default AccountPaymentMethodDetailWebDTO toMicroPaymentSource(RequestHarmoniDoBillPayment request) {
-		AccountPaymentMethodDetailWebDTO microAccountPaymentMethodDetail = null;
+        assertEquals("123456", result.getContractNo());
+    }
 
-		String microPaymentMethod = BillTransactionConstant.hmnMicroPaymentMap.get(request.getPaymentSourceCode());
+    @Test
+    public void testToCancelBillPaymentRequest() {
+        RequestHarmoniCancelBillPayment request = new RequestHarmoniCancelBillPayment();
+        request.setContractNo("123456");
 
-		if (EnumPaymentMethod.ACCOUNT.getValue().equals(microPaymentMethod)) {
+        CancelBillPaymentRequest result = mapper.toCancelBillPaymentRequest(request);
 
-			BalanceAccountPaymentInstrumentDTO hmnBalanceAccount = request.getBalanceAccountPaymentInstrument();
-			microAccountPaymentMethodDetail = new AccountPaymentMethodDetailWebDTO();
-			microAccountPaymentMethodDetail.setAccountBranchCode(hmnBalanceAccount.getAccountBranchCode());
-			microAccountPaymentMethodDetail.setAccountNo(hmnBalanceAccount.getAccountNumber());
+        assertEquals("123456", result.getContractNumber());
+    }
 
-		}
+    @Test
+    public void testToResponseHarmoniCancelBillPayment() {
+        CancelBillPaymentResponse microResponse = new CancelBillPaymentResponse();
 
-		return microAccountPaymentMethodDetail;
-	}
-	
-	
-	@Named("toMicroPaymentSource")
-	public default String toMicroPaymentSource(String hmnPaymentSource) {		
-		return BillTransactionConstant.hmnMicroPaymentMap.get(hmnPaymentSource);
-	}
-	
-	@Named("toHarmoniSubscriberNo1")
-	public default String toHarmoniSubscriberNo1(List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList) {
-		return subscriberNoPartList!=null && subscriberNoPartList.size() == 1 ? subscriberNoPartList.get(0).getPartValue(): null;
-	}
-	
-	@Named("toHarmoniSubscriberNo2")
-	public default String toHarmoniSubscriberNo2(List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList) {
-		return subscriberNoPartList!=null && subscriberNoPartList.size() == 2 ? subscriberNoPartList.get(1).getPartValue(): null;
-	}
-	
-	@Named("toHarmoniSubscriberNo3")
-	public default String toHarmoniSubscriberNo3(List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList) {
-		return subscriberNoPartList!=null && subscriberNoPartList.size() == 3 ? subscriberNoPartList.get(2).getPartValue(): null;
-	}
-	
-	
-	@Named("harmoniToMicroChannel")
-	public default String harmoniToMicroChannel(String harmoniChannel) {
-		return ChannelUtil.convertChannel(harmoniChannel);
-	}
-	
-	@Named("toSubscriberNoPartList")
-	public default List<SubscriberNoPartRequestWebDTO> toSubscriberNoPartList(RequestHarmoniQueryBills request) {
-		String subscriberNo1 = request.getSubscriberNo1();
-		String subscriberNo2 = request.getSubscriberNo2();
-		String subscriberNo3 = request.getSubscriberNo3();
+        ResponseHarmoniCancelBillPayment result = mapper.toResponseHarmoniCancelBillPayment(microResponse);
 
-		List<SubscriberNoPartRequestWebDTO> subscriberNoPartList = new ArrayList<>();
+        assertNotNull(result);
+    }
 
-		if (StringUtils.isNotEmpty(subscriberNo1)) {
-			SubscriberNoPartRequestWebDTO part = new SubscriberNoPartRequestWebDTO();
-			part.setPartNo(1);
-			part.setPartValue(subscriberNo1);
+    @Test
+    public void testToGetBillPaymentExpenseRequestDTO() {
+        RequestHarmoniGetBillPaymentExpense request = new RequestHarmoniGetBillPaymentExpense();
+        request.setCreditCardNo("1234");
 
-			subscriberNoPartList.add(part);
-		}
+        GetBillPaymentExpenseRequestDTO result = mapper.toGetBillPaymentExpenseRequestDTO(request);
 
-		if (StringUtils.isNotEmpty(subscriberNo2)) {
-			SubscriberNoPartRequestWebDTO part = new SubscriberNoPartRequestWebDTO();
-			part.setPartNo(2);
-			part.setPartValue(subscriberNo2);
+        assertEquals("1234", result.getCardNo());
+    }
 
-			subscriberNoPartList.add(part);
-		}
+    @Test
+    public void testToResponseHarmoniGetBillPaymentExpense() {
+        GetBillPaymentExpenseResponseDTO microResponse = new GetBillPaymentExpenseResponseDTO();
+        microResponse.setCommissionAmount(100);
 
-		if (StringUtils.isNotEmpty(subscriberNo3)) {
-			SubscriberNoPartRequestWebDTO part = new SubscriberNoPartRequestWebDTO();
-			part.setPartNo(3);
-			part.setPartValue(subscriberNo3);
+        ResponseHarmoniGetBillPaymentExpense result = mapper.toResponseHarmoniGetBillPaymentExpense(microResponse);
 
-			subscriberNoPartList.add(part);
-		}
+        assertEquals(100, result.getExpenseAmount());
+    }
 
-		return subscriberNoPartList;
-	}
-	
-	@AfterMapping
-	default void afterToGetQueryBillsResponse(@MappingTarget final ResponseHarmoniQueryBills harmoniResponse,
-			RequestHarmoniQueryBills harmoniRequest, QueryBillsResponse microResponse) {
+    @Test
+    public void testExtractCurrency() {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        BalanceAccountPaymentInstrumentDTO balanceAccount = new BalanceAccountPaymentInstrumentDTO();
+        balanceAccount.setAccountCurrencyCode("USD");
+        request.setBalanceAccountPaymentInstrument(balanceAccount);
+        request.setPaymentSourceCode("ACCOUNT");
 
-		List<HmnBaseBillDTO> harmoniBilllist = microResponse.getBillList().stream().map(microBill -> {
-			HmnBaseBillDTO hmn = new HmnBaseBillDTO();
-			hmn.setProduct(microResponse.getProductCode());
-			hmn.setInstitution(microResponse.getInstitutionCode());
-			hmn.setSubscriberNo(microResponse.getSubscriberNo());
-			hmn.setSubscriberName(microResponse.getSubscriberName());
-			hmn.setPayable(microBill.isPayable() ? EnumYesNo.YES.getValue() : EnumYesNo.NO.getValue());
-			if (!CollectionUtils.isEmpty(microResponse.getSubscriberNoPartList())) {
-				Optional<SubsrciberNoPartResponseWebDTO> firstSubscriberNo = microResponse.getSubscriberNoPartList()
-						.stream().filter(f -> f.getPartNo().equals("1")).findAny();
-				
-				Optional<SubsrciberNoPartResponseWebDTO> secondSubscriberNo = microResponse.getSubscriberNoPartList()
-						.stream().filter(f -> f.getPartNo().equals("2")).findAny();
-				
-				Optional<SubsrciberNoPartResponseWebDTO> thirtSubscriberNo = microResponse.getSubscriberNoPartList()
-						.stream().filter(f -> f.getPartNo().equals("3")).findAny();
+        String result = mapper.extractCurrency(request);
 
-				hmn.setSubscriberNoPart1(firstSubscriberNo.isPresent() ? firstSubscriberNo.get().getPartValue() : null);
-				hmn.setSubscriberNoPart2(
-						firstSubscriberNo.isPresent() ? secondSubscriberNo.get().getPartValue() : null);
-				hmn.setSubscriberNoPart3(thirtSubscriberNo.isPresent() ? thirtSubscriberNo.get().getPartValue() : null);
-			}
-			hmn.setBillDueDate(Date.from(microBill.getBillDueDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-			hmn.setBillNo(microBill.getBillNo());
-			hmn.setBillTerm(microBill.getBillTerm());
-			hmn.setBillAmount(microBill.getBillAmount());
-			//TODO currency control belki ??
-			hmn.setCurrency(microBill.getCurrency());
-			hmn.setBankReferenceNo(microBill.getBillProvisionId().toString());
+        assertEquals("USD", result);
+    }
 
-			
-			return hmn;
-		}).toList();
+    @Test
+    public void testToCartPaymentMethodDetail() {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        CreditCardPaymentInstumentDTO creditCard = new CreditCardPaymentInstumentDTO();
+        creditCard.setCardNumber("1234");
+        request.setCreditCardPaymentInstrument(creditCard);
+        request.setPaymentSourceCode("CARD");
 
-		harmoniResponse.setBillList(harmoniBilllist);
-	}
+        CreditCardPaymentMethodDetailWebDTO result = mapper.toCartPaymentMethodDetail(request);
 
-	@Named("extractOperatingBranchCode")
-	 default String extractOperatingBranchCode(String operatingBranchCode) {
-		return StringUtils.isEmpty(operatingBranchCode) ? BillTransactionConstant.GENERAL_BRANCH_CODE : operatingBranchCode;
-	}
+        assertNotNull(result);
+        assertEquals("1234", result.getCardNumber());
+    }
 
+    @Test
+    public void testToCashPaymentMethodDetail() {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        request.setPaymentSourceCode("CASH");
 
+        CashPaymentMethodDetailWebDTO result = mapper.toCashPaymentMethodDetail(request);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testToAccountPaymentMethodDetail() {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        BalanceAccountPaymentInstrumentDTO balanceAccount = new BalanceAccountPaymentInstrumentDTO();
+        balanceAccount.setAccountNumber("1234");
+        request.setBalanceAccountPaymentInstrument(balanceAccount);
+        request.setPaymentSourceCode("ACCOUNT");
+
+        AccountPaymentMethodDetailWebDTO result = mapper.toMicroPaymentSource(request);
+
+        assertNotNull(result);
+        assertEquals("1234", result.getAccountNo());
+    }
+
+    @Test
+    public void testToMicroPaymentSource() {
+        String hmnPaymentSource = "CARD";
+        BillTransactionConstant.hmnMicroPaymentMap.put(hmnPaymentSource, "MICRO_CARD");
+
+        String result = mapper.toMicroPaymentSource(hmnPaymentSource);
+
+        assertEquals("MICRO_CARD", result);
+    }
+
+    @Test
+    public void testToHarmoniSubscriberNo1() {
+        List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList = List.of(new SubsrciberNoPartResponseWebDTO(1, "1234"));
+
+        String result = mapper.toHarmoniSubscriberNo1(subscriberNoPartList);
+
+        assertEquals("1234", result);
+    }
+
+    @Test
+    public void testToHarmoniSubscriberNo2() {
+        List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList = List.of(
+                new SubsrciberNoPartResponseWebDTO(1, "1234"),
+                new SubsrciberNoPartResponseWebDTO(2, "5678")
+        );
+
+        String result = mapper.toHarmoniSubscriberNo2(subscriberNoPartList);
+
+        assertEquals("5678", result);
+    }
+
+    @Test
+    public void testToHarmoniSubscriberNo3() {
+        List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList = List.of(
+                new SubsrciberNoPartResponseWebDTO(1, "1234"),
+                new SubsrciberNoPartResponseWebDTO(2, "5678"),
+                new SubsrciberNoPartResponseWebDTO(3, "91011")
+        );
+
+        String result = mapper.toHarmoniSubscriberNo3(subscriberNoPartList);
+
+        assertEquals("91011", result);
+    }
+
+    @Test
+    public void testHarmoniToMicroChannel() {
+        String harmoniChannel = "WEB";
+        String expectedMicroChannel = "WEB_MICRO"; // Assuming the ChannelUtil.convertChannel method maps "WEB" to "WEB_MICRO"
+        when(ChannelUtil.convertChannel(harmoniChannel)).thenReturn(expectedMicroChannel);
+
+        String result = mapper.harmoniToMicroChannel(harmoniChannel);
+
+        assertEquals(expectedMicroChannel, result);
+    }
+
+    @Test
+    public void testToSubscriberNoPartList() {
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        request.setSubscriberNo1("1234");
+        request.setSubscriberNo2("5678");
+        request.setSubscriberNo3("91011");
+
+        List<SubscriberNoPartRequestWebDTO> result = mapper.toSubscriberNoPartList(request);
+
+        assertEquals(3, result.size());
+        assertEquals("1234", result.get(0).getPartValue());
+        assertEquals("5678", result.get(1).getPartValue());
+        assertEquals("91011", result.get(2).getPartValue());
+    }
+
+    @Test
+    public void testAfterToGetQueryBillsResponse() {
+        // Implement the test for the @AfterMapping method if necessary.
+    }
+
+    @Test
+    public void testExtractOperatingBranchCode() {
+        String operatingBranchCode = "branch";
+
+        String result = mapper.extractOperatingBranchCode(operatingBranchCode);
+
+        assertEquals("branch", result);
+
+        String emptyBranchCode = "";
+
+        result = mapper.extractOperatingBranchCode(emptyBranchCode);
+
+        assertEquals(BillTransactionConstant.GENERAL_BRANCH_CODE, result);
+    }
 }
