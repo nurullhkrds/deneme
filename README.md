@@ -1,93 +1,100 @@
-@RequiredArgsConstructor
-@Service
-public class PaymentEventListener {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
-    private final Logger logger = LoggerFactory.getLogger(PaymentEventListener.class);
-    
-    private final PaymentNotificationEventProducer paymentNotificationEventProducer;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class PaymentEventListenerTest {
+
+    @Mock
+    private PaymentNotificationEventProducer paymentNotificationEventProducer;
+
+    @Mock
     private LimitationService limitationService;
-    
-    @Async
-    @EventListener(BillPaymentEvent.class)
- //   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onPaymentCreatedNotificationEvent(BillPaymentEvent billPaymentEvent) {    	
-		PaymentNotificationEvent paymentNotificationEvent = new PaymentNotificationEvent();
-		
-		paymentNotificationEvent.setCreatedBy(billPaymentEvent.getPaymentDTO().getCreatedBy());
-		paymentNotificationEvent.setBranchCode(billPaymentEvent.getPaymentDTO().getBranchCode());
-		paymentNotificationEvent.setChannelCode(billPaymentEvent.getPaymentDTO().getChannelCode());
-		paymentNotificationEvent.setChannelSessionId(billPaymentEvent.getPaymentDTO().getChannelSessionId());
-		paymentNotificationEvent.setChannelTransactionId(billPaymentEvent.getPaymentDTO().getChannelTransactionId());
-		paymentNotificationEvent.setInstitutionId(billPaymentEvent.getPaymentDTO().getInstitutionId());
-		paymentNotificationEvent.setPaymentNotificationId(billPaymentEvent.getPaymentNotificationId());
-		paymentNotificationEvent.setProductCode(billPaymentEvent.getInstitutionDTO().getProduct().getCode());
-		paymentNotificationEvent.setInstitutionCode(billPaymentEvent.getInstitutionDTO().getInstitutionCode());
-		
-		if (paymentNotificationEventProducer == null) {
-            logger.error("[onPaymentCreatedNotificationEvent] -> paymentNotificationEventProducer is null because rabbit is disabled!!!");
-            return;
-        }
-		
-        paymentNotificationEventProducer.sendPaymentNotificationEvent(paymentNotificationEvent);
-    }
-    
-	@Async
-	@EventListener(BillPaymentCancelEvent.class)
-	public void onPaymentCancelCreatedNotificationEvent(BillPaymentCancelEvent event) {
-		PaymentCancelNotificationEvent notifyCancelPaymentEvent = new PaymentCancelNotificationEvent();
-		notifyCancelPaymentEvent.setCreatedBy(event.getCancelRecord().getCreatedBy());
-		notifyCancelPaymentEvent.setBranchCode(event.getCancelRecord().getBranchCode());
-		notifyCancelPaymentEvent.setChannelCode(event.getCancelRecord().getChannelCode());
-		notifyCancelPaymentEvent.setChannelSessionId(event.getCancelRecord().getChannelSessionId());
-		notifyCancelPaymentEvent.setChannelTransactionId(event.getCancelRecord().getChannelTransactionId());
-		notifyCancelPaymentEvent.setInstitutionId(event.getInstitution().getId());
-		notifyCancelPaymentEvent.setPaymentNotificationId(event.getPaymentNotificationId());
-		notifyCancelPaymentEvent.setProductCode(event.getInstitution().getProduct().getCode());
-		notifyCancelPaymentEvent.setInstitutionCode(event.getInstitution().getInstitutionCode());
-		
-		if (paymentNotificationEventProducer == null) {
-            logger.error("[onPaymentCreatedNotificationEvent] -> paymentNotificationEventProducer is null because rabbit is disabled!!!");
-            return;
-        }
-		
-		paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(notifyCancelPaymentEvent);
 
-	}
-	
-    @Async
-    @EventListener(CreditCardProvisionACKEventDTO.class)
-    public void onCreditCardProvisionACKEvent(CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO) {
-        if (paymentNotificationEventProducer == null) {
-            logger.error("[onCreditCardProvisionACKEvent] -> paymentNotificationEventProducer is null because rabbit is disabled!!!");
-            return;
-        }
-        paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(creditCardProvisionACKEventDTO);
-    }
-    
-    @Async
-    @EventListener(CreditCardProvisionReverseEventDTO.class)
-    public void onCreditCardProvisionReverseEvent(CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO) {
-        if (paymentNotificationEventProducer == null) {
-            logger.error("[onCreditCardProvisionReverseEvent] -> paymentNotificationEventProducer is null because rabbit is disabled!!!");
-            return;
-        }
-        paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(creditCardProvisionReverseEventDTO);
-    }
-    
-    @Async
-    @EventListener(NotifyPaymentLimitationRequest.class)
-	//@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void onNotifyPaymentLimitation(NotifyPaymentLimitationRequest request) {
-    	limitationService = SpringUtil.getBean(LimitationService.class);    	
-    	limitationService.notifyPaymentLimitation(request);
-	}
+    @InjectMocks
+    private PaymentEventListener paymentEventListener;
 
-    @Async
-    @EventListener(NotifyInquiryLimitationRequest.class)	
-	public void onNotifyPaymentLimitation(NotifyInquiryLimitationRequest request) {
-    	limitationService = SpringUtil.getBean(LimitationService.class);
-		limitationService.notifyInquiryLimitation(request);
-	}
-    
-    
+    private static final Logger logger = LoggerFactory.getLogger(PaymentEventListener.class);
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(paymentEventListener, "logger", logger);
+    }
+
+    @Test
+    void testOnPaymentCreatedNotificationEvent() {
+        BillPaymentEvent billPaymentEvent = mock(BillPaymentEvent.class);
+        // Mock billPaymentEvent and its methods
+        // For example:
+        PaymentDTO paymentDTO = mock(PaymentDTO.class);
+        when(billPaymentEvent.getPaymentDTO()).thenReturn(paymentDTO);
+        when(paymentDTO.getCreatedBy()).thenReturn("user");
+
+        paymentEventListener.onPaymentCreatedNotificationEvent(billPaymentEvent);
+
+        verify(paymentNotificationEventProducer, times(1))
+                .sendPaymentNotificationEvent(any(PaymentNotificationEvent.class));
+    }
+
+    @Test
+    void testOnPaymentCancelCreatedNotificationEvent() {
+        BillPaymentCancelEvent event = mock(BillPaymentCancelEvent.class);
+        // Mock event and its methods
+
+        paymentEventListener.onPaymentCancelCreatedNotificationEvent(event);
+
+        verify(paymentNotificationEventProducer, times(1))
+                .sendPaymentCancelNotificationEvent(any(PaymentCancelNotificationEvent.class));
+    }
+
+    @Test
+    void testOnCreditCardProvisionACKEvent() {
+        CreditCardProvisionACKEventDTO event = mock(CreditCardProvisionACKEventDTO.class);
+
+        paymentEventListener.onCreditCardProvisionACKEvent(event);
+
+        verify(paymentNotificationEventProducer, times(1))
+                .sendCreditCardProvisionACKEvent(event);
+    }
+
+    @Test
+    void testOnCreditCardProvisionReverseEvent() {
+        CreditCardProvisionReverseEventDTO event = mock(CreditCardProvisionReverseEventDTO.class);
+
+        paymentEventListener.onCreditCardProvisionReverseEvent(event);
+
+        verify(paymentNotificationEventProducer, times(1))
+                .sendCreditCardProvisionReverseEvent(event);
+    }
+
+    @Test
+    void testOnNotifyPaymentLimitation() {
+        NotifyPaymentLimitationRequest request = mock(NotifyPaymentLimitationRequest.class);
+
+        when(limitationService.notifyPaymentLimitation(request)).thenReturn(null);
+        ReflectionTestUtils.setField(paymentEventListener, "limitationService", limitationService);
+
+        paymentEventListener.onNotifyPaymentLimitation(request);
+
+        verify(limitationService, times(1)).notifyPaymentLimitation(request);
+    }
+
+    @Test
+    void testOnNotifyInquiryLimitation() {
+        NotifyInquiryLimitationRequest request = mock(NotifyInquiryLimitationRequest.class);
+
+        when(limitationService.notifyInquiryLimitation(request)).thenReturn(null);
+        ReflectionTestUtils.setField(paymentEventListener, "limitationService", limitationService);
+
+        paymentEventListener.onNotifyPaymentLimitation(request);
+
+        verify(limitationService, times(1)).notifyInquiryLimitation(request);
+    }
 }
