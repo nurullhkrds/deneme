@@ -1,29 +1,34 @@
-@Entity
-@Getter
-@Setter
-public class PaymentMethod {
-	
-	@Id
-	@Enumerated(EnumType.STRING)
-	//@Column(nullable = false, length = 50)
-	private EnumPaymentMethod code;
-	
-	@Column(nullable = false, length = 100)
-	private String name;
-		
-	@Column(nullable = false, length = 500)
-	private String explanation;
-	
-//	@OneToMany(mappedBy = "paymentMethod", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//	private List<InstitutionPymMethod> institutionPymMethodList;
-//		
-//	@OneToMany(mappedBy = "paymentMethod", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//	private List<InstitutionOrderPymMethod> institutionOrderPymMethodList;
-//	
-//	@OneToMany(mappedBy = "paymentMethod", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//	private List<InstitutionChannelPymMethod> institutionChannelPymMethodList;
-//	
-//	@OneToMany(mappedBy = "paymentMethod", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//	private List<OrderPaymentGroup> orderPaymentGroupList;
+ @Test
+    public void testFindPublishPaymentEventWithInstitutionPaymentNotification() {
+        when(paymentNotificationDTO.getNotificationType())
+                .thenReturn(EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION);
+        when(publishPaymentTypeDTO.getInsertedPaymentNotificationDTOList())
+                .thenReturn(List.of(paymentNotificationDTO));
 
-}
+        paymentEventPublisher.findPublishPaymentEvent(publishPaymentTypeDTO);
+
+        verify(eventPublisher, times(1)).publishEvent(any(BillPaymentEvent.class));
+    }
+
+    @Test
+    public void testFindPublishPaymentEventWithCardProvisionACK() {
+        when(paymentNotificationDTO.getNotificationType())
+                .thenReturn(EnumPaymentNotificationType.CRD_PRVSN_ACK);
+        when(paymentDTO.getPaymentMethod()).thenReturn(EnumPaymentMethod.CARD);
+        when(publishPaymentTypeDTO.getInsertedPaymentNotificationDTOList())
+                .thenReturn(List.of(paymentNotificationDTO));
+
+        paymentEventPublisher.findPublishPaymentEvent(publishPaymentTypeDTO);
+
+        verify(eventPublisher, times(1)).publishEvent(any(CreditCardProvisionACKEventDTO.class));
+    }
+
+    @Test
+    public void testFindPublishPaymentEventWithNoNotification() {
+        when(publishPaymentTypeDTO.getInsertedPaymentNotificationDTOList())
+                .thenReturn(Collections.emptyList());
+
+        paymentEventPublisher.findPublishPaymentEvent(publishPaymentTypeDTO);
+
+        verify(eventPublisher, never()).publishEvent(any());
+    }
