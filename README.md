@@ -1,11 +1,15 @@
-    @Test
-    public void testCorsConfiguration() throws Exception {
-        mockMvc.perform(options("/some-endpoint")
-                .header("Origin", "http://example.com")
-                .header("Access-Control-Request-Method", "GET"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "*"))
-                .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS"))
-                .andExpect(header().string("Access-Control-Allow-Headers", "*"));
+@Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
-}
