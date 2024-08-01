@@ -1,62 +1,39 @@
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+MockHttpServletRequest:
+      HTTP Method = OPTIONS
+      Request URI = /**
+       Parameters = {}
+          Headers = [Origin:"http://localhost:3000", Access-Control-Request-Method:"GET"]
+             Body = null
+    Session Attrs = {}
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+Handler:
+             Type = null
 
-@SpringBootTest
-@AutoConfigureMockMvc
-public class CorsConfigTest {
+Async:
+    Async started = false
+     Async result = null
 
-    @Autowired
-    private MockMvc mockMvc;
+Resolved Exception:
+             Type = null
 
-    @Test
-    public void testCorsConfigurationForLocalhost() throws Exception {
-        mockMvc.perform(options("/**")
-                .header("Origin", "http://localhost:3000")
-                .header("Access-Control-Request-Method", "GET"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
-                .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS"))
-                .andExpect(header().string("Access-Control-Allow-Headers", "*"))
-                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
-    }
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
 
-    @Test
-    public void testCorsConfigurationForSecondOrigin() throws Exception {
-        mockMvc.perform(options("/**")
-                .header("Origin", "http://yoursecondorigin.com")
-                .header("Access-Control-Request-Method", "GET"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://yoursecondorigin.com"))
-                .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS"))
-                .andExpect(header().string("Access-Control-Allow-Headers", "*"))
-                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
-    }
+FlashMap:
+       Attributes = null
 
-    @Test
-    public void testCorsConfigurationForThirdOrigin() throws Exception {
-        mockMvc.perform(options("/**")
-                .header("Origin", "http://yourthirdorigin.com")
-                .header("Access-Control-Request-Method", "GET"))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://yourthirdorigin.com"))
-                .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS"))
-                .andExpect(header().string("Access-Control-Allow-Headers", "*"))
-                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
-    }
+MockHttpServletResponse:
+           Status = 200
+    Error message = null
+          Headers = [Access-Control-Allow-Methods:"POST, GET, OPTIONS, DELETE, PUT, PATCH", "GET,POST,PUT,DELETE,OPTIONS", Access-Control-Max-Age:"3600", "1800", Access-Control-Expose-Headers:"X-Session-Id", Vary:"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", Access-Control-Allow-Origin:"*", X-Content-Type-Options:"nosniff", X-XSS-Protection:"1; mode=block", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0", X-Frame-Options:"DENY"]
+     Content type = null
+             Body = 
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
 
-    @Test
-    public void testCorsConfigurationForUnauthorizedOrigin() throws Exception {
-        mockMvc.perform(options("/**")
-                .header("Origin", "http://unauthorized.com")
-                .header("Access-Control-Request-Method", "GET"))
-                .andExpect(status().isForbidden());
-    }
-}
+java.lang.AssertionError: Response header 'Access-Control-Allow-Origin' expected:<http://localhost:3000> but was:<*>
+Expected :http://localhost:3000
+Actual   :*
