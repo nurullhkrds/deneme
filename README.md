@@ -1,7 +1,7 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -9,30 +9,17 @@ import org.springframework.web.filter.CorsFilter;
 
 public class WebConfigTest {
 
-    private WebConfig webConfig;
-    private UrlBasedCorsConfigurationSource source;
-
-    @BeforeEach
-    public void setUp() {
-        webConfig = new WebConfig();
-        source = new UrlBasedCorsConfigurationSource();
-    }
-
     @Test
-    public void testCorsFilterBean() {
+    public void testCorsFilter() {
+        WebConfig webConfig = new WebConfig();
         CorsFilter corsFilter = webConfig.corsFilter();
         
-        // CorsFilter'in UrlBasedCorsConfigurationSource içerdiğini kontrol edin
-        assertNotNull(corsFilter);
+        UrlBasedCorsConfigurationSource source = (UrlBasedCorsConfigurationSource) corsFilter.getConfigSource();
+        CorsConfiguration config = source.getCorsConfigurations().get("/**");
 
-        // UrlBasedCorsConfigurationSource'u doğrudan test edin
-        source.registerCorsConfiguration("/**", webConfig.corsFilter().getCorsConfigurationSource().getCorsConfiguration("/**"));
-        CorsConfiguration config = source.getCorsConfiguration("/**");
-
-        assertNotNull(config);
         assertTrue(config.getAllowCredentials());
-        assertTrue(config.getAllowedOriginPatterns().contains("*"));
-        assertTrue(config.getAllowedHeaders().contains("*"));
-        assertTrue(config.getAllowedMethods().contains("*"));
+        assertEquals("*", config.getAllowedOriginPatterns().get(0));
+        assertEquals("*", config.getAllowedHeaders().get(0));
+        assertEquals("*", config.getAllowedMethods().get(0));
     }
 }
