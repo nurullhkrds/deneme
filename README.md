@@ -1,59 +1,13 @@
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+    @GetMapping("/search")
+    public ResponseEntity<DataResult<List<ReturnMapDTO>>> searchReturnMaps(
+            @RequestParam(required = false) @Parameter(name = "returnMapCode") String returnMapCode,
+            @RequestParam (required = false) String institutionReturnCode,
+            @RequestParam(required = false) @Parameter(name = "bankReturnCode") String bankReturnCode
+           ) {
+        DataResult<List<ReturnMapDTO>> searchResult = adapterReturnMapClient.searchReturnMaps(returnMapCode, bankReturnCode, institutionReturnCode);
+        System.out.println("returnmap: "+returnMapCode );
+        System.out.println("bankCode: "+bankReturnCode);
+        System.out.println("kurum: "+institutionReturnCode);
 
-import org.junit.jupiter.api.Test;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-
-public class WebConfigTest {
-
-    @Test
-    public void testCorsFilter() {
-        WebConfig webConfig = new WebConfig();
-        CorsFilter corsFilter = webConfig.corsFilter();
-
-        assertNotNull(corsFilter, "CorsFilter should not be null");
-
-        // Directly test the configuration setup in WebConfig
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        source.registerCorsConfiguration("/**", config);
-
-        // Assert the configurations
-        CorsConfiguration registeredConfig = source.getCorsConfigurations().get("/**");
-
-        assertNotNull(registeredConfig, "CorsConfiguration should not be null");
-        assertTrue(registeredConfig.getAllowCredentials(), "AllowCredentials should be true");
-        assertEquals("*", registeredConfig.getAllowedOriginPatterns().get(0), "AllowedOriginPatterns should be '*'");
-        assertEquals("*", registeredConfig.getAllowedHeaders().get(0), "AllowedHeaders should be '*'");
-        assertEquals("*", registeredConfig.getAllowedMethods().get(0), "AllowedMethods should be '*'");
+        return ResponseEntity.status(searchResult.getStatusCode()).body(searchResult);
     }
-
-    @Test
-    public void testCorsConfigurationProperties() {
-        WebConfig webConfig = new WebConfig();
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        source.registerCorsConfiguration("/**", config);
-
-        // Verify individual properties
-        CorsConfiguration registeredConfig = source.getCorsConfigurations().get("/**");
-
-        assertNotNull(registeredConfig, "CorsConfiguration should not be null");
-        assertTrue(registeredConfig.getAllowCredentials(), "AllowCredentials should be true");
-        assertEquals("*", registeredConfig.getAllowedOriginPatterns().get(0), "AllowedOriginPatterns should be '*'");
-        assertEquals("*", registeredConfig.getAllowedHeaders().get(0), "AllowedHeaders should be '*'");
-        assertEquals("*", registeredConfig.getAllowedMethods().get(0), "AllowedMethods should be '*'");
-    }
-}
