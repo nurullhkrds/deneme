@@ -1,8 +1,35 @@
+public class ListAppender extends AppenderBase<ILoggingEvent> {
+    private final List<ILoggingEvent> logs = new ArrayList<>();
+
+    @Override
+    protected void append(ILoggingEvent eventObject) {
+        logs.add(eventObject);
+    }
+
+    public List<ILoggingEvent> getLogs() {
+        return logs;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 package com.ykb.payments.bill.transaction.payment.consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.ykb.payments.bill.common.enums.EnumBillResult;
 import com.ykb.payments.bill.transaction.payment.model.CreditCardProvisionACKEventDTO;
 import com.ykb.payments.bill.transaction.payment.model.CreditCardProvisionReverseEventDTO;
@@ -19,11 +46,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,12 +63,16 @@ public class BillEventConsumerTest {
     @InjectMocks
     private BillEventConsumer billEventConsumer;
 
-    @Mock
-    private Logger logger;
+    private ListAppender listAppender;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(billEventConsumer, "logger", logger);
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        Logger logger = (Logger) LoggerFactory.getLogger(BillEventConsumer.class);
+        listAppender = new ListAppender();
+        listAppender.setContext(loggerContext);
+        logger.addAppender(listAppender);
+        listAppender.start();
     }
 
     @Test
