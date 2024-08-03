@@ -22,7 +22,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,9 +40,12 @@ public class BillEventConsumerTest {
     @InjectMocks
     private BillEventConsumer billEventConsumer;
 
+    @Mock
+    private Logger logger;
+
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(billEventConsumer, "logger", mock(Logger.class));
+        ReflectionTestUtils.setField(billEventConsumer, "logger", logger);
     }
 
     @Test
@@ -162,8 +166,3 @@ public class BillEventConsumerTest {
         verify(paymentNotificationService, times(1)).creditCardReverseProvision(anyLong(), anyLong(), anyLong(), anyBoolean());
     }
 }
-
-
-
-java.lang.IllegalStateException: Could not access method or field: Can not set static final org.slf4j.Logger field com.ykb.payments.bill.transaction.payment.consumer.BillEventConsumer.logger to org.mockito.codegen.Logger$MockitoMock$WCHNAuZy
-
