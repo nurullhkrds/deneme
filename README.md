@@ -1,123 +1,242 @@
+@RestController
+@Tag(name = "Harmoni Bill Payment")
+@RequestMapping("/harmoniBillPayment")
+@RequiredArgsConstructor
+public class HarmoniPaymentAdkController {
 
-@ExtendWith(MockitoExtension.class)
-public class PaymentNotificationEventProducerTest {
+	private static final String ERROR = "E";
+	private static final String SUCCESS = "S";
 
-    @Mock
-    private RabbitTemplate rabbitTemplate;
+	private final SubscriberService subscriberService;
+	private final PaymentService paymentService;
+	private final RequestContext requestContext;
+	private final HarmoniMicroMapper harmoniMicroMapper;
 
-    @Mock
-    private org.slf4j.Logger logger;
+	private <T> HarmoniCoreServiceResultDTO<T> handleBillException(BillException ex) {
+		HarmoniCoreServiceResultDTO resutlDTO = new HarmoniCoreServiceResultDTO<>();
+		resutlDTO.setResult(null);
+		resutlDTO.setStatus(ERROR);
+		HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+		responseMessage.setResponseCode(CollectionUtils.isEmpty(ex.getBillResult().getHmnCode()) ? "" : ex.getBillResult().getHmnCode().get(0).getValue());
+		responseMessage.setResponseMessage(CollectionUtils.isEmpty(ex.getBillResult().getHmnCode()) ? ex.getBillResult().getExplanation() : ex.getBillResult().getHmnCode().get(0).getDescription());
+		if(ex.getParameters()!=null && !ex.getParameters().isEmpty()){
+			responseMessage.setErrorParameterMap(ex.getParameters());
+		}
+		resutlDTO.setResponseMessage(responseMessage);
+		return resutlDTO;
+	}
 
-    @InjectMocks
-    private PaymentNotificationEventProducer paymentNotificationEventProducer;
+	private <T> HarmoniCoreServiceResultDTO<T> handleBillException(MicroException ex) {
+		HarmoniCoreServiceResultDTO resutlDTO = new HarmoniCoreServiceResultDTO<>();
+		resutlDTO.setResult(null);
+		resutlDTO.setStatus(ERROR);
 
-    @BeforeEach
-    public void setUp() {
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentNotificationEventExchangeName", "paymentNotificationEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentNotificationEventRoutingKey", "paymentNotificationEventRoutingKey");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentCancelNotificationEventExchangeName", "paymentCancelNotificationEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentCancelNotificationEventRoutingKey", "paymentCancelNotificationEventRoutingKey");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionACKEventExchangeName", "creditCardProvisionACKEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionACKEventRoutingKey", "creditCardProvisionACKEventRoutingKey");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionReverseEventExchangeName", "creditCardProvisionReverseEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "ccreditCardProvisionReverseEventRoutingKey", "creditCardProvisionReverseEventRoutingKey");
-        
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "logger", logger);
-    }
+		ExceptionData exceptionData = ex.getExceptionData();
 
-    @Test
-    public void testSendPaymentNotificationEvent_Success() {
-        PaymentNotificationEvent event = new PaymentNotificationEvent();
-        event.setPaymentNotificationId(123L);
+		HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+		responseMessage.setResponseCode(exceptionData.getErrorCode().toString());
+		responseMessage.setResponseMessage(exceptionData.getErrorMessage());
+		if(ex.getExceptionData().getErrors()!=null && !ex.getExceptionData().getErrors().isEmpty()){
+			Map<String, String> errorParameterMap = new HashMap<>();
+			for (ValidationErrorData validationErrorData : ex.getExceptionData().getErrors()) {
+				errorParameterMap.put(validationErrorData.getField(),validationErrorData.getMessage());
+			}
+			responseMessage.setErrorParameterMap(errorParameterMap);
+		}
+		resutlDTO.setResponseMessage(responseMessage);
 
-        paymentNotificationEventProducer.sendPaymentNotificationEvent(event);
+		return resutlDTO;
+	}
 
-        verify(rabbitTemplate).convertAndSend(eq("paymentNotificationEventExchange"), eq("paymentNotificationEventRoutingKey"), eq(event));
-        verify(logger).info(eq("Published payment notification message. paymentNotificationId: '{}'"), eq(123L));
-    }
+	private void fillMandatoryFields(HarmoniCoreServiceBaseDataDTO coreData) {
+		if (coreData == null) {
+			return;
+		}
 
-    @Test
-    public void testSendPaymentNotificationEvent_Failure() {
-        PaymentNotificationEvent event = new PaymentNotificationEvent();
-        event.setPaymentNotificationId(123L);
+		requestContext.setChannelSessionId(coreData.getSessionId());
+		requestContext.setChannelTransactionId(coreData.getClientUniqueReference());
+		requestContext.setAgentCode(coreData.getAgentCode());
+		requestContext.setChannelCode(ChannelUtil.convertChannel(coreData.getChannelCode()));
+		requestContext.setOperatingBranchCode(coreData.getOperatingBranchCode());
+	}
 
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
 
-        paymentNotificationEventProducer.sendPaymentNotificationEvent(event);
+	@Operation(description = "Query Bills")
+	@PostMapping(path = "/queryBills")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> queryBills(
+			@RequestBody RequestHarmoniQueryBills request) throws MicroException {
 
-        verify(logger).error(eq("Error occurred while publishing payment notification message. paymentNotificationId: '{}' Exception Detail: '{}'"),
-                eq(123L), any(String.class));
-    }
+		fillMandatoryFields(request.getRequestSource());
+		try {
+			QueryBillsResponse queryBills = paymentService.queryBills(harmoniMicroMapper.toQueryBillRequest(request));
+			ResponseHarmoniQueryBills harmoniResponse = harmoniMicroMapper.toResponseHarmoniQueryBills(queryBills,
+					request);
 
-    @Test
-    public void testSendPaymentCancelNotificationEvent_Success() {
-        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
-        event.setPaymentNotificationId(123L);
+			HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(harmoniResponse);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
 
-        paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(event);
+			return result;
+		} catch (BillException e) {
+			return handleBillException(e);
+		}
+	}
 
-        verify(rabbitTemplate).convertAndSend(eq("paymentCancelNotificationEventExchange"), eq("paymentCancelNotificationEventRoutingKey"), eq(event));
-        verify(logger).info(eq("Published payment notification message. paymentNotificationId: '{}'"), eq(123L));
-    }
+	@Operation(description = "Do Bill Payment")
+	@PostMapping(path = "/doBillPayment")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> doBillPayment(
+			@RequestBody RequestHarmoniDoBillPayment request) throws MicroException {
 
-    @Test
-    public void testSendPaymentCancelNotificationEvent_Failure() {
-        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
-        event.setPaymentNotificationId(123L);
+		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
 
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
+		try {
+			DoBillPaymentResponse microResponse = paymentService
+					.doBillPayment(harmoniMicroMapper.toDoBillPaymentRequest(request));
 
-        paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(event);
+			ResponseHarmoniDoBillPaymentResultDTO hmnResponse = harmoniMicroMapper
+					.toResponseHarmoniDoBillPaymentResultDTO(microResponse);
 
-        verify(logger).error(eq("Error occurred while publishing payment notification message. paymentNotificationId: '{}' Exception Detail: '{}'"),
-                eq(123L), any(String.class));
-    }
+			HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(hmnResponse);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
+			return result;
 
-    @Test
-    public void testSendCreditCardProvisionACKEvent_Success() {
-        CreditCardProvisionACKEventDTO event = new CreditCardProvisionACKEventDTO();
-        event.setPaymentId(123L);
+		} catch (BillException e) {
+			return handleBillException(e);
+		}
 
-        paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(event);
+	}
 
-        verify(rabbitTemplate).convertAndSend(eq("creditCardProvisionACKEventExchange"), eq("creditCardProvisionACKEventRoutingKey"), eq(event));
-        verify(logger).info(eq("Published credit card provision ack message. Payment Id: '{}'"), eq(123L));
-    }
+	@Operation(description = "Cancel Bill Payment")
+	@PostMapping(path = "/cancelBillPayment")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniCancelBillPayment> cancelBillPayment(
+			@RequestBody RequestHarmoniCancelBillPayment request) throws MicroException {
 
-    @Test
-    public void testSendCreditCardProvisionACKEvent_Failure() {
-        CreditCardProvisionACKEventDTO event = new CreditCardProvisionACKEventDTO();
-        event.setPaymentId(123L);
+		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
 
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
+		try {
+			CancelBillPaymentResponse microResponse = paymentService
+					.cancelBillPayment(harmoniMicroMapper.toCancelBillPaymentRequest(request));
 
-        paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(event);
+			ResponseHarmoniCancelBillPayment convertedHarmoniResponse = harmoniMicroMapper
+					.toResponseHarmoniCancelBillPayment(microResponse);
 
-        verify(logger).error(eq("Error occurred while publishing credit card provision ack message. Payment Id: '{}' Exception Detail: '{}'"),
-                eq(123L), any(String.class));
-    }
+			HarmoniCoreServiceResultDTO<ResponseHarmoniCancelBillPayment> result = new HarmoniCoreServiceResultDTO<>();
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
+			return result;
 
-    @Test
-    public void testSendCreditCardProvisionReverseEvent_Success() {
-        CreditCardProvisionReverseEventDTO event = new CreditCardProvisionReverseEventDTO();
-        event.setPaymentCancelId(123L);
+		} catch (BillException e) {
+			return handleBillException(e);
+		}
+	}
 
-        paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(event);
+	@Operation(description = " Bill Payment Expense")
+	@PostMapping(path = "/getBillPaymentExpense")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> getBillPaymentExpense(
+			@RequestBody RequestHarmoniGetBillPaymentExpense request) {
+		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
 
-        verify(rabbitTemplate).convertAndSend(eq("creditCardProvisionReverseEventExchange"), eq("creditCardProvisionReverseEventRoutingKey"), eq(event));
-        verify(logger).info(eq("Published credit card provision reverse message. Payment Cancel Id: '{}'"), eq(123L));
-    }
+		try {
+			GetBillPaymentExpenseResponseDTO microResponse = subscriberService
+					.getBillPaymentExpense(harmoniMicroMapper.toGetBillPaymentExpenseRequestDTO(request));
+			ResponseHarmoniGetBillPaymentExpense harmoniResponse = harmoniMicroMapper
+					.toResponseHarmoniGetBillPaymentExpense(microResponse);
 
-    @Test
-    public void testSendCreditCardProvisionReverseEvent_Failure() {
-        CreditCardProvisionReverseEventDTO event = new CreditCardProvisionReverseEventDTO();
-        event.setPaymentCancelId(123L);
+			HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(harmoniResponse);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
 
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
+			return result;
 
-        paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(event);
+		} catch (MicroException e) {
+			return handleBillException(e);
+		}
+	}
 
-        verify(logger).error(eq("Error occurred while publishing credit card provision ack message. Payment Cancel Id: '{}' Exception Detail: '{}'"),
-                eq(123L), any(String.class));
-    }
+
+	@Operation(description = "Get customer paid bill list")
+	@GetMapping(path = "/getCustomerPaidBillList")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> getCustomerPaidBillList(
+				@RequestParam Long customerNo, @RequestParam String channelCode,@RequestParam(required = false) String product) {
+		try {
+			GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+			request.setCustomerNo(customerNo);
+			request.setChannelCode(ChannelUtil.convertChannel(channelCode));
+			request.setProductCode(product);
+			List<HmnPaidBillDTO> hmnPaidBillDTOList = paymentService.getMicroBillList(request);
+			ResponseHarmoniGetCustomerPaidBillList harmoniResponse = new ResponseHarmoniGetCustomerPaidBillList();
+			harmoniResponse.setBillDTOList(hmnPaidBillDTOList);
+			HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(harmoniResponse);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
+
+			return result;
+
+		} catch (MicroException e) {
+			return handleBillException(e);
+		}
+	}
+	@Operation(description = "Get Recon Count")
+	@GetMapping(path = "/getReconCount")
+	public HarmoniCoreServiceResultDTO<CountDTO> getReconCount(@RequestParam  boolean isPayment,
+															   @RequestParam Date reconciliationDate,
+															   @RequestParam String productCode,
+															   @RequestParam String institutionCode) throws MicroException{
+		try {
+			CountDTO countDTO =	paymentService.getReconCount(isPayment, reconciliationDate,productCode,institutionCode);
+			HarmoniCoreServiceResultDTO<CountDTO> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(countDTO);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
+			return result;
+		} catch (MicroException e) {
+			return handleBillException(e);
+		}
+	}
+
+	@Operation(description = "Get Recon Detail")
+	@GetMapping(path = "/getReconDetail")
+	public HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO> > getReconDetail(@RequestParam  boolean isPayment,
+															   @RequestParam Date reconciliationDate,
+															   @RequestParam String productCode,
+															   @RequestParam String institutionCode) throws MicroException{
+		try {
+			List<HmnPaidBillDTO> reconDetailList =	paymentService.getReconDetail(isPayment, reconciliationDate,productCode,institutionCode);
+			HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO>> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(reconDetailList);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
+			return result;
+		} catch (MicroException e) {
+			return handleBillException(e);
+		}
+	}
+
+
 }
