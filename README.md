@@ -1,55 +1,3 @@
-package com.ykb.payments.bill.transaction.process.query;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-
-import com.ykb.payments.bill.common.enums.EnumBillResult;
-import com.ykb.payments.bill.common.exception.BillException;
-import com.ykb.payments.bill.transaction.external.adapter.dto.QueriedBillDTO;
-import com.ykb.payments.bill.transaction.external.adapter.response.QueryBillsAdapterResponse;
-import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.response.ResponseGetCustomerPaidBillList;
-import com.ykb.payments.bill.transaction.external.limitation.model.PaymentAllowedResponse;
-import com.ykb.payments.bill.transaction.institution.mapper.InstitutionUserIntfMapper;
-import com.ykb.payments.bill.transaction.process.common.AbstractProcess;
-
-import com.ykb.payments.bill.transaction.external.adapter.service.AdapterService;
-import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.service.BillPaymentRestFacade;
-import com.ykb.payments.bill.transaction.external.limitation.service.LimitationService;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionUserIntfDTO;
-import com.ykb.payments.bill.transaction.institution.service.InstitutionUserIntService;
-import com.ykb.payments.bill.transaction.institution.util.SubscriberNumberUtils;
-import com.ykb.payments.bill.transaction.payment.dto.SubscriberNoPartRequestDTO;
-import com.ykb.payments.bill.transaction.payment.event.PaymentEventPublisher;
-import com.ykb.payments.bill.transaction.payment.mapper.PaymentMapper;
-import com.ykb.payments.bill.transaction.payment.repository.PaymentRepository;
-import com.ykb.payments.bill.transaction.payment.service.PaymentUtilImpl;
-import com.ykb.payments.bill.transaction.payment.service.ProvisionService;
-import com.ykb.payments.bill.transaction.process.common.ProcessDataPackKey;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-
-import java.util.Collections;
-
-import org.mockito.Spy;
-
 @ExtendWith(MockitoExtension.class)
 public class QueryBillsProcessTest {
 
@@ -74,6 +22,9 @@ public class QueryBillsProcessTest {
     @Mock
     private PaymentUtilImpl paymentUtilImpl;
 
+    @Mock
+    private AbstractProcess.DataPack dataPack;
+
     @Spy
     @InjectMocks
     private QueryBillsProcess queryBillsProcess;
@@ -81,12 +32,14 @@ public class QueryBillsProcessTest {
     @BeforeEach
     void setUp() {
         // Mock the dataPack method from AbstractProcess
-        when(queryBillsProcess.getDataPack().get(ProcessDataPackKey.CUSTOMER_NO.getKey())).thenReturn(123L);
-        when(queryBillsProcess.getDataPack().get(ProcessDataPackKey.IDENTITY_NO.getKey())).thenReturn(456L);
-        when(queryBillsProcess.getDataPack().get((String) ProcessDataPackKey.TAX_ID.getKey())).thenReturn("12345");
-        when(queryBillsProcess.getDataPack().get((String) ProcessDataPackKey.SUBSCRIBER_NO.getKey())).thenReturn("67890");
-        when(queryBillsProcess.getDataPack().get(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey())).thenReturn(Collections.emptyList());
-        when(queryBillsProcess.getDataPack().get((String) ProcessDataPackKey.CURRENCY.getKey())).thenReturn("USD");
+        when(queryBillsProcess.getDataPack()).thenReturn(dataPack);
+
+        when(dataPack.get(ProcessDataPackKey.CUSTOMER_NO.getKey())).thenReturn(123L);
+        when(dataPack.get(ProcessDataPackKey.IDENTITY_NO.getKey())).thenReturn(456L);
+        when(dataPack.get(ProcessDataPackKey.TAX_ID.getKey())).thenReturn("12345");
+        when(dataPack.get(ProcessDataPackKey.SUBSCRIBER_NO.getKey())).thenReturn("67890");
+        when(dataPack.get(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey())).thenReturn(Collections.emptyList());
+        when(dataPack.get(ProcessDataPackKey.CURRENCY.getKey())).thenReturn("USD");
 
         when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
     }
@@ -157,5 +110,3 @@ public class QueryBillsProcessTest {
         return response;
     }
 }
-
-java.lang.NullPointerException: Cannot invoke "java.util.Map.get(Object)" because the return value of "com.ykb.payments.bill.transaction.process.query.QueryBillsProcess.getDataPack()" is null
