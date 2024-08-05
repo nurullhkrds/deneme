@@ -1,23 +1,26 @@
-  @Test
-    void testGetBillPaymentExpense_MicroException() throws MicroException {
-        // Arrange
-        RequestHarmoniGetBillPaymentExpense request = new RequestHarmoniGetBillPaymentExpense();
-        MicroException microException = mock(MicroException.class);
-        ExceptionData exceptionData = mock(ExceptionData.class);
+	@Operation(description = "Get customer paid bill list")
+	@GetMapping(path = "/getCustomerPaidBillList")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> getCustomerPaidBillList(
+				@RequestParam Long customerNo, @RequestParam String channelCode,@RequestParam(required = false) String product) {
+		try {
+			GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+			request.setCustomerNo(customerNo);
+			request.setChannelCode(ChannelUtil.convertChannel(channelCode));
+			request.setProductCode(product);
+			List<HmnPaidBillDTO> hmnPaidBillDTOList = paymentService.getMicroBillList(request);
+			ResponseHarmoniGetCustomerPaidBillList harmoniResponse = new ResponseHarmoniGetCustomerPaidBillList();
+			harmoniResponse.setBillDTOList(hmnPaidBillDTOList);
+			HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(harmoniResponse);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
 
-        when(subscriberService.getBillPaymentExpense(any())).thenThrow(microException);
-        when(microException.getExceptionData()).thenReturn(exceptionData);
-        when(exceptionData.getErrorCode()).thenReturn(enumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getValue());
-        when(exceptionData.getErrorMessage()).thenReturn(enumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getDescription());
-        when(exceptionData.getErrors()).thenReturn(new HashMap<>()); // or any mock data
+			return result;
 
-        // Act
-        HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> result = harmoniPaymentAdkController.getBillPaymentExpense(request);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("E", result.getStatus());
-        assertNull(result.getResult());
-        assertEquals(enumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
-        assertEquals(enumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
-    }
+		} catch (MicroException e) {
+			return handleBillException(e);
+		}
+	}
