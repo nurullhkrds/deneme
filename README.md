@@ -1,31 +1,4 @@
-@ExtendWith(MockitoExtension.class)
-public class PaymentAdkControllerTest {
-
-    @Mock
-    private PaymentService paymentService;
-
-    @Mock
-    private PaymentFacade paymentFacade;
-
-    @Mock
-    private InstitutionBarcodeService institutionBarcodeService;
-
-    @Mock
-    private RequestContext requestContext;
-
-    @InjectMocks
-    private PaymentAdkController paymentAdkController;
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(paymentAdkController)
-                .build();
-    }
-
-    @Test
+   @Test
     public void testGetBillPaymentExpense() throws Exception {
         GetBillPaymentExpenseRequestDTO requestDTO = new GetBillPaymentExpenseRequestDTO();
         // Fill the requestDTO with valid data as per your validation requirements
@@ -33,9 +6,11 @@ public class PaymentAdkControllerTest {
         requestDTO.setChannelCode("testChannel");
         requestDTO.setOperatingBranchCode("testBranch");
         // Add other required fields
+        requestDTO.setOtherRequiredField("value"); // Add all necessary fields here
 
         GetBillPaymentExpenseResponseDTO responseDTO = new GetBillPaymentExpenseResponseDTO();
         // Fill responseDTO fields as needed
+        responseDTO.setSomeField("expectedValue"); // Fill this with the actual expected values
 
         when(paymentFacade.getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class))).thenReturn(responseDTO);
         doNothing().when(requestContext).setChannelSessionId(any(String.class));
@@ -45,9 +20,9 @@ public class PaymentAdkControllerTest {
         doNothing().when(requestContext).setOperatingBranchCode(any(String.class));
 
         mockMvc.perform(get("/adkBillPayment/getBillPaymentExpense")
-                .param("agentCode", "testAgent")
-                .param("channelCode", "testChannel")
-                .param("operatingBranchCode", "testBranch")
+                .param("agentCode", requestDTO.getAgentCode())
+                .param("channelCode", requestDTO.getChannelCode())
+                .param("operatingBranchCode", requestDTO.getOperatingBranchCode())
                 .header("x-trace-id", "trace-id")
                 .header("x-session-id", "session-id")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -56,4 +31,3 @@ public class PaymentAdkControllerTest {
 
         verify(paymentFacade).getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class));
     }
-}
