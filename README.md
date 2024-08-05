@@ -1,21 +1,28 @@
-   @Test
-    void testQueryBills_BillException() throws MicroException, BillException {
-        // Arrange
-        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
-        BillException billException = mock(BillException.class);
+@Operation(description = "Do Bill Payment")
+	@PostMapping(path = "/doBillPayment")
+	public HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> doBillPayment(
+			@RequestBody RequestHarmoniDoBillPayment request) throws MicroException {
 
-        EnumBillResult enumBillResult = EnumBillResult.PAID_BILL_NOT_FOUND_ERROR; // Use a real EnumBillResult value
+		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
 
-        when(paymentService.queryBills(any())).thenThrow(billException);
-        when(billException.getBillResult()).thenReturn(enumBillResult);
+		try {
+			DoBillPaymentResponse microResponse = paymentService
+					.doBillPayment(harmoniMicroMapper.toDoBillPaymentRequest(request));
 
-        // Act
-        HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = harmoniPaymentAdkController.queryBills(request);
+			ResponseHarmoniDoBillPaymentResultDTO hmnResponse = harmoniMicroMapper
+					.toResponseHarmoniDoBillPaymentResultDTO(microResponse);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("E", result.getStatus());
-        assertNull(result.getResult());
-        assertEquals(enumBillResult.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
-        assertEquals(enumBillResult.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
-    }
+			HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> result = new HarmoniCoreServiceResultDTO<>();
+			result.setResult(hmnResponse);
+			result.setStatus(SUCCESS);
+			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
+			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
+			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
+			result.setResponseMessage(responseMessage);
+			return result;
+
+		} catch (BillException e) {
+			return handleBillException(e);
+		}
+
+	}
