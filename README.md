@@ -1,44 +1,3 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Collections;
-
-public class ProcessExecutionMapperTest {
-
-    private ProcessExecutionMapper mapper;
-
-    @BeforeEach
-    public void setUp() {
-        mapper = Mappers.getMapper(ProcessExecutionMapper.class);
-    }
-
-    @Test
-    public void testToQueryBillProcessInput() {
-        QueryBillsRequest request = new QueryBillsRequest();
-        request.setOperatingBranchCode("001");
-        request.setDebtTypeID(1);
-
-        QueryBillProcessInput input = mapper.toQueryBillProcessInput(request);
-
-        assertEquals("001", input.getBranchCode());
-        assertEquals(1, input.getInstitutionDebtTypeId());
-    }
-
-    @Test
-    public void testToQueryBillsResponse() {
-        QueryBillsProcessOutput output = new QueryBillsProcessOutput();
-        output.setProvisionDTOList(Collections.emptyList());
-
-        QueryBillsResponse response = mapper.toQueryBillsResponse(output);
-
-        assertNotNull(response);
-    }
-
     @Test
     public void testAfterToGetQueryBillsResponse() {
         QueryBillsProcessOutput output = mock(QueryBillsProcessOutput.class);
@@ -46,8 +5,8 @@ public class ProcessExecutionMapperTest {
         when(output.getProvisionDTOList()).thenReturn(Collections.singletonList(provisionDTO));
         when(provisionDTO.getSubscriberName()).thenReturn("John Doe");
         when(provisionDTO.getBillNo()).thenReturn("123456");
-        when(provisionDTO.getAmount()).thenReturn(100.0);
-        when(provisionDTO.getBillDueDate()).thenReturn("2023-01-01");
+        when(provisionDTO.getAmount()).thenReturn(BigDecimal.valueOf(100.0));
+        when(provisionDTO.getBillDueDate()).thenReturn(LocalDate.parse("2023-01-01"));
         when(provisionDTO.getCurrency().getValue()).thenReturn("USD");
         when(provisionDTO.getBillTerm()).thenReturn("Monthly");
         when(provisionDTO.getId().toString()).thenReturn("1");
@@ -68,26 +27,8 @@ public class ProcessExecutionMapperTest {
         assertEquals("Monthly", bill.getBillTerm());
         assertEquals("1", bill.getBillProvisionId());
         assertEquals("Explanation", bill.getExplanation());
-        assertTrue(bill.getPayable());
     }
 
-    @Test
-    public void testToBillPaymentProcessInput() {
-        DoBillPaymentRequest request = new DoBillPaymentRequest();
-        request.setOperatingBranchCode("002");
 
-        BillPaymentProcessInput input = mapper.toBillPaymentProcessInput(request);
 
-        assertEquals("002", input.getBranchCode());
-    }
-
-    @Test
-    public void testToBillPaymentReverseProcessInput() {
-        CancelBillPaymentRequest request = new CancelBillPaymentRequest();
-        request.setOperatingBranchCode("003");
-
-        BillPaymentReverseProcessInput input = mapper.toBillPaymentReverseProcessInput(request);
-
-        assertEquals("003", input.getBranchCode());
-    }
-}
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.common.enums.EnumCurrencyCode.getValue()" because the return value of "com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO.getCurrency()" is null
