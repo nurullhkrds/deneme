@@ -1,40 +1,93 @@
-@Mapper(componentModel = "spring")
-public interface ProcessExecutionMapper {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+import org.springframework.util.CollectionUtils;
 
-	ProcessExecutionMapper INSTANCE = Mappers.getMapper(ProcessExecutionMapper.class);
+import java.util.Collections;
 
-	@Mapping(target = "branchCode", source = "operatingBranchCode")
-	@Mapping(target = "institutionDebtTypeId", source = "debtTypeID")
-	QueryBillProcessInput toQueryBillProcessInput(QueryBillsRequest queryBillsRequest);
+public class ProcessExecutionMapperTest {
 
-	QueryBillsResponse toQueryBillsResponse(QueryBillsProcessOutput queryBillsProcessOutput);
-	
-	@AfterMapping
-	default void afterToGetQueryBillsResponse(@MappingTarget final QueryBillsResponse queryBillsResponse,
-			QueryBillsProcessOutput queryBillsProcessOutput) {
-		if (CollectionUtils.isEmpty(queryBillsProcessOutput.getProvisionDTOList())) {
-			return;
-		}
-		queryBillsResponse
-				.setSubscriberName(queryBillsProcessOutput.getProvisionDTOList().get(0).getSubscriberName());
-		queryBillsResponse.setBillList(queryBillsProcessOutput.getProvisionDTOList().stream().map(provisionDTO -> {
-			QueriedBillResponseWebDTO queriedBillResponseWebDTO = new QueriedBillResponseWebDTO();
-			queriedBillResponseWebDTO.setBillNo(provisionDTO.getBillNo());
-			queriedBillResponseWebDTO.setBillAmount(provisionDTO.getAmount());
-			queriedBillResponseWebDTO.setBillDueDate(provisionDTO.getBillDueDate());
-			queriedBillResponseWebDTO.setCurrency(provisionDTO.getCurrency().getValue());
-			queriedBillResponseWebDTO.setBillTerm(provisionDTO.getBillTerm());
-			queriedBillResponseWebDTO.setBillProvisionId(provisionDTO.getId().toString());
-			queriedBillResponseWebDTO.setExplanation(provisionDTO.getExplanation());
-			queriedBillResponseWebDTO.setPayable(provisionDTO.getIsPayable());
-			return queriedBillResponseWebDTO;
-		}).toList());
-	}
-	@Mapping(target = "branchCode", source = "operatingBranchCode")
-	BillPaymentProcessInput toBillPaymentProcessInput(DoBillPaymentRequest doBillPaymentRequest);
+    private ProcessExecutionMapper mapper;
 
-	@Mapping(target = "branchCode", source = "operatingBranchCode")
-	BillPaymentReverseProcessInput toBillPaymentReverseProcessInput (CancelBillPaymentRequest cancelBillPaymentRequest);
+    @BeforeEach
+    public void setUp() {
+        mapper = Mappers.getMapper(ProcessExecutionMapper.class);
+    }
 
+    @Test
+    public void testToQueryBillProcessInput() {
+        QueryBillsRequest request = new QueryBillsRequest();
+        request.setOperatingBranchCode("001");
+        request.setDebtTypeID(1);
+
+        QueryBillProcessInput input = mapper.toQueryBillProcessInput(request);
+
+        assertEquals("001", input.getBranchCode());
+        assertEquals(1, input.getInstitutionDebtTypeId());
+    }
+
+    @Test
+    public void testToQueryBillsResponse() {
+        QueryBillsProcessOutput output = new QueryBillsProcessOutput();
+        output.setProvisionDTOList(Collections.emptyList());
+
+        QueryBillsResponse response = mapper.toQueryBillsResponse(output);
+
+        assertNotNull(response);
+    }
+
+    @Test
+    public void testAfterToGetQueryBillsResponse() {
+        QueryBillsProcessOutput output = mock(QueryBillsProcessOutput.class);
+        ProvisionDTO provisionDTO = mock(ProvisionDTO.class);
+        when(output.getProvisionDTOList()).thenReturn(Collections.singletonList(provisionDTO));
+        when(provisionDTO.getSubscriberName()).thenReturn("John Doe");
+        when(provisionDTO.getBillNo()).thenReturn("123456");
+        when(provisionDTO.getAmount()).thenReturn(100.0);
+        when(provisionDTO.getBillDueDate()).thenReturn("2023-01-01");
+        when(provisionDTO.getCurrency().getValue()).thenReturn("USD");
+        when(provisionDTO.getBillTerm()).thenReturn("Monthly");
+        when(provisionDTO.getId().toString()).thenReturn("1");
+        when(provisionDTO.getExplanation()).thenReturn("Explanation");
+        when(provisionDTO.getIsPayable()).thenReturn(true);
+
+        QueryBillsResponse response = new QueryBillsResponse();
+
+        mapper.afterToGetQueryBillsResponse(response, output);
+
+        assertEquals("John Doe", response.getSubscriberName());
+        assertEquals(1, response.getBillList().size());
+        QueriedBillResponseWebDTO bill = response.getBillList().get(0);
+        assertEquals("123456", bill.getBillNo());
+        assertEquals(100.0, bill.getBillAmount());
+        assertEquals("2023-01-01", bill.getBillDueDate());
+        assertEquals("USD", bill.getCurrency());
+        assertEquals("Monthly", bill.getBillTerm());
+        assertEquals("1", bill.getBillProvisionId());
+        assertEquals("Explanation", bill.getExplanation());
+        assertTrue(bill.getPayable());
+    }
+
+    @Test
+    public void testToBillPaymentProcessInput() {
+        DoBillPaymentRequest request = new DoBillPaymentRequest();
+        request.setOperatingBranchCode("002");
+
+        BillPaymentProcessInput input = mapper.toBillPaymentProcessInput(request);
+
+        assertEquals("002", input.getBranchCode());
+    }
+
+    @Test
+    public void testToBillPaymentReverseProcessInput() {
+        CancelBillPaymentRequest request = new CancelBillPaymentRequest();
+        request.setOperatingBranchCode("003");
+
+        BillPaymentReverseProcessInput input = mapper.toBillPaymentReverseProcessInput(request);
+
+        assertEquals("003", input.getBranchCode());
+    }
 }
