@@ -1,93 +1,101 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.context.request.RequestContextHolder;
+@Component
+@RequiredArgsConstructor
+public class PaymentNotificationEventProducer {
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+    private static final Logger logger = LoggerFactory.getLogger(PaymentNotificationEventProducer.class);
 
-@ExtendWith(MockitoExtension.class)
-public class BillEventConsumerTest {
+    private final RabbitTemplate rabbitTemplate;
 
-    @Mock
-    private PaymentService paymentService;
 
-    @Mock
-    private PaymentNotificationService paymentNotificationService;
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentNotificationEvent.exchangeName}")
+    private String paymentNotificationEventExchangeName;
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentNotificationEvent.routingKey}")
+    private String paymentNotificationEventRoutingKey;
 
-    @InjectMocks
-    private BillEventConsumer billEventConsumer;
+    
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentCancelNotificationEvent.exchangeName}")
+    private String paymentCancelNotificationEventExchangeName;
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentCancelNotificationEvent.routingKey}")
+    private String paymentCancelNotificationEventRoutingKey;
+    
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionACKEvent.exchangeName}")
+    private String creditCardProvisionACKEventExchangeName;
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionACKEvent.routingKey}")
+    private String creditCardProvisionACKEventRoutingKey;
+    
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionReverseEvent.exchangeName}")
+    private String creditCardProvisionReverseEventExchangeName;
+    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionReverseEvent.routingKey}")
+    private String ccreditCardProvisionReverseEventRoutingKey;
+  
+    @Async
+    public void sendPaymentNotificationEvent(PaymentNotificationEvent paymentNotificationEvent) {
+        try {
+            rabbitTemplate.convertAndSend(paymentNotificationEventExchangeName, paymentNotificationEventRoutingKey, paymentNotificationEvent);
 
-    @BeforeEach
-    void setUp() {
-        RequestContextHolder.resetRequestAttributes();
+            logger.info("Published payment notification message." +
+                            " paymentNotificationId: '{}'" ,
+                            paymentNotificationEvent.getPaymentNotificationId());
+
+        } catch (Exception ex) {
+            logger.error("Error occurred while publishing payment notification message." +
+                            " paymentNotificationId: '{}'" +                         
+                            " Exception Detail: '{}'",
+                            paymentNotificationEvent.getPaymentNotificationId(),
+                    ExceptionUtils.getStackTrace(ex));
+        }
+
     }
+    
+	@Async
+	public void sendPaymentCancelNotificationEvent(PaymentCancelNotificationEvent paymentCancelNotificationEvent) {
 
-    @Test
-    void testOnMessagePaymentNotificationEvent() throws Exception {
-        // Given
-        PaymentNotificationEvent event = new PaymentNotificationEvent();
-        NotifyPaymentProcessOutput output = new NotifyPaymentProcessOutput();
-        output.setResult(EnumBillResult.SUCCESS);
+		try {
+			rabbitTemplate.convertAndSend(paymentCancelNotificationEventExchangeName,
+					paymentCancelNotificationEventRoutingKey, paymentCancelNotificationEvent);
+			logger.info("Published payment notification message." + " paymentNotificationId: '{}'",
+					paymentCancelNotificationEvent.getPaymentNotificationId());
 
-        // When
-        when(paymentService.notifyPayment(any(PaymentNotificationEvent.class))).thenReturn(output);
+		} catch (Exception e) {
+			logger.error(
+					"Error occurred while publishing payment notification message." + " paymentNotificationId: '{}'"
+							+ " Exception Detail: '{}'",
+					paymentCancelNotificationEvent.getPaymentNotificationId(), ExceptionUtils.getStackTrace(e));
+		}
 
-        // Then
-        billEventConsumer.onMessage(event);
+	}
+	
+    public void sendCreditCardProvisionACKEvent(CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO) {
+        try {
+           
+            rabbitTemplate.convertAndSend(creditCardProvisionACKEventExchangeName, creditCardProvisionACKEventRoutingKey, creditCardProvisionACKEventDTO);
 
-        verify(paymentService, times(1)).notifyPayment(any(PaymentNotificationEvent.class));
+            logger.info("Published credit card provision ack message. Payment Id: '{}'", creditCardProvisionACKEventDTO.getPaymentId());
+
+        } catch (Exception ex) {
+            logger.error("Error occurred while publishing credit card provision ack message." +
+                            " Payment Id: '{}'" +
+                            " Exception Detail: '{}'",
+                    creditCardProvisionACKEventDTO.getPaymentId(),
+                    ExceptionUtils.getStackTrace(ex));
+        }
     }
+    
+	public void sendCreditCardProvisionReverseEvent(CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO) {
+		try {
 
-    @Test
-    void testOnMessagePaymentCancelNotificationEvent() throws Exception {
-        // Given
-        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
-        NotifyPaymentCancelProcessOutput output = new NotifyPaymentCancelProcessOutput();
-        output.setResult(EnumBillResult.SUCCESS);
+			rabbitTemplate.convertAndSend(creditCardProvisionReverseEventExchangeName,
+					ccreditCardProvisionReverseEventRoutingKey, creditCardProvisionReverseEventDTO);
 
-        // When
-        when(paymentService.notifyPaymentCancel(any(PaymentCancelNotificationEvent.class))).thenReturn(output);
+			logger.info("Published credit card provision reverse message. Payment Cancel Id: '{}'",
+					creditCardProvisionReverseEventDTO.getPaymentCancelId());
 
-        // Then
-        billEventConsumer.onMessage(event);
+		} catch (Exception ex) {
+			logger.error(
+					"Error occurred while publishing credit card provision ack message." + " Payment Cancel Id: '{}'"
+							+ " Exception Detail: '{}'",
+					creditCardProvisionReverseEventDTO.getPaymentCancelId(), ExceptionUtils.getStackTrace(ex));
+		}
+	}
 
-        verify(paymentService, times(1)).notifyPaymentCancel(any(PaymentCancelNotificationEvent.class));
-    }
-
-    @Test
-    void testProcessCreditCardProvisionACKMessage() throws Exception {
-        // Given
-        CreditCardProvisionACKEventDTO event = new CreditCardProvisionACKEventDTO();
-        event.setPaymentId(123L);
-        event.setPaymentNotificationId(456L);
-
-        // When
-        doNothing().when(paymentNotificationService).sendAckForCreditCardProvision(anyLong(), anyLong(), anyBoolean());
-
-        // Then
-        billEventConsumer.processCreditCardProvisionACKMessage(event);
-
-        verify(paymentNotificationService, times(1)).sendAckForCreditCardProvision(anyLong(), anyLong(), anyBoolean());
-    }
-
-    @Test
-    void testProcessCreditCardProvisionReverseMessage() throws Exception {
-        // Given
-        CreditCardProvisionReverseEventDTO event = new CreditCardProvisionReverseEventDTO();
-        event.setPaymentId(123L);
-        event.setPaymentNotificationId(456L);
-        event.setPaymentCancelId(789L);
-
-        // When
-        doNothing().when(paymentNotificationService).creditCardReverseProvision(anyLong(), anyLong(), anyLong(), anyBoolean());
-
-        // Then
-        billEventConsumer.processCreditCardProvisionReverseMessage(event);
-
-        verify(paymentNotificationService, times(1)).creditCardReverseProvision(anyLong(), anyLong(), anyLong(), anyBoolean());
-    }
 }
