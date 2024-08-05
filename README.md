@@ -1,18 +1,3 @@
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-import java.util.ArrayList;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class QueryBillsProcessTest {
@@ -64,7 +49,8 @@ public class QueryBillsProcessTest {
         ReflectionTestUtils.setField(queryBillsProcess, "paymentUtilImpl", paymentUtilImpl);
     }
 
-    private <T> T instantiatePrivateClass(Class<?> enclosingClass, String className) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    private <T> T instantiatePrivateClass(String className) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class<?> enclosingClass = queryBillsProcess.getClass();
         Class<?> innerClass = null;
         for (Class<?> clazz : enclosingClass.getDeclaredClasses()) {
             if (clazz.getSimpleName().equals(className)) {
@@ -79,7 +65,7 @@ public class QueryBillsProcessTest {
 
         Constructor<?> constructor = innerClass.getDeclaredConstructor(enclosingClass);
         constructor.setAccessible(true);
-        return (T) constructor.newInstance(enclosingClass);
+        return (T) constructor.newInstance(queryBillsProcess);
     }
     
     @Test
@@ -92,7 +78,7 @@ public class QueryBillsProcessTest {
         
         ReflectionTestUtils.setField(queryBillsProcess, "dataPack", dataPack);
         
-        QueryBillsProcess.GatherData gatherData = instantiatePrivateClass(QueryBillsProcess.class, "GatherData");
+        Object gatherData = instantiatePrivateClass("GatherData");
         ReflectionTestUtils.invokeMethod(gatherData, "executeStep");
         
         assertEquals(12345L, ReflectionTestUtils.getField(queryBillsProcess, "customerNo"));
@@ -115,7 +101,7 @@ public class QueryBillsProcessTest {
         
         when(subscriberNumberUtils.formatSubscriberNumberParts(anyList(), anyList())).thenReturn("formattedSubscriberNo");
         
-        QueryBillsProcess.FormatSubscriberNoPartList formatSubscriberNoPartList = instantiatePrivateClass(QueryBillsProcess.class, "FormatSubscriberNoPartList");
+        Object formatSubscriberNoPartList = instantiatePrivateClass("FormatSubscriberNoPartList");
         ReflectionTestUtils.invokeMethod(formatSubscriberNoPartList, "executeStep");
         
         assertEquals("formattedSubscriberNo", ReflectionTestUtils.getField(queryBillsProcess, "subscriberNo"));
@@ -134,7 +120,7 @@ public class QueryBillsProcessTest {
         
         when(subscriberNumberUtils.checkSubscriberNumberParts(anyList(), anyList())).thenReturn(true);
         
-        QueryBillsProcess.ValidateSubscriberNo validateSubscriberNo = instantiatePrivateClass(QueryBillsProcess.class, "ValidateSubscriberNo");
+        Object validateSubscriberNo = instantiatePrivateClass("ValidateSubscriberNo");
         ReflectionTestUtils.invokeMethod(validateSubscriberNo, "executeStep");
         
         assertNull(ReflectionTestUtils.getField(queryBillsProcess, "error"));
@@ -151,7 +137,7 @@ public class QueryBillsProcessTest {
         
         when(limitationService.isPaymentAllowedWithoutDebtOwner(anyString(), anyInt(), any(), anyString())).thenReturn(new PaymentAllowedResponse(true));
         
-        QueryBillsProcess.CheckCustomerQueryLimit checkCustomerQueryLimit = instantiatePrivateClass(QueryBillsProcess.class, "CheckCustomerQueryLimit");
+        Object checkCustomerQueryLimit = instantiatePrivateClass("CheckCustomerQueryLimit");
         ReflectionTestUtils.invokeMethod(checkCustomerQueryLimit, "executeStep");
         
         assertNull(ReflectionTestUtils.getField(queryBillsProcess, "error"));
@@ -161,4 +147,3 @@ public class QueryBillsProcessTest {
         
         assertEquals(EnumBillResult.BILL_QUERY_LIMIT_REACHED, ReflectionTestUtils.getField(queryBillsProcess, "error"));
     }
-}
