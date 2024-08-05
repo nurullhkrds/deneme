@@ -1,3 +1,4 @@
+
 @ExtendWith(MockitoExtension.class)
 public class BillTransactionRabbitMQConfigTest {
 
@@ -10,9 +11,18 @@ public class BillTransactionRabbitMQConfigTest {
     @InjectMocks
     private BillTransactionRabbitMQConfig billTransactionRabbitMQConfig;
 
+    @Mock
+    private ServiceSpec serviceSpec;
+
+    @Mock
+    private QueueSpec queueSpec;
+
     @BeforeEach
     void setUp() {
-        // Mock necessary properties if required
+        // Set up mocks for necessary methods
+        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
+        when(serviceSpec.getQueues()).thenReturn(Map.of("someQueue", queueSpec));
+        when(queueSpec.isDeclare()).thenReturn(true);
     }
 
     @Test
@@ -32,6 +42,7 @@ public class BillTransactionRabbitMQConfigTest {
         assertEquals("127.0.0.1", cachingConnectionFactory.getHost());
         assertEquals(5672, cachingConnectionFactory.getPort());
         assertEquals("test", cachingConnectionFactory.getUsername());
+        assertEquals("test", cachingConnectionFactory.getPassword());
     }
 
     @Test
