@@ -1,3 +1,17 @@
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Collections;
+
 @ExtendWith(MockitoExtension.class)
 public class QueryBillsProcessTest {
 
@@ -23,7 +37,7 @@ public class QueryBillsProcessTest {
     private PaymentUtilImpl paymentUtilImpl;
 
     @Mock
-    private AbstractProcess.DataPack dataPack;
+    private Map<String, Object> dataPack;
 
     @Spy
     @InjectMocks
@@ -31,8 +45,8 @@ public class QueryBillsProcessTest {
 
     @BeforeEach
     void setUp() {
-        // Mock the dataPack method from AbstractProcess
-        when(queryBillsProcess.getDataPack()).thenReturn(dataPack);
+        // Mock the getDataPack method from AbstractProcess
+        doReturn(dataPack).when(queryBillsProcess).getDataPack();
 
         when(dataPack.get(ProcessDataPackKey.CUSTOMER_NO.getKey())).thenReturn(123L);
         when(dataPack.get(ProcessDataPackKey.IDENTITY_NO.getKey())).thenReturn(456L);
