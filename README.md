@@ -1,33 +1,53 @@
-@RestController
-@Tag(name = "ADK Bill Payment")
-@RequestMapping("/adkBillPayment")
-@RequiredArgsConstructor
-public class PaymentAdkController {
-	private static final String X_TRACE_ID = "x-trace-id";
-	private static final String X_SESSION_ID = "x-session-id";
-	private final PaymentService paymentService;
-	private final PaymentFacade paymentFacade;
-	private final InstitutionBarcodeService institutionBarcodeService;
-	private final RequestContext requestContext;
+@ExtendWith(MockitoExtension.class)
+public class PaymentAdkControllerTest {
 
-	private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
-		requestContext.setChannelSessionId(channelSessionId);
-		requestContext.setChannelTransactionId(channelTransactionId);
-		requestContext.setAgentCode(webRequest.getAgentCode());
-		requestContext.setChannelCode(webRequest.getChannelCode());
-		requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
-	}
+    @Mock
+    private PaymentService paymentService;
 
-	@Operation(description = "Get commissionAmount")
-	@GetMapping(path = "/getBillPaymentExpense")
-	public ResponseEntity<GetBillPaymentExpenseResponseDTO> getBillPaymentExpense(
-			@Validated GetBillPaymentExpenseRequestDTO request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId)
-			throws MicroException {
+    @Mock
+    private PaymentFacade paymentFacade;
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		GetBillPaymentExpenseResponseDTO response = paymentFacade.getBillPaymentExpense(request);
+    @Mock
+    private InstitutionBarcodeService institutionBarcodeService;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @Mock
+    private RequestContext requestContext;
+
+    @InjectMocks
+    private PaymentAdkController paymentAdkController;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    public void setup() {
+        mockMvc = MockMvcBuilders.standaloneSetup(paymentAdkController).build();
+    }
+
+    @Test
+    public void testGetBillPaymentExpense() throws Exception {
+        GetBillPaymentExpenseRequestDTO requestDTO = new GetBillPaymentExpenseRequestDTO();
+        // fill requestDTO fields as needed
+        GetBillPaymentExpenseResponseDTO responseDTO = new GetBillPaymentExpenseResponseDTO();
+        // fill responseDTO fields as needed
+
+        when(paymentFacade.getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class))).thenReturn(responseDTO);
+        doNothing().when(requestContext).setChannelSessionId(any(String.class));
+        doNothing().when(requestContext).setChannelTransactionId(any(String.class));
+        doNothing().when(requestContext).setAgentCode(any(String.class));
+        doNothing().when(requestContext).setChannelCode(any(String.class));
+        doNothing().when(requestContext).setOperatingBranchCode(any(String.class));
+
+        mockMvc.perform(get("/adkBillPayment/getBillPaymentExpense")
+                .param("agentCode", "testAgent")
+                .param("channelCode", "testChannel")
+                .param("operatingBranchCode", "testBranch")
+                .header("x-trace-id", "trace-id")
+                .header("x-session-id", "session-id")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.someField").value("expectedValue")); // replace with actual fields in responseDTO
+
+        verify(paymentFacade).getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class));
+    }
+}
