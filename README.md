@@ -1,47 +1,33 @@
-@Test
-    void testGetReconDetail_Success() throws MicroException {
-        // Arrange
-        boolean isPayment = true;
-        Date reconciliationDate = new Date(1622494800000L); // Replace with appropriate long value
-        String productCode = "productCode";
-        String institutionCode = "institutionCode";
-        List<HmnPaidBillDTO> reconDetailList = Collections.singletonList(new HmnPaidBillDTO());
+@RestController
+@Tag(name = "ADK Bill Payment")
+@RequestMapping("/adkBillPayment")
+@RequiredArgsConstructor
+public class PaymentAdkController {
+	private static final String X_TRACE_ID = "x-trace-id";
+	private static final String X_SESSION_ID = "x-session-id";
+	private final PaymentService paymentService;
+	private final PaymentFacade paymentFacade;
+	private final InstitutionBarcodeService institutionBarcodeService;
+	private final RequestContext requestContext;
 
-        when(paymentService.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode)).thenReturn(reconDetailList);
+	private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
+		requestContext.setChannelSessionId(channelSessionId);
+		requestContext.setChannelTransactionId(channelTransactionId);
+		requestContext.setAgentCode(webRequest.getAgentCode());
+		requestContext.setChannelCode(webRequest.getChannelCode());
+		requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
+	}
 
-        // Act
-        HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO>> result = harmoniPaymentAdkController.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode);
+	@Operation(description = "Get commissionAmount")
+	@GetMapping(path = "/getBillPaymentExpense")
+	public ResponseEntity<GetBillPaymentExpenseResponseDTO> getBillPaymentExpense(
+			@Validated GetBillPaymentExpenseRequestDTO request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId)
+			throws MicroException {
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("S", result.getStatus());
-        assertEquals(reconDetailList, result.getResult());
-        assertEquals(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
-        assertEquals(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
-    }
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+		GetBillPaymentExpenseResponseDTO response = paymentFacade.getBillPaymentExpense(request);
 
-    @Test
-    void testGetReconDetail_MicroException() throws MicroException {
-        // Arrange
-        boolean isPayment = true;
-        Date reconciliationDate = new Date(1622494800000L); // Replace with appropriate long value
-        String productCode = "productCode";
-        String institutionCode = "institutionCode";
-        MicroException microException = mock(MicroException.class);
-        ExceptionData exceptionData = mock(ExceptionData.class);
-
-        when(paymentService.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode)).thenThrow(microException);
-        when(microException.getExceptionData()).thenReturn(exceptionData);
-        when(exceptionData.getErrorCode()).thenReturn(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getValue());
-        when(exceptionData.getErrorMessage()).thenReturn(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getDescription());
-
-        // Act
-        HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO>> result = harmoniPaymentAdkController.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("E", result.getStatus());
-        assertNull(result.getResult());
-        assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
-        assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
-    }
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
