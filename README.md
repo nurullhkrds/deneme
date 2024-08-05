@@ -1,33 +1,70 @@
-@RestController
-@Tag(name = "ADK Bill Payment")
-@RequestMapping("/adkBillPayment")
-@RequiredArgsConstructor
-public class PaymentAdkController {
-	private static final String X_TRACE_ID = "x-trace-id";
-	private static final String X_SESSION_ID = "x-session-id";
-	private final PaymentService paymentService;
-	private final PaymentFacade paymentFacade;
-	private final InstitutionBarcodeService institutionBarcodeService;
-	private final RequestContext requestContext;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-	private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
-		requestContext.setChannelSessionId(channelSessionId);
-		requestContext.setChannelTransactionId(channelTransactionId);
-		requestContext.setAgentCode(webRequest.getAgentCode());
-		requestContext.setChannelCode(webRequest.getChannelCode());
-		requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
-	}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-	@Operation(description = "Get commissionAmount")
-	@GetMapping(path = "/getBillPaymentExpense")
-	public ResponseEntity<GetBillPaymentExpenseResponseDTO> getBillPaymentExpense(
-			@Validated GetBillPaymentExpenseRequestDTO request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId)
-			throws MicroException {
+@ExtendWith(MockitoExtension.class)
+public class PaymentAdkControllerTest {
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		GetBillPaymentExpenseResponseDTO response = paymentFacade.getBillPaymentExpense(request);
+    private MockMvc mockMvc;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @Mock
+    private PaymentService paymentService;
+
+    @Mock
+    private PaymentFacade paymentFacade;
+
+    @Mock
+    private InstitutionBarcodeService institutionBarcodeService;
+
+    @Mock
+    private RequestContext requestContext;
+
+    @InjectMocks
+    private PaymentAdkController paymentAdkController;
+
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setup() {
+        objectMapper = new ObjectMapper();
+        mockMvc = MockMvcBuilders.standaloneSetup(paymentAdkController).build();
+    }
+
+    @Test
+    public void testGetBillPaymentExpense() throws Exception {
+        GetBillPaymentExpenseRequestDTO requestDTO = new GetBillPaymentExpenseRequestDTO();
+        requestDTO.setAgentCode("agentCode");
+        requestDTO.setChannelCode("channelCode");
+        requestDTO.setOperatingBranchCode("branchCode");
+
+        GetBillPaymentExpenseResponseDTO responseDTO = new GetBillPaymentExpenseResponseDTO();
+        // Populate responseDTO with expected data
+
+        when(paymentFacade.getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class))).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/adkBillPayment/getBillPaymentExpense")
+                .param("agentCode", requestDTO.getAgentCode())
+                .param("channelCode", requestDTO.getChannelCode())
+                .param("operatingBranchCode", requestDTO.getOperatingBranchCode())
+                .header("x-trace-id", "traceId")
+                .header("x-session-id", "sessionId")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.field").value("expectedValue"));
+
+        verify(paymentFacade, times(1)).getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class));
+    }
+}
