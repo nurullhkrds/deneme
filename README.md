@@ -1,4 +1,4 @@
-    @Test
+  @Test
     public void testCreateProvisions() throws Exception {
         QueriedBillDTO billDTO = new QueriedBillDTO();
         billDTO.setCurrency("USD");
@@ -14,17 +14,32 @@
         billDTO.setSubscriberName("Test Subscriber");
         billDTO.setSubscriberNo("987654321");
 
-        queryBillsProcess.queriedBillDTOList = List.of(billDTO);
+        List<QueriedBillDTO> billList = List.of(billDTO);
+
+        // Use reflection to set the private field 'queriedBillDTOList'
+        Field queriedBillDTOListField = queryBillsProcess.getClass().getDeclaredField("queriedBillDTOList");
+        queriedBillDTOListField.setAccessible(true);
+        queriedBillDTOListField.set(queryBillsProcess, billList);
 
         // Use reflection to access the private inner class
-        Class<?> innerClass = queryBillsProcess.getClass().getDeclaredClasses()[0];
-        Object createProvisionsInstance = innerClass.getDeclaredConstructor(queryBillsProcess.getClass()).newInstance(queryBillsProcess);
+        Class<?>[] innerClasses = queryBillsProcess.getClass().getDeclaredClasses();
+        Class<?> createProvisionsClass = null;
+        for (Class<?> innerClass : innerClasses) {
+            if (innerClass.getSimpleName().equals("CreateProvisions")) {
+                createProvisionsClass = innerClass;
+                break;
+            }
+        }
+        assertNotNull(createProvisionsClass, "CreateProvisions inner class not found");
 
-        // Access the private method
-        Method executeStep = innerClass.getDeclaredMethod("executeStep");
+        Object createProvisionsInstance = createProvisionsClass.getDeclaredConstructor(queryBillsProcess.getClass()).newInstance(queryBillsProcess);
+
+        // Access the private method 'executeStep'
+        Method executeStep = createProvisionsClass.getDeclaredMethod("executeStep");
         executeStep.setAccessible(true);
         executeStep.invoke(createProvisionsInstance);
 
+        // Use reflection to access the private field 'provisionList'
         Field provisionListField = queryBillsProcess.getClass().getDeclaredField("provisionList");
         provisionListField.setAccessible(true);
         List<ProvisionDTO> provisionList = (List<ProvisionDTO>) provisionListField.get(queryBillsProcess);
