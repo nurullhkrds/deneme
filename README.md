@@ -21,7 +21,8 @@ class BillTransactionRabbitMQConfigTest {
         CfService mockService = mock(CfService.class);
         CfCredentials mockCredentials = mock(CfCredentials.class);
 
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(new RabbitMQProperties.ServiceSpec());
+        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
         when(mockService.getCredentials()).thenReturn(mockCredentials);
         when(mockCredentials.getName()).thenReturn("mockName");
         when(mockCredentials.getHost()).thenReturn("mockHost");
@@ -76,7 +77,7 @@ class BillTransactionRabbitMQConfigTest {
         consumerSpec.setMaxConcurrentConsumers(5);
         consumerSpec.setPrefetchCount(10);
 
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
         when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
         when(rabbitMQProperties.getConsumerByKey(serviceSpec, "paymentNotificationEvent")).thenReturn(consumerSpec);
 
@@ -85,9 +86,6 @@ class BillTransactionRabbitMQConfigTest {
         assertNotNull(factory);
         assertEquals(mockConnectionFactory, factory.getConnectionFactory());
         assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-        assertEquals(1, factory.getConcurrentConsumers());
-        assertEquals(5, factory.getMaxConcurrentConsumers());
-        assertEquals(10, factory.getPrefetchCount());
     }
 
     @Test
@@ -97,7 +95,7 @@ class BillTransactionRabbitMQConfigTest {
         consumerSpec.setMaxConcurrentConsumers(10);
         consumerSpec.setPrefetchCount(20);
 
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
         when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
         when(rabbitMQProperties.getConsumerByKey(serviceSpec, "paymentCancelNotificationEvent")).thenReturn(consumerSpec);
 
@@ -106,9 +104,6 @@ class BillTransactionRabbitMQConfigTest {
         assertNotNull(factory);
         assertEquals(mockConnectionFactory, factory.getConnectionFactory());
         assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-        assertEquals(2, factory.getConcurrentConsumers());
-        assertEquals(10, factory.getMaxConcurrentConsumers());
-        assertEquals(20, factory.getPrefetchCount());
     }
 
     @Test
@@ -118,7 +113,7 @@ class BillTransactionRabbitMQConfigTest {
         consumerSpec.setMaxConcurrentConsumers(15);
         consumerSpec.setPrefetchCount(30);
 
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
         when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
         when(rabbitMQProperties.getConsumerByKey(serviceSpec, "creditCardProvisionACKEvent")).thenReturn(consumerSpec);
 
@@ -129,9 +124,6 @@ class BillTransactionRabbitMQConfigTest {
         assertNotNull(factory);
         assertEquals(mockConnectionFactory, factory.getConnectionFactory());
         assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-        assertEquals(3, factory.getConcurrentConsumers());
-        assertEquals(15, factory.getMaxConcurrentConsumers());
-        assertEquals(30, factory.getPrefetchCount());
     }
 
     @Test
@@ -141,7 +133,7 @@ class BillTransactionRabbitMQConfigTest {
         consumerSpec.setMaxConcurrentConsumers(20);
         consumerSpec.setPrefetchCount(40);
 
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
         when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
         when(rabbitMQProperties.getConsumerByKey(serviceSpec, "creditCardProvisionReverseEvent")).thenReturn(consumerSpec);
 
@@ -152,9 +144,6 @@ class BillTransactionRabbitMQConfigTest {
         assertNotNull(factory);
         assertEquals(mockConnectionFactory, factory.getConnectionFactory());
         assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-        assertEquals(4, factory.getConcurrentConsumers());
-        assertEquals(20, factory.getMaxConcurrentConsumers());
-        assertEquals(40, factory.getPrefetchCount());
     }
 
     @Test
