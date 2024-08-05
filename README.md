@@ -1,77 +1,131 @@
-@ExtendWith(MockitoExtension.class)
-public class PaymentAdkControllerTest {
+@RestController
+@Tag(name = "ADK Bill Payment")
+@RequestMapping("/adkBillPayment")
+@RequiredArgsConstructor
+public class PaymentAdkController {
+	private static final String X_TRACE_ID = "x-trace-id";
+	private static final String X_SESSION_ID = "x-session-id";
+	private final PaymentService paymentService;
+	private final PaymentFacade paymentFacade;
+	private final InstitutionBarcodeService institutionBarcodeService;
+	private final RequestContext requestContext;
 
-    @Mock
-    private PaymentService paymentService;
+	private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
+		requestContext.setChannelSessionId(channelSessionId);
+		requestContext.setChannelTransactionId(channelTransactionId);
+		requestContext.setAgentCode(webRequest.getAgentCode());
+		requestContext.setChannelCode(webRequest.getChannelCode());
+		requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
+	}
 
-    @Mock
-    private PaymentFacade paymentFacade;
+	@Operation(description = "Get commissionAmount")
+	@GetMapping(path = "/getBillPaymentExpense")
+	public ResponseEntity<GetBillPaymentExpenseResponseDTO> getBillPaymentExpense(
+			@Validated GetBillPaymentExpenseRequestDTO request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId)
+			throws MicroException {
 
-    @Mock
-    private InstitutionBarcodeService institutionBarcodeService;
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+		GetBillPaymentExpenseResponseDTO response = paymentFacade.getBillPaymentExpense(request);
 
-    @Mock
-    private RequestContext requestContext;
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @InjectMocks
-    private PaymentAdkController paymentAdkController;
+	@Operation(description = "Query Bills")
+	@PostMapping(path = "/queryBills")
+	public ResponseEntity<QueryBillsResponse> queryBills(
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId, @RequestBody QueryBillsRequest request)
+			throws MicroException {
 
-    @Autowired
-    private MockMvc mockMvc;
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+		QueryBillsResponse response = paymentFacade.queryBills(request);
 
-    @BeforeEach
-    public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(paymentAdkController)
-                .build();
-    }
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @Test
-    public void testGetBillPaymentExpense() throws Exception {
-        GetBillPaymentExpenseRequestDTO requestDTO = new GetBillPaymentExpenseRequestDTO();
-        // Fill the requestDTO with valid data as per your validation requirements
-        requestDTO.setAgentCode("testAgent");
-        requestDTO.setChannelCode("testChannel");
-        requestDTO.setOperatingBranchCode("testBranch");
-        requestDTO.setProductCode("testProductCode");
-        requestDTO.setInstitutionCode("testInstitutionCode");
-        requestDTO.setBillProvisionId("testBillProvisionId");
-        requestDTO.setPaymentMethod("testPaymentMethod");
-        requestDTO.setAccountNo("testAccountNo");
-        requestDTO.setAccountBranchCode("testAccountBranchCode");
-        requestDTO.setCardNo("testCardNo");
-        requestDTO.setPaymentAmount(new BigDecimal("100.00"));
-        requestDTO.setPaymentCurrency("USD");
+	@Operation(description = "Do Bill Payment")
+	@PostMapping(path = "/doBillPayment")
+	public ResponseEntity<DoBillPaymentResponse> doBillPayment(
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId, @RequestBody DoBillPaymentRequest request)
+			throws MicroException {
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+		DoBillPaymentResponse response = paymentFacade.doBillPayment(request);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-        GetBillPaymentExpenseResponseDTO responseDTO = new GetBillPaymentExpenseResponseDTO();
-        // Fill responseDTO fields as needed
-        responseDTO.setCommissionAmount(new BigDecimal("10.00")); // Example value
+	@Operation(description = "Cancel Bill Payment")
+	@PostMapping(path = "/cancelBillPayment")
+	public ResponseEntity<CancelBillPaymentResponse> cancelBillPayment(
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId,
+			@RequestBody CancelBillPaymentRequest request) throws MicroException {
 
-        when(paymentFacade.getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class))).thenReturn(responseDTO);
-        doNothing().when(requestContext).setChannelSessionId(any(String.class));
-        doNothing().when(requestContext).setChannelTransactionId(any(String.class));
-        doNothing().when(requestContext).setAgentCode(any(String.class));
-        doNothing().when(requestContext).setChannelCode(any(String.class));
-        doNothing().when(requestContext).setOperatingBranchCode(any(String.class));
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+		CancelBillPaymentResponse response = paymentFacade.cancelBillPayment(request);
 
-        mockMvc.perform(get("/adkBillPayment/getBillPaymentExpense")
-                .param("agentCode", requestDTO.getAgentCode())
-                .param("channelCode", requestDTO.getChannelCode())
-                .param("operatingBranchCode", requestDTO.getOperatingBranchCode())
-                .param("productCode", requestDTO.getProductCode())
-                .param("institutionCode", requestDTO.getInstitutionCode())
-                .param("billProvisionId", requestDTO.getBillProvisionId())
-                .param("paymentMethod", requestDTO.getPaymentMethod())
-                .param("accountNo", requestDTO.getAccountNo())
-                .param("accountBranchCode", requestDTO.getAccountBranchCode())
-                .param("cardNo", requestDTO.getCardNo())
-                .param("paymentAmount", requestDTO.getPaymentAmount().toString())
-                .param("paymentCurrency", requestDTO.getPaymentCurrency())
-                .header("x-trace-id", "trace-id")
-                .header("x-session-id", "session-id")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.commissionAmount").value("10.00")); // replace with actual fields in responseDTO
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-        verify(paymentFacade).getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class));
-    }
+	@Operation(description = "Get Customer Paid Bill List")
+	@GetMapping(path = "/getCustomerPaidBillList")
+	public ResponseEntity<GetCustomerPaidBillListResponse> getCustomerPaidBillList(
+			@RequestBody @Validated GetCustomerPaidBillListRequest request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
+
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+
+		return ResponseEntity.ok(paymentService.getCustomerPaidBillList(request));
+	}
+
+	@Operation(description = "Get subsriber no with barcode")
+	@GetMapping(path = "/getSubscriberNoWithBarcode")
+	public ResponseEntity<GetSubscriberNoWithBarcodeResponse> getSubscriberNoWithBarcode(
+			@Validated GetSubscriberNoWithBarcodeRequest request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId) {
+
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+		GetSubscriberNoWithBarcodeResponse response = institutionBarcodeService.getSubscriberNoWithBarcode(request);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@Operation(description = "Parse SubscriberNo Into Parts")
+	@GetMapping(path = "/parseSubscriberNoIntoParts")
+	public ResponseEntity<ParseSubscriberNoIntoPartsResponse> parseSubscriberNoIntoParts(
+			@Validated ParseSubscriberNoIntoPartsRequest request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId) {
+
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+
+		return new ResponseEntity<>(paymentService.parseSubscriberNoIntoParts(request), HttpStatus.OK);
+	}
+	
+	
+	@Operation(description = "Notify payment to institution")
+	@PostMapping(path = "/notifyPayment")
+	public ResponseEntity<NotifyPaymentResponse> notifyPayment(@RequestBody NotifyPaymentRequest request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+
+		return ResponseEntity.ok().body(paymentService.notifyPayment(request));
+	}
+
+	@Operation(description = "Notify payment cancel to institution")
+	@PostMapping(path = "/notifyPaymentCancel")
+	public ResponseEntity<NotifyPaymentCancelResponse> notifyPaymentCancel(
+			@RequestBody NotifyPaymentCancelRequest request,
+			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
+			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
+		fillMandatoryFields(request, channelTransactionId, channelSessionId);		
+		
+		return ResponseEntity.ok().body(paymentService.notifyPaymentCancel(request));
+	}
+	
 }
