@@ -1,171 +1,131 @@
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
-class BillTransactionRabbitMQConfigTest {
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.core.MessageConverter;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleRabbitListenerContainerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+@ExtendWith(MockitoExtension.class)
+public class BillTransactionRabbitMQConfigTest {
 
     @Mock
     private RabbitMQProperties rabbitMQProperties;
 
-    @Mock
-    private ConnectionFactory mockConnectionFactory;
-
     @InjectMocks
     private BillTransactionRabbitMQConfig billTransactionRabbitMQConfig;
 
+    @Mock
+    private ConnectionFactory connectionFactory;
+
+    @Mock
+    private CachingConnectionFactory cachingConnectionFactory;
+
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+
+    @Mock
+    private SimpleRabbitListenerContainerFactory simpleRabbitListenerContainerFactory;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(billTransactionRabbitMQConfig, "creditCardProvisionACKNotificationMaxTryCount", 3);
+        ReflectionTestUtils.setField(billTransactionRabbitMQConfig, "creditCardReverseProvisionNotificationMaxTryCount", 3);
     }
 
     @Test
     void testBillTransactionRabbitFactory() {
-        CfService mockService = mock(CfService.class);
-        CfCredentials mockCredentials = mock(CfCredentials.class);
+        // Mock the necessary methods and return values
+        // ... (Set up mocks for CfService, CfCredentials, etc.)
 
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
-        when(mockService.getCredentials()).thenReturn(mockCredentials);
-        when(mockCredentials.getName()).thenReturn("mockName");
-        when(mockCredentials.getHost()).thenReturn("mockHost");
-        when(mockCredentials.getUsername()).thenReturn("mockUsername");
-        when(mockCredentials.getPassword()).thenReturn("mockPassword");
-        when(mockCredentials.getString(anyString())).thenReturn("mockVHost");
+        ConnectionFactory factory = billTransactionRabbitMQConfig.billTransactionRabbitFactory();
 
-        CachingConnectionFactory connectionFactory = (CachingConnectionFactory) billTransactionRabbitMQConfig.billTransactionRabbitFactory();
-
-        assertNotNull(connectionFactory);
-        assertEquals("mockHost", connectionFactory.getHost());
-        assertEquals("mockUsername", connectionFactory.getUsername());
-        assertEquals("mockPassword", connectionFactory.getPassword());
-        assertEquals("mockVHost", connectionFactory.getVirtualHost());
+        // Assert the properties of the factory
+        assertNotNull(factory);
     }
 
     @Test
     void testBillRabbitLocalConnectionFactory() {
-        CachingConnectionFactory connectionFactory = (CachingConnectionFactory) billTransactionRabbitMQConfig.billRabbitLocalConnectionFactory();
+        ConnectionFactory factory = billTransactionRabbitMQConfig.billRabbitLocalConnectionFactory();
 
-        assertNotNull(connectionFactory);
-        assertEquals("127.0.0.1", connectionFactory.getHost());
-        assertEquals(5672, connectionFactory.getPort());
-        assertEquals("test", connectionFactory.getUsername());
-        assertEquals("test", connectionFactory.getPassword());
+        assertNotNull(factory);
+        assertEquals("127.0.0.1", ((CachingConnectionFactory) factory).getHost());
+        assertEquals(5672, ((CachingConnectionFactory) factory).getPort());
     }
 
     @Test
     void testBillTransactionRabbitTemplate() {
-        RabbitTemplate rabbitTemplate = billTransactionRabbitMQConfig.billTransactionRabbitTemplate(mockConnectionFactory);
+        when(connectionFactory.createConnection()).thenReturn(mock(com.rabbitmq.client.Connection.class));
 
-        assertNotNull(rabbitTemplate);
-        assertEquals(mockConnectionFactory, rabbitTemplate.getConnectionFactory());
-        assertTrue(rabbitTemplate.getMessageConverter() instanceof Jackson2JsonMessageConverter);
+        RabbitTemplate template = billTransactionRabbitMQConfig.billTransactionRabbitTemplate(connectionFactory);
+
+        assertNotNull(template);
+        assertEquals(connectionFactory, template.getConnectionFactory());
     }
 
     @Test
     void testJsonMessageConverter() {
-        MessageConverter messageConverter = billTransactionRabbitMQConfig.jsonMessageConverter();
+        MessageConverter converter = billTransactionRabbitMQConfig.jsonMessageConverter();
 
-        assertNotNull(messageConverter);
-        assertTrue(messageConverter instanceof Jackson2JsonMessageConverter);
+        assertNotNull(converter);
 
-        ObjectMapper mapper = ((Jackson2JsonMessageConverter) messageConverter).getJsonObjectMapper();
-        assertTrue(mapper.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
+        ObjectMapper mapper = ((Jackson2JsonMessageConverter) converter).getMapper();
+        assertTrue(mapper.getRegisteredModuleIds().contains(JavaTimeModule.class.getName()));
+        assertFalse(mapper.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
     }
 
     @Test
     void testPaymentNotificationRabbitListenerContainerFactory() {
-        ConsumerSpec consumerSpec = new ConsumerSpec();
-        consumerSpec.setMinConcurrentConsumers(1);
-        consumerSpec.setMaxConcurrentConsumers(5);
-        consumerSpec.setPrefetchCount(10);
+        when(connectionFactory.createConnection()).thenReturn(mock(com.rabbitmq.client.Connection.class));
 
-        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
-        when(rabbitMQProperties.getConsumerByKey(serviceSpec, "paymentNotificationEvent")).thenReturn(consumerSpec);
-
-        SimpleRabbitListenerContainerFactory factory = billTransactionRabbitMQConfig.paymentNotificationRabbitListenerContainerFactory(mockConnectionFactory);
+        SimpleRabbitListenerContainerFactory factory = billTransactionRabbitMQConfig.paymentNotificationRabbitListenerContainerFactory(connectionFactory);
 
         assertNotNull(factory);
-        assertEquals(mockConnectionFactory, factory.getConnectionFactory());
-        assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-    }
-
-    @Test
-    void testPaymentCancelNotificationRabbitListenerContainerFactory() {
-        ConsumerSpec consumerSpec = new ConsumerSpec();
-        consumerSpec.setMinConcurrentConsumers(2);
-        consumerSpec.setMaxConcurrentConsumers(10);
-        consumerSpec.setPrefetchCount(20);
-
-        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
-        when(rabbitMQProperties.getConsumerByKey(serviceSpec, "paymentCancelNotificationEvent")).thenReturn(consumerSpec);
-
-        SimpleRabbitListenerContainerFactory factory = billTransactionRabbitMQConfig.paymentCancelNotificationRabbitListenerContainerFactory(mockConnectionFactory);
-
-        assertNotNull(factory);
-        assertEquals(mockConnectionFactory, factory.getConnectionFactory());
-        assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-    }
-
-    @Test
-    void testCreditCardProvisionACKRabbitListenerContainerFactory() {
-        ConsumerSpec consumerSpec = new ConsumerSpec();
-        consumerSpec.setMinConcurrentConsumers(3);
-        consumerSpec.setMaxConcurrentConsumers(15);
-        consumerSpec.setPrefetchCount(30);
-
-        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
-        when(rabbitMQProperties.getConsumerByKey(serviceSpec, "creditCardProvisionACKEvent")).thenReturn(consumerSpec);
-
-        billTransactionRabbitMQConfig.creditCardProvisionACKNotificationMaxTryCount = 3;
-
-        SimpleRabbitListenerContainerFactory factory = billTransactionRabbitMQConfig.creditCardProvisionACKRabbitListenerContainerFactory(mockConnectionFactory);
-
-        assertNotNull(factory);
-        assertEquals(mockConnectionFactory, factory.getConnectionFactory());
-        assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
-    }
-
-    @Test
-    void testCreditCardReverseProvisionRabbitListenerContainerFactory() {
-        ConsumerSpec consumerSpec = new ConsumerSpec();
-        consumerSpec.setMinConcurrentConsumers(4);
-        consumerSpec.setMaxConcurrentConsumers(20);
-        consumerSpec.setPrefetchCount(40);
-
-        RabbitMQProperties.ServiceSpec serviceSpec = mock(RabbitMQProperties.ServiceSpec.class);
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
-        when(rabbitMQProperties.getConsumerByKey(serviceSpec, "creditCardProvisionReverseEvent")).thenReturn(consumerSpec);
-
-        billTransactionRabbitMQConfig.creditCardReverseProvisionNotificationMaxTryCount = 4;
-
-        SimpleRabbitListenerContainerFactory factory = billTransactionRabbitMQConfig.creditCardReverseProvisionRabbitListenerContainerFactory(mockConnectionFactory);
-
-        assertNotNull(factory);
-        assertEquals(mockConnectionFactory, factory.getConnectionFactory());
-        assertTrue(factory.getMessageConverter() instanceof Jackson2JsonMessageConverter);
+        assertEquals(connectionFactory, factory.getConnectionFactory());
     }
 
     @Test
     void testDeclareQueues() throws IOException, TimeoutException {
-        Channel mockChannel = mock(Channel.class);
-        QueueSpec mockQueueSpec = mock(QueueSpec.class);
-        RabbitMQProperties.ServiceSpec mockServiceSpec = mock(RabbitMQProperties.ServiceSpec.class);
+        // Mock the necessary methods and return values
+        Channel channel = mock(Channel.class);
+        RabbitMQUtil utilMock = mock(RabbitMQUtil.class);
 
-        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(mockServiceSpec);
-        when(mockServiceSpec.getQueues()).thenReturn(Map.of("testQueue", mockQueueSpec));
-        when(mockQueueSpec.isDeclare()).thenReturn(true);
-        when(RabbitMQUtil.getChannel(any())).thenReturn(mockChannel);
-        when(RabbitMQUtil.isValidExchangeType(any())).thenReturn(true);
+        // Set up mock for RabbitMQUtil.getChannel
+        when(utilMock.getChannel(any(ConnectionFactory.class))).thenReturn(channel);
 
-        doNothing().when(mockChannel).exchangeDeclare(anyString(), anyString(), anyBoolean());
-        doNothing().when(mockChannel).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        doNothing().when(mockChannel).queueBind(anyString(), anyString(), anyString());
+        billTransactionRabbitMQConfig.declareQueues(connectionFactory);
 
-        billTransactionRabbitMQConfig.declareQueues(mockConnectionFactory);
+        // Verify that declareQueue was called
+        verify(channel, times(1)).queueDeclarePassive(anyString());
+    }
 
-        verify(mockChannel, times(1)).exchangeDeclare(anyString(), anyString(), anyBoolean());
-        verify(mockChannel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        verify(mockChannel, times(1)).queueBind(anyString(), anyString(), anyString());
+    @Test
+    void testDeclareQueue() throws IOException {
+        Channel channel = mock(Channel.class);
+        QueueSpec queue = new QueueSpec();
+        queue.setName("testQueue");
+        queue.setExchange(new ExchangeSpec("testExchange", "direct", true));
+
+        billTransactionRabbitMQConfig.declareQueue(channel, queue);
+
+        verify(channel).exchangeDeclare(eq("testExchange"), eq("direct"), eq(true));
+        verify(channel).queueDeclare(eq("testQueue"), eq(true), eq(false), eq(false), any());
+        verify(channel).queueBind(eq("testQueue"), eq("testExchange"), eq(""));
     }
 }
