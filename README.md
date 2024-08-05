@@ -18,7 +18,7 @@ public class HarmoniPaymentAdkControllerTest {
 
     @BeforeEach
     void setUp() {
-
+        // Optional setup tasks
     }
 
     @Test
@@ -42,5 +42,3 @@ public class HarmoniPaymentAdkControllerTest {
         assertEquals(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
         assertEquals(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
     }
-
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.service.PaymentService.queryBills(com.ykb.payments.bill.transaction.payment.web.request.QueryBillsRequest)" because "this.paymentService" is null
