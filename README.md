@@ -1,131 +1,153 @@
-@RestController
-@Tag(name = "ADK Bill Payment")
-@RequestMapping("/adkBillPayment")
-@RequiredArgsConstructor
-public class PaymentAdkController {
-	private static final String X_TRACE_ID = "x-trace-id";
-	private static final String X_SESSION_ID = "x-session-id";
-	private final PaymentService paymentService;
-	private final PaymentFacade paymentFacade;
-	private final InstitutionBarcodeService institutionBarcodeService;
-	private final RequestContext requestContext;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
-	private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
-		requestContext.setChannelSessionId(channelSessionId);
-		requestContext.setChannelTransactionId(channelTransactionId);
-		requestContext.setAgentCode(webRequest.getAgentCode());
-		requestContext.setChannelCode(webRequest.getChannelCode());
-		requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
-	}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-	@Operation(description = "Get commissionAmount")
-	@GetMapping(path = "/getBillPaymentExpense")
-	public ResponseEntity<GetBillPaymentExpenseResponseDTO> getBillPaymentExpense(
-			@Validated GetBillPaymentExpenseRequestDTO request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId)
-			throws MicroException {
+@ExtendWith(MockitoExtension.class)
+public class PaymentAdkControllerTest {
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		GetBillPaymentExpenseResponseDTO response = paymentFacade.getBillPaymentExpense(request);
+    @Mock
+    private PaymentService paymentService;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @Mock
+    private PaymentFacade paymentFacade;
 
-	@Operation(description = "Query Bills")
-	@PostMapping(path = "/queryBills")
-	public ResponseEntity<QueryBillsResponse> queryBills(
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId, @RequestBody QueryBillsRequest request)
-			throws MicroException {
+    @Mock
+    private InstitutionBarcodeService institutionBarcodeService;
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		QueryBillsResponse response = paymentFacade.queryBills(request);
+    @Mock
+    private RequestContext requestContext;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @InjectMocks
+    private PaymentAdkController paymentAdkController;
 
-	@Operation(description = "Do Bill Payment")
-	@PostMapping(path = "/doBillPayment")
-	public ResponseEntity<DoBillPaymentResponse> doBillPayment(
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId, @RequestBody DoBillPaymentRequest request)
-			throws MicroException {
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		DoBillPaymentResponse response = paymentFacade.doBillPayment(request);
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @BeforeEach
+    void setUp() {
+        // Setup code if needed
+    }
 
-	@Operation(description = "Cancel Bill Payment")
-	@PostMapping(path = "/cancelBillPayment")
-	public ResponseEntity<CancelBillPaymentResponse> cancelBillPayment(
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId,
-			@RequestBody CancelBillPaymentRequest request) throws MicroException {
+    @Test
+    void testGetBillPaymentExpense() throws MicroException {
+        GetBillPaymentExpenseRequestDTO request = new GetBillPaymentExpenseRequestDTO();
+        GetBillPaymentExpenseResponseDTO response = new GetBillPaymentExpenseResponseDTO();
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		CancelBillPaymentResponse response = paymentFacade.cancelBillPayment(request);
+        when(paymentFacade.getBillPaymentExpense(any(GetBillPaymentExpenseRequestDTO.class))).thenReturn(response);
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+        ResponseEntity<GetBillPaymentExpenseResponseDTO> result = paymentAdkController.getBillPaymentExpense(request, "traceId", "sessionId");
 
-	@Operation(description = "Get Customer Paid Bill List")
-	@GetMapping(path = "/getCustomerPaidBillList")
-	public ResponseEntity<GetCustomerPaidBillListResponse> getCustomerPaidBillList(
-			@RequestBody @Validated GetCustomerPaidBillListRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+    @Test
+    void testQueryBills() throws MicroException {
+        QueryBillsRequest request = new QueryBillsRequest();
+        QueryBillsResponse response = new QueryBillsResponse();
 
-		return ResponseEntity.ok(paymentService.getCustomerPaidBillList(request));
-	}
+        when(paymentFacade.queryBills(any(QueryBillsRequest.class))).thenReturn(response);
 
-	@Operation(description = "Get subsriber no with barcode")
-	@GetMapping(path = "/getSubscriberNoWithBarcode")
-	public ResponseEntity<GetSubscriberNoWithBarcodeResponse> getSubscriberNoWithBarcode(
-			@Validated GetSubscriberNoWithBarcodeRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) {
+        ResponseEntity<QueryBillsResponse> result = paymentAdkController.queryBills("traceId", "sessionId", request);
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		GetSubscriberNoWithBarcodeResponse response = institutionBarcodeService.getSubscriberNoWithBarcode(request);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @Test
+    void testDoBillPayment() throws MicroException {
+        DoBillPaymentRequest request = new DoBillPaymentRequest();
+        DoBillPaymentResponse response = new DoBillPaymentResponse();
 
-	@Operation(description = "Parse SubscriberNo Into Parts")
-	@GetMapping(path = "/parseSubscriberNoIntoParts")
-	public ResponseEntity<ParseSubscriberNoIntoPartsResponse> parseSubscriberNoIntoParts(
-			@Validated ParseSubscriberNoIntoPartsRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) {
+        when(paymentFacade.doBillPayment(any(DoBillPaymentRequest.class))).thenReturn(response);
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+        ResponseEntity<DoBillPaymentResponse> result = paymentAdkController.doBillPayment("traceId", "sessionId", request);
 
-		return new ResponseEntity<>(paymentService.parseSubscriberNoIntoParts(request), HttpStatus.OK);
-	}
-	
-	
-	@Operation(description = "Notify payment to institution")
-	@PostMapping(path = "/notifyPayment")
-	public ResponseEntity<NotifyPaymentResponse> notifyPayment(@RequestBody NotifyPaymentRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
 
-		return ResponseEntity.ok().body(paymentService.notifyPayment(request));
-	}
+    @Test
+    void testCancelBillPayment() throws MicroException {
+        CancelBillPaymentRequest request = new CancelBillPaymentRequest();
+        CancelBillPaymentResponse response = new CancelBillPaymentResponse();
 
-	@Operation(description = "Notify payment cancel to institution")
-	@PostMapping(path = "/notifyPaymentCancel")
-	public ResponseEntity<NotifyPaymentCancelResponse> notifyPaymentCancel(
-			@RequestBody NotifyPaymentCancelRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);		
-		
-		return ResponseEntity.ok().body(paymentService.notifyPaymentCancel(request));
-	}
-	
+        when(paymentFacade.cancelBillPayment(any(CancelBillPaymentRequest.class))).thenReturn(response);
+
+        ResponseEntity<CancelBillPaymentResponse> result = paymentAdkController.cancelBillPayment("traceId", "sessionId", request);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    void testGetCustomerPaidBillList() throws MicroException {
+        GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+        GetCustomerPaidBillListResponse response = new GetCustomerPaidBillListResponse();
+
+        when(paymentService.getCustomerPaidBillList(any(GetCustomerPaidBillListRequest.class))).thenReturn(response);
+
+        ResponseEntity<GetCustomerPaidBillListResponse> result = paymentAdkController.getCustomerPaidBillList(request, "traceId", "sessionId");
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    void testGetSubscriberNoWithBarcode() {
+        GetSubscriberNoWithBarcodeRequest request = new GetSubscriberNoWithBarcodeRequest();
+        GetSubscriberNoWithBarcodeResponse response = new GetSubscriberNoWithBarcodeResponse();
+
+        when(institutionBarcodeService.getSubscriberNoWithBarcode(any(GetSubscriberNoWithBarcodeRequest.class))).thenReturn(response);
+
+        ResponseEntity<GetSubscriberNoWithBarcodeResponse> result = paymentAdkController.getSubscriberNoWithBarcode(request, "traceId", "sessionId");
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    void testParseSubscriberNoIntoParts() {
+        ParseSubscriberNoIntoPartsRequest request = new ParseSubscriberNoIntoPartsRequest();
+        ParseSubscriberNoIntoPartsResponse response = new ParseSubscriberNoIntoPartsResponse();
+
+        when(paymentService.parseSubscriberNoIntoParts(any(ParseSubscriberNoIntoPartsRequest.class))).thenReturn(response);
+
+        ResponseEntity<ParseSubscriberNoIntoPartsResponse> result = paymentAdkController.parseSubscriberNoIntoParts(request, "traceId", "sessionId");
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    void testNotifyPayment() throws MicroException {
+        NotifyPaymentRequest request = new NotifyPaymentRequest();
+        NotifyPaymentResponse response = new NotifyPaymentResponse();
+
+        when(paymentService.notifyPayment(any(NotifyPaymentRequest.class))).thenReturn(response);
+
+        ResponseEntity<NotifyPaymentResponse> result = paymentAdkController.notifyPayment(request, "traceId", "sessionId");
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
+
+    @Test
+    void testNotifyPaymentCancel() throws MicroException {
+        NotifyPaymentCancelRequest request = new NotifyPaymentCancelRequest();
+        NotifyPaymentCancelResponse response = new NotifyPaymentCancelResponse();
+
+        when(paymentService.notifyPaymentCancel(any(NotifyPaymentCancelRequest.class))).thenReturn(response);
+
+        ResponseEntity<NotifyPaymentCancelResponse> result = paymentAdkController.notifyPaymentCancel(request, "traceId", "sessionId");
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+    }
 }
