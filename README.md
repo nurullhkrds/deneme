@@ -1,17 +1,7 @@
-  @Test
-    public void testBillTransactionRabbitTemplate() throws IOException, TimeoutException {
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        Connection connection = mock(Connection.class);
-        Channel channel = mock(Channel.class);
 
-        given(connectionFactory.createConnection()).willReturn(connection);
-        given(connection.createChannel(false)).willReturn(channel);
+org.mockito.exceptions.base.MockitoException: 
+The used MockMaker SubclassByteBuddyMockMaker does not support the creation of static mocks
 
-        try (MockedStatic<RabbitMQUtil> utilities = mockStatic(RabbitMQUtil.class)) {
-            utilities.when(() -> RabbitMQUtil.getChannel(connectionFactory)).thenReturn(channel);
-            RabbitTemplate rabbitTemplate = config.billTransactionRabbitTemplate(connectionFactory);
-            assertNotNull(rabbitTemplate);
-            assertEquals(connectionFactory, rabbitTemplate.getConnectionFactory());
-            assertNotNull(rabbitTemplate.getMessageConverter());
-        }
-    }
+Mockito's inline mock maker supports static mocks based on the Instrumentation API.
+You can simply enable this mock mode, by placing the 'mockito-inline' artifact where you are currently using 'mockito-core'.
+Note that Mockito's inline mock maker is not supported on Android.
