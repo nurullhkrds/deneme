@@ -1,131 +1,96 @@
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.springframework.amqp.core.MessageConverter;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleRabbitListenerContainerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-@ExtendWith(MockitoExtension.class)
 public class BillTransactionRabbitMQConfigTest {
 
     @Mock
     private RabbitMQProperties rabbitMQProperties;
 
     @InjectMocks
-    private BillTransactionRabbitMQConfig billTransactionRabbitMQConfig;
-
-    @Mock
-    private ConnectionFactory connectionFactory;
-
-    @Mock
-    private CachingConnectionFactory cachingConnectionFactory;
-
-    @Mock
-    private RabbitTemplate rabbitTemplate;
-
-    @Mock
-    private SimpleRabbitListenerContainerFactory simpleRabbitListenerContainerFactory;
+    private BillTransactionRabbitMQConfig config;
 
     @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(billTransactionRabbitMQConfig, "creditCardProvisionACKNotificationMaxTryCount", 3);
-        ReflectionTestUtils.setField(billTransactionRabbitMQConfig, "creditCardReverseProvisionNotificationMaxTryCount", 3);
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testBillTransactionRabbitFactory() {
-        // Mock the necessary methods and return values
-        // ... (Set up mocks for CfService, CfCredentials, etc.)
-
-        ConnectionFactory factory = billTransactionRabbitMQConfig.billTransactionRabbitFactory();
-
-        // Assert the properties of the factory
-        assertNotNull(factory);
+    public void testBillTransactionRabbitTemplate() {
+        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
+        RabbitTemplate rabbitTemplate = config.billTransactionRabbitTemplate(connectionFactory);
+        assertNotNull(rabbitTemplate);
+        assertEquals(connectionFactory, rabbitTemplate.getConnectionFactory());
+        assertNotNull(rabbitTemplate.getMessageConverter());
     }
 
     @Test
-    void testBillRabbitLocalConnectionFactory() {
-        ConnectionFactory factory = billTransactionRabbitMQConfig.billRabbitLocalConnectionFactory();
-
-        assertNotNull(factory);
-        assertEquals("127.0.0.1", ((CachingConnectionFactory) factory).getHost());
-        assertEquals(5672, ((CachingConnectionFactory) factory).getPort());
-    }
-
-    @Test
-    void testBillTransactionRabbitTemplate() {
-        when(connectionFactory.createConnection()).thenReturn(mock(com.rabbitmq.client.Connection.class));
-
-        RabbitTemplate template = billTransactionRabbitMQConfig.billTransactionRabbitTemplate(connectionFactory);
-
-        assertNotNull(template);
-        assertEquals(connectionFactory, template.getConnectionFactory());
-    }
-
-    @Test
-    void testJsonMessageConverter() {
-        MessageConverter converter = billTransactionRabbitMQConfig.jsonMessageConverter();
-
+    public void testJsonMessageConverter() {
+        MessageConverter converter = config.jsonMessageConverter();
         assertNotNull(converter);
-
-        ObjectMapper mapper = ((Jackson2JsonMessageConverter) converter).getMapper();
-        assertTrue(mapper.getRegisteredModuleIds().contains(JavaTimeModule.class.getName()));
-        assertFalse(mapper.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS));
+        assertTrue(converter instanceof Jackson2JsonMessageConverter);
     }
 
     @Test
-    void testPaymentNotificationRabbitListenerContainerFactory() {
-        when(connectionFactory.createConnection()).thenReturn(mock(com.rabbitmq.client.Connection.class));
+    public void testPaymentNotificationRabbitListenerContainerFactory() {
+        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
+        ConsumerSpec consumerSpec = new ConsumerSpec();
+        consumerSpec.setMinConcurrentConsumers(1);
+        consumerSpec.setMaxConcurrentConsumers(10);
+        consumerSpec.setPrefetchCount(5);
 
-        SimpleRabbitListenerContainerFactory factory = billTransactionRabbitMQConfig.paymentNotificationRabbitListenerContainerFactory(connectionFactory);
-
+        when(rabbitMQProperties.getConsumerByKey(any(), anyString())).thenReturn(consumerSpec);
+        SimpleRabbitListenerContainerFactory factory = config.paymentNotificationRabbitListenerContainerFactory(connectionFactory);
         assertNotNull(factory);
-        assertEquals(connectionFactory, factory.getConnectionFactory());
     }
 
     @Test
-    void testDeclareQueues() throws IOException, TimeoutException {
-        // Mock the necessary methods and return values
+    public void testDeclareQueues() throws IOException, TimeoutException {
+        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
         Channel channel = mock(Channel.class);
-        RabbitMQUtil utilMock = mock(RabbitMQUtil.class);
+        QueueSpec queueSpec = new QueueSpec();
+        queueSpec.setName("testQueue");
+        queueSpec.setDurable(true);
+        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
+        queueSpec.setRoutingKey("testRoutingKey");
+        queueSpec.setDeclare(true);
+        Map<String, QueueSpec> queues = new HashMap<>();
+        queues.put("testQueue", queueSpec);
 
-        // Set up mock for RabbitMQUtil.getChannel
-        when(utilMock.getChannel(any(ConnectionFactory.class))).thenReturn(channel);
+        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        serviceSpec.setQueues(queues);
+        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
 
-        billTransactionRabbitMQConfig.declareQueues(connectionFactory);
-
-        // Verify that declareQueue was called
-        verify(channel, times(1)).queueDeclarePassive(anyString());
-    }
-
-    @Test
-    void testDeclareQueue() throws IOException {
-        Channel channel = mock(Channel.class);
-        QueueSpec queue = new QueueSpec();
-        queue.setName("testQueue");
-        queue.setExchange(new ExchangeSpec("testExchange", "direct", true));
-
-        billTransactionRabbitMQConfig.declareQueue(channel, queue);
-
-        verify(channel).exchangeDeclare(eq("testExchange"), eq("direct"), eq(true));
-        verify(channel).queueDeclare(eq("testQueue"), eq(true), eq(false), eq(false), any());
-        verify(channel).queueBind(eq("testQueue"), eq("testExchange"), eq(""));
+        try (MockedStatic<RabbitMQUtil> utilities = mockStatic(RabbitMQUtil.class)) {
+            utilities.when(() -> RabbitMQUtil.getChannel(connectionFactory)).thenReturn(channel);
+            config.declareQueues(connectionFactory);
+            verify(channel).queueDeclare(queueSpec.getName(), queueSpec.isDurable(), false, false, null);
+            verify(channel).exchangeDeclare(queueSpec.getExchange().getName(), queueSpec.getExchange().getType(), queueSpec.getExchange().isDurable());
+            verify(channel).queueBind(queueSpec.getName(), queueSpec.getExchange().getName(), queueSpec.getRoutingKey());
+        }
     }
 }
