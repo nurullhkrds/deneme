@@ -1,4 +1,3 @@
-
     @Test
     public void testCreateProvisions() throws Exception {
         QueriedBillDTO billDTO = new QueriedBillDTO();
@@ -14,25 +13,25 @@
         billDTO.setBillAmount(new BigDecimal("100.00"));
         billDTO.setSubscriberName("Test Subscriber");
         billDTO.setSubscriberNo("987654321");
-        
-        List<QueriedBillDTO> billList = List.of(billDTO);
-        
-        // Use reflection to set the private field
-        Field queriedBillDTOListField = queryBillsProcess.getClass().getDeclaredField("queriedBillDTOList");
-        queriedBillDTOListField.setAccessible(true);
-        queriedBillDTOListField.set(queryBillsProcess, billList);
 
-        QueryBillsProcess.CreateProvisions createProvisions = queryBillsProcess.new CreateProvisions();
-        createProvisions.executeStep();
+        queryBillsProcess.queriedBillDTOList = List.of(billDTO);
 
-        // Use reflection to access the private field
+        // Use reflection to access the private inner class
+        Class<?> innerClass = queryBillsProcess.getClass().getDeclaredClasses()[0];
+        Object createProvisionsInstance = innerClass.getDeclaredConstructor(queryBillsProcess.getClass()).newInstance(queryBillsProcess);
+
+        // Access the private method
+        Method executeStep = innerClass.getDeclaredMethod("executeStep");
+        executeStep.setAccessible(true);
+        executeStep.invoke(createProvisionsInstance);
+
         Field provisionListField = queryBillsProcess.getClass().getDeclaredField("provisionList");
         provisionListField.setAccessible(true);
         List<ProvisionDTO> provisionList = (List<ProvisionDTO>) provisionListField.get(queryBillsProcess);
 
         assertNotNull(provisionList);
         assertEquals(1, provisionList.size());
-        
+
         ProvisionDTO provisionDTO = provisionList.get(0);
         assertEquals("USD", provisionDTO.getCurrency().toString());
         assertEquals("12345", provisionDTO.getQueryStan());
