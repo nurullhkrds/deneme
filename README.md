@@ -1,8 +1,8 @@
-  @Test
+@Test
     void testGetReconCount_Success() throws MicroException {
         // Arrange
         boolean isPayment = true;
-        Date reconciliationDate = new Date();
+        Date reconciliationDate = new Date(1622494800000L); // Replace with appropriate long value
         String productCode = "productCode";
         String institutionCode = "institutionCode";
         CountDTO countDTO = new CountDTO();
@@ -24,7 +24,7 @@
     void testGetReconCount_MicroException() throws MicroException {
         // Arrange
         boolean isPayment = true;
-        Date reconciliationDate = new Date();
+        Date reconciliationDate = new Date(1622494800000L); // Replace with appropriate long value
         String productCode = "productCode";
         String institutionCode = "institutionCode";
         MicroException microException = mock(MicroException.class);
