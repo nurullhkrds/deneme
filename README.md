@@ -1,4 +1,4 @@
-@Test
+  @Test
     void testGetReconCount_Success() throws MicroException {
         // Arrange
         boolean isPayment = true;
@@ -45,4 +45,3 @@
         assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
         assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
     }
-}
