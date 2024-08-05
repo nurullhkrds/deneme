@@ -1,3 +1,91 @@
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+@RunWith(MockitoJUnitRunner.class)
+public class HarmoniPaymentAdkControllerTest {
+
+    @InjectMocks
+    private HarmoniPaymentAdkController harmoniPaymentAdkController;
+
+    @Mock
+    private SubscriberService subscriberService;
+
+    @Mock
+    private PaymentService paymentService;
+
+    @Mock
+    private RequestContext requestContext;
+
+    @Mock
+    private HarmoniMicroMapper harmoniMicroMapper;
+
+    @BeforeEach
+    void setUp() {
+        // MockitoJUnitRunner or MockitoAnnotations.initMocks(this); if using @RunWith(MockitoJUnitRunner.class)
+        // Optional setup tasks
+    }
+
+    @Test
+    void testQueryBills_Success() throws MicroException, BillException {
+        // Arrange
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        QueryBillsResponse queryBillsResponse = new QueryBillsResponse();
+        ResponseHarmoniQueryBills responseHarmoniQueryBills = new ResponseHarmoniQueryBills();
+
+        when(paymentService.queryBills(any())).thenReturn(queryBillsResponse);
+        when(harmoniMicroMapper.toQueryBillRequest(any())).thenReturn(new Object());
+        when(harmoniMicroMapper.toResponseHarmoniQueryBills(any(), any())).thenReturn(responseHarmoniQueryBills);
+
+        // Act
+        HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = harmoniPaymentAdkController.queryBills(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(responseHarmoniQueryBills, result.getResult());
+        assertEquals(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue(), result.getResponseMessage().getResponseCode());
+        assertEquals(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription(), result.getResponseMessage().getResponseMessage());
+    }
+
+    @Test
+    void testQueryBills_BillException() throws MicroException, BillException {
+        // Arrange
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        BillException billException = mock(BillException.class);
+        BillResult billResult = mock(BillResult.class);
+
+        when(paymentService.queryBills(any())).thenThrow(billException);
+        when(billException.getBillResult()).thenReturn(billResult);
+        when(billResult.getHmnCode()).thenReturn(Collections.emptyList());
+        when(billResult.getExplanation()).thenReturn("Explanation");
+
+        // Act
+        HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = harmoniPaymentAdkController.queryBills(request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+        assertEquals("", result.getResponseMessage().getResponseCode());
+        assertEquals("Explanation", result.getResponseMessage().getResponseMessage());
+    }
+}
+
+
+------------
+
 @RestController
 @Tag(name = "Harmoni Bill Payment")
 @RequestMapping("/harmoniBillPayment")
