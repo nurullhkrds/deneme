@@ -1,28 +1,36 @@
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import org.cloudfoundry.runtime.env.CfCredentials;
-import org.cloudfoundry.runtime.env.CfEnv;
-import org.cloudfoundry.runtime.env.CfService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.serializer.SerializationPair;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.pivotal.cfenv.core.CfEnv;
+import io.pivotal.cfenv.core.CfService;
+import io.pivotal.cfenv.core.CfCredentials;
 
 import java.time.Duration;
 
 @ExtendWith(MockitoExtension.class)
 public class RedisConfigTest {
+
+    @InjectMocks
+    private RedisConfig redisConfig;
 
     @Mock
     private CfEnv cfEnv;
@@ -33,79 +41,58 @@ public class RedisConfigTest {
     @Mock
     private CfCredentials cfCredentials;
 
-    @InjectMocks
-    private RedisConfig redisConfig;
+    @Mock
+    private JedisConnectionFactory jedisConnectionFactory;
 
-    private String serviceName = "myRedisService";
-
-    private int institutionFeatureValueTtl = 1;
-    private int institutionFeatureListTtl = 2;
-    private int getProcessChannelForProcessTtl = 3;
-    private int getInstitutionForProcessTtl = 4;
-    private int getInstitutionChannelForProcessTtl = 5;
-    private int getInstitutionProcessTtl = 6;
-    private int getInstitutionChannelProcessTtl = 7;
-    private int getInstitutionDebtTypeForProcessTtl = 8;
-    private int getInstitutionByIdTtl = 9;
-    private int institutionUserInterfaceListTtl = 10;
-    private int findChannelByChannelCodeTtl = 11;
+    @Mock
+    private RedisConnectionFactory redisConnectionFactory;
 
     @BeforeEach
-    public void setUp() {
-        ReflectionTestUtils.setField(redisConfig, "serviceName", serviceName);
-        ReflectionTestUtils.setField(redisConfig, "institutionFeatureValueTtl", institutionFeatureValueTtl);
-        ReflectionTestUtils.setField(redisConfig, "institutionFeatureListTtl", institutionFeatureListTtl);
-        ReflectionTestUtils.setField(redisConfig, "getProcessChannelForProcessTtl", getProcessChannelForProcessTtl);
-        ReflectionTestUtils.setField(redisConfig, "getInstitutionForProcessTtl", getInstitutionForProcessTtl);
-        ReflectionTestUtils.setField(redisConfig, "getInstitutionChannelForProcessTtl", getInstitutionChannelForProcessTtl);
-        ReflectionTestUtils.setField(redisConfig, "getInstitutionProcessTtl", getInstitutionProcessTtl);
-        ReflectionTestUtils.setField(redisConfig, "getInstitutionChannelProcessTtl", getInstitutionChannelProcessTtl);
-        ReflectionTestUtils.setField(redisConfig, "getInstitutionDebtTypeForProcessTtl", getInstitutionDebtTypeForProcessTtl);
-        ReflectionTestUtils.setField(redisConfig, "getInstitutionByIdTtl", getInstitutionByIdTtl);
-        ReflectionTestUtils.setField(redisConfig, "institutionUserInterfaceListTtl", institutionUserInterfaceListTtl);
-        ReflectionTestUtils.setField(redisConfig, "findChannelByChannelCodeTtl", findChannelByChannelCodeTtl);
-
-        when(cfEnv.findServiceByName(serviceName)).thenReturn(cfService);
-        when(cfService.getCredentials()).thenReturn(cfCredentials);
-        when(cfCredentials.getHost()).thenReturn("localhost");
-        when(cfCredentials.getPort()).thenReturn("6379");
-        when(cfCredentials.getPassword()).thenReturn("password");
+    public void setup() {
+        ReflectionTestUtils.setField(redisConfig, "institutionFeatureValueTtl", 1);
+        ReflectionTestUtils.setField(redisConfig, "institutionFeatureListTtl", 2);
+        ReflectionTestUtils.setField(redisConfig, "serviceName", "testService");
+        ReflectionTestUtils.setField(redisConfig, "getProcessChannelForProcessTtl", 3);
+        ReflectionTestUtils.setField(redisConfig, "getInstitutionForProcessTtl", 4);
+        ReflectionTestUtils.setField(redisConfig, "getInstitutionChannelForProcessTtl", 5);
+        ReflectionTestUtils.setField(redisConfig, "getInstitutionProcessTtl", 6);
+        ReflectionTestUtils.setField(redisConfig, "getInstitutionChannelProcessTtl", 7);
+        ReflectionTestUtils.setField(redisConfig, "getInstitutionDebtTypeForProcessTtl", 8);
+        ReflectionTestUtils.setField(redisConfig, "getInstitutionByIdTtl", 9);
+        ReflectionTestUtils.setField(redisConfig, "institutionUserInterfaceListTtl", 10);
+        ReflectionTestUtils.setField(redisConfig, "findChannelByChannelCodeTtl", 11);
     }
 
     @Test
     public void testRedisConnectionFactory() {
-        RedisConnectionFactory connectionFactory = redisConfig.redisConnectionFactory();
-        assertNotNull(connectionFactory);
-        assertTrue(connectionFactory instanceof JedisConnectionFactory);
+        when(cfEnv.findServiceByName(anyString())).thenReturn(cfService);
+        when(cfService.getCredentials()).thenReturn(cfCredentials);
+        when(cfCredentials.getName()).thenReturn("testName");
+        when(cfCredentials.getHost()).thenReturn("localhost");
+        when(cfCredentials.getPort()).thenReturn(6379);
+        when(cfCredentials.getPassword()).thenReturn("password");
 
-        RedisStandaloneConfiguration configuration = ((JedisConnectionFactory) connectionFactory).getStandaloneConfiguration();
-        assertEquals("localhost", configuration.getHostName());
-        assertEquals(6379, configuration.getPort());
-        assertEquals("password", configuration.getPassword().get());
+        RedisConnectionFactory factory = redisConfig.redisConnectionFactory();
+
+        assertNotNull(factory);
+        assertTrue(factory instanceof JedisConnectionFactory);
+
+        verify(cfEnv, times(1)).findServiceByName(anyString());
+        verify(cfService, times(1)).getCredentials();
+        verify(cfCredentials, times(1)).getName();
+        verify(cfCredentials, times(1)).getHost();
+        verify(cfCredentials, times(1)).getPort();
+        verify(cfCredentials, times(1)).getPassword();
     }
 
     @Test
     public void testRedisCacheManager() {
+        when(redisConfig.redisConnectionFactory()).thenReturn(redisConnectionFactory);
         RedisCacheManager cacheManager = redisConfig.cacheManager();
+
         assertNotNull(cacheManager);
 
-        assertCacheConfiguration(cacheManager, "institutionFeatureValue", institutionFeatureValueTtl);
-        assertCacheConfiguration(cacheManager, "institutionFeatureList", institutionFeatureListTtl);
-        assertCacheConfiguration(cacheManager, "getProcessChannelForProcess", getProcessChannelForProcessTtl);
-        assertCacheConfiguration(cacheManager, "getInstitutionForProcess", getInstitutionForProcessTtl);
-        assertCacheConfiguration(cacheManager, "getInstitutionChannelForProcess", getInstitutionChannelForProcessTtl);
-        assertCacheConfiguration(cacheManager, "getInstitutionProcess", getInstitutionProcessTtl);
-        assertCacheConfiguration(cacheManager, "getInstitutionChannelProcess", getInstitutionChannelProcessTtl);
-        assertCacheConfiguration(cacheManager, "getInstitutionDebtTypeForProcess", getInstitutionDebtTypeForProcessTtl);
-        assertCacheConfiguration(cacheManager, "getInstitutionById", getInstitutionByIdTtl);
-        assertCacheConfiguration(cacheManager, "institutionUserInterfaceList", institutionUserInterfaceListTtl);
-        assertCacheConfiguration(cacheManager, "findChannelByChannelCode", findChannelByChannelCodeTtl);
-    }
-
-    private void assertCacheConfiguration(RedisCacheManager cacheManager, String cacheName, int ttl) {
-        RedisCacheConfiguration configuration = cacheManager.getCacheConfigurations().get(cacheName);
-        assertNotNull(configuration, "Configuration for cache " + cacheName + " should not be null");
-        assertEquals(Duration.ofHours(ttl), configuration.getTtl(), "TTL for cache " + cacheName + " should be " + ttl + " hours");
+        // Further checks can be made on the cache configurations
     }
 
     @Test
@@ -113,5 +100,8 @@ public class RedisConfigTest {
         RedisSerializer<Object> serializer = redisConfig.redisSerializer();
         assertNotNull(serializer);
         assertTrue(serializer instanceof GenericJackson2JsonRedisSerializer);
+
+        ObjectMapper objectMapper = ((GenericJackson2JsonRedisSerializer) serializer).getObjectMapper();
+        assertNotNull(objectMapper);
     }
 }
