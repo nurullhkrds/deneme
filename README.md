@@ -1,14 +1,4 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.*;
-
+@ExtendWith(MockitoExtension.class)
 public class QueryBillsProcessTest {
 
     @InjectMocks
@@ -35,131 +25,90 @@ public class QueryBillsProcessTest {
     @Mock
     private PaymentUtilImpl paymentUtilImpl;
 
+    private ProcessDataPack dataPack;
+    private String channelTransactionId = "testChannelTransactionId";
+    private String channelSessionId = "testChannelSessionId";
+    private String institutionDebtTypeId = "testInstitutionDebtTypeId";
+    private String channelCode = "testChannelCode";
+    private String branchCode = "testBranchCode";
+    private String institutionCode = "testInstitutionCode";
+    private String productCode = "testProductCode";
+    private String agentCode = "testAgentCode";
+    private Institution institution = new Institution("testInstitutionId", "testInstitutionCode");
+    private EnumBillResult error;
+
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        queryBillsProcess = new QueryBillsProcess();
+        dataPack = mock(ProcessDataPack.class);
+        when(dataPack.get(ProcessDataPackKey.CUSTOMER_NO.getKey())).thenReturn(12345L);
+        when(dataPack.get(ProcessDataPackKey.IDENTITY_NO.getKey())).thenReturn(67890L);
+        when(dataPack.get(ProcessDataPackKey.TAX_ID.getKey())).thenReturn("1234567890");
+        when(dataPack.get(ProcessDataPackKey.SUBSCRIBER_NO.getKey())).thenReturn("subscriberNo");
+        when(dataPack.get(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey())).thenReturn(Collections.emptyList());
+        when(dataPack.get(ProcessDataPackKey.CURRENCY.getKey())).thenReturn("USD");
+
+        queryBillsProcess.setDataPack(dataPack);
+        queryBillsProcess.setChannelTransactionId(channelTransactionId);
+        queryBillsProcess.setChannelSessionId(channelSessionId);
+        queryBillsProcess.setInstitutionDebtTypeId(institutionDebtTypeId);
+        queryBillsProcess.setChannelCode(channelCode);
+        queryBillsProcess.setBranchCode(branchCode);
+        queryBillsProcess.setInstitution(institution);
+        queryBillsProcess.setProductCode(productCode);
+        queryBillsProcess.setAgentCode(agentCode);
     }
 
     @Test
-    public void testExecuteProcess() throws BillException {
-        // Arrange
-        Map<String, Object> dataPack = new HashMap<>();
-        dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 12345L);
-        dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), 67890L);
-        dataPack.put(ProcessDataPackKey.TAX_ID.getKey(), "TAX123");
-        dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "SUB123");
-        dataPack.put(ProcessDataPackKey.CURRENCY.getKey(), "USD");
-        queryBillsProcess.setDataPack(dataPack);
-        
-        when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
-        when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
-        when(SpringUtil.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
-        when(SpringUtil.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
-        when(SpringUtil.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
-        when(SpringUtil.getBean(LimitationService.class)).thenReturn(limitationService);
-        when(SpringUtil.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
-        when(SubscriberNumberUtils.formatSubscriberNumberParts(any(), any())).thenReturn("FormattedSubscriberNo");
-        when(SubscriberNumberUtils.checkSubscriberNumberParts(any(), any())).thenReturn(true);
+    public void testExecuteProcess_Successful() throws BillException {
+        // Mock methods
+        when(adapterService.queryBills(any(), any(), any())).thenReturn(new QueryBillsAdapterResponse());
         when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
-
-        // Act
+        when(limitationService.isPaymentAllowedWithoutDebtOwner(any(), any(), any(), any()))
+                .thenReturn(new PaymentAllowedResponse(true));
+        when(institutionUserIntService.getUserInterface(any())).thenReturn(Collections.emptyList());
+        
+        // Execute process
         queryBillsProcess.executeProcess();
 
-        // Assert
-        assertNotNull(queryBillsProcess.getAdapterService());
-        assertNotNull(queryBillsProcess.getInstitutionUserIntService());
-        assertNotNull(queryBillsProcess.getInstitutionUserIntMapper());
-        assertNotNull(queryBillsProcess.getBillPaymentRestFacade());
-        assertNotNull(queryBillsProcess.getPaymentRepository());
-        assertNotNull(queryBillsProcess.getPaymentMapper());
-        assertNotNull(queryBillsProcess.getLimitationService());
-        assertNotNull(queryBillsProcess.getPaymentUtilImpl());
-        assertEquals("FormattedSubscriberNo", queryBillsProcess.getSubscriberNo());
-        assertNull(queryBillsProcess.getError());
+        // Verify methods
+        verify(adapterService, times(1)).queryBills(any(), any(), any());
+        verify(provisionService, times(1)).invalidateNotPaidProvisions(any(), any());
+        verify(provisionService, times(1)).createProvisions(any());
+        verify(paymentEventPublisher, times(1)).publishInquiryLimiationNotification(any());
 
-        // Additional assertions for other steps can be added here
+        // Assert result
+        assertEquals(EnumBillResult.SUCCESS, queryBillsProcess.getExecutionOutput().getResult());
     }
 
-    // Additional helper methods and tests for each step can be added here
-
-    // Example for testing a specific step
     @Test
     public void testGatherData() {
-        // Arrange
-        Map<String, Object> dataPack = new HashMap<>();
-        dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 12345L);
-        dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), 67890L);
-        dataPack.put(ProcessDataPackKey.TAX_ID.getKey(), "TAX123");
-        dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "SUB123");
-        dataPack.put(ProcessDataPackKey.CURRENCY.getKey(), "USD");
-        queryBillsProcess.setDataPack(dataPack);
+        // Given
+        GatherData gatherData = queryBillsProcess.new GatherData();
 
-        when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
-        when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
-        when(SpringUtil.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
-        when(SpringUtil.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
-        when(SpringUtil.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
-        when(SpringUtil.getBean(LimitationService.class)).thenReturn(limitationService);
-        when(SpringUtil.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+        // When
+        gatherData.executeStep();
 
-        // Act
-        queryBillsProcess.executeProcess();
-
-        // Assert
-        assertNotNull(queryBillsProcess.getAdapterService());
-        assertNotNull(queryBillsProcess.getInstitutionUserIntService());
-        assertNotNull(queryBillsProcess.getInstitutionUserIntMapper());
-        assertNotNull(queryBillsProcess.getBillPaymentRestFacade());
-        assertNotNull(queryBillsProcess.getPaymentRepository());
-        assertNotNull(queryBillsProcess.getPaymentMapper());
-        assertNotNull(queryBillsProcess.getLimitationService());
-        assertNotNull(queryBillsProcess.getPaymentUtilImpl());
+        // Then
         assertEquals(12345L, queryBillsProcess.getCustomerNo());
         assertEquals(67890L, queryBillsProcess.getIdentityNo());
-        assertEquals("TAX123", queryBillsProcess.getTaxOfficeNo());
-        assertEquals("SUB123", queryBillsProcess.getSubscriberNo());
+        assertEquals("1234567890", queryBillsProcess.getTaxOfficeNo());
+        assertEquals("subscriberNo", queryBillsProcess.getSubscriberNo());
         assertEquals("USD", queryBillsProcess.getCurrency());
     }
 
-    // Example for testing FormatSubscriberNoPartList step
     @Test
-    public void testFormatSubscriberNoPartList() {
-        // Arrange
-        List<InstitutionUserIntfDTO> institutionUserIntListDTO = new ArrayList<>();
-        List<SubscriberNoPartRequestDTO> subscriberNoPartList = new ArrayList<>();
-        queryBillsProcess.setInstitutionUserIntListDTO(institutionUserIntListDTO);
-        queryBillsProcess.setSubscriberNoPartList(subscriberNoPartList);
+    public void testValidateSubscriberNo_Invalid() {
+        // Given
+        ValidateSubscriberNo validateSubscriberNo = queryBillsProcess.new ValidateSubscriberNo();
+        when(SubscriberNumberUtils.checkSubscriberNumberParts(any(), any())).thenReturn(false);
 
-        when(SubscriberNumberUtils.formatSubscriberNumberParts(institutionUserIntListDTO, subscriberNoPartList)).thenReturn("FormattedSubscriberNo");
+        // When
+        validateSubscriberNo.executeStep();
 
-        // Act
-        queryBillsProcess.executeProcess();
-
-        // Assert
-        assertEquals("FormattedSubscriberNo", queryBillsProcess.getSubscriberNo());
+        // Then
+        assertEquals(EnumBillResult.SUBSCRIBER_NUMBER_INVALID, queryBillsProcess.getError());
     }
 
-    // Example for testing ValidateSubscriberNo step
-    @Test
-    public void testValidateSubscriberNo() {
-        // Arrange
-        List<InstitutionUserIntfDTO> institutionUserIntListDTO = new ArrayList<>();
-        List<SubscriberNoPartRequestDTO> subscriberNoPartList = new ArrayList<>();
-        queryBillsProcess.setInstitutionUserIntListDTO(institutionUserIntListDTO);
-        queryBillsProcess.setSubscriberNoPartList(subscriberNoPartList);
-
-        when(SubscriberNumberUtils.checkSubscriberNumberParts(institutionUserIntListDTO, subscriberNoPartList)).thenReturn(true);
-
-        // Act
-        queryBillsProcess.executeProcess();
-
-        // Assert
-        assertNull(queryBillsProcess.getError());
-    }
-
-    // More tests for other steps can be added similarly
+    // Add similar tests for other process steps...
 
 }
