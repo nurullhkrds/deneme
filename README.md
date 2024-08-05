@@ -1,4 +1,5 @@
- @Test
+
+    @Test
     public void testCreateProvisions() throws Exception {
         QueriedBillDTO billDTO = new QueriedBillDTO();
         billDTO.setCurrency("USD");
@@ -14,17 +15,17 @@
         billDTO.setSubscriberName("Test Subscriber");
         billDTO.setSubscriberNo("987654321");
         
-        queryBillsProcess.queriedBillDTOList = List.of(billDTO);
+        List<QueriedBillDTO> billList = List.of(billDTO);
+        
+        // Use reflection to set the private field
+        Field queriedBillDTOListField = queryBillsProcess.getClass().getDeclaredField("queriedBillDTOList");
+        queriedBillDTOListField.setAccessible(true);
+        queriedBillDTOListField.set(queryBillsProcess, billList);
 
-        // Use reflection to access the private inner class
-        Class<?> innerClass = queryBillsProcess.getClass().getDeclaredClasses()[0];
-        Object createProvisionsInstance = innerClass.getDeclaredConstructor(queryBillsProcess.getClass()).newInstance(queryBillsProcess);
+        QueryBillsProcess.CreateProvisions createProvisions = queryBillsProcess.new CreateProvisions();
+        createProvisions.executeStep();
 
-        // Access the private method
-        Method executeStep = innerClass.getDeclaredMethod("executeStep");
-        executeStep.setAccessible(true);
-        executeStep.invoke(createProvisionsInstance);
-
+        // Use reflection to access the private field
         Field provisionListField = queryBillsProcess.getClass().getDeclaredField("provisionList");
         provisionListField.setAccessible(true);
         List<ProvisionDTO> provisionList = (List<ProvisionDTO>) provisionListField.get(queryBillsProcess);
@@ -46,4 +47,3 @@
         assertEquals("Test Subscriber", provisionDTO.getSubscriberName());
         assertEquals("987654321", provisionDTO.getSubscriberNo());
     }
-}
