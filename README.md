@@ -1,242 +1,336 @@
-@RestController
-@Tag(name = "Harmoni Bill Payment")
-@RequestMapping("/harmoniBillPayment")
-@RequiredArgsConstructor
-public class HarmoniPaymentAdkController {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-	private static final String ERROR = "E";
-	private static final String SUCCESS = "S";
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-	private final SubscriberService subscriberService;
-	private final PaymentService paymentService;
-	private final RequestContext requestContext;
-	private final HarmoniMicroMapper harmoniMicroMapper;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-	private <T> HarmoniCoreServiceResultDTO<T> handleBillException(BillException ex) {
-		HarmoniCoreServiceResultDTO resutlDTO = new HarmoniCoreServiceResultDTO<>();
-		resutlDTO.setResult(null);
-		resutlDTO.setStatus(ERROR);
-		HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-		responseMessage.setResponseCode(CollectionUtils.isEmpty(ex.getBillResult().getHmnCode()) ? "" : ex.getBillResult().getHmnCode().get(0).getValue());
-		responseMessage.setResponseMessage(CollectionUtils.isEmpty(ex.getBillResult().getHmnCode()) ? ex.getBillResult().getExplanation() : ex.getBillResult().getHmnCode().get(0).getDescription());
-		if(ex.getParameters()!=null && !ex.getParameters().isEmpty()){
-			responseMessage.setErrorParameterMap(ex.getParameters());
-		}
-		resutlDTO.setResponseMessage(responseMessage);
-		return resutlDTO;
-	}
+@ExtendWith(MockitoExtension.class)
+class HarmoniPaymentAdkControllerTest {
 
-	private <T> HarmoniCoreServiceResultDTO<T> handleBillException(MicroException ex) {
-		HarmoniCoreServiceResultDTO resutlDTO = new HarmoniCoreServiceResultDTO<>();
-		resutlDTO.setResult(null);
-		resutlDTO.setStatus(ERROR);
+    @InjectMocks
+    private HarmoniPaymentAdkController harmoniPaymentAdkController;
 
-		ExceptionData exceptionData = ex.getExceptionData();
+    @Mock
+    private SubscriberService subscriberService;
 
-		HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-		responseMessage.setResponseCode(exceptionData.getErrorCode().toString());
-		responseMessage.setResponseMessage(exceptionData.getErrorMessage());
-		if(ex.getExceptionData().getErrors()!=null && !ex.getExceptionData().getErrors().isEmpty()){
-			Map<String, String> errorParameterMap = new HashMap<>();
-			for (ValidationErrorData validationErrorData : ex.getExceptionData().getErrors()) {
-				errorParameterMap.put(validationErrorData.getField(),validationErrorData.getMessage());
-			}
-			responseMessage.setErrorParameterMap(errorParameterMap);
-		}
-		resutlDTO.setResponseMessage(responseMessage);
+    @Mock
+    private PaymentService paymentService;
 
-		return resutlDTO;
-	}
+    @Mock
+    private RequestContext requestContext;
 
-	private void fillMandatoryFields(HarmoniCoreServiceBaseDataDTO coreData) {
-		if (coreData == null) {
-			return;
-		}
+    @Mock
+    private HarmoniMicroMapper harmoniMicroMapper;
 
-		requestContext.setChannelSessionId(coreData.getSessionId());
-		requestContext.setChannelTransactionId(coreData.getClientUniqueReference());
-		requestContext.setAgentCode(coreData.getAgentCode());
-		requestContext.setChannelCode(ChannelUtil.convertChannel(coreData.getChannelCode()));
-		requestContext.setOperatingBranchCode(coreData.getOperatingBranchCode());
-	}
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
+    // Test for queryBills method
+    @Test
+    void testQueryBills_Success() throws MicroException {
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        // populate request with necessary data
 
-	@Operation(description = "Query Bills")
-	@PostMapping(path = "/queryBills")
-	public HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> queryBills(
-			@RequestBody RequestHarmoniQueryBills request) throws MicroException {
+        QueryBillsResponse queryBillsResponse = new QueryBillsResponse();
+        ResponseHarmoniQueryBills responseHarmoniQueryBills = new ResponseHarmoniQueryBills();
+        
+        when(harmoniMicroMapper.toQueryBillRequest(request)).thenReturn(queryBillsResponse);
+        when(paymentService.queryBills(queryBillsResponse)).thenReturn(queryBillsResponse);
+        when(harmoniMicroMapper.toResponseHarmoniQueryBills(queryBillsResponse, request)).thenReturn(responseHarmoniQueryBills);
 
-		fillMandatoryFields(request.getRequestSource());
-		try {
-			QueryBillsResponse queryBills = paymentService.queryBills(harmoniMicroMapper.toQueryBillRequest(request));
-			ResponseHarmoniQueryBills harmoniResponse = harmoniMicroMapper.toResponseHarmoniQueryBills(queryBills,
-					request);
+        HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = harmoniPaymentAdkController.queryBills(request);
 
-			HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = new HarmoniCoreServiceResultDTO<>();
-			result.setResult(harmoniResponse);
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(responseHarmoniQueryBills, result.getResult());
 
-			return result;
-		} catch (BillException e) {
-			return handleBillException(e);
-		}
-	}
+        verify(harmoniMicroMapper).toQueryBillRequest(request);
+        verify(paymentService).queryBills(queryBillsResponse);
+        verify(harmoniMicroMapper).toResponseHarmoniQueryBills(queryBillsResponse, request);
+    }
 
-	@Operation(description = "Do Bill Payment")
-	@PostMapping(path = "/doBillPayment")
-	public HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> doBillPayment(
-			@RequestBody RequestHarmoniDoBillPayment request) throws MicroException {
+    @Test
+    void testQueryBills_BillException() throws MicroException {
+        RequestHarmoniQueryBills request = new RequestHarmoniQueryBills();
+        // populate request with necessary data
 
-		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
+        BillException billException = new BillException();
+        // populate billException with necessary data
 
-		try {
-			DoBillPaymentResponse microResponse = paymentService
-					.doBillPayment(harmoniMicroMapper.toDoBillPaymentRequest(request));
+        when(paymentService.queryBills(any())).thenThrow(billException);
 
-			ResponseHarmoniDoBillPaymentResultDTO hmnResponse = harmoniMicroMapper
-					.toResponseHarmoniDoBillPaymentResultDTO(microResponse);
+        HarmoniCoreServiceResultDTO<ResponseHarmoniQueryBills> result = harmoniPaymentAdkController.queryBills(request);
 
-			HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> result = new HarmoniCoreServiceResultDTO<>();
-			result.setResult(hmnResponse);
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
-			return result;
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
 
-		} catch (BillException e) {
-			return handleBillException(e);
-		}
+    // Test for doBillPayment method
+    @Test
+    void testDoBillPayment_Success() throws MicroException {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        // populate request with necessary data
 
-	}
+        DoBillPaymentResponse microResponse = new DoBillPaymentResponse();
+        ResponseHarmoniDoBillPaymentResultDTO hmnResponse = new ResponseHarmoniDoBillPaymentResultDTO();
 
-	@Operation(description = "Cancel Bill Payment")
-	@PostMapping(path = "/cancelBillPayment")
-	public HarmoniCoreServiceResultDTO<ResponseHarmoniCancelBillPayment> cancelBillPayment(
-			@RequestBody RequestHarmoniCancelBillPayment request) throws MicroException {
+        when(harmoniMicroMapper.toDoBillPaymentRequest(request)).thenReturn(microResponse);
+        when(paymentService.doBillPayment(microResponse)).thenReturn(microResponse);
+        when(harmoniMicroMapper.toResponseHarmoniDoBillPaymentResultDTO(microResponse)).thenReturn(hmnResponse);
 
-		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
+        HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> result = harmoniPaymentAdkController.doBillPayment(request);
 
-		try {
-			CancelBillPaymentResponse microResponse = paymentService
-					.cancelBillPayment(harmoniMicroMapper.toCancelBillPaymentRequest(request));
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(hmnResponse, result.getResult());
 
-			ResponseHarmoniCancelBillPayment convertedHarmoniResponse = harmoniMicroMapper
-					.toResponseHarmoniCancelBillPayment(microResponse);
+        verify(harmoniMicroMapper).toDoBillPaymentRequest(request);
+        verify(paymentService).doBillPayment(microResponse);
+        verify(harmoniMicroMapper).toResponseHarmoniDoBillPaymentResultDTO(microResponse);
+    }
 
-			HarmoniCoreServiceResultDTO<ResponseHarmoniCancelBillPayment> result = new HarmoniCoreServiceResultDTO<>();
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
-			return result;
+    @Test
+    void testDoBillPayment_BillException() throws MicroException {
+        RequestHarmoniDoBillPayment request = new RequestHarmoniDoBillPayment();
+        // populate request with necessary data
 
-		} catch (BillException e) {
-			return handleBillException(e);
-		}
-	}
+        BillException billException = new BillException();
+        // populate billException with necessary data
 
-	@Operation(description = " Bill Payment Expense")
-	@PostMapping(path = "/getBillPaymentExpense")
-	public HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> getBillPaymentExpense(
-			@RequestBody RequestHarmoniGetBillPaymentExpense request) {
-		fillMandatoryFields(request.getCoreServiceBaseDataDTO());
+        when(paymentService.doBillPayment(any())).thenThrow(billException);
 
-		try {
-			GetBillPaymentExpenseResponseDTO microResponse = subscriberService
-					.getBillPaymentExpense(harmoniMicroMapper.toGetBillPaymentExpenseRequestDTO(request));
-			ResponseHarmoniGetBillPaymentExpense harmoniResponse = harmoniMicroMapper
-					.toResponseHarmoniGetBillPaymentExpense(microResponse);
+        HarmoniCoreServiceResultDTO<ResponseHarmoniDoBillPaymentResultDTO> result = harmoniPaymentAdkController.doBillPayment(request);
 
-			HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> result = new HarmoniCoreServiceResultDTO<>();
-			result.setResult(harmoniResponse);
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
 
-			return result;
+    // Test for cancelBillPayment method
+    @Test
+    void testCancelBillPayment_Success() throws MicroException {
+        RequestHarmoniCancelBillPayment request = new RequestHarmoniCancelBillPayment();
+        // populate request with necessary data
 
-		} catch (MicroException e) {
-			return handleBillException(e);
-		}
-	}
+        CancelBillPaymentResponse microResponse = new CancelBillPaymentResponse();
+        ResponseHarmoniCancelBillPayment convertedHarmoniResponse = new ResponseHarmoniCancelBillPayment();
 
+        when(harmoniMicroMapper.toCancelBillPaymentRequest(request)).thenReturn(microResponse);
+        when(paymentService.cancelBillPayment(microResponse)).thenReturn(microResponse);
+        when(harmoniMicroMapper.toResponseHarmoniCancelBillPayment(microResponse)).thenReturn(convertedHarmoniResponse);
 
-	@Operation(description = "Get customer paid bill list")
-	@GetMapping(path = "/getCustomerPaidBillList")
-	public HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> getCustomerPaidBillList(
-				@RequestParam Long customerNo, @RequestParam String channelCode,@RequestParam(required = false) String product) {
-		try {
-			GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
-			request.setCustomerNo(customerNo);
-			request.setChannelCode(ChannelUtil.convertChannel(channelCode));
-			request.setProductCode(product);
-			List<HmnPaidBillDTO> hmnPaidBillDTOList = paymentService.getMicroBillList(request);
-			ResponseHarmoniGetCustomerPaidBillList harmoniResponse = new ResponseHarmoniGetCustomerPaidBillList();
-			harmoniResponse.setBillDTOList(hmnPaidBillDTOList);
-			HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> result = new HarmoniCoreServiceResultDTO<>();
-			result.setResult(harmoniResponse);
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
+        HarmoniCoreServiceResultDTO<ResponseHarmoniCancelBillPayment> result = harmoniPaymentAdkController.cancelBillPayment(request);
 
-			return result;
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(convertedHarmoniResponse, result.getResult());
 
-		} catch (MicroException e) {
-			return handleBillException(e);
-		}
-	}
-	@Operation(description = "Get Recon Count")
-	@GetMapping(path = "/getReconCount")
-	public HarmoniCoreServiceResultDTO<CountDTO> getReconCount(@RequestParam  boolean isPayment,
-															   @RequestParam Date reconciliationDate,
-															   @RequestParam String productCode,
-															   @RequestParam String institutionCode) throws MicroException{
-		try {
-			CountDTO countDTO =	paymentService.getReconCount(isPayment, reconciliationDate,productCode,institutionCode);
-			HarmoniCoreServiceResultDTO<CountDTO> result = new HarmoniCoreServiceResultDTO<>();
-			result.setResult(countDTO);
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
-			return result;
-		} catch (MicroException e) {
-			return handleBillException(e);
-		}
-	}
+        verify(harmoniMicroMapper).toCancelBillPaymentRequest(request);
+        verify(paymentService).cancelBillPayment(microResponse);
+        verify(harmoniMicroMapper).toResponseHarmoniCancelBillPayment(microResponse);
+    }
 
-	@Operation(description = "Get Recon Detail")
-	@GetMapping(path = "/getReconDetail")
-	public HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO> > getReconDetail(@RequestParam  boolean isPayment,
-															   @RequestParam Date reconciliationDate,
-															   @RequestParam String productCode,
-															   @RequestParam String institutionCode) throws MicroException{
-		try {
-			List<HmnPaidBillDTO> reconDetailList =	paymentService.getReconDetail(isPayment, reconciliationDate,productCode,institutionCode);
-			HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO>> result = new HarmoniCoreServiceResultDTO<>();
-			result.setResult(reconDetailList);
-			result.setStatus(SUCCESS);
-			HarmoniResponseStatusMsgDTO responseMessage = new HarmoniResponseStatusMsgDTO();
-			responseMessage.setResponseCode(EnumBillResult.SUCCESS.getHmnCode().get(0).getValue());
-			responseMessage.setResponseMessage(EnumBillResult.SUCCESS.getHmnCode().get(0).getDescription());
-			result.setResponseMessage(responseMessage);
-			return result;
-		} catch (MicroException e) {
-			return handleBillException(e);
-		}
-	}
+    @Test
+    void testCancelBillPayment_BillException() throws MicroException {
+        RequestHarmoniCancelBillPayment request = new RequestHarmoniCancelBillPayment();
+        // populate request with necessary data
 
+        BillException billException = new BillException();
+        // populate billException with necessary data
 
+        when(paymentService.cancelBillPayment(any())).thenThrow(billException);
+
+        HarmoniCoreServiceResultDTO<ResponseHarmoniCancelBillPayment> result = harmoniPaymentAdkController.cancelBillPayment(request);
+
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
+
+    // Test for getBillPaymentExpense method
+    @Test
+    void testGetBillPaymentExpense_Success() throws MicroException {
+        RequestHarmoniGetBillPaymentExpense request = new RequestHarmoniGetBillPaymentExpense();
+        // populate request with necessary data
+
+        GetBillPaymentExpenseResponseDTO microResponse = new GetBillPaymentExpenseResponseDTO();
+        ResponseHarmoniGetBillPaymentExpense harmoniResponse = new ResponseHarmoniGetBillPaymentExpense();
+
+        when(harmoniMicroMapper.toGetBillPaymentExpenseRequestDTO(request)).thenReturn(microResponse);
+        when(subscriberService.getBillPaymentExpense(microResponse)).thenReturn(microResponse);
+        when(harmoniMicroMapper.toResponseHarmoniGetBillPaymentExpense(microResponse)).thenReturn(harmoniResponse);
+
+        HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> result = harmoniPaymentAdkController.getBillPaymentExpense(request);
+
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(harmoniResponse, result.getResult());
+
+        verify(harmoniMicroMapper).toGetBillPaymentExpenseRequestDTO(request);
+        verify(subscriberService).getBillPaymentExpense(microResponse);
+        verify(harmoniMicroMapper).toResponseHarmoniGetBillPaymentExpense(microResponse);
+    }
+
+    @Test
+    void testGetBillPaymentExpense_MicroException() throws MicroException {
+        RequestHarmoniGetBillPaymentExpense request = new RequestHarmoniGetBillPaymentExpense();
+        // populate request with necessary data
+
+        MicroException microException = new MicroException();
+        // populate microException with necessary data
+
+        when(subscriberService.getBillPaymentExpense(any())).thenThrow(microException);
+
+        HarmoniCoreServiceResultDTO<ResponseHarmoniGetBillPaymentExpense> result = harmoniPaymentAdkController.getBillPaymentExpense(request);
+
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
+
+    // Test for getCustomerPaidBillList method
+    @Test
+    void testGetCustomerPaidBillList_Success() throws MicroException {
+        Long customerNo = 123L;
+        String channelCode = "channelCode";
+        String product = "product";
+
+        GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+        request.setCustomerNo(customerNo);
+        request.setChannelCode(ChannelUtil.convertChannel(channelCode));
+        request.setProductCode(product);
+
+        List<HmnPaidBillDTO> hmnPaidBillDTOList = Collections.singletonList(new HmnPaidBillDTO());
+        ResponseHarmoniGetCustomerPaidBillList harmoniResponse = new ResponseHarmoniGetCustomerPaidBillList();
+        harmoniResponse.setBillDTOList(hmnPaidBillDTOList);
+
+        when(paymentService.getMicroBillList(request)).thenReturn(hmnPaidBillDTOList);
+
+        HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> result = harmoniPaymentAdkController.getCustomerPaidBillList(customerNo, channelCode, product);
+
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(harmoniResponse, result.getResult());
+
+        verify(paymentService).getMicroBillList(request);
+    }
+
+    @Test
+    void testGetCustomerPaidBillList_MicroException() throws MicroException {
+        Long customerNo = 123L;
+        String channelCode = "channelCode";
+        String product = "product";
+
+        GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+        request.setCustomerNo(customerNo);
+        request.setChannelCode(ChannelUtil.convertChannel(channelCode));
+        request.setProductCode(product);
+
+        MicroException microException = new MicroException();
+        // populate microException with necessary data
+
+        when(paymentService.getMicroBillList(any())).thenThrow(microException);
+
+        HarmoniCoreServiceResultDTO<ResponseHarmoniGetCustomerPaidBillList> result = harmoniPaymentAdkController.getCustomerPaidBillList(customerNo, channelCode, product);
+
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
+
+    // Test for getReconCount method
+    @Test
+    void testGetReconCount_Success() throws MicroException {
+        boolean isPayment = true;
+        Date reconciliationDate = new Date();
+        String productCode = "productCode";
+        String institutionCode = "institutionCode";
+
+        CountDTO countDTO = new CountDTO();
+        // populate countDTO with necessary data
+
+        when(paymentService.getReconCount(isPayment, reconciliationDate, productCode, institutionCode)).thenReturn(countDTO);
+
+        HarmoniCoreServiceResultDTO<CountDTO> result = harmoniPaymentAdkController.getReconCount(isPayment, reconciliationDate, productCode, institutionCode);
+
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(countDTO, result.getResult());
+
+        verify(paymentService).getReconCount(isPayment, reconciliationDate, productCode, institutionCode);
+    }
+
+    @Test
+    void testGetReconCount_MicroException() throws MicroException {
+        boolean isPayment = true;
+        Date reconciliationDate = new Date();
+        String productCode = "productCode";
+        String institutionCode = "institutionCode";
+
+        MicroException microException = new MicroException();
+        // populate microException with necessary data
+
+        when(paymentService.getReconCount(isPayment, reconciliationDate, productCode, institutionCode)).thenThrow(microException);
+
+        HarmoniCoreServiceResultDTO<CountDTO> result = harmoniPaymentAdkController.getReconCount(isPayment, reconciliationDate, productCode, institutionCode);
+
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
+
+    // Test for getReconDetail method
+    @Test
+    void testGetReconDetail_Success() throws MicroException {
+        boolean isPayment = true;
+        Date reconciliationDate = new Date();
+        String productCode = "productCode";
+        String institutionCode = "institutionCode";
+
+        List<HmnPaidBillDTO> reconDetailList = Collections.singletonList(new HmnPaidBillDTO());
+        // populate reconDetailList with necessary data
+
+        when(paymentService.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode)).thenReturn(reconDetailList);
+
+        HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO>> result = harmoniPaymentAdkController.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode);
+
+        assertNotNull(result);
+        assertEquals("S", result.getStatus());
+        assertEquals(reconDetailList, result.getResult());
+
+        verify(paymentService).getReconDetail(isPayment, reconciliationDate, productCode, institutionCode);
+    }
+
+    @Test
+    void testGetReconDetail_MicroException() throws MicroException {
+        boolean isPayment = true;
+        Date reconciliationDate = new Date();
+        String productCode = "productCode";
+        String institutionCode = "institutionCode";
+
+        MicroException microException = new MicroException();
+        // populate microException with necessary data
+
+        when(paymentService.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode)).thenThrow(microException);
+
+        HarmoniCoreServiceResultDTO<List<HmnPaidBillDTO>> result = harmoniPaymentAdkController.getReconDetail(isPayment, reconciliationDate, productCode, institutionCode);
+
+        assertNotNull(result);
+        assertEquals("E", result.getStatus());
+        assertNull(result.getResult());
+    }
 }
