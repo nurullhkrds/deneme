@@ -1,37 +1,14 @@
-@WebMvcTest(CachingController.class)
-public class CachingControllerTest {
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private CachingService cachingService;
-
-    @MockBean
-    private Logger logger;
-
-    @Test
-    public void clearAllCaches_shouldCallEvictAllCaches() throws Exception {
-        // Arrange & Act
-        ResultActions resultActions = mockMvc.perform(get("/caching/evict/all"));
-
-        // Assert
-        resultActions.andExpect(status().isOk());
-        verify(cachingService).evictAllCaches();
-    }
-
-    @Test
-    public void evictAllCacheValues_shouldCallEvictAllCacheValues() throws Exception {
-        // Arrange
-        String cacheName = "testCache";
-
-        // Act
-        ResultActions resultActions = mockMvc.perform(get("/caching/evict")
-                .param("cacheName", cacheName));
-
-        // Assert
-        resultActions.andExpect(status().isOk());
-        verify(logger).info("request: {}", cacheName);
-        verify(cachingService).evictAllCacheValues(cacheName);
-    }
-}
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
