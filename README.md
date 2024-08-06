@@ -1,1 +1,4 @@
-java: Source option 5 is no longer supported. Use 7 or later.
+<properties>
+    <maven.compiler.source>7</maven.compiler.source>
+    <maven.compiler.target>7</maven.compiler.target>
+</properties>
