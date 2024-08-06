@@ -1,4 +1,44 @@
-@Test
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+import com.ykb.payments.bill.transaction.accounting.provision.service.CardProvisionServiceImpl;
+import com.ykb.payments.bill.transaction.accounting.provision.dto.*;
+
+@ExtendWith(MockitoExtension.class)
+public class CardProvisionServiceImplTest {
+
+    @Mock
+    private SwtSwitchIntegrationService cardProvisionService;
+
+    @Mock
+    private ProvisionNextService provisionNextService;
+
+    @Mock
+    private AccountingUtilServiceImpl accountingUtilServiceImpl;
+
+    @Mock
+    private AccountingUtil accountingDateUtil;
+
+    @InjectMocks
+    private CardProvisionServiceImpl cardProvisionServiceImpl;
+
+    private CreateAccountingDTO createAccountingDTO;
+
+    @BeforeEach
+    void setUp() {
+        createAccountingDTO = new CreateAccountingDTO();
+        // Setup createAccountingDTO with necessary values
+        // Same as your setup method
+        createAccountingDTO.setDummyMerchant(true);
+    }
+
+    @Test
     void testDoAccounting_PrepareProvisionRequest() {
         createAccountingDTO.setDummyMerchant(true);
 
@@ -10,25 +50,15 @@
 
         CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
 
-        assertFalse(result.isSuccess());
+        // Ensure the method succeeds
+        assertTrue(result.isSuccess());
 
+        // Capture the argument
         ArgumentCaptor<MakeProvisionRequest> argumentCaptor = ArgumentCaptor.forClass(MakeProvisionRequest.class);
         verify(provisionNextService).makeProvision(argumentCaptor.capture());
         MakeProvisionRequest capturedRequest = argumentCaptor.getValue();
 
+        // Verify the captured values
         assertEquals(createAccountingDTO.getChannelTransactionId(), capturedRequest.getTransactionId());
     }
-
-Wanted but not invoked:
-provisionNextService.makeProvision(
-    <Capturing argument>
-);
--> at com.ykb.payments.bill.transaction.accounting.provision.service.CardProvisionServiceImplTest.testDoAccounting_PrepareProvisionRequest(CardProvisionServiceImplTest.java:216)
-Actually, there were zero interactions with this mock.
-
-Wanted but not invoked:
-provisionNextService.makeProvision(
-    <Capturing argument>
-);
--> at com.ykb.payments.bill.transaction.accounting.provision.service.CardProvisionServiceImplTest.testDoAccounting_PrepareProvisionRequest(CardProvisionServiceImplTest.java:216)
-Actually, there were zero interactions with this mock.
+}
