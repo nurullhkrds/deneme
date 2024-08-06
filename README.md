@@ -1,53 +1,24 @@
-ockHttpServletRequest:
-      HTTP Method = GET
-      Request URI = /caching/evict
-       Parameters = {cacheName=[testCache]}
-          Headers = []
-             Body = null
-    Session Attrs = {}
+@Test
+    public void evictAllCacheValues_shouldCallEvictAllCacheValues() throws Exception {
+        // Arrange
+        String cacheName = "testCache";
 
-Handler:
-             Type = com.ykb.payments.bill.transaction.caching.web.CachingController
-           Method = com.ykb.payments.bill.transaction.caching.web.CachingController#evictAllCacheValues(String)
+        // Act
+        ResultActions resultActions = mockMvc.perform(get("/caching/evict")
+                .param("cacheName", cacheName));
 
-Async:
-    Async started = false
-     Async result = null
+        // Assert
+        resultActions.andExpect(status().isOk());
+        verify(logger, times(1)).info("request: {}", cacheName);
+        verify(cachingService, times(1)).evictAllCacheValues(cacheName);
+    }
 
-Resolved Exception:
-             Type = null
+    @TestConfiguration
+    static class TestConfig {
 
-ModelAndView:
-        View name = null
-             View = null
-            Model = null
-
-FlashMap:
-       Attributes = null
-
-MockHttpServletResponse:
-           Status = 200
-    Error message = null
-          Headers = []
-     Content type = null
-             Body = 
-    Forwarded URL = null
-   Redirected URL = null
-          Cookies = []
-
-
-Wanted but not invoked:
-org.slf4j.Logger#0 bean.info(
-    "request: {}",
-    "testCache"
-);
--> at com.ykb.payments.bill.transaction.caching.web.CachingControllerTest.evictAllCacheValues_shouldCallEvictAllCacheValues(CachingControllerTest.java:54)
-Actually, there were zero interactions with this mock.
-
-Wanted but not invoked:
-org.slf4j.Logger#0 bean.info(
-    "request: {}",
-    "testCache"
-);
--> at com.ykb.payments.bill.transaction.caching.web.CachingControllerTest.evictAllCacheValues_shouldCallEvictAllCacheValues(CachingControllerTest.java:54)
-Actually, there were zero interactions with this mock.
+        @Bean
+        @Primary
+        public Logger logger() {
+            return LoggerFactory.getLogger(CachingController.class);
+        }
+    }
