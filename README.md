@@ -1,53 +1,37 @@
-ockHttpServletRequest:
-      HTTP Method = GET
-      Request URI = /caching/evict
-       Parameters = {cacheName=[testCache]}
-          Headers = []
-             Body = null
-    Session Attrs = {}
+@WebMvcTest(CachingController.class)
+public class CachingControllerTest {
 
-Handler:
-             Type = com.ykb.payments.bill.transaction.caching.web.CachingController
-           Method = com.ykb.payments.bill.transaction.caching.web.CachingController#evictAllCacheValues(String)
+    @Autowired
+    private MockMvc mockMvc;
 
-Async:
-    Async started = false
-     Async result = null
+    @MockBean
+    private CachingService cachingService;
 
-Resolved Exception:
-             Type = null
+    @MockBean
+    private Logger logger;
 
-ModelAndView:
-        View name = null
-             View = null
-            Model = null
+    @Test
+    public void clearAllCaches_shouldCallEvictAllCaches() throws Exception {
+        // Arrange & Act
+        ResultActions resultActions = mockMvc.perform(get("/caching/evict/all"));
 
-FlashMap:
-       Attributes = null
+        // Assert
+        resultActions.andExpect(status().isOk());
+        verify(cachingService).evictAllCaches();
+    }
 
-MockHttpServletResponse:
-           Status = 200
-    Error message = null
-          Headers = []
-     Content type = null
-             Body = 
-    Forwarded URL = null
-   Redirected URL = null
-          Cookies = []
+    @Test
+    public void evictAllCacheValues_shouldCallEvictAllCacheValues() throws Exception {
+        // Arrange
+        String cacheName = "testCache";
 
+        // Act
+        ResultActions resultActions = mockMvc.perform(get("/caching/evict")
+                .param("cacheName", cacheName));
 
-Wanted but not invoked:
-org.slf4j.Logger#0 bean.info(
-    "request: {}",
-    "testCache"
-);
--> at com.ykb.payments.bill.transaction.caching.web.CachingControllerTest.evictAllCacheValues_shouldCallEvictAllCacheValues(CachingControllerTest.java:48)
-Actually, there were zero interactions with this mock.
-
-Wanted but not invoked:
-org.slf4j.Logger#0 bean.info(
-    "request: {}",
-    "testCache"
-);
--> at com.ykb.payments.bill.transaction.caching.web.CachingControllerTest.evictAllCacheValues_shouldCallEvictAllCacheValues(CachingControllerTest.java:48)
-Actually, there were zero interactions with this mock.
+        // Assert
+        resultActions.andExpect(status().isOk());
+        verify(logger, times(1)).info("request: {}", cacheName);
+        verify(cachingService, times(1)).evictAllCacheValues(cacheName);
+    }
+}
