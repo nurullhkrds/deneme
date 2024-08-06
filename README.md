@@ -3,36 +3,41 @@ import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import java.util.List;
 
 class CachingControllerTest {
-
-    @Spy
-    private CachingController cachingController;
 
     @Mock
     private CachingService cachingService;
 
+    @InjectMocks
+    private CachingController cachingController;
+
     private MockMvc mockMvc;
 
-    @Captor
-    private ArgumentCaptor<String> logCaptor;
+    private ListAppender<ILoggingEvent> listAppender;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        cachingController = new CachingController(LoggerFactory.getLogger(CachingController.class), cachingService);
         mockMvc = MockMvcBuilders.standaloneSetup(cachingController).build();
+
+        // Logger ve ListAppender ayarları
+        Logger logger = (Logger) LoggerFactory.getLogger(CachingController.class);
+        listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
     }
 
     @Test
@@ -52,12 +57,10 @@ class CachingControllerTest {
                 .andExpect(status().isOk());
 
         verify(cachingService, times(1)).evictAllCacheValues(cacheName);
-        
-        // Capture and verify the log message
-        ArgumentCaptor<String> logCaptor = ArgumentCaptor.forClass(String.class);
-        verify(cachingController.getLogger(), times(1)).info(logCaptor.capture(), logCaptor.capture());
-        List<String> logValues = logCaptor.getAllValues();
-        assertEquals("request: {}", logValues.get(0));
-        assertEquals(cacheName, logValues.get(1));
+
+        // Log mesajını doğrula
+        List<ILoggingEvent> logsList = listAppender.list;
+        assertEquals(1, logsList.size());
+        assertTrue(logsList.get(0).getFormattedMessage().contains("request: " + cacheName));
     }
 }
