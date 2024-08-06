@@ -343,3 +343,177 @@ public class CardProvisionServiceImpl implements ProvisionService  {
         }
     }
 }
+
+
+
+
+
+"package com.ykb.payments.bill.transaction.accounting.provision.service;
+
+import com.ykb.architecture.micro.error.exception.BusinessException;
+import com.ykb.architecture.micro.error.exception.ServiceCallException;
+import com.ykb.payments.bill.common.enums.EnumBillResult;
+import com.ykb.payments.bill.common.enums.EnumCurrencyCode;
+import com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingDTO;
+import com.ykb.payments.bill.transaction.accounting.dto.CreateAccountingResultDTO;
+import com.ykb.payments.bill.transaction.accounting.util.AccountingUtil;
+import com.ykb.payments.bill.transaction.external.cardpayment.request.CardProvisionRequest;
+import com.ykb.payments.bill.transaction.external.cardpayment.response.CardProvisionResponse;
+import com.ykb.payments.bill.transaction.external.cardpayment.service.SwtSwitchIntegrationService;
+import com.ykb.payments.bill.transaction.external.corebanking.account.service.AccountingUtilServiceImpl;
+import com.ykb.payments.bill.transaction.external.corebanking.account.service.ProvisionNextService;
+import com.ykb.payments.bill.transaction.external.corebanking.commission.model.response.ResponseCommissionInformation;
+import com.ykb.payments.bill.transaction.institution.dto.*;
+import com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayStrategyCode;
+import com.ykb.payments.bill.transaction.institution.enums.EnumProvisionType;
+import com.ykb.payments.bill.transaction.payment.dto.CreditCardPaymentMethodDetailDTO;
+import com.ykb.payments.bill.transaction.payment.dto.ProvisionDTO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+
+@ExtendWith(MockitoExtension.class)
+public class CardProvisionServiceImplTest {
+
+    @Mock
+    private SwtSwitchIntegrationService cardProvisionService;
+
+    @Mock
+    private ProvisionNextService provisionNextService;
+
+    @Mock
+    private AccountingUtilServiceImpl accountingUtilServiceImpl;
+
+    @Mock
+    private AccountingUtil accountingDateUtil;
+
+    @InjectMocks
+    private CardProvisionServiceImpl cardProvisionServiceImpl;
+
+    private CreateAccountingDTO createAccountingDTO;
+
+    @BeforeEach
+    void setUp() {
+        createAccountingDTO = new CreateAccountingDTO();
+
+        InstitutionDTO institutionDTO = new InstitutionDTO();
+        institutionDTO.setName("Test Institution");
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setProductCampaignCode("ProductCampaignCode");
+        institutionDTO.setProduct(productDTO);
+        institutionDTO.setId(1L);
+        institutionDTO.setCustomerNo(1001L);
+        createAccountingDTO.setInstitution(institutionDTO);
+
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        institutionChannelPymMethodDTO.setAccountingTemplateCode("TemplateCode");
+        institutionChannelPymMethodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.NO_VALOR);
+        createAccountingDTO.setInstitutionChannelPymMethodDTO(institutionChannelPymMethodDTO);
+
+        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
+        institutionChnnlPymMthdAccDTO.setInstitutionAccountNo("AccountNo");
+        createAccountingDTO.setInstitutionChnnlPymMthdAccDTO(institutionChnnlPymMthdAccDTO);
+
+        createAccountingDTO.setCurrency(EnumCurrencyCode.DOLAR);
+        createAccountingDTO.setChannelCode("TestChannel");
+        createAccountingDTO.setBranchCode("TestBranch");
+        createAccountingDTO.setChannelSessionId("TestSessionId");
+        createAccountingDTO.setMerchantNo("TestMerchantNo");
+        createAccountingDTO.setPaymentAmount(BigDecimal.TEN);
+        createAccountingDTO.setDummyMerchant(false);
+
+        CreditCardPaymentMethodDetailDTO creditCardPaymentMethodDetailDTO = new CreditCardPaymentMethodDetailDTO();
+        creditCardPaymentMethodDetailDTO.setCardNumber("4111111111111111");
+        createAccountingDTO.setPaymentMethodDetailDTO(creditCardPaymentMethodDetailDTO);
+
+        ProvisionDTO provisionDTO = new ProvisionDTO();
+        provisionDTO.setCustomerNo(1001L);
+        createAccountingDTO.setProvisionDTO(provisionDTO);
+
+        ResponseCommissionInformation responseCommissionInformation = new ResponseCommissionInformation();
+        responseCommissionInformation.setInquiryId("InquiryId");
+        responseCommissionInformation.setTotalCommissionTaxLocalCurrencyAmount(BigDecimal.ONE);
+        responseCommissionInformation.setTotalCommissionLocalCurrencyAmount(BigDecimal.ONE);
+        createAccountingDTO.setResponseCommissionInformation(responseCommissionInformation);
+
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+        createAccountingDTO.setInstitutionChnnlPymMthdPscDTO(institutionChnnlPymMthdPscDTO);
+    }
+
+    @Test
+    void testDoAccounting_SuccessfulRealMerchant() throws BusinessException, ServiceCallException {
+        createAccountingDTO.setDummyMerchant(false);
+        CardProvisionResponse cardProvisionResponse = new CardProvisionResponse();
+        cardProvisionResponse.setGuid("123456");
+        when(cardProvisionService.doProvision(any(CardProvisionRequest.class)))
+                .thenReturn(cardProvisionResponse);
+        when(accountingUtilServiceImpl.getContractNumber()).thenReturn(123456L);
+
+        try {
+            CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
+            assertTrue(result.isSuccess());
+            assertEquals(123456L, result.getContractNo());
+        } catch (Exception e) {
+            if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
+                Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
+                assertNotNull(errorCode);
+            } else {
+                fail("hata " + e.getMessage(), e);
+            }
+        }
+    }
+
+    @Test
+    void testDoAccounting_CardProvisionFailure() throws BusinessException, ServiceCallException {
+        createAccountingDTO.setDummyMerchant(true);
+        doThrow(new RuntimeException("hata")).when(cardProvisionService).doProvision(any(CardProvisionRequest.class));
+
+        try {
+            CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
+            assertFalse(result.isSuccess());
+            assertEquals(EnumBillResult.BILL_CREDIT_CARD_PROVISION_ERROR, result.getError());
+        } catch (Exception e) {
+            if (e.getCause() != null && e.getCause().getClass().equals(ServiceCallException.class)) {
+                Long errorCode = ((ServiceCallException) e.getCause()).getErrorCode();
+                assertNotNull(errorCode);
+            } else {
+                fail("hata " + e.getMessage(), e);
+            }
+        }
+    }
+
+    @Test
+    void testGetProvisionType() {
+        CardProvisionServiceImpl cardProvisionServiceImpl = new CardProvisionServiceImpl(
+                mock(SwtSwitchIntegrationService.class),
+                mock(ProvisionNextService.class),
+                mock(AccountingUtilServiceImpl.class),
+                mock(AccountingUtil.class)
+        );
+
+        EnumProvisionType expectedProvisionType = EnumProvisionType.CARD;
+
+        EnumProvisionType actualProvisionType = cardProvisionServiceImpl.getProvisionType();
+
+        // Assert
+        assertEquals(expectedProvisionType, actualProvisionType, "mesaj");
+    }
+
+
+
+
+
+
+}
+
+"
