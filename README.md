@@ -8,4 +8,7 @@ void testSendPaymentNotificationEvent_Failure() {
 
     // Act and Assert: Assert that a RuntimeException is thrown when sendPaymentNotificationEvent is called
     assertThrows(RuntimeException.class, () -> paymentNotificationEventProducer.sendPaymentNotificationEvent(event));
+
+    // Verify that convertAndSend was called
+    verify(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
 }
