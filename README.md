@@ -1,51 +1,34 @@
-import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.*;
+@Test
+    void testDoAccounting_PrepareProvisionRequest() {
+        createAccountingDTO.setDummyMerchant(true);
 
-import java.lang.reflect.Method;
+        MakeProvisionResponse makeProvisionResponse = new MakeProvisionResponse();
+        makeProvisionResponse.setSuccess(true);
+        makeProvisionResponse.setContractNo(123456L);
+        when(provisionNextService.makeProvision(any(MakeProvisionRequest.class)))
+                .thenReturn(makeProvisionResponse);
 
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+        CreateAccountingResultDTO result = cardProvisionServiceImpl.doAccounting(createAccountingDTO);
 
-public class CardProvisionServiceImplTest {
+        assertFalse(result.isSuccess());
 
-    @Mock
-    private SwtSwitchIntegrationService cardProvisionService;
+        ArgumentCaptor<MakeProvisionRequest> argumentCaptor = ArgumentCaptor.forClass(MakeProvisionRequest.class);
+        verify(provisionNextService).makeProvision(argumentCaptor.capture());
+        MakeProvisionRequest capturedRequest = argumentCaptor.getValue();
 
-    @Mock
-    private ProvisionNextService provisionNextService;
-
-    @Mock
-    private AccountingUtilServiceImpl accountingUtilServiceImpl;
-
-    @Mock
-    private AccountingUtil accountingDateUtil;
-
-    @InjectMocks
-    private CardProvisionServiceImpl cardProvisionServiceImpl;
-
-    @Mock
-    private InstitutionChnnlPymMthdPscDTO pscDTO;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
+        assertEquals(createAccountingDTO.getChannelTransactionId(), capturedRequest.getTransactionId());
     }
 
-    @Test
-    void testGetBlockDayCount() throws Exception {
-        InstitutionChannelPymMethodDTO methodDTO = new InstitutionChannelPymMethodDTO();
-        methodDTO.setBlockDayStrategyCode(EnumBlockDayStrategyCode.DAILY);
+Wanted but not invoked:
+provisionNextService.makeProvision(
+    <Capturing argument>
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardProvisionServiceImplTest.testDoAccounting_PrepareProvisionRequest(CardProvisionServiceImplTest.java:216)
+Actually, there were zero interactions with this mock.
 
-        // Mock the pscDTO to return a valid block day count
-        when(pscDTO.getBlockDayCount(anyInt())).thenReturn(3);
-
-        // Access the private method using reflection
-        Method method = CardProvisionServiceImpl.class.getDeclaredMethod("getBlockDayCount", InstitutionChannelPymMethodDTO.class, InstitutionChnnlPymMthdPscDTO.class);
-        method.setAccessible(true);
-        int blockDayCount = (int) method.invoke(cardProvisionServiceImpl, methodDTO, pscDTO);
-
-        assertEquals(3, blockDayCount);
-    }
-}
+Wanted but not invoked:
+provisionNextService.makeProvision(
+    <Capturing argument>
+);
+-> at com.ykb.payments.bill.transaction.accounting.provision.service.CardProvisionServiceImplTest.testDoAccounting_PrepareProvisionRequest(CardProvisionServiceImplTest.java:216)
+Actually, there were zero interactions with this mock.
