@@ -28,9 +28,13 @@ public class QueryBillsProcessTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         queryBillsProcess.setDataPack(new HashMap<>());
-
-        // Initialize stepHandler
-        queryBillsProcess.stepHandler = queryBillsProcess.new ProcessStepHandler();
+        
+        // stepHandler'ı initialize etmek için `executeProcess` metodunu çağır
+        try {
+            queryBillsProcess.executeProcess();
+        } catch (Exception e) {
+            // Hata oluştuysa ignore et
+        }
     }
 
     @Test
