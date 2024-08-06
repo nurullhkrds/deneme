@@ -1,23 +1,37 @@
-@RestController
-@Tag(name = "Caching Operations")
-@RequestMapping("/caching")
-@RequiredArgsConstructor
-public class CachingController {
+@WebMvcTest(CachingController.class)
+public class CachingControllerTest {
 
-	private final Logger logger = LoggerFactory.getLogger(CachingController.class);
+    @Autowired
+    private MockMvc mockMvc;
 
-	private final CachingService cachingService;
+    @MockBean
+    private CachingService cachingService;
 
-	@Operation(summary = "Clear all caches")
-	@GetMapping("/evict/all")
-	public void clearAllCaches() {
-		cachingService.evictAllCaches();
-	}
+    @MockBean
+    private Logger logger;
 
-	@Operation(summary = "Clear specific cache value")
-	@GetMapping("/evict")
-	public void evictAllCacheValues(@RequestParam(required = true) String cacheName) {
-		logger.info("request: {}", cacheName);
-		cachingService.evictAllCacheValues(cacheName);
-	}
+    @Test
+    public void clearAllCaches_shouldCallEvictAllCaches() throws Exception {
+        // Arrange & Act
+        ResultActions resultActions = mockMvc.perform(get("/caching/evict/all"));
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+        verify(cachingService).evictAllCaches();
+    }
+
+    @Test
+    public void evictAllCacheValues_shouldCallEvictAllCacheValues() throws Exception {
+        // Arrange
+        String cacheName = "testCache";
+
+        // Act
+        ResultActions resultActions = mockMvc.perform(get("/caching/evict")
+                .param("cacheName", cacheName));
+
+        // Assert
+        resultActions.andExpect(status().isOk());
+        verify(logger).info("request: {}", cacheName);
+        verify(cachingService).evictAllCacheValues(cacheName);
+    }
 }
