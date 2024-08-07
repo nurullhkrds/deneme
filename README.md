@@ -1,7 +1,4 @@
-public void setInstitutionDebtType(InstitutionDebtTypeDTO institutionDebtType) {
-        this.institutionDebtType = institutionDebtType;
-    }
+institutionDebtType ID before process: 1
+institutionDebtType ID before initProcess call: 1
 
-    public InstitutionDebtTypeDTO getInstitutionDebtType() {
-        return institutionDebtType;
-    }
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO.getId()" because "this.institutionDebtType" is null
