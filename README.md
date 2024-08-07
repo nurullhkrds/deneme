@@ -1,20 +1,132 @@
-org.mockito.exceptions.misusing.PotentialStubbingProblem: 
-Strict stubbing argument mismatch. Please check:
- - this invocation of 'getUserInterface' method:
-    institutionUserIntService.getUserInterface(
-    null
-);
-    -> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcess$GatherData.executeStep(QueryBillsProcess.java:105)
- - has following stubbing(s) with different arguments:
-    1. institutionUserIntService.getUserInterface(
-    0L
-);
-      -> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcessSuccess(QueryBillsProcessTest.java:144)
-Typically, stubbing argument mismatch indicates user mistake when writing tests.
-Mockito fails early so that you can debug potential problem easily.
-However, there are legit scenarios when this exception generates false negative signal:
-  - stubbing the same method multiple times using 'given().will()' or 'when().then()' API
-    Please use 'will().given()' or 'doReturn().when()' API for stubbing.
-  - stubbed method is intentionally invoked with different arguments by code under test
-    Please use default or 'silent' JUnit Rule (equivalent of Strictness.LENIENT).
-For more information see javadoc for PotentialStubbingProblem class.
+@ExtendWith(MockitoExtension.class)
+public class QueryBillsProcessTest {
+
+    @Mock
+    private AdapterService adapterService;
+
+    @Mock
+    private ProvisionService provisionService;
+
+    @Mock
+    private InstitutionUserIntService institutionUserIntService;
+
+    @Mock
+    private InstitutionUserIntfMapper institutionUserIntMapper;
+
+    @Mock
+    private BillPaymentRestFacade billPaymentRestFacade;
+
+    @Mock
+    private PaymentRepository paymentRepository;
+
+    @Mock
+    private PaymentMapper paymentMapper;
+
+    @Mock
+    private LimitationService limitationService;
+
+    @Mock
+    private PaymentEventPublisher paymentEventPublisher;
+
+    @Mock
+    private PaymentUtilImpl paymentUtilImpl;
+
+    @Mock
+    private ProcessService processService;
+
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @InjectMocks
+    private QueryBillsProcess process;
+
+    @Mock
+    private InstitutionDTO institution;
+
+    @Mock
+    private InstitutionDebtTypeDTO institutionDebtType;
+
+    @Mock
+    private InstitutionProcessDTO institutionProcess;
+
+    private Long institutionDebtTypeId;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        institution = new InstitutionDTO();
+        institution.setId(1L);
+
+        institutionDebtType = new InstitutionDebtTypeDTO();
+        institutionDebtType.setId(1L);
+
+        institutionProcess = new InstitutionProcessDTO();
+        institutionProcess.setIsOnline(true);
+
+        process.setInstitution(institution);
+        process.setInstitutionDebtType(institutionDebtType);
+        process.setInstitutionProcess(institutionProcess);
+        
+        // Initialize internal data structures
+        process.setDataPack(new HashMap<>());
+        process.setExecutionOutput(new QueryBillsProcessOutput());
+    }
+
+    @Test
+    void testExecuteProcessSuccess() throws BillException {
+        SpringUtil springUtil = new SpringUtil();
+        springUtil.setApplicationContext(applicationContext);
+
+        doReturn(adapterService).when(SpringUtil.getBean(AdapterService.class));
+        doReturn(institutionUserIntService).when(SpringUtil.getBean(InstitutionUserIntService.class));
+        doReturn(institutionUserIntMapper).when(SpringUtil.getBean(InstitutionUserIntfMapper.class));
+        doReturn(billPaymentRestFacade).when(SpringUtil.getBean(BillPaymentRestFacade.class));
+        doReturn(paymentRepository).when(SpringUtil.getBean(PaymentRepository.class));
+        doReturn(paymentMapper).when(SpringUtil.getBean(PaymentMapper.class));
+        doReturn(limitationService).when(SpringUtil.getBean(LimitationService.class));
+        doReturn(paymentUtilImpl).when(SpringUtil.getBean(PaymentUtilImpl.class));
+        doReturn(paymentEventPublisher).when(SpringUtil.getBean(PaymentEventPublisher.class));
+        doReturn(processService).when(SpringUtil.getBean(ProcessService.class));
+
+        InstitutionUserIntfDTO mockInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
+        doReturn(List.of(mockInstitutionUserIntfDTO)).when(institutionUserIntService).getUserInterface(anyLong());
+        doReturn(true).when(paymentUtilImpl).isFomOperationEnabled(any());
+
+        QueriedBillDTO mockQueriedBillDTO = new QueriedBillDTO();
+        mockQueriedBillDTO.setBillDueDate(LocalDate.now());
+        mockQueriedBillDTO.setBillNo("12345");
+
+        QueryBillsAdapterResponse mockResponse = new QueryBillsAdapterResponse();
+        mockResponse.setInternalResultCode(String.valueOf(EnumBillResult.SUCCESS.getCode()));
+        mockResponse.setBills(List.of(mockQueriedBillDTO));
+
+        doReturn(mockResponse).when(adapterService).queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString());
+
+        institutionDebtTypeId = 1L;
+
+        ProcessExecutionInput input = new ProcessExecutionInputConcrete(EnumProcessCode.QUERY_BILLS);
+        input.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 1L);
+        input.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 1L);
+        input.getDataPack().put(ProcessDataPackKey.TAX_ID.getKey(), "taxId");
+        input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
+        input.getDataPack().put(ProcessDataPackKey.INSTITUTION_DEBT_TYPE_ID.getKey(), institutionDebtTypeId);
+
+        System.out.println("institutionDebtType ID before process: " + institutionDebtType.getId());
+        process.setInstitutionDebtType(institutionDebtType);
+        process.setInstitutionProcess(institutionProcess); // Ensure institutionProcess is set
+        System.out.println("institutionDebtType ID before initProcess call: " + (process.getInstitutionDebtType() != null ? process.getInstitutionDebtType().getId() : "null"));
+
+        try {
+            process.initProcess(input, new ProcessLogDTO("processLogDto"));
+            System.out.println("institutionDebtType ID after initProcess: " + (process.getInstitutionDebtType() != null ? process.getInstitutionDebtType().getId() : "null"));
+        } catch (NullPointerException e) {
+            System.out.println("Caught NullPointerException: " + e.getMessage());
+        }
+
+        process.executeProcess();
+
+        QueryBillsProcessOutput output = (QueryBillsProcessOutput) process.getExecutionOutput();
+        assertEquals(EnumBillResult.SUCCESS, output.getResult());
+        assertEquals(1, output.getProvisionDTOList().size());
+    }
