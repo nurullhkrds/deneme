@@ -1,1 +1,2 @@
-        System.out.println("QueryBillsProcess executeProcess - institutionDebtType ID: " + (institutionDebtType != null ? institutionDebtType.getId() : "null"));
+institutionDebtType ID before process: 1
+institutionDebtType ID before initProcess call: 1
