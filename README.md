@@ -1,19 +1,18 @@
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+public class ErrorResult extends Result {
 
-public class ErrorDataResultTest {
+    public ErrorResult(String message, int statusCode) {
+        super(false, message, statusCode);
+    }
+}public class SuccessDataResult<T> extends DataResult<T> {
+    public SuccessDataResult(String message, T data, int statusCode) {
+        super(true, message, data, statusCode);
+    }
 
-    @Test
-    public void testErrorDataResult() {
-        String message = "Error occurred";
-        Integer data = 123;
-        int statusCode = 400;
 
-        ErrorDataResult<Integer> errorDataResult = new ErrorDataResult<>(message, data, statusCode);
 
-        assertFalse(errorDataResult.isSuccess());
-        assertEquals(message, errorDataResult.getMessage());
-        assertEquals(data, errorDataResult.getData());
-        assertEquals(statusCode, errorDataResult.getStatusCode());
+
+}public class SuccessResult extends Result {
+    public SuccessResult(String message, int statusCode) {
+        super(true, message, statusCode);
     }
 }
