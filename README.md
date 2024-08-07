@@ -1,132 +1,284 @@
-@ExtendWith(MockitoExtension.class)
-public class QueryBillsProcessTest {
+public class NotifyPaymentProcess extends AbstractProcess {
 
-    @Mock
-    private AdapterService adapterService;
+	private static final Integer MAX_LENGTH_OF_NEW_INFO_FIELDS = 100;
+	private static final Integer MAX_LENGTH_OF_OLD_INFO_FIELD = 50;
 
-    @Mock
-    private ProvisionService provisionService;
+	private Long notificationTryCount;
+	private Long paymentNotificationId;
+	private Long paymentId;
 
-    @Mock
-    private InstitutionUserIntService institutionUserIntService;
+	private PaymentService paymentService;
+	private PaymentNotificationService paymentNotificationService;
+	private AdapterService adapterService;
 
-    @Mock
-    private InstitutionUserIntfMapper institutionUserIntMapper;
+	// be carefull for hibernate dirty update
+	private PaymentNotification paymentNotification;
+	// be carefull for hibernate dirty update
+	private Payment payment;
 
-    @Mock
-    private BillPaymentRestFacade billPaymentRestFacade;
+	private NotifyPaymentAdapterResponse notifyPaymentResponse;
 
-    @Mock
-    private PaymentRepository paymentRepository;
+	@Override
+	public void initProcess(ProcessExecutionInput input, ProcessLogDTO logDTO) {
+		shouldRaiseExceptionOnABillError = false;
+		super.initProcess(input, logDTO);
+	}
 
-    @Mock
-    private PaymentMapper paymentMapper;
+	@Override
+	protected void prepareExecutionOutput() {
+		executionOutput = new NotifyPaymentProcessOutput();
+		executionOutput.setResult(error);
+		
+		if(notifyPaymentResponse != null) {
+			((NotifyPaymentProcessOutput) executionOutput).setInstitutionReturnCode(notifyPaymentResponse.getInstitutionResultCode());
+			((NotifyPaymentProcessOutput) executionOutput).setInstitutionReturnCode(notifyPaymentResponse.getInstitutionResultDetail());
+		}
+	}
 
-    @Mock
-    private LimitationService limitationService;
+	@Override
+	public void executeProcess() throws BillException {
+		addProcessStep(new GatherData());
+		addProcessStep(new FetchPaymentNotificationRecordWithLock());
+		addProcessStep(new FetchPaymentRecordWithLock());
+		addProcessStep(new CallInstitutionExternalService());
+		addProcessStep(new UpdatePaymentNotificationRecord());
+		addProcessStep(new UpdatePaymentRecord());
+		addProcessStep(new DoAutomaticPaymentCancel());
+		
+		executeSteps();
+		prepareLogVariable();
+	}
 
-    @Mock
-    private PaymentEventPublisher paymentEventPublisher;
+	private class GatherData implements ProcessStep {
 
-    @Mock
-    private PaymentUtilImpl paymentUtilImpl;
+		@Override
+		public void executeStep() throws BillException {
+			notificationTryCount = Long.valueOf(Optional
+					.ofNullable(SpringUtil.getBean(InstitutionFeatureService.class)
+							.getFeatureValue(EnumFeatureCode.NOTIFICATION_TRY_COUNT, institutionCode, productCode))
+					.orElse(BillTransactionConstant.DEFAULT_NOTIFICATION_TRY_COUNT));
+			paymentNotificationId = (Long) dataPack.get(ProcessDataPackKey.PAYMENT_NOTIFICATION_ID.getKey());
 
-    @Mock
-    private ProcessService processService;
+			paymentService = SpringUtil.getBean(PaymentService.class);
+			adapterService = SpringUtil.getBean(AdapterService.class);
+			paymentNotificationService = SpringUtil.getBean(PaymentNotificationService.class);
+		}
 
-    @Mock
-    private ApplicationContext applicationContext;
+	}
 
-    @InjectMocks
-    private QueryBillsProcess process;
+	private class FetchPaymentNotificationRecordWithLock implements ProcessStep {
 
-    @Mock
-    private InstitutionDTO institution;
+		@Override
+		public void executeStep() throws BillException {
+			paymentNotification = paymentNotificationService.findPaymentNotificationWithLock(paymentNotificationId);
 
-    @Mock
-    private InstitutionDebtTypeDTO institutionDebtType;
+			if (paymentNotification == null) {
+				error = EnumBillResult.BILL_PAYMENT_NOTIFICATION_NOT_FOUND;
+				return;
+			}
 
-    @Mock
-    private InstitutionProcessDTO institutionProcess;
+			if (!EnumPaymentNotificationType.INSTITUTION_PAYMENT_NOTIFICATION
+					.equals(paymentNotification.getNotificationType())) {
+				error = EnumBillResult.BILL_PAYMENT_NOTIFICATION_TYPE_INVALID;
+				return;
+			}
 
-    private Long institutionDebtTypeId;
+			if (EnumPaymentNotificationStatu.SUCCESS.equals(paymentNotification.getNotificationStatus())) {
+				error = EnumBillResult.BILL_PAYMENT_NOTIFICATION_ALREADY_NOTIFIED;
+				return;
+			}
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+			Integer retryCount = Optional.ofNullable(paymentNotification.getRetryCount()).orElse(0);
+			if (Integer.compare(retryCount, notificationTryCount.intValue()) > 0) {
+				error = EnumBillResult.BILL_PAYMENT_NOTIFICATION_TRY_COUNT_EXCEEDED;
+				return;
+			}
 
-        institution = new InstitutionDTO();
-        institution.setId(1L);
+			paymentId = paymentNotification.getPaymentId();
 
-        institutionDebtType = new InstitutionDebtTypeDTO();
-        institutionDebtType.setId(1L);
+		}
 
-        institutionProcess = new InstitutionProcessDTO();
-        institutionProcess.setIsOnline(true);
+	}
 
-        process.setInstitution(institution);
-        process.setInstitutionDebtType(institutionDebtType);
-        process.setInstitutionProcess(institutionProcess);
-        
-        // Initialize internal data structures
-        process.setDataPack(new HashMap<>());
-        process.setExecutionOutput(new QueryBillsProcessOutput());
-    }
+	private class FetchPaymentRecordWithLock implements ProcessStep {
 
-    @Test
-    void testExecuteProcessSuccess() throws BillException {
-        SpringUtil springUtil = new SpringUtil();
-        springUtil.setApplicationContext(applicationContext);
+		@Override
+		public void executeStep() throws BillException {
+			payment = paymentService.findPaymentByIdWithLock(paymentId);
 
-        when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
-        when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
-        when(SpringUtil.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
-        when(SpringUtil.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
-        when(SpringUtil.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
-        when(SpringUtil.getBean(LimitationService.class)).thenReturn(limitationService);
-        when(SpringUtil.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
-        when(SpringUtil.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
-        when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
+			if (payment == null) {
+				error = EnumBillResult.PAID_BILL_NOT_FOUND_ERROR;
+				return;
+			}
+		}
 
-        InstitutionUserIntfDTO mockInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
-        when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(List.of(mockInstitutionUserIntfDTO));
-        when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
+	}
 
-        QueriedBillDTO mockQueriedBillDTO = new QueriedBillDTO();
-        mockQueriedBillDTO.setBillDueDate(LocalDate.now());
-        mockQueriedBillDTO.setBillNo("12345");
+	private class CallInstitutionExternalService implements ProcessStep {
 
-        QueryBillsAdapterResponse mockResponse = new QueryBillsAdapterResponse();
-        mockResponse.setInternalResultCode(String.valueOf(EnumBillResult.SUCCESS.getCode()));
-        mockResponse.setBills(List.of(mockQueriedBillDTO));
+		@Override
+		public void executeStep() throws BillException {
 
-        when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(mockResponse);
+			NotifyPaymentAdapterRequest request = new NotifyPaymentAdapterRequest();
+			request.setChannelCode(channelCode);
+			request.setInstitution(institutionCode);
+			request.setInstitutionDebtTypeId(payment.getInstitutionDebtTypeId());
+			request.setInstitutionId(payment.getInstitutionDebtTypeId());
+			request.setOperatingBranchCode(branchCode);
+			request.setProduct(productCode);
+			request.setRequestDate(LocalDateTime.now());
+			request.setTransactionDate(payment.getCreateDate());
+			request.setUserCode(agentCode);
 
-        institutionDebtTypeId = 1L;
+			PaidBillAdapterDTO paidBillAdapterDTO = PaymentMapper.INSTANCE.toPaidBillAdapterDTO(payment);
+			mapAdditionalInfoAreas(payment, paidBillAdapterDTO);
 
-        ProcessExecutionInput input = new ProcessExecutionInputConcrete(EnumProcessCode.QUERY_BILLS);
-        input.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 1L);
-        input.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 1L);
-        input.getDataPack().put(ProcessDataPackKey.TAX_ID.getKey(), "taxId");
-        input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
-        input.getDataPack().put(ProcessDataPackKey.INSTITUTION_DEBT_TYPE_ID.getKey(), institutionDebtTypeId);
+			request.setPaidBill(paidBillAdapterDTO);
 
-        System.out.println("institutionDebtType ID before process: " + institutionDebtType.getId());
-        process.setInstitutionDebtType(institutionDebtType);
-        process.setInstitutionProcess(institutionProcess); // Ensure institutionProcess is set
-        System.out.println("institutionDebtType ID before initProcess call: " + (process.getInstitutionDebtType() != null ? process.getInstitutionDebtType().getId() : "null"));
+			notifyPaymentResponse = adapterService.notifyPayment(request, payment.getChannelTransactionId(), payment.getChannelSessionId());
+		}
 
-        try {
-            process.initProcess(input, new ProcessLogDTO("processLogDto"));
-            System.out.println("institutionDebtType ID after initProcess: " + (process.getInstitutionDebtType() != null ? process.getInstitutionDebtType().getId() : "null"));
-        } catch (NullPointerException e) {
-            System.out.println("Caught NullPointerException: " + e.getMessage());
-        }
+		private void mapAdditionalInfoAreas(Payment payment, PaidBillAdapterDTO paidBillAdapterDTO) {
 
-        process.executeProcess();
+			String additionalInfo1 = StringUtils.rightPad(payment.getAdditionalInfo1(), MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String additionalInfo2 = StringUtils.rightPad(payment.getAdditionalInfo2(), MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String additionalInfo3 = StringUtils.rightPad(payment.getAdditionalInfo3(), MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String additionalInfo4 = StringUtils.rightPad(payment.getAdditionalInfo4(), MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String additionalInfo5 = StringUtils.rightPad(payment.getAdditionalInfo5(), MAX_LENGTH_OF_NEW_INFO_FIELDS);
 
-        QueryBillsProcessOutput output = (QueryBillsProcessOutput) process.getExecutionOutput();
-        assertEquals(EnumBillResult.SUCCESS, output.getResult());
-        assertEquals(1, output.getProvisionDTOList().size());
-    }
+			String info1 = StringUtils.substring(additionalInfo1, 0, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			String info2 = StringUtils.substring(additionalInfo2, 0, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			String info3 = StringUtils.substring(additionalInfo3, 0, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			String info4 = StringUtils.substring(additionalInfo4, 0, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			String info5 = StringUtils.substring(additionalInfo5, 0, MAX_LENGTH_OF_OLD_INFO_FIELD);
+
+			String info6 = StringUtils.substring(additionalInfo1, MAX_LENGTH_OF_OLD_INFO_FIELD,	MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String info7 = StringUtils.substring(additionalInfo2, MAX_LENGTH_OF_OLD_INFO_FIELD,	MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String info8 = StringUtils.substring(additionalInfo3, MAX_LENGTH_OF_OLD_INFO_FIELD,	MAX_LENGTH_OF_NEW_INFO_FIELDS);
+			String info9 = StringUtils.substring(additionalInfo4, MAX_LENGTH_OF_OLD_INFO_FIELD,	MAX_LENGTH_OF_NEW_INFO_FIELDS);
+
+			paidBillAdapterDTO.setAdditionalInfo1(StringUtils.trim(info1));
+			paidBillAdapterDTO.setAdditionalInfo2(StringUtils.trim(info2));
+			paidBillAdapterDTO.setAdditionalInfo3(StringUtils.trim(info3));
+			paidBillAdapterDTO.setAdditionalInfo4(StringUtils.trim(info4));
+			paidBillAdapterDTO.setAdditionalInfo5(StringUtils.trim(info5));
+			paidBillAdapterDTO.setAdditionalInfo6(StringUtils.trim(info6));
+			paidBillAdapterDTO.setAdditionalInfo7(StringUtils.trim(info7));
+			paidBillAdapterDTO.setAdditionalInfo8(StringUtils.trim(info8));
+			paidBillAdapterDTO.setAdditionalInfo9(StringUtils.trim(info9));
+		}
+
+	}
+
+	private class UpdatePaymentNotificationRecord implements ProcessStep {
+
+		@Override
+		public void executeStep() throws BillException {
+
+			if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(notifyPaymentResponse.getStatus())) {
+				paymentNotification.setNotificationStatus(EnumPaymentNotificationStatu.SUCCESS);
+				paymentNotification.setNotificationDate(LocalDateTime.now());
+			}
+
+			else {
+				paymentNotification.setNotificationStatus(EnumPaymentNotificationStatu.ERROR);
+			}
+
+			Integer retryCount = Optional.ofNullable(paymentNotification.getRetryCount()).orElse(0);
+			paymentNotification.setRetryCount(retryCount + 1);
+			paymentNotification.setResponseCode(notifyPaymentResponse.getInternalResultCode());
+			paymentNotification.setResponseMessage(notifyPaymentResponse.getInternalResultDetail());
+			paymentNotification.setInstitutionReturnCode(notifyPaymentResponse.getInstitutionResultCode());
+			paymentNotification.setInstitutionReturnText(notifyPaymentResponse.getInstitutionResultDetail());
+			paymentNotification.setUpdateDate(LocalDateTime.now());
+			paymentNotification.setUpdatedBy("SYSTEM");
+			paymentNotificationService.updatePaymentNotification(paymentNotification);
+		}
+
+	}
+
+	private class UpdatePaymentRecord implements ProcessStep {
+
+		@Override
+		public void executeStep() throws BillException {
+			NotifiedBillAdapterDTO notifiedBill = notifyPaymentResponse.getNotifiedBill();
+			if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(notifyPaymentResponse.getStatus())
+					&& notifiedBill != null) {
+				payment.setPaymentStan(notifiedBill.getPaymentStan());
+				payment.setInstitutionPaymentStan(notifiedBill.getInstitutionPaymentStan());
+			}
+
+			if (notifiedBill != null) {
+
+				mapAdditionalInfoAreas(payment, notifiedBill);
+			}
+
+			paymentService.updatePayment(payment);
+		}
+
+		private void mapAdditionalInfoAreas(Payment payment, NotifiedBillAdapterDTO notifiedBill) {
+
+			String additionalInfo1 = Optional.ofNullable(notifiedBill.getAdditionalInfo1()).orElse("");
+			String additionalInfo2 = Optional.ofNullable(notifiedBill.getAdditionalInfo2()).orElse("");
+			String additionalInfo3 = Optional.ofNullable(notifiedBill.getAdditionalInfo3()).orElse("");
+			String additionalInfo4 = Optional.ofNullable(notifiedBill.getAdditionalInfo4()).orElse("");
+			String additionalInfo5 = Optional.ofNullable(notifiedBill.getAdditionalInfo5()).orElse("");
+			String additionalInfo6 = Optional.ofNullable(notifiedBill.getAdditionalInfo6()).orElse("");
+			String additionalInfo7 = Optional.ofNullable(notifiedBill.getAdditionalInfo7()).orElse("");
+			String additionalInfo8 = Optional.ofNullable(notifiedBill.getAdditionalInfo8()).orElse("");
+			String additionalInfo9 = Optional.ofNullable(notifiedBill.getAdditionalInfo9()).orElse("");
+
+			additionalInfo1 = StringUtils.rightPad(additionalInfo1, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			additionalInfo2 = StringUtils.rightPad(additionalInfo2, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			additionalInfo3 = StringUtils.rightPad(additionalInfo3, MAX_LENGTH_OF_OLD_INFO_FIELD);
+			additionalInfo4 = StringUtils.rightPad(additionalInfo4, MAX_LENGTH_OF_OLD_INFO_FIELD);
+
+			additionalInfo1 = additionalInfo1.concat(additionalInfo6);
+			additionalInfo2 = additionalInfo2.concat(additionalInfo7);
+			additionalInfo3 = additionalInfo3.concat(additionalInfo8);
+			additionalInfo4 = additionalInfo4.concat(additionalInfo9);
+
+			payment.setAdditionalInfo1(StringUtils.trim(additionalInfo1));
+			payment.setAdditionalInfo2(StringUtils.trim(additionalInfo2));
+			payment.setAdditionalInfo3(StringUtils.trim(additionalInfo3));
+			payment.setAdditionalInfo4(StringUtils.trim(additionalInfo4));
+			payment.setAdditionalInfo5(StringUtils.trim(additionalInfo5));
+		}
+
+	}
+
+	private class DoAutomaticPaymentCancel implements ProcessStep {
+
+		@Override
+		public void executeStep() throws BillException {
+			NotifiedBillAdapterDTO notifiedBill = notifyPaymentResponse.getNotifiedBill();
+
+			if (notifyPaymentResponse.isReverseReqired()) {
+				// TODO: implements later....
+			}
+		}
+
+	}
+
+	private void prepareLogVariable() {
+		if (payment != null) {
+			logDTO.setCustomerNo(payment.getCustomerNo());
+			logDTO.setIdentityNo(payment.getIdentityNo());
+			logDTO.setTaxId(payment.getTaxId());
+			logDTO.setSubscriberNo(payment.getSubscriberNo());
+
+			return;
+		}
+
+		if (paymentNotification != null) {
+			PaymentDTO paymentDTO = Optional.ofNullable(paymentService.getPayment(paymentNotification.getPaymentId()))
+					.orElse(new PaymentDTO());
+			logDTO.setCustomerNo(paymentDTO.getCustomerNo());
+			logDTO.setIdentityNo(paymentDTO.getIdentityNo());
+			logDTO.setTaxId(paymentDTO.getTaxId());
+			logDTO.setSubscriberNo(paymentDTO.getSubscriberNo());
+		}
+
+	}
+
+}
