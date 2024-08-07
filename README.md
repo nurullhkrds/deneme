@@ -1,10 +1,24 @@
-public final class UrlConstants {
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-    private UrlConstants() {
-        throw new IllegalAccessError("only constants");
+public class UrlConstantsTest {
+
+    @Test
+    public void testConstructorThrowsException() {
+        // Sınıfın oluşturulamaz olduğunu test eder
+        Exception exception = assertThrows(IllegalAccessError.class, () -> {
+            new UrlConstants();
+        });
+
+        String expectedMessage = "only constants";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
-    public static final String RETURN_MAP_PATH = "/returnMaps";
-
-
+    @Test
+    public void testConstants() {
+        // Sabitlerin doğru değerlere sahip olduğunu test eder
+        assertEquals("/returnMaps", UrlConstants.RETURN_MAP_PATH);
+    }
 }
