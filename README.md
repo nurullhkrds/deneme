@@ -28,7 +28,9 @@ class NotifyPaymentProcessTest {
 
     @Test
     void testExecuteProcessSuccess() throws BillException {
-        // Mocking SpringUtil setup
+        SpringUtil springUtil = new SpringUtil();
+        springUtil.setApplicationContext(applicationContext);
+
         when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
         when(SpringUtil.getBean(InstitutionFeatureService.class)).thenReturn(institutionFeatureService);
         when(SpringUtil.getBean(PaymentNotificationService.class)).thenReturn(paymentNotificationService);
@@ -74,6 +76,8 @@ class NotifyPaymentProcessTest {
     @Test
     void testExecuteProcessPaymentNotificationNotFound() throws BillException {
         // Mocking SpringUtil setup
+        SpringUtil springUtil = new SpringUtil();
+        springUtil.setApplicationContext(applicationContext);
         when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
         when(SpringUtil.getBean(InstitutionFeatureService.class)).thenReturn(institutionFeatureService);
         when(SpringUtil.getBean(PaymentNotificationService.class)).thenReturn(paymentNotificationService);
@@ -104,3 +108,5 @@ class NotifyPaymentProcessTest {
         }
     }
 }
+
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO.getId()" because "this.institutionDebtType" is null
