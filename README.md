@@ -41,7 +41,7 @@ public class QueryBillsProcessTest {
     private QueryBillsProcess process;
 
     @Mock
-    private InstitutionDTO institution; // Changed to InstitutionDTO
+    private InstitutionDTO institution;
 
     @Mock
     private InstitutionDebtTypeDTO institutionDebtType;
@@ -55,6 +55,10 @@ public class QueryBillsProcessTest {
         // Initialize mocks
         when(institution.getId()).thenReturn(1L);
         when(institutionDebtType.getId()).thenReturn(1L);
+
+        // Set the institution and debt type in the process
+        process.setInstitution(institution);
+        process.setInstitutionDebtType(institutionDebtType);
     }
 
     @Test
@@ -98,8 +102,7 @@ public class QueryBillsProcessTest {
         input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
         input.getDataPack().put(ProcessDataPackKey.INSTITUTION_DEBT_TYPE_ID.getKey(), institutionDebtTypeId);
 
-        // Set required fields in the process
-        process.setInstitution(institution);
+        // Ensure the institutionDebtType is set
         process.setInstitutionDebtType(institutionDebtType);
 
         // Execute process
