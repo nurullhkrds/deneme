@@ -1,123 +1,76 @@
-@ExtendWith(MockitoExtension.class)
-public class QueryBillsProcessTest {
+institutionDebtType ID before process: 1
 
-    @Mock
-    private AdapterService adapterService;
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO.getId()" because "this.institutionDebtType" is null
 
-    @Mock
-    private ProvisionService provisionService;
+	at com.ykb.payments.bill.transaction.process.common.AbstractProcess.initProcess(AbstractProcess.java:233)
+	at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcessSuccess(QueryBillsProcessTest.java:162)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:725)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:149)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:140)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:84)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(ExecutableInvoker.java:115)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.lambda$invoke$0(ExecutableInvoker.java:105)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:104)
+	at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:98)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:214)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:210)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:135)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:66)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:107)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)
+	at org.junit.platform.launcher.core.DefaultLauncherSession$DelegatingLauncher.execute(DefaultLauncherSession.java:86)
+	at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:53)
+	at com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:57)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38)
+	at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35)
+	at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:232)
+	at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:55)
 
-    @Mock
-    private InstitutionUserIntService institutionUserIntService;
-
-    @Mock
-    private InstitutionUserIntfMapper institutionUserIntMapper;
-
-    @Mock
-    private BillPaymentRestFacade billPaymentRestFacade;
-
-    @Mock
-    private PaymentRepository paymentRepository;
-
-    @Mock
-    private PaymentMapper paymentMapper;
-
-    @Mock
-    private LimitationService limitationService;
-
-    @Mock
-    private PaymentEventPublisher paymentEventPublisher;
-
-    @Mock
-    private PaymentUtilImpl paymentUtilImpl;
-
-    @Mock
-    private ProcessService processService;
-
-    @Mock
-    private ApplicationContext applicationContext;
-
-    @InjectMocks
-    private QueryBillsProcess process;
-
-    @Mock
-    private InstitutionDTO institution;
-
-    @Mock
-    private InstitutionDebtTypeDTO institutionDebtType;
-
-    private Long institutionDebtTypeId;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        // Initialize mocks
-        institution = new InstitutionDTO(); // Ensure a concrete instance
-        institution.setId(1L); // Set the ID for institution
-
-        institutionDebtType = new InstitutionDebtTypeDTO(); // Ensure a concrete instance
-        institutionDebtType.setId(1L); // Set the ID for institutionDebtType
-
-        // Set the institution and debt type in the process
-        process.setInstitution(institution);
-        process.setInstitutionDebtType(institutionDebtType);
-    }
-
-    @Test
-    void testExecuteProcessSuccess() throws BillException {
-        SpringUtil springUtil = new SpringUtil();
-        springUtil.setApplicationContext(applicationContext);
-
-        // Mock Spring beans
-        when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
-        when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
-        when(SpringUtil.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
-        when(SpringUtil.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
-        when(SpringUtil.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
-        when(SpringUtil.getBean(LimitationService.class)).thenReturn(limitationService);
-        when(SpringUtil.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
-        when(SpringUtil.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
-        when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
-
-        // Mock necessary methods
-        InstitutionUserIntfDTO mockInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
-        when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(List.of(mockInstitutionUserIntfDTO));
-        when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
-
-        QueriedBillDTO mockQueriedBillDTO = new QueriedBillDTO();
-        mockQueriedBillDTO.setBillDueDate(LocalDate.now());
-        mockQueriedBillDTO.setBillNo("12345");
-
-        QueryBillsAdapterResponse mockResponse = new QueryBillsAdapterResponse();
-        mockResponse.setInternalResultCode(String.valueOf(EnumBillResult.SUCCESS.getCode()));
-        mockResponse.setBills(List.of(mockQueriedBillDTO));
-
-        when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(mockResponse);
-
-        institutionDebtTypeId = 1L;
-
-        ProcessExecutionInput input = new ProcessExecutionInputConcrete(EnumProcessCode.QUERY_BILLS);
-        input.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 1L);
-        input.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 1L);
-        input.getDataPack().put(ProcessDataPackKey.TAX_ID.getKey(), "taxId");
-        input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
-        input.getDataPack().put(ProcessDataPackKey.INSTITUTION_DEBT_TYPE_ID.getKey(), institutionDebtTypeId);
-
-        // Log the state of institutionDebtType
-        System.out.println("institutionDebtType ID before process: " + institutionDebtType.getId());
-
-        // Ensure the institutionDebtType is set
-        process.setInstitutionDebtType(institutionDebtType);
-
-        // Execute process
-        process.initProcess(input, new ProcessLogDTO("processLogDto"));
-        System.out.println("institutionDebtType ID after initProcess: " + process.getInstitutionDebtType().getId());
-        process.executeProcess();
-
-        // Verify output
-        QueryBillsProcessOutput output = (QueryBillsProcessOutput) process.getExecutionOutput();
-        assertEquals(EnumBillResult.SUCCESS, output.getResult());
-        assertEquals(1, output.getProvisionDTOList().size());
-    }
