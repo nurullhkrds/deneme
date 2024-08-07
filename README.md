@@ -44,13 +44,15 @@ public class QueryBillsProcessTest {
     private Institution institution;
 
     @Mock
-    private InstitutionDebtTypeDTO institutionDebtType; // Add this mock
-
-    private Long institutionDebtTypeId;
+    private InstitutionDebtTypeDTO institutionDebtType;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        // Ensure institutionDebtType and institution are properly initialized
+        when(institutionDebtType.getId()).thenReturn(1L);
+        when(institution.getId()).thenReturn(1L);
+        when(processService.getProcessChannel(anyString(), anyString())).thenReturn("channel");
     }
 
     @Test
@@ -58,6 +60,7 @@ public class QueryBillsProcessTest {
         SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
 
+        // Mock Spring beans
         when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
         when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
         when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
@@ -69,9 +72,7 @@ public class QueryBillsProcessTest {
         when(SpringUtil.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
         when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
 
-        when(institution.getId()).thenReturn(1L); // Mock institution ID
-        when(institutionDebtType.getId()).thenReturn(1L); // Mock institutionDebtType ID
-
+        // Mock necessary methods
         InstitutionUserIntfDTO mockInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
         when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(List.of(mockInstitutionUserIntfDTO));
         when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
@@ -86,17 +87,21 @@ public class QueryBillsProcessTest {
 
         when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(mockResponse);
 
-        institutionDebtTypeId = 1L; // Initialize this field
-
+        // Initialize input
         ProcessExecutionInput input = new ProcessExecutionInputConcrete(EnumProcessCode.BILL_QUERY);
         input.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 1L);
         input.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 1L);
         input.getDataPack().put(ProcessDataPackKey.TAX_ID.getKey(), "taxId");
         input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
 
+        // Initialize institutionDebtTypeId
+        process.setInstitutionDebtType(institutionDebtType); // Add this line
+
+        // Execute process
         process.initProcess(input, new ProcessLogDTO("processLogDto"));
         process.executeProcess();
 
+        // Verify output
         QueryBillsProcessOutput output = (QueryBillsProcessOutput) process.getExecutionOutput();
         assertEquals(EnumBillResult.SUCCESS, output.getResult());
         assertEquals(1, output.getProvisionDTOList().size());
