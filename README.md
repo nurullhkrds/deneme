@@ -1,3 +1,4 @@
+
 @ExtendWith(MockitoExtension.class)
 public class QueryBillsProcessTest {
 
@@ -41,7 +42,7 @@ public class QueryBillsProcessTest {
     private QueryBillsProcess process;
 
     @Mock
-    private Institution institution;
+    private InstitutionDTO institution; // Change this to InstitutionDTO
 
     @Mock
     private InstitutionDebtTypeDTO institutionDebtType;
@@ -98,7 +99,7 @@ public class QueryBillsProcessTest {
         input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
 
         // Set required fields in the process
-        process.setInstitution(institution);
+        process.setInstitution(institution); // Changed this to InstitutionDTO
         process.setInstitutionDebtType(institutionDebtType);
 
         // Execute process
