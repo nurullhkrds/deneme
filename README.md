@@ -28,9 +28,9 @@ class NotifyPaymentProcessTest {
 
     @Test
     void testExecuteProcessSuccess() throws BillException {
+        // Mock SpringUtil behavior
         SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
-
         when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
         when(SpringUtil.getBean(InstitutionFeatureService.class)).thenReturn(institutionFeatureService);
         when(SpringUtil.getBean(PaymentNotificationService.class)).thenReturn(paymentNotificationService);
@@ -60,6 +60,7 @@ class NotifyPaymentProcessTest {
         when(paymentNotificationService.findPaymentNotificationWithLock(1L)).thenReturn(mockNotification);
         when(paymentService.findPaymentByIdWithLock(1L)).thenReturn(mockPayment);
         when(adapterService.notifyPayment(any(NotifyPaymentAdapterRequest.class), anyString(), anyString())).thenReturn(mockResponse);
+        when(processService.getInstitutionDebtTypeForProcess(any(), any(), any())).thenReturn(institutionDebtTypeDTO);
 
         // Test input and execution
         ProcessExecutionInput input = new ProcessExecutionInputConcrete(EnumProcessCode.BILL_PAYMENT);
@@ -70,12 +71,12 @@ class NotifyPaymentProcessTest {
 
         // Assertion
         NotifyPaymentProcessOutput output = (NotifyPaymentProcessOutput) process.getExecutionOutput();
-        assertNull(output); // Adjust as needed based on expected output
+        assertNotNull(output); // Adjust as needed based on expected output
     }
 
     @Test
     void testExecuteProcessPaymentNotificationNotFound() throws BillException {
-        // Mocking SpringUtil setup
+        // Mock SpringUtil behavior
         SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
         when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
@@ -83,9 +84,6 @@ class NotifyPaymentProcessTest {
         when(SpringUtil.getBean(PaymentNotificationService.class)).thenReturn(paymentNotificationService);
         when(SpringUtil.getBean(PaymentService.class)).thenReturn(paymentService);
         when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
-
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
-        institutionDebtTypeDTO.setId(123L);
 
         // Mock behavior setup
         when(paymentNotificationService.findPaymentNotificationWithLock(1L)).thenReturn(null);
@@ -108,5 +106,3 @@ class NotifyPaymentProcessTest {
         }
     }
 }
-
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO.getId()" because "this.institutionDebtType" is null
