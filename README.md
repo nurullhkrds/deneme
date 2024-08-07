@@ -44,13 +44,17 @@ public class QueryBillsProcessTest {
     private Institution institution;
 
     @Mock
-    private InstitutionDebtTypeDTO institutionDebtType; // Add this mock
+    private InstitutionDebtTypeDTO institutionDebtType;
 
     private Long institutionDebtTypeId;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        
+        // Initialize mocks
+        when(institution.getId()).thenReturn(1L);
+        when(institutionDebtType.getId()).thenReturn(1L);
     }
 
     @Test
@@ -58,6 +62,7 @@ public class QueryBillsProcessTest {
         SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
 
+        // Mock Spring beans
         when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
         when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
         when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
@@ -69,9 +74,7 @@ public class QueryBillsProcessTest {
         when(SpringUtil.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
         when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
 
-        when(institution.getId()).thenReturn(1L); // Mock institution ID
-        when(institutionDebtType.getId()).thenReturn(1L); // Mock institutionDebtType ID
-
+        // Mock necessary methods
         InstitutionUserIntfDTO mockInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
         when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(List.of(mockInstitutionUserIntfDTO));
         when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
@@ -86,7 +89,7 @@ public class QueryBillsProcessTest {
 
         when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(mockResponse);
 
-        institutionDebtTypeId = 1L; // Initialize this field
+        institutionDebtTypeId = 1L;
 
         ProcessExecutionInput input = new ProcessExecutionInputConcrete(EnumProcessCode.QUERY_BILLS);
         input.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 1L);
@@ -94,11 +97,16 @@ public class QueryBillsProcessTest {
         input.getDataPack().put(ProcessDataPackKey.TAX_ID.getKey(), "taxId");
         input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
 
+        // Set required fields in the process
+        process.setInstitution(institution);
+        process.setInstitutionDebtType(institutionDebtType);
+
+        // Execute process
         process.initProcess(input, new ProcessLogDTO("processLogDto"));
         process.executeProcess();
 
+        // Verify output
         QueryBillsProcessOutput output = (QueryBillsProcessOutput) process.getExecutionOutput();
         assertEquals(EnumBillResult.SUCCESS, output.getResult());
         assertEquals(1, output.getProvisionDTOList().size());
     }
-
