@@ -1,4 +1,3 @@
-
 @ExtendWith(MockitoExtension.class)
 public class QueryBillsProcessTest {
 
@@ -54,8 +53,11 @@ public class QueryBillsProcessTest {
         MockitoAnnotations.openMocks(this);
 
         // Initialize mocks
-        when(institution.getId()).thenReturn(1L);
-        when(institutionDebtType.getId()).thenReturn(1L);
+        institution = new InstitutionDTO(); // Ensure a concrete instance
+        institution.setId(1L); // Set the ID for institution
+
+        institutionDebtType = new InstitutionDebtTypeDTO(); // Ensure a concrete instance
+        institutionDebtType.setId(1L); // Set the ID for institutionDebtType
 
         // Set the institution and debt type in the process
         process.setInstitution(institution);
