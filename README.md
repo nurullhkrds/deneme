@@ -53,8 +53,11 @@ public class QueryBillsProcessTest {
         MockitoAnnotations.openMocks(this);
 
         // Initialize mocks
-        when(institution.getId()).thenReturn(1L);
-        when(institutionDebtType.getId()).thenReturn(1L);
+        institution = new InstitutionDTO(); // Ensure a concrete instance
+        institution.setId(1L); // Set the ID for institution
+
+        institutionDebtType = new InstitutionDebtTypeDTO(); // Ensure a concrete instance
+        institutionDebtType.setId(1L); // Set the ID for institutionDebtType
 
         // Set the institution and debt type in the process
         process.setInstitution(institution);
@@ -101,6 +104,9 @@ public class QueryBillsProcessTest {
         input.getDataPack().put(ProcessDataPackKey.TAX_ID.getKey(), "taxId");
         input.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subNo");
         input.getDataPack().put(ProcessDataPackKey.INSTITUTION_DEBT_TYPE_ID.getKey(), institutionDebtTypeId);
+
+        // Log the state of institutionDebtType
+        System.out.println("institutionDebtType ID: " + institutionDebtType.getId());
 
         // Ensure the institutionDebtType is set
         process.setInstitutionDebtType(institutionDebtType);
