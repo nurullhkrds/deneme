@@ -78,20 +78,20 @@ public class QueryBillsProcessTest {
         SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
 
-        doReturn(adapterService).when(SpringUtil.getBean(AdapterService.class));
-        doReturn(institutionUserIntService).when(SpringUtil.getBean(InstitutionUserIntService.class));
-        doReturn(institutionUserIntMapper).when(SpringUtil.getBean(InstitutionUserIntfMapper.class));
-        doReturn(billPaymentRestFacade).when(SpringUtil.getBean(BillPaymentRestFacade.class));
-        doReturn(paymentRepository).when(SpringUtil.getBean(PaymentRepository.class));
-        doReturn(paymentMapper).when(SpringUtil.getBean(PaymentMapper.class));
-        doReturn(limitationService).when(SpringUtil.getBean(LimitationService.class));
-        doReturn(paymentUtilImpl).when(SpringUtil.getBean(PaymentUtilImpl.class));
-        doReturn(paymentEventPublisher).when(SpringUtil.getBean(PaymentEventPublisher.class));
-        doReturn(processService).when(SpringUtil.getBean(ProcessService.class));
+        when(SpringUtil.getBean(AdapterService.class)).thenReturn(adapterService);
+        when(SpringUtil.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
+        when(SpringUtil.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
+        when(SpringUtil.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
+        when(SpringUtil.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
+        when(SpringUtil.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
+        when(SpringUtil.getBean(LimitationService.class)).thenReturn(limitationService);
+        when(SpringUtil.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+        when(SpringUtil.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
+        when(SpringUtil.getBean(ProcessService.class)).thenReturn(processService);
 
         InstitutionUserIntfDTO mockInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
-        doReturn(List.of(mockInstitutionUserIntfDTO)).when(institutionUserIntService).getUserInterface(anyLong());
-        doReturn(true).when(paymentUtilImpl).isFomOperationEnabled(any());
+        when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(List.of(mockInstitutionUserIntfDTO));
+        when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
 
         QueriedBillDTO mockQueriedBillDTO = new QueriedBillDTO();
         mockQueriedBillDTO.setBillDueDate(LocalDate.now());
@@ -101,7 +101,7 @@ public class QueryBillsProcessTest {
         mockResponse.setInternalResultCode(String.valueOf(EnumBillResult.SUCCESS.getCode()));
         mockResponse.setBills(List.of(mockQueriedBillDTO));
 
-        doReturn(mockResponse).when(adapterService).queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString());
+        when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(mockResponse);
 
         institutionDebtTypeId = 1L;
 
