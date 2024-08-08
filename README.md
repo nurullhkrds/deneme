@@ -1,20 +1,22 @@
- @Test
-    public void testCallQueueDeclare() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+ lenient().when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
+        lenient().when(RabbitMQUtil.getChannel(connectionFactory)).thenReturn(channel);
+    }
+
+    @Test
+    public void testDeclareQueues() throws IOException, TimeoutException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         QueueSpec queueSpec = new QueueSpec();
         queueSpec.setName("testQueue");
-        ExchangeSpec exchangeSpec = new ExchangeSpec();
-        exchangeSpec.setName("testExchange");
-        exchangeSpec.setType("direct");
-        exchangeSpec.setDurable(true);
-        queueSpec.setExchange(exchangeSpec);
-        queueSpec.setRoutingKey("");
+        queueSpec.setDeclare(true);
+        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
 
-        Method callQueueDeclareMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("callQueueDeclare", Channel.class, QueueSpec.class);
-        callQueueDeclareMethod.setAccessible(true);
+        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        serviceSpec.setQueues(Collections.singletonMap("testQueue", queueSpec));
 
-        when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
+        when(rabbitMQProperties.getServiceByKey("billtransaction-rabbitmq")).thenReturn(serviceSpec);
 
-        callQueueDeclareMethod.invoke(config, channel, queueSpec);
+        Method declareQueuesMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueues", ConnectionFactory.class);
+        declareQueuesMethod.setAccessible(true);
+        declareQueuesMethod.invoke(config, connectionFactory);
 
         ArgumentCaptor<String> queueNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> exchangeNameCaptor = ArgumentCaptor.forClass(String.class);
@@ -24,7 +26,7 @@
         verify(channel, times(1)).queueDeclare(queueNameCaptor.capture(), anyBoolean(), anyBoolean(), anyBoolean(), any());
         verify(channel, times(1)).queueBind(queueNameCaptor.capture(), exchangeNameCaptor.capture(), routingKeyCaptor.capture());
 
-        assert queueNameCaptor.getAllValues().get(0).equals("testQueue");
+        assert queueNameCaptor.getValue().equals("testQueue");
         assert exchangeNameCaptor.getValue().equals("testExchange");
         assert routingKeyCaptor.getValue() == null || routingKeyCaptor.getValue().isEmpty();
     }
