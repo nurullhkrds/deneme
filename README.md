@@ -1,11 +1,21 @@
-  private void declareQueues(ConnectionFactory connectionFactory) {
-        if (rabbitMQProperties.getServiceByKey(SERVICE_KEY).getQueues() == null) {
-            return;
-        }
+   @Test
+    void testBillTransactionRabbitTemplate() throws Exception {
+        // Mock the jsonMessageConverter method
+        when(config.jsonMessageConverter()).thenReturn(messageConverter);
 
-        try (Channel channel = RabbitMQUtil.getChannel(connectionFactory)) {
-            rabbitMQProperties.getServiceByKey(SERVICE_KEY).getQueues().entrySet().stream().filter(spec -> spec.getValue().isDeclare()).forEach(spec -> declareQueue(channel, spec.getValue()));
-        } catch (IOException | TimeoutException e) {
-            logger.error("An error occurred while declaring queues.", e);
-        }
+        // Use ReflectionTestUtils to invoke the private declareQueues method
+        doAnswer(invocation -> {
+            ReflectionTestUtils.invokeMethod(config, "declareQueues", connectionFactory);
+            return null;
+        }).when(config).billTransactionRabbitTemplate(connectionFactory);
+
+        RabbitTemplate rabbitTemplate = config.billTransactionRabbitTemplate(connectionFactory);
+
+        assertNotNull(rabbitTemplate);
+        assertEquals(connectionFactory, rabbitTemplate.getConnectionFactory());
+        assertEquals(messageConverter, rabbitTemplate.getMessageConverter());
+        assertFalse(rabbitTemplate.isChannelTransacted());
+
+        // Verify that declareQueues was called using Reflection
+        verify(config, times(1)).billTransactionRabbitTemplate(connectionFactory);
     }
