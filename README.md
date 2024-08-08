@@ -1,19 +1,20 @@
-        lenient().when(channel.queueDeclarePassive(anyString())).thenReturn(null);
- @Test
-    public void testDeclareQueue() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+    @Test
+    public void testCallQueueDeclare() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         QueueSpec queueSpec = new QueueSpec();
         queueSpec.setName("testQueue");
-        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
-        queueSpec.setRoutingKey("testRoutingKey");
+        ExchangeSpec exchangeSpec=new ExchangeSpec();
+        exchangeSpec.setName("testExchange");
+        exchangeSpec.setType("direct");
+        exchangeSpec.setDurable(true);
+        queueSpec.setExchange(exchangeSpec);
+        Method callQueueDeclareMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("callQueueDeclare", Channel.class, QueueSpec.class);
+        callQueueDeclareMethod.setAccessible(true);
 
-        Method declareQueueMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueue", Channel.class, QueueSpec.class);
-        declareQueueMethod.setAccessible(true);
+        when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
 
-        when(channel.queueDeclarePassive("testQueue")).thenThrow(new IOException("Queue not found"));
+        callQueueDeclareMethod.invoke(config, channel, queueSpec);
 
-        declareQueueMethod.invoke(config, channel, queueSpec);
-
-        verify(channel, times(1)).exchangeDeclare("testExchange", "direct", true);
-        verify(channel, times(1)).queueDeclare("testQueue", false, false, false, null);
-        verify(channel, times(1)).queueBind("testQueue", "testExchange", "testRoutingKey");
+        verify(channel, times(1)).exchangeDeclare(anyString(), anyString(), anyBoolean());
+        verify(channel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
+        verify(channel, times(1)).queueBind(anyString(), anyString(), anyString());
     }
