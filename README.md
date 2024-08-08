@@ -1,29 +1,36 @@
-    @Bean
-    @Primary
-	@ConditionalOnProperty(value = "runtime.platform", havingValue = "pcf")
-    public ConnectionFactory billTransactionRabbitFactory() {
+  @Test
+    public void testBillTransactionRabbitFactory() {
+        String serviceKey = "billtransaction-rabbitmq";
 
-        final CfService rabbitService = new CfEnv().findServiceByName(rabbitMQProperties.getServiceByKey(SERVICE_KEY).getName());
-        final CfCredentials rabbitCredentials = rabbitService.getCredentials();
+        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
+        serviceSpec.setName(serviceKey);
 
-        final String plan = rabbitService.getPlan();
+        when(rabbitMQProperties.getServiceByKey(serviceKey)).thenReturn(serviceSpec);
+        when(cfEnv.findServiceByName(anyString())).thenReturn(cfService);
+        when(cfService.getCredentials()).thenReturn(cfCredentials);
+        when(cfService.getPlan()).thenReturn("standard");
 
-        final String name = rabbitCredentials.getName();
-        final String hostname = rabbitCredentials.getHost();
-        final String username = rabbitCredentials.getUsername();
-        final String password = rabbitCredentials.getPassword();
-        final String virtualHost = rabbitCredentials.getString("vhost");
+        when(cfCredentials.getName()).thenReturn("rabbitServiceName");
+        when(cfCredentials.getHost()).thenReturn("localhost");
+        when(cfCredentials.getUsername()).thenReturn("user");
+        when(cfCredentials.getPassword()).thenReturn("password");
+        when(cfCredentials.getString("vhost")).thenReturn("vhost");
 
-        final CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setAddresses(hostname);
-        connectionFactory.setUsername(username);
-        connectionFactory.setPassword(password);
-        connectionFactory.setVirtualHost(virtualHost);
+        ConnectionFactory connectionFactory = config.billTransactionRabbitFactory();
 
-        logger.info("RabbitConnectionFactory [billTransactionRabbitFactory] is initialized with Pcf configuration " +
-                        "ServiceName: [{}] Name: [{}] Hostname: [{}] VirtualHost: [{}] Username: [{}] Plan: [{}]",
-                rabbitMQProperties.getServiceByKey(SERVICE_KEY).getName(), name, hostname, virtualHost, username, plan);
+        assert connectionFactory instanceof CachingConnectionFactory;
+        CachingConnectionFactory cachingConnectionFactory = (CachingConnectionFactory) connectionFactory;
+        assert cachingConnectionFactory.getHost().equals("localhost");
+        assert cachingConnectionFactory.getUsername().equals("user");
+        assert cachingConnectionFactory.getPassword().equals("password");
+        assert cachingConnectionFactory.getVirtualHost().equals("vhost");
 
-        return connectionFactory;
-
+        verify(cfEnv, times(1)).findServiceByName(anyString());
+        verify(cfService, times(1)).getCredentials();
+        verify(cfService, times(1)).getPlan();
+        verify(cfCredentials, times(1)).getName();
+        verify(cfCredentials, times(1)).getHost();
+        verify(cfCredentials, times(1)).getUsername();
+        verify(cfCredentials, times(1)).getPassword();
+        verify(cfCredentials, times(1)).getString("vhost");
     }
