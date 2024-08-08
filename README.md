@@ -1,34 +1,55 @@
- @Test
-    public void testGetCustomerPaidBillList() throws MicroException {
-        // Arrange
-        GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
-        request.setCustomerNo("123");
-        request.setChannelCode("channelCode");
-        request.setProductCode("productCode");
+	@Override
+	public GetCustomerPaidBillListResponse getCustomerPaidBillList(GetCustomerPaidBillListRequest request)
+			throws MicroException {
 
-        List<Payment> customerPaidBillList = new ArrayList<>();
-        // Mock Payment nesneleri oluşturup listeye ekleyin
-        when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), anyString(), anyString(), anyString()))
-                .thenReturn(customerPaidBillList);
+		List<PaidBillResponseWebDTO> microBillList = getBillList(request);
+		List<PaidBillResponseWebDTO> harmoniBillList = getHarmoniBillList(request);
+		List<PaidBillResponseWebDTO> combinedBillList = new ArrayList<>();
 
-        ChannelDTO requestChannel = new ChannelDTO();
-        // Mock ChannelDTO nesnesi oluşturun ve set edin
-        when(channelService.findChannelByChannelCode(anyString())).thenReturn(requestChannel);
-        when(channelService.areChannelsTheSameAccountingGroup(any(ChannelDTO.class), any(ChannelDTO.class)))
-                .thenReturn(true);
+		combinedBillList.addAll(microBillList);
+		combinedBillList.addAll(harmoniBillList);
 
-        PaidBillResponseWebDTO paidBillResponseWebDTO = new PaidBillResponseWebDTO();
-        // Mock PaidBillResponseWebDTO nesnesi oluşturun
-        when(paymentMapper.toDTO(any(Payment.class))).thenReturn(paidBillResponseWebDTO);
-        when(paymentMapper.toPaidBillResponseWebDTO(any(Payment.class), any(Institution.class)))
-                .thenReturn(paidBillResponseWebDTO);
+		BillValidationUtil.validateCondition(!CollectionUtils.isEmpty(combinedBillList),
+				EnumBillResult.PAID_BILL_NOT_FOUND_ERROR, BillTransactionConstant.APP_NAME);
 
-        Institution institution = new Institution();
-        when(institutionService.getInstitutionById(anyString())).thenReturn(institution);
+		GetCustomerPaidBillListResponse response = new GetCustomerPaidBillListResponse();
+		response.setBillList(combinedBillList);
 
-        // Act
-        GetCustomerPaidBillListResponse response = billService.getCustomerPaidBillList(request);
+		return response;
+	}
 
-        // Assert
-        assertEquals(0, response.getBillList().size());
-    }
+	private List<PaidBillResponseWebDTO> getHarmoniBillList(GetCustomerPaidBillListRequest request) {
+
+		List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
+
+		ResponseGetCustomerPaidBillList harmoniResponse = billPaymentRestFacade
+				.getCustomerPaidBillList(request.getCustomerNo());
+
+		if (SUCCESS.equals(harmoniResponse.getStatus())) {
+			List<HmnPaidBillDTO> hmnPaidBillList = harmoniResponse.getBillDTOList();
+			harmoniBillList = hmnPaidBillList.stream().map(paymentMapper::toPaidBillResponseWebDTO).toList();
+		}
+
+		return harmoniBillList;
+
+	}
+
+	private List<PaidBillResponseWebDTO> getBillList(GetCustomerPaidBillListRequest request) {
+
+		List<PaidBillResponseWebDTO> microBillList;
+		List<Payment> customerPaidBillList = paymentRepository.findCustomerPaidBillList(LocalDate.now(),
+				request.getCustomerNo(), EnumBillStatu.PAID.getValue(),request.getProductCode());
+
+		// TODO: burada kanal kodu için aynı muhasebe grubundakilerini filtreleyelimm
+
+		ChannelDTO requestChannel = channelService.findChannelByChannelCode(request.getChannelCode());
+
+		microBillList = customerPaidBillList.stream().map(paymentMapper::toDTO)
+				.filter(f -> channelService.areChannelsTheSameAccountingGroup(requestChannel,
+						channelService.findChannelByChannelCode(f.getChannelCode())))
+				.map(bill -> paymentMapper.toPaidBillResponseWebDTO(bill,
+						institutionService.getInstitutionById(bill.getInstitutionId())))
+				.toList();
+		return microBillList;
+
+	}
