@@ -1,21 +1,38 @@
-@Tag(name = "ADK Bill Payment")
-@RequestMapping("/adkBillPayment")
-@RequiredArgsConstructor
-@RestController
-public class PaymentNotificationController {
+public class PaymentNotificationControllerTest {
 
-    private final PaymentNotificationService paymentNotificationService;
-    
-    @Schema(description = "Send credit card provision ack")
-    @PostMapping(value = "/send-credit-card-provision-ack")
-    public ResponseEntity<Void> sendCreditCardProvisionAck(
-            @RequestBody GetCreditCardProvisionAckRequest request
-           ) throws BusinessException {
+    @InjectMocks
+    private PaymentNotificationController paymentNotificationController;
 
-        paymentNotificationService.sendAckForCreditCardProvision(request.getPaymentDTO().getId(),request.getPaymentNotificationId(), request.getIsBatch());
+    @Mock
+    private PaymentNotificationService paymentNotificationService;
 
-        return new ResponseEntity<>(HttpStatus.OK);
-
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void testSendCreditCardProvisionAck() throws BusinessException {
+        // Arrange
+        GetCreditCardProvisionAckRequest request = new GetCreditCardProvisionAckRequest();
+        PaymentDTO paymentDTO = new PaymentDTO();
+        paymentDTO.setId(123L);
+        request.setPaymentDTO(paymentDTO);
+        request.setPaymentNotificationId("notificationId");
+        request.setIsBatch(true);
+
+        doNothing().when(paymentNotificationService).sendAckForCreditCardProvision(anyLong(), anyString(), anyBoolean());
+
+        // Act
+        ResponseEntity<Void> response = paymentNotificationController.sendCreditCardProvisionAck(request);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(paymentNotificationService).sendAckForCreditCardProvision(123L, "notificationId", true);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<String> handleBusinessException(BusinessException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
 }
