@@ -1,59 +1,68 @@
 
-    @Test
-    public void testDeclareQueues() throws IOException, TimeoutException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        QueueSpec queueSpec = new QueueSpec();
-        queueSpec.setName("testQueue");
-        queueSpec.setDeclare(true);
-        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
+Argument(s) are different! Wanted:
+channel.queueBind(
+    <any string>,
+    <any string>,
+    <any string>
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testDeclareQueue(BillTransactionRabbitMQConfigTest.java:122)
+Actual invocations have different arguments:
+channel.queueDeclarePassive(
+    "testQueue"
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
+channel.exchangeDeclare(
+    "testExchange",
+    "direct",
+    true
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:254)
+channel.queueDeclare(
+    "testQueue",
+    false,
+    false,
+    false,
+    null
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:257)
+channel.queueBind(
+    "testQueue",
+    "testExchange",
+    null
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:260)
 
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
-        serviceSpec.setQueues(Collections.singletonMap("testQueue", queueSpec));
+Comparison Failure: 
+<Click to see difference>
 
-        when(rabbitMQProperties.getServiceByKey("billtransaction-rabbitmq")).thenReturn(serviceSpec);
-        when(RabbitMQUtil.getChannel(connectionFactory)).thenReturn(channel);
-        when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
-
-        Method declareQueuesMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueues", ConnectionFactory.class);
-        declareQueuesMethod.setAccessible(true);
-        declareQueuesMethod.invoke(config, connectionFactory);
-
-        verify(channel, times(1)).exchangeDeclare(anyString(), anyString(), anyBoolean());
-        verify(channel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        verify(channel, times(1)).queueBind(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    public void testDeclareQueue() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-        QueueSpec queueSpec = new QueueSpec();
-        queueSpec.setName("testQueue");
-        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
-
-        Method declareQueueMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueue", Channel.class, QueueSpec.class);
-        declareQueueMethod.setAccessible(true);
-
-        when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
-
-        declareQueueMethod.invoke(config, channel, queueSpec);
-
-        verify(channel, times(1)).exchangeDeclare(anyString(), anyString(), anyBoolean());
-        verify(channel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        verify(channel, times(1)).queueBind(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    public void testCallQueueDeclare() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-        QueueSpec queueSpec = new QueueSpec();
-        queueSpec.setName("testQueue");
-        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
-
-        Method callQueueDeclareMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("callQueueDeclare", Channel.class, QueueSpec.class);
-        callQueueDeclareMethod.setAccessible(true);
-
-        when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
-
-        callQueueDeclareMethod.invoke(config, channel, queueSpec);
-
-        verify(channel, times(1)).exchangeDeclare(anyString(), anyString(), anyBoolean());
-        verify(channel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        verify(channel, times(1)).queueBind(anyString(), anyString(), anyString());
-    }
+Argument(s) are different! Wanted:
+channel.queueBind(
+    <any string>,
+    <any string>,
+    <any string>
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testDeclareQueue(BillTransactionRabbitMQConfigTest.java:122)
+Actual invocations have different arguments:
+channel.queueDeclarePassive(
+    "testQueue"
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
+channel.exchangeDeclare(
+    "testExchange",
+    "direct",
+    true
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:254)
+channel.queueDeclare(
+    "testQueue",
+    false,
+    false,
+    false,
+    null
+);
+-> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:257)
+channel.queueBind(
+    "testQueue",
+    "testExchange",
+    null
+);
