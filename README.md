@@ -1,58 +1,28 @@
-
-    @Test
-    void testGetBillList() {
-        // Test verilerinin hazırlanması
+  @Test
+    public void testGetCustomerPaidBillList() throws MicroException {
+        // Given
         GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
         request.setCustomerNo("12345");
-        request.setChannelCode("channelCode");
-        request.setProductCode("productCode");
+        request.setProductCode("PRODUCT_CODE");
+        request.setChannelCode("CHANNEL_CODE");
 
-        Payment payment = new Payment();
-        payment.setChannelCode("paymentChannelCode");
-        payment.setInstitutionId("institutionId");
+        List<PaidBillResponseWebDTO> microBillList = new ArrayList<>();
+        List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
 
-        List<Payment> paymentList = new ArrayList<>();
-        paymentList.add(payment);
-
-        ChannelDTO requestChannel = new ChannelDTO();
-        ChannelDTO paymentChannel = new ChannelDTO();
-
-        PaidBillResponseWebDTO dto = new PaidBillResponseWebDTO();
-        Institution institution = new Institution();
-
-        // Mock davranışlarının ayarlanması
-        when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode")))
-            .thenReturn(paymentList);
-
-        when(channelService.findChannelByChannelCode(eq("channelCode")))
-            .thenReturn(requestChannel);
-
-        when(channelService.findChannelByChannelCode(eq("paymentChannelCode")))
-            .thenReturn(paymentChannel);
-
-        when(channelService.areChannelsTheSameAccountingGroup(eq(requestChannel), eq(paymentChannel)))
+        when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("PRODUCT_CODE")))
+            .thenReturn(new ArrayList<>());
+        when(channelService.findChannelByChannelCode(anyString())).thenReturn(new ChannelDTO());
+        when(channelService.areChannelsTheSameAccountingGroup(any(ChannelDTO.class), any(ChannelDTO.class)))
             .thenReturn(true);
+        when(paymentMapper.toDTO(any(Payment.class))).thenReturn(new PaidBillResponseWebDTO());
+        when(paymentMapper.toPaidBillResponseWebDTO(any(PaidBillResponseWebDTO.class), any(InstitutionDTO.class)))
+            .thenReturn(new PaidBillResponseWebDTO());
+        when(billPaymentRestFacade.getCustomerPaidBillList("12345")).thenReturn(new ResponseGetCustomerPaidBillList());
 
-        when(paymentMapper.toDTO(any(Payment.class)))
-            .thenReturn(dto);
+        // When
+        GetCustomerPaidBillListResponse response = paymentServiceImpl.getCustomerPaidBillList(request);
 
-        when(paymentMapper.toPaidBillResponseWebDTO(any(Payment.class), any(Institution.class)))
-            .thenReturn(dto);
-
-        when(institutionService.getInstitutionById(eq("institutionId")))
-            .thenReturn(institution);
-
-        // Metodun çağrılması
-        List<PaidBillResponseWebDTO> result = paymentService.getBillList(request);
-
-        // Sonuçların doğrulanması
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(paymentRepository, times(1)).findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode"));
-        verify(channelService, times(1)).findChannelByChannelCode(eq("channelCode"));
-        verify(channelService, times(1)).findChannelByChannelCode(eq("paymentChannelCode"));
-        verify(channelService, times(1)).areChannelsTheSameAccountingGroup(eq(requestChannel), eq(paymentChannel));
-        verify(paymentMapper, times(1)).toDTO(any(Payment.class));
-        verify(paymentMapper, times(1)).toPaidBillResponseWebDTO(any(Payment.class), any(Institution.class));
-        verify(institutionService, times(1)).getInstitutionById(eq("institutionId"));
+        // Then
+        assertNotNull(response);
+        assertTrue(response.getBillList().isEmpty());
     }
