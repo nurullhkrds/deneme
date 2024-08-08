@@ -1,17 +1,19 @@
+        lenient().when(channel.queueDeclarePassive(anyString())).thenReturn(null);
+ @Test
+    public void testDeclareQueue() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+        QueueSpec queueSpec = new QueueSpec();
+        queueSpec.setName("testQueue");
+        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
+        queueSpec.setRoutingKey("testRoutingKey");
 
-org.mockito.exceptions.misusing.PotentialStubbingProblem: 
-Strict stubbing argument mismatch. Please check:
- - this invocation of 'queueDeclarePassive' method:
-    channel.queueDeclarePassive(null);
-    -> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
- - has following stubbing(s) with different arguments:
-    1. channel.queueDeclarePassive("");
-      -> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testDeclareQueue(BillTransactionRabbitMQConfigTest.java:116)
-Typically, stubbing argument mismatch indicates user mistake when writing tests.
-Mockito fails early so that you can debug potential problem easily.
-However, there are legit scenarios when this exception generates false negative signal:
-  - stubbing the same method multiple times using 'given().will()' or 'when().then()' API
-    Please use 'will().given()' or 'doReturn().when()' API for stubbing.
-  - stubbed method is intentionally invoked with different arguments by code under test
-    Please use default or 'silent' JUnit Rule (equivalent of Strictness.LENIENT).
-For more information see javadoc for PotentialStubbingProblem class.
+        Method declareQueueMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueue", Channel.class, QueueSpec.class);
+        declareQueueMethod.setAccessible(true);
+
+        when(channel.queueDeclarePassive("testQueue")).thenThrow(new IOException("Queue not found"));
+
+        declareQueueMethod.invoke(config, channel, queueSpec);
+
+        verify(channel, times(1)).exchangeDeclare("testExchange", "direct", true);
+        verify(channel, times(1)).queueDeclare("testQueue", false, false, false, null);
+        verify(channel, times(1)).queueBind("testQueue", "testExchange", "testRoutingKey");
+    }
