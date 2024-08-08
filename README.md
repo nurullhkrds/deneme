@@ -1,3 +1,10 @@
+    @BeforeEach
+    void setUp() {
+        when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
+        when(serviceSpec.getQueues()).thenReturn(Map.of("queueName", new QueueSpec()));
+        config.creditCardReverseProvisionNotificationMaxTryCount = 3; // Set the value here
+    }
+
     @Test
     void testCreditCardReverseProvisionRabbitListenerContainerFactory() {
         ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
@@ -6,4 +13,4 @@
         SimpleRabbitListenerContainerFactory factory = config.creditCardReverseProvisionRabbitListenerContainerFactory(connectionFactory);
 
         assertNotNull(factory);
-    }java.lang.NullPointerException: Cannot invoke "java.lang.Integer.intValue()" because "this.creditCardReverseProvisionNotificationMaxTryCount" is null
+    }
