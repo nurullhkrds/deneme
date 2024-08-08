@@ -1,68 +1,18 @@
+@Test
+    public void testDeclareQueue() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+        QueueSpec queueSpec = new QueueSpec();
+        queueSpec.setName("testQueue");
+        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
+        queueSpec.setRoutingKey("testRoutingKey");
 
-Argument(s) are different! Wanted:
-channel.queueBind(
-    <any string>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testDeclareQueue(BillTransactionRabbitMQConfigTest.java:122)
-Actual invocations have different arguments:
-channel.queueDeclarePassive(
-    "testQueue"
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
-channel.exchangeDeclare(
-    "testExchange",
-    "direct",
-    true
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:254)
-channel.queueDeclare(
-    "testQueue",
-    false,
-    false,
-    false,
-    null
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:257)
-channel.queueBind(
-    "testQueue",
-    "testExchange",
-    null
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:260)
+        Method declareQueueMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueue", Channel.class, QueueSpec.class);
+        declareQueueMethod.setAccessible(true);
 
-Comparison Failure: 
-<Click to see difference>
+        when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
 
-Argument(s) are different! Wanted:
-channel.queueBind(
-    <any string>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testDeclareQueue(BillTransactionRabbitMQConfigTest.java:122)
-Actual invocations have different arguments:
-channel.queueDeclarePassive(
-    "testQueue"
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
-channel.exchangeDeclare(
-    "testExchange",
-    "direct",
-    true
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:254)
-channel.queueDeclare(
-    "testQueue",
-    false,
-    false,
-    false,
-    null
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:257)
-channel.queueBind(
-    "testQueue",
-    "testExchange",
-    null
-);
+        declareQueueMethod.invoke(config, channel, queueSpec);
+
+        verify(channel, times(1)).exchangeDeclare("testExchange", "direct", true);
+        verify(channel, times(1)).queueDeclare("testQueue", false, false, false, null);
+        verify(channel, times(1)).queueBind("testQueue", "testExchange", "testRoutingKey");
+    }
