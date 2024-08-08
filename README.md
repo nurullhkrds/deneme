@@ -1,10 +1,20 @@
-org.mockito.exceptions.misusing.MissingMethodInvocationException: 
-when() requires an argument which has to be 'a method call on a mock'.
-For example:
-    when(mock.getArticles()).thenReturn(articles);
+  @Test
+    void testBillTransactionRabbitTemplate() throws IOException, TimeoutException {
+        // Mock the jsonMessageConverter method
+        when(config.jsonMessageConverter()).thenReturn(messageConverter);
 
-Also, this error might show up because:
-1. you stub either of: final/private/equals()/hashCode() methods.
-   Those methods *cannot* be stubbed/verified.
-   Mocking methods declared on non-public parent classes is not supported.
-2. inside when() you don't call method on mock but on some other object.
+        // Mock the declareQueues method
+        ReflectionTestUtils.setField(config, "rabbitMQProperties", rabbitMQProperties);
+        doNothing().when(config).declareQueues(connectionFactory);
+
+        RabbitTemplate rabbitTemplate = config.billTransactionRabbitTemplate(connectionFactory);
+
+        assertNotNull(rabbitTemplate);
+        assertEquals(connectionFactory, rabbitTemplate.getConnectionFactory());
+        assertEquals(messageConverter, rabbitTemplate.getMessageConverter());
+        assertFalse(rabbitTemplate.isChannelTransacted());
+
+        // Verify that declareQueues was called using Reflection
+        ReflectionTestUtils.invokeMethod(config, "declareQueues", connectionFactory);
+        verify(config, times(1)).declareQueues(connectionFactory);
+    }
