@@ -1,11 +1,12 @@
-  @Test
-    void testBillTransactionRabbitTemplate() throws IOException, TimeoutException {
+
+    @Test
+    void testBillTransactionRabbitTemplate() throws Exception {
         // Mock the jsonMessageConverter method
         when(config.jsonMessageConverter()).thenReturn(messageConverter);
 
-        // Mock the declareQueues method
-        ReflectionTestUtils.setField(config, "rabbitMQProperties", rabbitMQProperties);
-        doNothing().when(config).declareQueues(connectionFactory);
+        // Mock the RabbitMQUtil.getChannel method to return a mock channel
+        mockStatic(RabbitMQUtil.class);
+        when(RabbitMQUtil.getChannel(connectionFactory)).thenReturn(channel);
 
         RabbitTemplate rabbitTemplate = config.billTransactionRabbitTemplate(connectionFactory);
 
@@ -14,7 +15,6 @@
         assertEquals(messageConverter, rabbitTemplate.getMessageConverter());
         assertFalse(rabbitTemplate.isChannelTransacted());
 
-        // Verify that declareQueues was called using Reflection
-        ReflectionTestUtils.invokeMethod(config, "declareQueues", connectionFactory);
-        verify(config, times(1)).declareQueues(connectionFactory);
+        // Verify that declareQueue was called
+        verify(channel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyMap());
     }
