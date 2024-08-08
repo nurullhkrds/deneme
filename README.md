@@ -1,68 +1,58 @@
-@Test
-void testGetCustomerPaidBillList() throws MicroException {
-    GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
-    request.setCustomerNo("12345");
-    request.setChannelCode("channelCode");
-    request.setProductCode("productCode");
 
-    List<PaidBillResponseWebDTO> microBillList = new ArrayList<>();
-    List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
+    @Test
+    void testGetBillList() {
+        // Test verilerinin hazırlanması
+        GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+        request.setCustomerNo("12345");
+        request.setChannelCode("channelCode");
+        request.setProductCode("productCode");
 
-    when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode")))
-        .thenReturn(new ArrayList<>());
-    
-    when(billPaymentRestFacade.getCustomerPaidBillList(eq("12345")))
-        .thenReturn(new ResponseGetCustomerPaidBillList(SUCCESS, new ArrayList<>()));
+        Payment payment = new Payment();
+        payment.setChannelCode("paymentChannelCode");
+        payment.setInstitutionId("institutionId");
 
-    when(channelService.findChannelByChannelCode(anyString()))
-        .thenReturn(new ChannelDTO());
+        List<Payment> paymentList = new ArrayList<>();
+        paymentList.add(payment);
 
-    GetCustomerPaidBillListResponse response = paymentService.getCustomerPaidBillList(request);
+        ChannelDTO requestChannel = new ChannelDTO();
+        ChannelDTO paymentChannel = new ChannelDTO();
 
-    assertNotNull(response);
-    assertEquals(0, response.getBillList().size());
+        PaidBillResponseWebDTO dto = new PaidBillResponseWebDTO();
+        Institution institution = new Institution();
 
-    // Ek testler ve doğrulamalar
-}
+        // Mock davranışlarının ayarlanması
+        when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode")))
+            .thenReturn(paymentList);
 
-@Test
-void testParseSubscriberNoIntoParts() {
-    ParseSubscriberNoIntoPartsRequest request = new ParseSubscriberNoIntoPartsRequest();
-    request.setSubscriberNo("1234567890");
-    request.setProductCode("productCode");
-    request.setInstitutionCode("institutionCode");
+        when(channelService.findChannelByChannelCode(eq("channelCode")))
+            .thenReturn(requestChannel);
 
-    List<InstitutionUserIntfDTO> userInterfaceList = new ArrayList<>();
-    when(institutionUserIntService.getDefaultUserInterface(eq("productCode"), eq("institutionCode")))
-        .thenReturn(userInterfaceList);
+        when(channelService.findChannelByChannelCode(eq("paymentChannelCode")))
+            .thenReturn(paymentChannel);
 
-    ParseSubscriberNoIntoPartsResponse response = paymentService.parseSubscriberNoIntoParts(request);
+        when(channelService.areChannelsTheSameAccountingGroup(eq(requestChannel), eq(paymentChannel)))
+            .thenReturn(true);
 
-    assertNotNull(response);
-    assertEquals(0, response.getSubsrciberNoPartResponseWebDTO().size());
+        when(paymentMapper.toDTO(any(Payment.class)))
+            .thenReturn(dto);
 
-    // Ek testler ve doğrulamalar
-}
+        when(paymentMapper.toPaidBillResponseWebDTO(any(Payment.class), any(Institution.class)))
+            .thenReturn(dto);
 
-@Test
-void testGetMicroBillList() throws MicroException {
-    GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
-    request.setCustomerNo("12345");
-    request.setChannelCode("channelCode");
-    request.setProductCode("productCode");
+        when(institutionService.getInstitutionById(eq("institutionId")))
+            .thenReturn(institution);
 
-    List<Payment> paymentList = new ArrayList<>();
-    when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode")))
-        .thenReturn(paymentList);
+        // Metodun çağrılması
+        List<PaidBillResponseWebDTO> result = paymentService.getBillList(request);
 
-    when(channelService.findChannelByChannelCode(anyString()))
-        .thenReturn(new ChannelDTO());
-
-    List<HmnPaidBillDTO> result = paymentService.getMicroBillList(request);
-
-    assertNotNull(result);
-    assertEquals(0, result.size());
-
-    // Ek testler ve doğrulamalar
-}
-
+        // Sonuçların doğrulanması
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(paymentRepository, times(1)).findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode"));
+        verify(channelService, times(1)).findChannelByChannelCode(eq("channelCode"));
+        verify(channelService, times(1)).findChannelByChannelCode(eq("paymentChannelCode"));
+        verify(channelService, times(1)).areChannelsTheSameAccountingGroup(eq(requestChannel), eq(paymentChannel));
+        verify(paymentMapper, times(1)).toDTO(any(Payment.class));
+        verify(paymentMapper, times(1)).toPaidBillResponseWebDTO(any(Payment.class), any(Institution.class));
+        verify(institutionService, times(1)).getInstitutionById(eq("institutionId"));
+    }
