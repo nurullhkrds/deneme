@@ -1,12 +1,18 @@
-    @Test
+   @Test
     void testBillTransactionRabbitFactory() {
-        when(cfService.getCredentials()).thenReturn(cfCredentials);
         when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
-        when(serviceSpec.getQueues()).thenReturn(Map.of("queueName", new QueueSpec()));
+        when(serviceSpec.getName()).thenReturn("testService");
+        when(cfService.getCredentials()).thenReturn(cfCredentials);
+        when(cfService.getPlan()).thenReturn("testPlan");
+        when(cfCredentials.getName()).thenReturn("testService");
         when(cfCredentials.getHost()).thenReturn("localhost");
         when(cfCredentials.getUsername()).thenReturn("user");
         when(cfCredentials.getPassword()).thenReturn("password");
         when(cfCredentials.getString("vhost")).thenReturn("/");
+
+        // Simulate finding the service
+        when(cfService.getName()).thenReturn("testService");
+        when(new CfEnv().findServiceByName(anyString())).thenReturn(cfService);
 
         ConnectionFactory factory = config.billTransactionRabbitFactory();
 
@@ -15,4 +21,4 @@
         CachingConnectionFactory cachingFactory = (CachingConnectionFactory) factory;
         assertEquals("localhost", cachingFactory.getHost());
         assertEquals("user", cachingFactory.getUsername());
-    }java.lang.IllegalArgumentException: No service with name [null] was found.
+    }
