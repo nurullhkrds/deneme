@@ -1,34 +1,16 @@
- lenient().when(connectionFactory.createConnection()).thenReturn(connection);
-        lenient().when(connection.createChannel()).thenReturn(channel);
-        lenient().when(channel.queueDeclarePassive(anyString())).thenThrow(new IOException("Queue not found"));
-        lenient().when(RabbitMQUtil.getChannel(connectionFactory)).thenReturn(channel);
 
-
-    @Test
-    public void testDeclareQueues() throws IOException, TimeoutException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        QueueSpec queueSpec = new QueueSpec();
-        queueSpec.setName("testQueue");
-        queueSpec.setDeclare(true);
-        queueSpec.setExchange(new ExchangeSpec("testExchange", "direct", true));
-
-        RabbitMQProperties.ServiceSpec serviceSpec = new RabbitMQProperties.ServiceSpec();
-        serviceSpec.setQueues(Collections.singletonMap("testQueue", queueSpec));
-
-        when(rabbitMQProperties.getServiceByKey("billtransaction-rabbitmq")).thenReturn(serviceSpec);
-
-        Method declareQueuesMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("declareQueues", ConnectionFactory.class);
-        declareQueuesMethod.setAccessible(true);
-        declareQueuesMethod.invoke(config, connectionFactory);
-
-        ArgumentCaptor<String> queueNameCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> exchangeNameCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-
-        verify(channel, times(1)).exchangeDeclare(exchangeNameCaptor.capture(), anyString(), anyBoolean());
-        verify(channel, times(1)).queueDeclare(queueNameCaptor.capture(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        verify(channel, times(1)).queueBind(queueNameCaptor.capture(), exchangeNameCaptor.capture(), routingKeyCaptor.capture());
-
-        assert queueNameCaptor.getValue().equals("testQueue");
-        assert exchangeNameCaptor.getValue().equals("testExchange");
-        assert routingKeyCaptor.getValue() == null || routingKeyCaptor.getValue().isEmpty();
-    }
+org.mockito.exceptions.misusing.CannotStubVoidMethodWithReturnValue: 
+'close' is a *void method* and it *cannot* be stubbed with a *return value*!
+Voids are usually stubbed with Throwables:
+    doThrow(exception).when(mock).someVoidMethod();
+If you need to set the void method to do nothing you can use:
+    doNothing().when(mock).someVoidMethod();
+For more information, check out the javadocs for Mockito.doNothing().
+***
+If you're unsure why you're getting above error read on.
+Due to the nature of the syntax above problem might occur because:
+1. The method you are trying to stub is *overloaded*. Make sure you are calling the right overloaded version.
+2. Somewhere in your test you are stubbing *final methods*. Sorry, Mockito does not verify/stub final methods.
+3. A spy is stubbed using when(spy.foo()).then() syntax. It is safer to stub spies - 
+   - with doReturn|Throw() family of methods. More in javadocs for Mockito.spy() method.
+4. Mocking methods declared on non-public parent classes is not supported.
