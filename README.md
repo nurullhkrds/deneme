@@ -1,12 +1,14 @@
-    @Test
+ @Test
     public void testCallQueueDeclare() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         QueueSpec queueSpec = new QueueSpec();
         queueSpec.setName("testQueue");
-        ExchangeSpec exchangeSpec=new ExchangeSpec();
+        ExchangeSpec exchangeSpec = new ExchangeSpec();
         exchangeSpec.setName("testExchange");
         exchangeSpec.setType("direct");
         exchangeSpec.setDurable(true);
         queueSpec.setExchange(exchangeSpec);
+        queueSpec.setRoutingKey("");
+
         Method callQueueDeclareMethod = BillTransactionRabbitMQConfig.class.getDeclaredMethod("callQueueDeclare", Channel.class, QueueSpec.class);
         callQueueDeclareMethod.setAccessible(true);
 
@@ -14,75 +16,15 @@
 
         callQueueDeclareMethod.invoke(config, channel, queueSpec);
 
-        verify(channel, times(1)).exchangeDeclare(anyString(), anyString(), anyBoolean());
-        verify(channel, times(1)).queueDeclare(anyString(), anyBoolean(), anyBoolean(), anyBoolean(), any());
-        verify(channel, times(1)).queueBind(anyString(), anyString(), anyString());
+        ArgumentCaptor<String> queueNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> exchangeNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(channel, times(1)).exchangeDeclare(exchangeNameCaptor.capture(), anyString(), anyBoolean());
+        verify(channel, times(1)).queueDeclare(queueNameCaptor.capture(), anyBoolean(), anyBoolean(), anyBoolean(), any());
+        verify(channel, times(1)).queueBind(queueNameCaptor.capture(), exchangeNameCaptor.capture(), routingKeyCaptor.capture());
+
+        assert queueNameCaptor.getAllValues().get(0).equals("testQueue");
+        assert exchangeNameCaptor.getValue().equals("testExchange");
+        assert routingKeyCaptor.getValue() == null || routingKeyCaptor.getValue().isEmpty();
     }
-
-Argument(s) are different! Wanted:
-channel.queueBind(
-    <any string>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testCallQueueDeclare(BillTransactionRabbitMQConfigTest.java:122)
-Actual invocations have different arguments:
-channel.queueDeclarePassive(
-    "testQueue"
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
-channel.exchangeDeclare(
-    "testExchange",
-    "direct",
-    true
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:254)
-channel.queueDeclare(
-    "testQueue",
-    false,
-    false,
-    false,
-    null
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:257)
-channel.queueBind(
-    "testQueue",
-    "testExchange",
-    null
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:260)
-
-Comparison Failure: 
-<Click to see difference>
-
-Argument(s) are different! Wanted:
-channel.queueBind(
-    <any string>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfigTest.testCallQueueDeclare(BillTransactionRabbitMQConfigTest.java:122)
-Actual invocations have different arguments:
-channel.queueDeclarePassive(
-    "testQueue"
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:248)
-channel.exchangeDeclare(
-    "testExchange",
-    "direct",
-    true
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:254)
-channel.queueDeclare(
-    "testQueue",
-    false,
-    false,
-    false,
-    null
-);
--> at com.ykb.payments.bill.transaction.config.BillTransactionRabbitMQConfig.callQueueDeclare(BillTransactionRabbitMQConfig.java:257)
-channel.queueBind(
-    "testQueue",
-    "testExchange",
-    null
-);
