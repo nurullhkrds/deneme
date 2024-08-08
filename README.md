@@ -1,8 +1,9 @@
+
     @BeforeEach
     void setUp() {
         when(rabbitMQProperties.getServiceByKey(anyString())).thenReturn(serviceSpec);
         when(serviceSpec.getQueues()).thenReturn(Map.of("queueName", new QueueSpec()));
-        config.creditCardReverseProvisionNotificationMaxTryCount = 3; // Set the value here
+        ReflectionTestUtils.setField(config, "creditCardReverseProvisionNotificationMaxTryCount", 3); // Set the value here
     }
 
     @Test
