@@ -1,95 +1,68 @@
-@Service
-@RequiredArgsConstructor
-public class PaymentServiceImpl implements PaymentService {
-	private final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
+@Test
+void testGetCustomerPaidBillList() throws MicroException {
+    GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+    request.setCustomerNo("12345");
+    request.setChannelCode("channelCode");
+    request.setProductCode("productCode");
 
-	private static final String SUCCESS = "S";
+    List<PaidBillResponseWebDTO> microBillList = new ArrayList<>();
+    List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
 
-	private final ProcessManager processManager;
-	private final ProcessExecutionMapper processExecutionMapper;
-	private final RequestContext requestContext;
-	private final PaymentRepository paymentRepository;
-	private final PaymentCancelRepository paymentCancelRepository;
-	private final PaymentMapper paymentMapper;
-	private final PaymentCancelMapper paymentCancelMapper;
-	private final InstitutionService institutionService;
-	private final BillPaymentRestFacade billPaymentRestFacade;
-	private final InstitutionUserIntService institutionUserIntService;
-	private final ChannelService channelService;
+    when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode")))
+        .thenReturn(new ArrayList<>());
+    
+    when(billPaymentRestFacade.getCustomerPaidBillList(eq("12345")))
+        .thenReturn(new ResponseGetCustomerPaidBillList(SUCCESS, new ArrayList<>()));
 
+    when(channelService.findChannelByChannelCode(anyString()))
+        .thenReturn(new ChannelDTO());
 
-@Override
-	public GetCustomerPaidBillListResponse getCustomerPaidBillList(GetCustomerPaidBillListRequest request)
-			throws MicroException {
+    GetCustomerPaidBillListResponse response = paymentService.getCustomerPaidBillList(request);
 
-		List<PaidBillResponseWebDTO> microBillList = getBillList(request);
-		List<PaidBillResponseWebDTO> harmoniBillList = getHarmoniBillList(request);
-		List<PaidBillResponseWebDTO> combinedBillList = new ArrayList<>();
+    assertNotNull(response);
+    assertEquals(0, response.getBillList().size());
 
-		combinedBillList.addAll(microBillList);
-		combinedBillList.addAll(harmoniBillList);
+    // Ek testler ve doğrulamalar
+}
 
-		BillValidationUtil.validateCondition(!CollectionUtils.isEmpty(combinedBillList),
-				EnumBillResult.PAID_BILL_NOT_FOUND_ERROR, BillTransactionConstant.APP_NAME);
+@Test
+void testParseSubscriberNoIntoParts() {
+    ParseSubscriberNoIntoPartsRequest request = new ParseSubscriberNoIntoPartsRequest();
+    request.setSubscriberNo("1234567890");
+    request.setProductCode("productCode");
+    request.setInstitutionCode("institutionCode");
 
-		GetCustomerPaidBillListResponse response = new GetCustomerPaidBillListResponse();
-		response.setBillList(combinedBillList);
+    List<InstitutionUserIntfDTO> userInterfaceList = new ArrayList<>();
+    when(institutionUserIntService.getDefaultUserInterface(eq("productCode"), eq("institutionCode")))
+        .thenReturn(userInterfaceList);
 
-		return response;
-	}
+    ParseSubscriberNoIntoPartsResponse response = paymentService.parseSubscriberNoIntoParts(request);
 
-private List<PaidBillResponseWebDTO> getHarmoniBillList(GetCustomerPaidBillListRequest request) {
+    assertNotNull(response);
+    assertEquals(0, response.getSubsrciberNoPartResponseWebDTO().size());
 
-		List<PaidBillResponseWebDTO> harmoniBillList = new ArrayList<>();
+    // Ek testler ve doğrulamalar
+}
 
-		ResponseGetCustomerPaidBillList harmoniResponse = billPaymentRestFacade
-				.getCustomerPaidBillList(request.getCustomerNo());
+@Test
+void testGetMicroBillList() throws MicroException {
+    GetCustomerPaidBillListRequest request = new GetCustomerPaidBillListRequest();
+    request.setCustomerNo("12345");
+    request.setChannelCode("channelCode");
+    request.setProductCode("productCode");
 
-		if (SUCCESS.equals(harmoniResponse.getStatus())) {
-			List<HmnPaidBillDTO> hmnPaidBillList = harmoniResponse.getBillDTOList();
-			harmoniBillList = hmnPaidBillList.stream().map(paymentMapper::toPaidBillResponseWebDTO).toList();
-		}
+    List<Payment> paymentList = new ArrayList<>();
+    when(paymentRepository.findCustomerPaidBillList(any(LocalDate.class), eq("12345"), eq("PAID"), eq("productCode")))
+        .thenReturn(paymentList);
 
-		return harmoniBillList;
+    when(channelService.findChannelByChannelCode(anyString()))
+        .thenReturn(new ChannelDTO());
 
-	}
+    List<HmnPaidBillDTO> result = paymentService.getMicroBillList(request);
 
-	private List<PaidBillResponseWebDTO> getBillList(GetCustomerPaidBillListRequest request) {
+    assertNotNull(result);
+    assertEquals(0, result.size());
 
-		List<PaidBillResponseWebDTO> microBillList;
-		List<Payment> customerPaidBillList = paymentRepository.findCustomerPaidBillList(LocalDate.now(),
-				request.getCustomerNo(), EnumBillStatu.PAID.getValue(),request.getProductCode());
+    // Ek testler ve doğrulamalar
+}
 
-		// TODO: burada kanal kodu için aynı muhasebe grubundakilerini filtreleyelimm
-
-		ChannelDTO requestChannel = channelService.findChannelByChannelCode(request.getChannelCode());
-
-		microBillList = customerPaidBillList.stream().map(paymentMapper::toDTO)
-				.filter(f -> channelService.areChannelsTheSameAccountingGroup(requestChannel,
-						channelService.findChannelByChannelCode(f.getChannelCode())))
-				.map(bill -> paymentMapper.toPaidBillResponseWebDTO(bill,
-						institutionService.getInstitutionById(bill.getInstitutionId())))
-				.toList();
-		return microBillList;
-
-	}
-	@Override
-	public ParseSubscriberNoIntoPartsResponse parseSubscriberNoIntoParts(ParseSubscriberNoIntoPartsRequest request) {
-		ParseSubscriberNoIntoPartsResponse response = new ParseSubscriberNoIntoPartsResponse();
-		List<InstitutionUserIntfDTO> institutionUserIntfDTOList;
-		if (request.getDebtTypeID() == null) {
-			institutionUserIntfDTOList = institutionUserIntService.getDefaultUserInterface(request.getProductCode(),
-					request.getInstitutionCode());
-		} else {
-			institutionUserIntfDTOList = institutionUserIntService.getUserInterface(request.getDebtTypeID());
-		}
-		List<SubsrciberNoPartResponseWebDTO> subscriberNoIntoPartList = SubscriberNumberUtils
-				.parseSubscriberNoIntoParts(institutionUserIntfDTOList, request.getSubscriberNo());
-		response.setSubsrciberNoPartResponseWebDTO(subscriberNoIntoPartList);
-		return response;
-	}
-@Override
-	public List<HmnPaidBillDTO> getMicroBillList(GetCustomerPaidBillListRequest request) throws MicroException{
-		List<PaidBillResponseWebDTO> paidBillResponseWebDTOList = getBillList(request);
-		return paymentMapper.toHmnPaidBillDTOList(paidBillResponseWebDTOList);
-	}
