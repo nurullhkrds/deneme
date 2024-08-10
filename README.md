@@ -1,20 +1,35 @@
 public class AbstractProcessTest {
 
+    @InjectMocks
     private AbstractProcess process;
 
+    @Mock
+    private ProcessService processService;
+    @Mock
+    ProcessChannelDTO processChannelDTO;
+    @Mock
+    InstitutionDTO institutionDTO;
+    @Mock
+    InstitutionDebtTypeDTO institutionDebtTypeDTO;
+    @Mock
+    InstitutionChannelDTO institutionChannelDTO;
+    @Mock
+    InstitutionProcessDTO institutionProcessDTO;
+    @Mock
+    InstitutionChannelProcessDTO institutionChannelProcessDTO;
+    @Mock
+    ProcessLogDTO processLogDTO;
     @BeforeEach
     public void setUp() {
-        process = new NotifyPaymentProcess(); // Concrete class implementation
-
         // Mock nesneleri tanımla
-        process.processService = mock(ProcessService.class);
-        process.processChannel = mock(ProcessChannelDTO.class);
-        process.institution = mock(InstitutionDTO.class);
-        process.institutionDebtType = mock(InstitutionDebtTypeDTO.class);
-        process.institutionChannel = mock(InstitutionChannelDTO.class);
-        process.institutionProcess = mock(InstitutionProcessDTO.class);
-        process.institutionChannelProcess = mock(InstitutionChannelProcessDTO.class);
-        process.logDTO = mock(ProcessLogDTO.class);
+        process.processService = processService;
+        process.processChannel = processChannelDTO;
+        process.institution = institutionDTO;
+        process.institutionDebtType = institutionDebtTypeDTO;
+        process.institutionChannel = institutionChannelDTO;
+        process.institutionProcess = institutionProcessDTO;
+        process.institutionChannelProcess =institutionChannelProcessDTO;
+        process.logDTO = processLogDTO;
 
         // Varsayılan mock davranışlarını ayarla
         lenient().when(process.processChannel.getIsActive()).thenReturn(true);
@@ -165,3 +180,5 @@ public class AbstractProcessTest {
         process.beforeExecuteProcess();
     }
 }
+ bu benim test sınıfım ama tümünde "java.lang.NullPointerException: Cannot assign field "processService" because "this.process" is null
+" hatasını almaktayım ."
