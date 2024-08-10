@@ -1,47 +1,30 @@
-   @InjectMocks
-    private NotifyPaymentProcess process; // Somut sınıfı kullanın
+@Test
+public void testBeforeExecuteProcess_Success() throws BillException {
+    // Eklenen loglar ve assert ifadeleri ile kontrol
+    assertNotNull(process.processChannel, "processChannel is null");
+    assertNotNull(process.processChannel.getIsActive(), "processChannel.getIsActive() is null");
+    assertNotNull(process.processChannel.getWorkingStartTime(), "processChannel.getWorkingStartTime() is null");
+    assertNotNull(process.processChannel.getWorkingFinishTime(), "processChannel.getWorkingFinishTime() is null");
 
-    @Mock
-    private ProcessService processService;
-    @Mock
-    private ProcessChannelDTO processChannelDTO;
-    @Mock
-    private InstitutionDTO institutionDTO;
-    @Mock
-    private InstitutionDebtTypeDTO institutionDebtTypeDTO;
-    @Mock
-    private InstitutionChannelDTO institutionChannelDTO;
-    @Mock
-    private InstitutionProcessDTO institutionProcessDTO;
-    @Mock
-    private InstitutionChannelProcessDTO institutionChannelProcessDTO;
-    @Mock
-    private ProcessLogDTO processLogDTO;
+    assertNotNull(process.institution, "institution is null");
+    assertNotNull(process.institution.getIsActive(), "institution.getIsActive() is null");
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this); // Mock nesneleri başlat
+    assertNotNull(process.institutionProcess, "institutionProcess is null");
+    assertNotNull(process.institutionProcess.getIsActive(), "institutionProcess.getIsActive() is null");
 
-        // Mock nesneleri tanımla
-        process.processService = processService;
-        process.processChannel = processChannelDTO;
-        process.institution = institutionDTO;
-        process.institutionDebtType = institutionDebtTypeDTO;
-        process.institutionChannel = institutionChannelDTO;
-        process.institutionProcess = institutionProcessDTO;
-        process.institutionChannelProcess = institutionChannelProcessDTO;
-        process.logDTO = processLogDTO;
+    assertNotNull(process.institutionChannelProcess, "institutionChannelProcess is null");
+    assertNotNull(process.institutionChannelProcess.getIsActive(), "institutionChannelProcess.getIsActive() is null");
+    assertNotNull(process.institutionChannelProcess.getWorkingStartTime(), "institutionChannelProcess.getWorkingStartTime() is null");
+    assertNotNull(process.institutionChannelProcess.getWorkingFinishTime(), "institutionChannelProcess.getWorkingFinishTime() is null");
 
-        // Varsayılan mock davranışlarını ayarla
-        lenient().when(process.processChannel.getIsActive()).thenReturn(true);
-        lenient().when(process.processChannel.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
-        lenient().when(process.processChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
-        lenient().when(process.institution.getIsActive()).thenReturn(true);
-        lenient().when(process.institutionProcess.getIsActive()).thenReturn(true);
-        lenient().when(process.institutionChannel.getIsActive()).thenReturn(true);
-        lenient().when(process.institutionChannelProcess.getIsActive()).thenReturn(true);
-        lenient().when(process.institutionChannelProcess.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
-        lenient().when(process.institutionChannelProcess.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
-        lenient().when(process.institutionDebtType.getIsActive()).thenReturn(true);
-        lenient().when(process.logDTO.getResponseData1()).thenReturn(""); // responseData1'in null olmadığından emin olun
-    }
+    assertNotNull(process.institutionChannel, "institutionChannel is null");
+    assertNotNull(process.institutionChannel.getIsActive(), "institutionChannel.getIsActive() is null");
+    assertNotNull(process.institutionChannel.getWorkingStartTime(), "institutionChannel.getWorkingStartTime() is null");
+    assertNotNull(process.institutionChannel.getWorkingFinishTime(), "institutionChannel.getWorkingFinishTime() is null");
+
+    assertNotNull(process.institutionDebtType, "institutionDebtType is null");
+    assertNotNull(process.institutionDebtType.getIsActive(), "institutionDebtType.getIsActive() is null");
+
+    // Eğer tüm bu kontrollerden geçilirse metot çalıştırılabilir
+    process.beforeExecuteProcess();
+}
