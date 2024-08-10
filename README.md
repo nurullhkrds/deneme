@@ -1,10 +1,15 @@
-org.opentest4j.AssertionFailedError: Unexpected exception type thrown ==> expected: <com.ykb.payments.bill.common.exception.BillException> but was: <java.lang.NullPointerException>
-    @Test
-    public void testAfterExecuteProcess_ErrorAndRaiseException() {
-        process.error = EnumBillResult.SUCCESS;
-        process.shouldRaiseExceptionOnABillError = true;
+@Test
+public void testAfterExecuteProcess_ErrorAndRaiseException() {
+    // Gerekli nesnelerin atandığından emin olun
+    process.executionOutput = mock(ProcessExecutionOutput.class); // Ensure this is not null
+    process.logDTO = mock(ProcessLogDTO.class); // Ensure logDTO is not null
 
-        assertThrows(BillException.class, () -> {
-            process.afterExecuteProcess();
-        });
-    }
+    // Simüle edilen bir hata durumu ayarla
+    process.error = EnumBillResult.SOME_ERROR; // Hata durumunu simüle etmek için yanlış sonuç kullan
+    process.shouldRaiseExceptionOnABillError = true;
+
+    // Beklenen exception'un fırlatıldığını doğrula
+    assertThrows(BillException.class, () -> {
+        process.afterExecuteProcess();
+    });
+}
