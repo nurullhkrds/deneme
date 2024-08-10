@@ -1,4 +1,109 @@
-@RunWith(MockitoJUnitRunner.class)
+public class TestProcessExecutionInput extends ProcessExecutionInput {
+
+    private EnumProcessCode processCode;
+    private String productCode;
+    private String institutionCode;
+    private String channelSessionId;
+    private String channelTransactionId;
+    private String channelCode;
+    private String agentCode;
+    private String branchCode;
+    private Long institutionDebtTypeId;
+    private Map<String, Object> dataPack;
+
+    @Override
+    public EnumProcessCode getProcessCode() {
+        return processCode;
+    }
+
+    public void setProcessCode(EnumProcessCode processCode) {
+        this.processCode = processCode;
+    }
+
+    @Override
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
+    @Override
+    public String getInstitutionCode() {
+        return institutionCode;
+    }
+
+    public void setInstitutionCode(String institutionCode) {
+        this.institutionCode = institutionCode;
+    }
+
+    @Override
+    public String getChannelSessionId() {
+        return channelSessionId;
+    }
+
+    public void setChannelSessionId(String channelSessionId) {
+        this.channelSessionId = channelSessionId;
+    }
+
+    @Override
+    public String getChannelTransactionId() {
+        return channelTransactionId;
+    }
+
+    public void setChannelTransactionId(String channelTransactionId) {
+        this.channelTransactionId = channelTransactionId;
+    }
+
+    @Override
+    public String getChannelCode() {
+        return channelCode;
+    }
+
+    public void setChannelCode(String channelCode) {
+        this.channelCode = channelCode;
+    }
+
+    @Override
+    public String getAgentCode() {
+        return agentCode;
+    }
+
+    public void setAgentCode(String agentCode) {
+        this.agentCode = agentCode;
+    }
+
+    @Override
+    public String getBranchCode() {
+        return branchCode;
+    }
+
+    public void setBranchCode(String branchCode) {
+        this.branchCode = branchCode;
+    }
+
+    @Override
+    public Long getInstitutionDebtTypeId() {
+        return institutionDebtTypeId;
+    }
+
+    public void setInstitutionDebtTypeId(Long institutionDebtTypeId) {
+        this.institutionDebtTypeId = institutionDebtTypeId;
+    }
+
+    @Override
+    public Map<String, Object> getDataPack() {
+        return dataPack;
+    }
+
+    public void setDataPack(Map<String, Object> dataPack) {
+        this.dataPack = dataPack;
+    }
+}
+
+
+
 public class AbstractProcessTest {
 
     @Mock
@@ -26,11 +131,11 @@ public class AbstractProcessTest {
     private InstitutionChannelProcessDTO institutionChannelProcess;
 
     @InjectMocks
-    private AbstractProcess process = new NotifyPaymentProcess(); // Concrete class implementation needed
+    private AbstractProcess process = new NotifyPaymentProcess(); // Concrete class implementation
 
     @Before
     public void setUp() {
-        // Initialize common mocks and default behavior
+        // Mock bağımlılıkların varsayılan davranışları
         when(processService.getProcessChannel(anyString(), anyString())).thenReturn(processChannel);
         when(processService.getInstitutionForProcess(anyString(), anyString())).thenReturn(institution);
         when(processService.getInstitutionDebtTypeForProcess(anyString(), anyString(), anyLong())).thenReturn(institutionDebtType);
@@ -38,7 +143,7 @@ public class AbstractProcessTest {
         when(processService.getInstitutionProcess(anyString(), anyString(), anyString())).thenReturn(institutionProcess);
         when(processService.getInstitutionChannelProcess(anyLong(), anyString(), anyString())).thenReturn(institutionChannelProcess);
 
-        // Default behaviors
+        // Default behavior for mock objects
         when(processChannel.getIsActive()).thenReturn(true);
         when(institution.getIsActive()).thenReturn(true);
         when(institutionProcess.getIsActive()).thenReturn(true);
@@ -56,14 +161,14 @@ public class AbstractProcessTest {
 
     @Test(expected = BillException.class)
     public void testBeforeExecuteProcess_ProcessChannelNotFound() throws BillException {
-        when(processChannel).thenReturn(null);
+        when(processService.getProcessChannel(anyString(), anyString())).thenReturn(null);
 
         process.beforeExecuteProcess();
     }
 
     @Test(expected = BillException.class)
     public void testBeforeExecuteProcess_InstitutionNotFound() throws BillException {
-        when(institution).thenReturn(null);
+        when(processService.getInstitutionForProcess(anyString(), anyString())).thenReturn(null);
 
         process.beforeExecuteProcess();
     }
@@ -79,7 +184,7 @@ public class AbstractProcessTest {
 
     @Test
     public void testInitProcess() {
-        ProcessExecutionInput input = new ProcessExecutionInput();
+        TestProcessExecutionInput input = new TestProcessExecutionInput();
         input.setProcessCode(EnumProcessCode.SOME_CODE);
         input.setProductCode("productCode");
         input.setInstitutionCode("institutionCode");
@@ -95,7 +200,7 @@ public class AbstractProcessTest {
 
         verify(processService).getProcessChannel("SOME_CODE", "channelCode");
         verify(processService).getInstitutionForProcess("productCode", "institutionCode");
-        // Verify other service calls
+        // Diğer service çağrılarını doğrula
     }
 
     @Test
@@ -125,5 +230,5 @@ public class AbstractProcessTest {
         verify(step1, never()).executeStep();
     }
 
-    // Add more test cases to cover different scenarios
+    // Diğer test senaryolarını ekleyin
 }
