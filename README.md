@@ -1,1 +1,10 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.payment.service.PaymentUtilImpl.isFomOperationEnabled(com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO)" because "this.this$0.paymentUtilImpl" is null
+  @BeforeEach
+    void resetSpringUtil() {
+        SpringUtil.setApplicationContext(null); // SpringUtil'in context'ini sıfırlayın
+    }
+
+    @AfterEach
+    void tearDown() {
+        Mockito.reset(paymentUtilImpl, applicationContext);
+    }
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
