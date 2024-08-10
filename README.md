@@ -1,166 +1,173 @@
-@Getter
-@Setter
-public abstract class AbstractProcess implements IProcess {
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-	protected ProcessExecutionOutput executionOutput;
-	protected ProcessChannelDTO processChannel;
-	protected ProcessLogDTO logDTO;
-	protected InstitutionDTO institution;
-	protected InstitutionDebtTypeDTO institutionDebtType;
-	protected InstitutionChannelDTO institutionChannel;
-	protected InstitutionProcessDTO institutionProcess;
-	protected InstitutionChannelProcessDTO institutionChannelProcess;
+import java.time.LocalTime;
 
-	protected String channelSessionId;
-	protected String channelTransactionId;
+public class AbstractProcessTest {
 
-	protected String channelCode;
-	protected String agentCode;
-	protected String branchCode;
+    private AbstractProcess process;
 
-	protected String productCode;
-	protected String institutionCode;
-	// Null gelmesi durumunda default debt type olcak.
-	protected Long institutionDebtTypeId;
+    @BeforeEach
+    public void setUp() {
+        process = new NotifyPaymentProcess(); // Concrete class implementation
 
-	protected ProcessService processService;
-	private EnumProcessCode processCode;
-	protected EnumBillResult error = null;
+        // Mock nesneleri tanımla
+        process.processService = mock(ProcessService.class);
+        process.processChannel = mock(ProcessChannelDTO.class);
+        process.institution = mock(InstitutionDTO.class);
+        process.institutionDebtType = mock(InstitutionDebtTypeDTO.class);
+        process.institutionChannel = mock(InstitutionChannelDTO.class);
+        process.institutionProcess = mock(InstitutionProcessDTO.class);
+        process.institutionChannelProcess = mock(InstitutionChannelProcessDTO.class);
+        process.logDTO = mock(ProcessLogDTO.class);
 
-	protected Map<String, Object> dataPack;
-	private ProcessStepHandler stepHandler;
+        // Varsayılan mock davranışlarını ayarla
+        when(process.processChannel.getIsActive()).thenReturn(true);
+        when(process.processChannel.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
+        when(process.processChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
+        when(process.institution.getIsActive()).thenReturn(true);
+        when(process.institutionProcess.getIsActive()).thenReturn(true);
+        when(process.institutionChannel.getIsActive()).thenReturn(true);
+        when(process.institutionChannelProcess.getIsActive()).thenReturn(true);
+        when(process.institutionChannelProcess.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
+        when(process.institutionChannelProcess.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
+        when(process.institutionDebtType.getIsActive()).thenReturn(true);
+    }
 
-	//Notify process de hata alması durumunda güncelleme yapsın istiyoruz
-	protected Boolean shouldRaiseExceptionOnABillError = true;
-	
-	@Override
-	public void beforeExecuteProcess() throws BillException {
-		String logPrefix = "\t[PM-BE] ";
+    @Test
+    public void testBeforeExecuteProcess_ProcessChannelNotFound() {
+        process.processChannel = null;
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Process kanalda tanımlı mı ?
-		 */
-		addStepLog(logPrefix + "process channel found checking");
-		ProcessUtil.validateConditionWithArgs(processChannel != null, EnumBillResult.PROCESS_CHANNEL_NOT_FOUND,
-				channelCode);
-		addStepLog(logPrefix + "process channel found checked.");
+    @Test
+    public void testBeforeExecuteProcess_ProcessChannelNotActive() {
+        when(process.processChannel.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * process kanalda aktif mi ?
-		 */
-		addStepLog(logPrefix + "process channel activate checking.");
-		ProcessUtil.validateConditionWithArgs(processChannel.getIsActive(), EnumBillResult.PROCESS_CHANNEL_NOT_ACTIVE,
-				channelCode);
-		addStepLog(logPrefix + "process channel activate checked.");
+    @Test
+    public void testBeforeExecuteProcess_ProcessChannelNotWorkingHours() {
+        when(process.processChannel.getWorkingStartTime()).thenReturn(LocalTime.of(8, 0));
+        when(process.processChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(16, 0));
+        when(LocalTime.now()).thenReturn(LocalTime.of(17, 30)); // Çalışma saatleri dışında bir zaman
 
-		/**
-		 * process kanal calisma saat aralığı
-		 */
-		addStepLog(logPrefix + "process channel working time checking.");
-		ProcessUtil.validateConditionWithArgs(
-				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), processChannel.getWorkingStartTime(),
-						processChannel.getWorkingFinishTime()),
-				EnumBillResult.PROCESS_CHANNEL_WORKING_TIME_ERROR,
-				ProcessUtil.formatWorkingTime(processChannel.getWorkingStartTime()),
-				ProcessUtil.formatWorkingTime(processChannel.getWorkingFinishTime()), channelCode);
-		addStepLog(logPrefix + "process channel working time checked.");
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurum tanımı var mı ?
-		 */
-		addStepLog(logPrefix + "institution found checking.");
-		ProcessUtil.validateCondition(institution != null, EnumBillResult.INSTITUTION_NOT_FOUND);
-		addStepLog(logPrefix + "institution found checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionNotFound() {
+        process.institution = null;
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurum aktif mi
-		 */
-		addStepLog(logPrefix + "institution active checking.");
-		ProcessUtil.validateCondition(institution.getIsActive(), EnumBillResult.INSTITUTION_NOT_ACTIVE);
-		addStepLog(logPrefix + "institution active checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionNotActive() {
+        when(process.institution.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun process tanımı var mı ?
-		 */
-		addStepLog(logPrefix + "institution process found checking.");
-		ProcessUtil.validateCondition(institutionProcess != null, EnumBillResult.INSTITUTION_PROCESS_NOT_FOUND);
-		addStepLog(logPrefix + "institution process found checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionProcessNotFound() {
+        process.institutionProcess = null;
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun process'i aktif mi ?
-		 */
-		addStepLog(logPrefix + "institution process activate checking.");
-		ProcessUtil.validateCondition(institutionProcess.getIsActive(),
-				EnumBillResult.INSTITUTION_PROCESS_NOT_ACTIVE);
-		addStepLog(logPrefix + "institution process activate checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionProcessNotActive() {
+        when(process.institutionProcess.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun kanalında process tanımı var mı ?
-		 */
-		addStepLog(logPrefix + "institution process channel found checking.");
-		ProcessUtil.validateConditionWithArgs(institutionChannelProcess != null,
-				EnumBillResult.INSTITUTION_PROCESS_CHANNEL_NOT_FOUND, channelCode);
-		addStepLog(logPrefix + "institution process channel found checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionChannelProcessNotFound() {
+        process.institutionChannelProcess = null;
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun kanalında process tanımı aktif mi ?
-		 */
-		addStepLog(logPrefix + "institution process channel activate checking.");
-		ProcessUtil.validateConditionWithArgs(institutionChannelProcess.getIsActive(),
-				EnumBillResult.INSTITUTION_PROCESS_CHANNEL_NOT_ACTIVE, channelCode);
-		addStepLog(logPrefix + "institution process channel activate checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionChannelProcessNotActive() {
+        when(process.institutionChannelProcess.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun kanalında tanımlı processin calisma saat araliginda mi ?
-		 */
-		addStepLog(logPrefix + "institution process channel working time checking.");
-		ProcessUtil.validateConditionWithArgs(
-				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), institutionChannelProcess.getWorkingStartTime(),
-						institutionChannelProcess.getWorkingFinishTime()),
-				EnumBillResult.INSTITUTION_PROCESS_CHANNEL_WORKING_TIME_ERROR,
-				ProcessUtil.formatWorkingTime(institutionChannelProcess.getWorkingStartTime()),
-				ProcessUtil.formatWorkingTime(institutionChannelProcess.getWorkingFinishTime()), channelCode);
-		addStepLog(logPrefix + "institution process channel working time checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionChannelProcessNotWorkingHours() {
+        when(process.institutionChannelProcess.getWorkingStartTime()).thenReturn(LocalTime.of(8, 0));
+        when(process.institutionChannelProcess.getWorkingFinishTime()).thenReturn(LocalTime.of(16, 0));
+        when(LocalTime.now()).thenReturn(LocalTime.of(17, 30)); // Çalışma saatleri dışında bir zaman
 
-		/**
-		 * Kurumunun kanal tanımı var mı ?
-		 */
-		addStepLog(logPrefix + "institution channel found checking.");
-		ProcessUtil.validateCondition(institutionChannel != null, EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND);
-		addStepLog(logPrefix + "institution channel found checked.");
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun kanal tanımı aktif mi
-		 */
-		addStepLog(logPrefix + "institution channel active checking.");
-		ProcessUtil.validateCondition(institutionChannel.getIsActive(),
-				EnumBillResult.INSTITUTION_CHANNEL_NOT_ACTIVE);
-		addStepLog(logPrefix + "institution channel active checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionChannelNotFound() {
+        process.institutionChannel = null;
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurumun kanal çalışma aralığında mı
-		 */
-		addStepLog(logPrefix + "institution channel working time checking.");
-		ProcessUtil.validateConditionWithArgs(
-				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), institutionChannel.getWorkingStartTime(),
-						institutionChannel.getWorkingFinishTime()),
-				EnumBillResult.INSTITUTION_WORKING_TIME_ERROR,
-				ProcessUtil.formatWorkingTime(institutionChannel.getWorkingStartTime()),
-				ProcessUtil.formatWorkingTime(institutionChannel.getWorkingFinishTime()), channelCode);
-		addStepLog(logPrefix + "institution channel working time checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionChannelNotActive() {
+        when(process.institutionChannel.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-		/**
-		 * Kurum borç tipi tanımlı mı
-		 */
-		addStepLog(logPrefix + "institution debt type found checking.");
-		ProcessUtil.validateCondition(institutionDebtType != null, EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_FOUND);
-		addStepLog(logPrefix + "institution debt type found checked.");
+    @Test
+    public void testBeforeExecuteProcess_InstitutionChannelNotWorkingHours() {
+        when(process.institutionChannel.getWorkingStartTime()).thenReturn(LocalTime.of(8, 0));
+        when(process.institutionChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(16, 0));
+        when(LocalTime.now()).thenReturn(LocalTime.of(17, 30)); // Çalışma saatleri dışında bir zaman
 
-		/**
-		 * kurum borç tipi aktif mi?
-		 */
-		addStepLog(logPrefix + "institution debt type active checking.");
-		ProcessUtil.validateConditionWithArgs(institutionDebtType.getIsActive(),
-				EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_ACTIVE, institutionDebtTypeId);
-		addStepLog(logPrefix + "institution debt type active checked.");
-	}
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
+
+    @Test
+    public void testBeforeExecuteProcess_InstitutionDebtTypeNotFound() {
+        process.institutionDebtType = null;
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
+
+    @Test
+    public void testBeforeExecuteProcess_InstitutionDebtTypeNotActive() {
+        when(process.institutionDebtType.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
+
+    @Test
+    public void testBeforeExecuteProcess_Success() throws BillException {
+        // Her şeyin doğru ayarlandığı durumda başarıyla tamamlanmalı
+        process.beforeExecuteProcess();
+    }
+}
