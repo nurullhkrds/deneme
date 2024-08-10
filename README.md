@@ -1,1 +1,3 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.ProductDTO.getFomCheckFlag()" because the return value of "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getProduct()" is null
+   ProductDTO productDTO = new ProductDTO();
+    productDTO.setFomCheckFlag(true);  // Eğer bu bir boolean ise
+    institutionDTO.setProduct(productDTO);
