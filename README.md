@@ -1,14 +1,14 @@
 @Test
 public void testAfterExecuteProcess_ErrorAndRaiseException() {
-    // Gerekli nesnelerin atandığından emin olun
-    process.executionOutput = mock(ProcessExecutionOutput.class); // Ensure this is not null
-    process.logDTO = mock(ProcessLogDTO.class); // Ensure logDTO is not null
+    // Gerekli nesnelerin atanmasını sağlayın
+    process.executionOutput = mock(ProcessExecutionOutput.class); // Non-null assignment
+    process.logDTO = mock(ProcessLogDTO.class); // Ensure logDTO is assigned
 
-    // Simüle edilen bir hata durumu ayarla
-    process.error = EnumBillResult.SOME_ERROR; // Hata durumunu simüle etmek için yanlış sonuç kullan
+    // Hata durumu oluşturun
+    process.error = EnumBillResult.SOME_ERROR; // Hata durumunu ayarla
     process.shouldRaiseExceptionOnABillError = true;
 
-    // Beklenen exception'un fırlatıldığını doğrula
+    // Beklenen exception'un fırlatıldığını doğrulayın
     assertThrows(BillException.class, () -> {
         process.afterExecuteProcess();
     });
