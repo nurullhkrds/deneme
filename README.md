@@ -1,4 +1,5 @@
- class AbstractProcessTest {
+@ExtendWith(MockitoExtension.class)
+class AbstractProcessTest {
 
     @Mock
     private ProcessService processService;
@@ -37,6 +38,7 @@
         when(institutionChannelProcess.getIsActive()).thenReturn(true);
         when(institutionDebtType.getIsActive()).thenReturn(true);
 
+        // Mock nesnelerini ata
         process.processChannel = processChannel;
         process.institution = institution;
         process.institutionDebtType = institutionDebtType;
@@ -48,95 +50,107 @@
     }
 
     @Test
-    public void testBeforeExecuteProcess_ProcessChannelNotFound() throws BillException {
+    public void testBeforeExecuteProcess_ProcessChannelNotFound() {
         process.processChannel = null;
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_ProcessChannelNotActive() throws BillException {
+    public void testBeforeExecuteProcess_ProcessChannelNotActive() {
         when(processChannel.getIsActive()).thenReturn(false);
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionNotFound() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionNotFound() {
         process.institution = null;
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionNotActive() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionNotActive() {
         when(institution.getIsActive()).thenReturn(false);
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionProcessNotFound() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionProcessNotFound() {
         process.institutionProcess = null;
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionProcessNotActive() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionProcessNotActive() {
         when(institutionProcess.getIsActive()).thenReturn(false);
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionChannelProcessNotFound() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionChannelProcessNotFound() {
         process.institutionChannelProcess = null;
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionChannelProcessNotActive() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionChannelProcessNotActive() {
         when(institutionChannelProcess.getIsActive()).thenReturn(false);
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionChannelNotFound() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionChannelNotFound() {
         process.institutionChannel = null;
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionChannelNotActive() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionChannelNotActive() {
         when(institutionChannel.getIsActive()).thenReturn(false);
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionDebtTypeNotFound() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionDebtTypeNotFound() {
         process.institutionDebtType = null;
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
-    public void testBeforeExecuteProcess_InstitutionDebtTypeNotActive() throws BillException {
+    public void testBeforeExecuteProcess_InstitutionDebtTypeNotActive() {
         when(institutionDebtType.getIsActive()).thenReturn(false);
-
-        process.beforeExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
     }
 
     @Test
     public void testBeforeExecuteProcess_Success() throws BillException {
         process.beforeExecuteProcess();
-
         // Eğer exception fırlatılmadıysa, başarılı sayılabilir
     }
+
     @Test
     public void testAfterExecuteProcess_Success() throws BillException {
         process.executionOutput = mock(ProcessExecutionOutput.class);
@@ -150,28 +164,25 @@
     }
 
     @Test
-    public void testAfterExecuteProcess_ErrorAndRaiseException() throws BillException {
-        process.error = EnumBillResult.SUCCESS;
+    public void testAfterExecuteProcess_ErrorAndRaiseException() {
+        process.error = EnumBillResult.SOME_ERROR;
         process.shouldRaiseExceptionOnABillError = true;
 
-        process.afterExecuteProcess();
+        assertThrows(BillException.class, () -> {
+            process.afterExecuteProcess();
+        });
     }
 
     @Test
     public void testAfterExecuteProcess_ErrorNoRaiseException() throws BillException {
         process.executionOutput = mock(ProcessExecutionOutput.class);
-        process.error = EnumBillResult.SUCCESS;
+        process.error = EnumBillResult.SOME_ERROR;
         process.shouldRaiseExceptionOnABillError = false;
 
         process.afterExecuteProcess();
 
-        assertEquals(EnumBillResult.SUCCESS.getCode().toString(), logDTO.getResultCode());
-        assertEquals(EnumBillResult.SUCCESS.getExplanation(), logDTO.getResultText());
+        assertEquals(EnumBillResult.SOME_ERROR.getCode().toString(), logDTO.getResultCode());
+        assertEquals(EnumBillResult.SOME_ERROR.getExplanation(), logDTO.getResultText());
         assertEquals(EnumLoggingResultType.ERROR.getExplanation(), logDTO.getReturnType());
     }
-
 }
-
-
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.ProcessChannelDTO.getIsActive()" because "this.processChannel" is null
-
