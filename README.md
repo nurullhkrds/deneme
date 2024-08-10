@@ -1,8 +1,11 @@
 @Test
 void testBeforeExecuteProcess_Success() throws BillException {
-    // Çalışma saatlerini belirli sabit zamanlara ayarlayın
-    when(process.processChannel.getWorkingStartTime()).thenReturn(LocalTime.of(8, 0));  // 08:00'da başlıyor
-    when(process.processChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0)); // 17:00'da bitiyor
+    // LocalTime.now() şu anki zamana göre ayarlandığı için, bunu test sırasında kontrol edin
+    LocalTime now = LocalTime.now();
+
+    // `processChannel` çalışma saatlerini şu anki zaman aralığına uyacak şekilde ayarlayın
+    when(process.processChannel.getWorkingStartTime()).thenReturn(now.minusHours(1)); // 1 saat önce başlasın
+    when(process.processChannel.getWorkingFinishTime()).thenReturn(now.plusHours(1)); // 1 saat sonra bitsin
 
     // Her şeyin doğru ayarlandığı durumda başarıyla tamamlanmalı
     process.beforeExecuteProcess();
