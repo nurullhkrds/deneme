@@ -1,10 +1,91 @@
-org.mockito.exceptions.misusing.MissingMethodInvocationException: 
-when() requires an argument which has to be 'a method call on a mock'.
-For example:
-    when(mock.getArticles()).thenReturn(articles);
+@ExtendWith(MockitoExtension.class)
+class BillPaymentReverseProcessTest {
 
-Also, this error might show up because:
-1. you stub either of: final/private/equals()/hashCode() methods.
-   Those methods *cannot* be stubbed/verified.
-   Mocking methods declared on non-public parent classes is not supported.
-2. inside when() you don't call method on mock but on some other object.
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @Mock
+    private AccountingService accountingService;
+
+    @Mock
+    private PaymentService paymentService;
+
+    @Mock
+    private PaymentNotificationService paymentNotificationService;
+
+    @Mock
+    private PaymentEventPublisher paymentEventPublisher;
+
+    @Mock
+    private InstitutionFeatureService institutionFeatureService;
+
+    @Mock
+    private ChannelService channelService;
+
+    @Mock
+    private PaymentUtilImpl paymentUtilImpl;
+
+    @InjectMocks
+    private BillPaymentReverseProcess billPaymentReverseProcess;
+
+    private PaymentDTO paymentDTO;
+    @Mock
+    private InstitutionDTO institutionDTO;
+
+
+    @Test
+    void testExecuteProcess_Success() throws BillException, IllegalAccessException, NoSuchFieldException {
+        SpringUtil springUtil=new SpringUtil();
+        springUtil.setApplicationContext(applicationContext);
+        lenient().when(applicationContext.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+
+        lenient().when(applicationContext.getBean(PaymentNotificationService.class)).thenReturn(paymentNotificationService);
+        lenient().when(applicationContext.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
+        lenient().when(applicationContext.getBean(PaymentService.class)).thenReturn(paymentService);
+        lenient().when(applicationContext.getBean(AccountingService.class)).thenReturn(accountingService);
+        lenient().when(applicationContext.getBean(InstitutionFeatureService.class)).thenReturn(institutionFeatureService);
+        lenient().when(applicationContext.getBean(ChannelService.class)).thenReturn(channelService);
+
+
+        CreateReverseAccountingResultDTO createReverseAccountingResultDTO=new CreateReverseAccountingResultDTO();
+        createReverseAccountingResultDTO.setSuccess(true);
+        paymentDTO = new PaymentDTO();
+        paymentDTO.setId(123L);
+        paymentDTO.setChannelCode("someChannelCode");
+
+        paymentDTO.setContractNo(456L);
+        paymentDTO.setPaymentMethod(EnumPaymentMethod.ACCOUNT);
+
+        ProcessLogDTO logDTO = new ProcessLogDTO("123");
+        billPaymentReverseProcess.setLogDTO(logDTO);
+
+
+        institutionDTO = new InstitutionDTO();
+        institutionDTO.setInstitutionCode("123");
+        institutionDTO.setIsReverseAllowed(true);
+
+
+        billPaymentReverseProcess.setInstitution(institutionDTO);
+
+        Field stepHandlerField = AbstractProcess.class.getDeclaredField("stepHandler");
+        stepHandlerField.setAccessible(true);
+        stepHandlerField.set(billPaymentReverseProcess, billPaymentReverseProcess.new ProcessStepHandler());
+
+        when(paymentService.getPayment(anyLong(), anyLong())).thenReturn(paymentDTO);
+        when(accountingService.doReverseAccounting(any())).thenReturn(createReverseAccountingResultDTO);
+        lenient().when(paymentUtilImpl.isFomOperationEnabled(institutionDTO)).thenReturn(true);
+
+        billPaymentReverseProcess.setDataPack(new HashMap<>());
+        billPaymentReverseProcess.getDataPack().put(ProcessDataPackKey.BILL_ID.getKey(), 1L);
+        billPaymentReverseProcess.getDataPack().put(ProcessDataPackKey.CONTRACT_NO.getKey(), 456L);
+
+        billPaymentReverseProcess.executeProcess();
+
+        verify(paymentService).getPayment(1L, 456L);
+        verify(accountingService).doReverseAccounting(any());
+        verify(paymentNotificationService, times(1)).insertPaymentNotification(any());
+        verify(paymentEventPublisher).findPublishPaymentCancelEvent(any());
+
+        assertNull(billPaymentReverseProcess.getExecutionOutput());
+    }
+}
