@@ -1,55 +1,160 @@
-addStepLog(logPrefix + "institution channel found checking.");
-		ProcessUtil.validateCondition(institutionChannel != null, EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND);
-		addStepLog(logPrefix + "institution channel found checked.");
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-		/**
-		 * Kurumun kanal tanımı aktif mi
-		 */
-		addStepLog(logPrefix + "institution channel active checking.");
-		ProcessUtil.validateCondition(institutionChannel.getIsActive(),
-				EnumBillResult.INSTITUTION_CHANNEL_NOT_ACTIVE);
-		addStepLog(logPrefix + "institution channel active checked.");
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-		/**
-		 * Kurumun kanal çalışma aralığında mı
-		 */
-		addStepLog(logPrefix + "institution channel working time checking.");
-		ProcessUtil.validateConditionWithArgs(
-				ProcessUtil.isTimeBetweenWorkingHour(LocalTime.now(), institutionChannel.getWorkingStartTime(),
-						institutionChannel.getWorkingFinishTime()),
-				EnumBillResult.INSTITUTION_WORKING_TIME_ERROR,
-				ProcessUtil.formatWorkingTime(institutionChannel.getWorkingStartTime()),
-				ProcessUtil.formatWorkingTime(institutionChannel.getWorkingFinishTime()), channelCode);
-		addStepLog(logPrefix + "institution channel working time checked.");
+import java.time.LocalTime;
 
-		/**
-		 * Kurum borç tipi tanımlı mı
-		 */
-		addStepLog(logPrefix + "institution debt type found checking.");
-		ProcessUtil.validateCondition(institutionDebtType != null, EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_FOUND);
-		addStepLog(logPrefix + "institution debt type found checked.");
+public class AbstractProcessTest {
 
-		/**
-		 * kurum borç tipi aktif mi?
-		 */
-		addStepLog(logPrefix + "institution debt type active checking.");
-		ProcessUtil.validateConditionWithArgs(institutionDebtType.getIsActive(),
-				EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_ACTIVE, institutionDebtTypeId);
-		addStepLog(logPrefix + "institution debt type active checked.");
-	}
+    @InjectMocks
+    private NotifyPaymentProcess process; // Somut sınıfı kullanıyoruz
 
-	@Override
-	public void afterExecuteProcess() throws BillException {
-		boolean errorIsNotNullAndNotSuccess = this.error != null && !EnumBillResult.SUCCESS.equals(error);
-		if (errorIsNotNullAndNotSuccess && shouldRaiseExceptionOnABillError) {
-			ProcessUtil.raiseBillException(error);
-		}
+    @Mock
+    private ProcessService processService;
+    @Mock
+    private ProcessChannelDTO processChannelDTO;
+    @Mock
+    private InstitutionDTO institutionDTO;
+    @Mock
+    private InstitutionDebtTypeDTO institutionDebtTypeDTO;
+    @Mock
+    private InstitutionChannelDTO institutionChannelDTO;
+    @Mock
+    private InstitutionProcessDTO institutionProcessDTO;
+    @Mock
+    private InstitutionChannelProcessDTO institutionChannelProcessDTO;
+    @Mock
+    private ProcessLogDTO processLogDTO;
+    @Mock
+    private ProcessExecutionOutput executionOutput;
 
-		prepareExecutionOutput();
-		String responseData1 = logDTO.getResponseData1();
-		responseData1 = responseData1.concat("\n------OUTPUT-------\n").concat(executionOutput.toString());
-		logDTO.setResponseData1(responseData1);
-		logDTO.setResultCode(errorIsNotNullAndNotSuccess ? error.getCode().toString() : EnumBillResult.SUCCESS.getCode().toString());
-		logDTO.setResultText(errorIsNotNullAndNotSuccess ? error.getExplanation().toString() : EnumBillResult.SUCCESS.getExplanation());
-		logDTO.setReturnType(errorIsNotNullAndNotSuccess ? EnumLoggingResultType.ERROR.getExplanation() : EnumLoggingResultType.SUCCESS.getExplanation());
-	}
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        process.processService = processService;
+        process.processChannel = processChannelDTO;
+        process.institution = institutionDTO;
+        process.institutionDebtType = institutionDebtTypeDTO;
+        process.institutionChannel = institutionChannelDTO;
+        process.institutionProcess = institutionProcessDTO;
+        process.institutionChannelProcess = institutionChannelProcessDTO;
+        process.logDTO = processLogDTO;
+
+        when(process.processChannel.getIsActive()).thenReturn(true);
+        when(process.processChannel.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
+        when(process.processChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
+        when(process.institution.getIsActive()).thenReturn(true);
+        when(process.institutionProcess.getIsActive()).thenReturn(true);
+        when(process.institutionChannel.getIsActive()).thenReturn(true);
+        when(process.institutionChannel.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
+        when(process.institutionChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
+        when(process.institutionChannelProcess.getIsActive()).thenReturn(true);
+        when(process.institutionChannelProcess.getWorkingStartTime()).thenReturn(LocalTime.of(9, 0));
+        when(process.institutionChannelProcess.getWorkingFinishTime()).thenReturn(LocalTime.of(17, 0));
+        when(process.institutionDebtType.getIsActive()).thenReturn(true);
+        when(process.logDTO.getResponseData1()).thenReturn("");
+    }
+
+    @Test
+    void testBeforeExecuteProcess_InstitutionChannelNotFound() {
+        process.institutionChannel = null;
+
+        BillException exception = assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+
+        assertEquals(EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    void testBeforeExecuteProcess_InstitutionChannelNotActive() {
+        when(process.institutionChannel.getIsActive()).thenReturn(false);
+
+        BillException exception = assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+
+        assertEquals(EnumBillResult.INSTITUTION_CHANNEL_NOT_ACTIVE.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    void testBeforeExecuteProcess_InstitutionChannelWorkingTimeError() {
+        when(process.institutionChannel.getWorkingStartTime()).thenReturn(LocalTime.of(8, 0));
+        when(process.institutionChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(16, 0));
+
+        BillException exception = assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+
+        assertEquals(EnumBillResult.INSTITUTION_WORKING_TIME_ERROR.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    void testBeforeExecuteProcess_InstitutionDebtTypeNotFound() {
+        process.institutionDebtType = null;
+
+        BillException exception = assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+
+        assertEquals(EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_FOUND.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    void testBeforeExecuteProcess_InstitutionDebtTypeNotActive() {
+        when(process.institutionDebtType.getIsActive()).thenReturn(false);
+
+        BillException exception = assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+
+        assertEquals(EnumBillResult.INSTITUTION_DEBT_TYPE_NOT_ACTIVE.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    void testAfterExecuteProcess_Success() throws BillException {
+        when(executionOutput.toString()).thenReturn("executionOutput");
+        process.executionOutput = executionOutput;
+        process.error = null;  // No error
+
+        process.afterExecuteProcess();
+
+        verify(process.logDTO).setResponseData1(contains("executionOutput"));
+        verify(process.logDTO).setResultCode(EnumBillResult.SUCCESS.getCode().toString());
+        verify(process.logDTO).setResultText(EnumBillResult.SUCCESS.getExplanation());
+        verify(process.logDTO).setReturnType(EnumLoggingResultType.SUCCESS.getExplanation());
+    }
+
+    @Test
+    void testAfterExecuteProcess_WithErrorAndRaiseException() {
+        process.error = EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND;  // An example error
+        process.shouldRaiseExceptionOnABillError = true;
+
+        BillException exception = assertThrows(BillException.class, () -> {
+            process.afterExecuteProcess();
+        });
+
+        assertEquals(EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    void testAfterExecuteProcess_WithErrorNoRaiseException() throws BillException {
+        when(executionOutput.toString()).thenReturn("executionOutput");
+        process.executionOutput = executionOutput;
+        process.error = EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND;  // An example error
+        process.shouldRaiseExceptionOnABillError = false;
+
+        process.afterExecuteProcess();
+
+        verify(process.logDTO).setResponseData1(contains("executionOutput"));
+        verify(process.logDTO).setResultCode(EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND.getCode().toString());
+        verify(process.logDTO).setResultText(EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND.getExplanation());
+        verify(process.logDTO).setReturnType(EnumLoggingResultType.ERROR.getExplanation());
+    }
+}
