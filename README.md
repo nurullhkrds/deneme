@@ -1,1 +1,3 @@
-java.lang.IllegalArgumentException: Application is running with pcf mode, [micro.redis.servicePerfLog] property must be defined at config files.
+@SpringBootTest
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@PropertySource("classpath:application.properties")
