@@ -1,15 +1,17 @@
- @Test
-    public void testAfterExecuteProcess_ErrorNoRaiseException() throws BillException {
-        lenient().when(process.logDTO.getResponseData1()).thenReturn(""); // responseData1'in null olmadığından emin olun
+@Test
+public void testAfterExecuteProcess_ErrorNoRaiseException() throws BillException {
+    process.executionOutput = mock(ProcessExecutionOutput.class);
+    process.logDTO = mock(ProcessLogDTO.class);
 
-        process.executionOutput = mock(ProcessExecutionOutput.class);
-        process.logDTO = mock(ProcessLogDTO.class);
-        process.error = EnumBillResult.PAID_BILL_NOT_FOUND_ERROR; // Hata durumunu simüle edin
-        process.shouldRaiseExceptionOnABillError = false;
+    // Mock işleminden sonra getResponseData1'in null olmadığından emin olun
+    lenient().when(process.logDTO.getResponseData1()).thenReturn(""); // responseData1'in null olmadığından emin olun
 
-        process.afterExecuteProcess();
+    process.error = EnumBillResult.PAID_BILL_NOT_FOUND_ERROR; // Hata durumunu simüle edin
+    process.shouldRaiseExceptionOnABillError = false;
 
-        assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getCode().toString(), process.logDTO.getResultCode());
-        assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getExplanation(), process.logDTO.getResultText());
-        assertEquals(EnumLoggingResultType.ERROR.getExplanation(), process.logDTO.getReturnType());
-    }java.lang.NullPointerException: Cannot invoke "String.concat(String)" because "responseData1" is null
+    process.afterExecuteProcess();
+
+    assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getCode().toString(), process.logDTO.getResultCode());
+    assertEquals(EnumBillResult.PAID_BILL_NOT_FOUND_ERROR.getExplanation(), process.logDTO.getResultText());
+    assertEquals(EnumLoggingResultType.ERROR.getExplanation(), process.logDTO.getReturnType());
+}
