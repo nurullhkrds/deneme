@@ -1,11 +1,6 @@
-    @Test
-    public void testBeforeExecuteProcess_InstitutionChannelNotWorkingHours() {
-        when(process.institutionChannel.getWorkingStartTime()).thenReturn(LocalTime.of(8, 0));
-        when(process.institutionChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(16, 0));
-        when(LocalTime.now()).thenReturn(LocalTime.of(17, 30)); // Çalışma saatleri dışında bir zaman
 
-        BillException exception = assertThrows(BillException.class, () -> {
-            process.beforeExecuteProcess();
-        });
-        assertEquals("1501",exception.getErrorCode().toString());
-    }
+    @Test
+     void testBeforeExecuteProcess_Success() throws BillException {
+        // Her şeyin doğru ayarlandığı durumda başarıyla tamamlanmalı
+        process.beforeExecuteProcess();
+    }com.ykb.payments.bill.common.exception.BillException: Transaction can be made beetween 09:00:00 and 17:00:00 for the given  channel: someChannelCode
