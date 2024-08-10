@@ -1,2 +1,1 @@
-org.mockito.exceptions.base.MockitoException: Unable to initialize @Spy annotated field 'paymentUtilImpl'.
-Please ensure that the type 'PaymentUtilImpl' has a no-arg constructor.
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.ProductDTO.getFomCheckFlag()" because the return value of "com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO.getProduct()" is null
