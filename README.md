@@ -1,7 +1,9 @@
-    @Test
-     void testBeforeExecuteProcess_Success() throws BillException {
+@Test
+void testBeforeExecuteProcess_Success() throws BillException {
+    // Şu anki zamana uygun bir çalışma saatleri aralığı belirleyin
+    when(process.processChannel.getWorkingStartTime()).thenReturn(LocalTime.of(0, 0));  // 00:00'da başlasın
+    when(process.processChannel.getWorkingFinishTime()).thenReturn(LocalTime.of(23, 59)); // 23:59'da bitsin
 
-         process.beforeExecuteProcess();
-     }
-
-com.ykb.payments.bill.common.exception.BillException: Transaction can be made beetween 09:00:00 and 17:00:00 for the given  channel: someChannelCode
+    // Her şeyin doğru ayarlandığı durumda başarıyla tamamlanmalı
+    process.beforeExecuteProcess();
+}
