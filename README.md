@@ -1,15 +1,14 @@
-@Test
-public void testAfterExecuteProcess_ErrorAndRaiseException() {
-    // Gerekli nesnelerin atanmasını sağlayın
-    process.executionOutput = mock(ProcessExecutionOutput.class); // Non-null assignment
-    process.logDTO = mock(ProcessLogDTO.class); // Ensure logDTO is assigned
+    @Test
+    public void testBeforeExecuteProcess_InstitutionNotActive() {
+        when(institution.getIsActive()).thenReturn(false);
+        assertThrows(BillException.class, () -> {
+            process.beforeExecuteProcess();
+        });
+    }
 
-    // Hata durumu oluşturun
-    process.error = EnumBillResult.SOME_ERROR; // Hata durumunu ayarla
-    process.shouldRaiseExceptionOnABillError = true;
-
-    // Beklenen exception'un fırlatıldığını doğrulayın
-    assertThrows(BillException.class, () -> {
-        process.afterExecuteProcess();
-    });
-}
+org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at com.ykb.payments.bill.transaction.process.common.AbstractProcessTest.testBeforeExecuteProcess_InstitutionNotActive(AbstractProcessTest.java:109)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
