@@ -1,13 +1,6 @@
-    @Test
-    public void testBeforeExecuteProcess_InstitutionChannelProcessNotActive() {
-        when(institutionChannelProcess.getIsActive()).thenReturn(false);
-        assertThrows(BillException.class, () -> {
-            process.beforeExecuteProcess();
-        });
+   @Test
+    public void testBeforeExecuteProcess_Success() throws BillException {
+        process.beforeExecuteProcess();
     }
-org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
-Unnecessary stubbings detected.
-Clean & maintainable test code requires zero unnecessary code.
-Following stubbings are unnecessary (click to navigate to relevant line of code):
-  1. -> at com.ykb.payments.bill.transaction.process.common.AbstractProcessTest.testBeforeExecuteProcess_InstitutionChannelProcessNotActive(AbstractProcessTest.java:137)
-Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+
+.common.exception.BillException: Transaction can be made beetween  and  for the given  channel: channelCode
