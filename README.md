@@ -1,23 +1,72 @@
-@Test
-void testAfterExecuteProcess_Success() throws BillException {
-    when(process.logDTO.getResponseData1()).thenReturn("ExistingData");
-    when(executionOutput.toString()).thenReturn("executionOutput");
+   @Test
+     void testAfterExecuteProcess_WithErrorNoRaiseException() throws BillException {
+         when(executionOutput.toString()).thenReturn("executionOutput");
+         process.executionOutput = executionOutput;
+         process.error = EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND;  // An example error
+         process.shouldRaiseExceptionOnABillError = false;
 
-    process.executionOutput = executionOutput;
-    process.error = null;  // No error
+         process.afterExecuteProcess();
 
-    process.afterExecuteProcess();
+         verify(process.logDTO).setResponseData1(contains("executionOutput"));
+         verify(process.logDTO).setResultCode(EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND.getCode().toString());
+         verify(process.logDTO).setResultText(EnumBillResult.INSTITUTION_CHANNEL_NOT_FOUND.getExplanation());
+         verify(process.logDTO).setReturnType(EnumLoggingResultType.ERROR.getExplanation());
+     }
 
-    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(process.logDTO).setResponseData1(captor.capture());
 
-    String capturedArgument = captor.getValue();
-    System.out.println("Captured Argument: " + capturedArgument); // Argümanı yazdır
 
-    assertTrue(capturedArgument.contains("ExistingData"), "Expected capturedArgument to contain 'ExistingData'");
-    assertTrue(capturedArgument.contains("executionOutput"), "Expected capturedArgument to contain 'executionOutput'");
+"processLogDTO.setResponseData1(
+    contains("executionOutput")
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcessTest.testAfterExecuteProcess_WithErrorNoRaiseException(AbstractProcessTest.java:296)
+Actual invocations have different arguments:
+processLogDTO.getResponseData1(
+    
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:204)
+processLogDTO.setResponseData1(
+    "
+------OUTPUT-------
+{"result":"INSTITUTION_CHANNEL_NOT_FOUND"}"
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:206)
+processLogDTO.setResultCode(
+    "2022"
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:207)
+processLogDTO.setResultText(
+    "Channel is not defined for the institution"
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:208)
+processLogDTO.setReturnType(
+    "ERROR"
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:209)
 
-    verify(process.logDTO).setResultCode(EnumBillResult.SUCCESS.getCode().toString());
-    verify(process.logDTO).setResultText(EnumBillResult.SUCCESS.getExplanation());
-    verify(process.logDTO).setReturnType(EnumLoggingResultType.SUCCESS.getExplanation());
-}
+Comparison Failure: 
+<Click to see difference>
+
+Argument(s) are different! Wanted:
+processLogDTO.setResponseData1(
+    contains("executionOutput")
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcessTest.testAfterExecuteProcess_WithErrorNoRaiseException(AbstractProcessTest.java:296)
+Actual invocations have different arguments:
+processLogDTO.getResponseData1(
+    
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:204)
+processLogDTO.setResponseData1(
+    "
+------OUTPUT-------
+{"result":"INSTITUTION_CHANNEL_NOT_FOUND"}"
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:206)
+processLogDTO.setResultCode(
+    "2022"
+);
+-> at com.ykb.payments.bill.transaction.process.common.AbstractProcess.afterExecuteProcess(AbstractProcess.java:207)
+processLogDTO.setResultText(
+    "Channel is not defined for the institution"
+);
+"
