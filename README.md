@@ -1,1 +1,4 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.process.common.AbstractProcess$ProcessStepHandler.addFlow(com.ykb.payments.bill.transaction.process.common.ProcessStep)" because "this.stepHandler" is null
+// Use reflection to set the stepHandler field
+        Field stepHandlerField = AbstractProcess.class.getDeclaredField("stepHandler");
+        stepHandlerField.setAccessible(true);
+        stepHandlerField.set(process, process.new ProcessStepHandler());
