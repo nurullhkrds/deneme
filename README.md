@@ -1,1 +1,1 @@
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.service.ChannelService.findChannelByChannelCode(String)" because "this.this$0.channelService" is null
+assertNotNull(channelService, "channelService should not be null");
