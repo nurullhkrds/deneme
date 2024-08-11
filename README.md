@@ -96,7 +96,7 @@ class QueryBillsProcessTest {
     }
 
     @Test
-    void testCheckCustomerQueryLimit_LimitReached() {
+    void testExecuteProcess_CheckCustomerQueryLimit() throws BillException {
         when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
 
         PaymentAllowedResponse response = new PaymentAllowedResponse();
@@ -108,13 +108,13 @@ class QueryBillsProcessTest {
         process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
         process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
 
-        process.new CheckCustomerQueryLimit().executeStep();
+        process.executeProcess();
 
         assertEquals(EnumBillResult.BILL_QUERY_LIMIT_REACHED, process.getExecutionOutput().getResult());
     }
 
     @Test
-    void testQueryFromService_Success() throws BillException {
+    void testExecuteProcess_QueryFromService_Success() throws BillException {
         QueryBillsAdapterResponse response = new QueryBillsAdapterResponse();
         response.setInternalResultCode("00"); // Success code
         List<QueriedBillDTO> bills = new ArrayList<>();
@@ -128,48 +128,60 @@ class QueryBillsProcessTest {
         process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
         process.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
 
-        process.new QueryFromService().executeStep();
+        process.executeProcess();
 
         assertNotNull(process.getExecutionOutput());
         assertEquals(EnumBillResult.SUCCESS, process.getExecutionOutput().getResult());
     }
 
     @Test
-    void testEliminateBills_NoBillsFound() {
+    void testExecuteProcess_EliminateBills_NoBillsFound() throws BillException {
         process.setQueriedBillDTOList(new ArrayList<>());
 
-        process.new EliminateBills().executeStep();
+        process.setDataPack(new HashMap<>());
+        process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
+
+        process.executeProcess();
 
         assertEquals(EnumBillResult.BILL_NOT_FOUND, process.getExecutionOutput().getResult());
     }
 
     @Test
-    void testInvalidateNotPaidProvisions() {
-        process.new InvalidateNotPaidProvisions().executeStep();
+    void testExecuteProcess_InvalidateNotPaidProvisions() throws BillException {
+        process.setDataPack(new HashMap<>());
+        process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
+
+        process.executeProcess();
 
         verify(provisionService, times(1)).invalidateNotPaidProvisions(anyLong(), anyString());
     }
 
     @Test
-    void testCreateProvisions() {
+    void testExecuteProcess_CreateProvisions() throws BillException {
         when(provisionService.createProvisions(anyList())).thenReturn(new ArrayList<>());
 
         process.setQueriedBillDTOList(new ArrayList<>());
 
-        process.new CreateProvisions().executeStep();
+        process.setDataPack(new HashMap<>());
+        process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
+
+        process.executeProcess();
 
         verify(provisionService, times(1)).createProvisions(anyList());
     }
 
     @Test
-    void testUpdateCustomerQueryLimit_FomEnabled() {
+    void testExecuteProcess_UpdateCustomerQueryLimit_FomEnabled() throws BillException {
         when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
 
         process.setDataPack(new HashMap<>());
         process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
         process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
 
-        process.new UpdateCustomerQueryLimit().executeStep();
+        process.executeProcess();
 
         verify(paymentEventPublisher, times(1)).publishInquiryLimiationNotification(any());
     }
