@@ -1,29 +1,72 @@
-@Service
-@RequiredArgsConstructor
-public class ProcessServiceImpl implements ProcessService {
+public class ProcessServiceImplTest {
 
-	private final ProcessChannelService processChannelService;
-	private final InstitutionService institutionService;
-	private final InstitutionDebtTypeService institutionDebtTypeService;	
+    @Mock
+    private ProcessChannelService processChannelService;
 
+    @Mock
+    private InstitutionService institutionService;
 
-@Override
-	@Cacheable(value = "getProcessChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public ProcessChannelDTO getProcessChannel(String code, String channelCode) {
-		if (StringUtils.isEmpty(code) || StringUtils.isEmpty(channelCode)) {
-			return null;
-		}
+    @Mock
+    private InstitutionDebtTypeService institutionDebtTypeService;
 
-		return processChannelService.findProcessChannel(code, channelCode);
-	}
-	@Override
-	@Cacheable(value = "getInstitutionDebtTypeForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionDebtTypeDTO getInstitutionDebtTypeForProcess(String productCode, String institutionCode,Long institutionDebtTypeId) {
-		if(institutionDebtTypeId != null) {
-			return institutionDebtTypeService.getDebtType(institutionDebtTypeId);
-		}
-		if(!StringUtils.isAnyEmpty(productCode,institutionCode)){
-			return institutionDebtTypeService.getDefaultDebtType(productCode,institutionCode);
-		}
-		return null;
-	}
+    @InjectMocks
+    private ProcessServiceImpl processServiceImpl;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        CacheManager cacheManager = new ConcurrentMapCacheManager();
+    }
+
+    @Test
+    void testGetProcessChannel_ValidInput() {
+        ProcessChannelDTO expectedDto = new ProcessChannelDTO();
+        when(processChannelService.findProcessChannel(anyString(), anyString())).thenReturn(expectedDto);
+
+        ProcessChannelDTO result = processServiceImpl.getProcessChannel("code", "channelCode");
+
+        assertEquals(expectedDto, result);
+    }
+
+    @Test
+    void testGetProcessChannel_EmptyCodeOrChannelCode() {
+        ProcessChannelDTO result1 = processServiceImpl.getProcessChannel("", "channelCode");
+        ProcessChannelDTO result2 = processServiceImpl.getProcessChannel("code", "");
+
+        assertNull(result1);
+        assertNull(result2);
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_WithDebtTypeId() {
+        InstitutionDebtTypeDTO expectedDto = new InstitutionDebtTypeDTO();
+        when(institutionDebtTypeService.getDebtType(anyLong())).thenReturn(expectedDto);
+
+        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess("productCode", "institutionCode", 1L);
+
+        assertEquals(expectedDto, result);
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_WithProductAndInstitutionCode() {
+        InstitutionDebtTypeDTO expectedDto = new InstitutionDebtTypeDTO();
+        when(institutionDebtTypeService.getDefaultDebtType(anyString(), anyString())).thenReturn(expectedDto);
+
+        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess("productCode", "institutionCode", null);
+
+        assertEquals(expectedDto, result);
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_EmptyProductOrInstitutionCode() {
+        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess("", "", null);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_NullDebtTypeIdAndCodes() {
+        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess(null, null, null);
+
+        assertNull(result);
+    }
