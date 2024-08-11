@@ -1,71 +1,153 @@
-@Service
-@RequiredArgsConstructor
-public class ProcessServiceImpl implements ProcessService {
+@ExtendWith(MockitoExtension.class)
+class ProcessServiceImplTest {
 
-	private final ProcessChannelService processChannelService;
-	private final InstitutionService institutionService;
-	private final InstitutionDebtTypeService institutionDebtTypeService;
+    @Mock
+    private ProcessChannelService processChannelService;
 
-	@Override
-	@Cacheable(value = "getInstitutionForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionDTO getInstitutionForProcess(String productCode, String institutionCode) {
-		if (StringUtils.isAnyEmpty(productCode, institutionCode)) {
-			return null;
-		}
+    @Mock
+    private InstitutionService institutionService;
 
-		return institutionService.getInstitution(productCode, institutionCode);
-	}
+    @Mock
+    private InstitutionDebtTypeService institutionDebtTypeService;
 
-	@Override
-	@Cacheable(value = "getInstitutionChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionChannelDTO getInstitutionChannelForProcess(Long institutionDebtTypeId, String channelCode) {
-		if (institutionDebtTypeId == null || StringUtils.isEmpty(channelCode)) {
-			return null;
-		}
+    @InjectMocks
+    private ProcessServiceImpl processService;
 
-		return institutionService.getInstitutionChannel(institutionDebtTypeId, channelCode);
-	}
+    @BeforeEach
+    void setUp() {
+        // Her testten önce gerekli mock davranışlarını kurabilirsiniz.
+    }
 
-	@Override
-	@Cacheable(value = "getProcessChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public ProcessChannelDTO getProcessChannel(String code, String channelCode) {
-		if (StringUtils.isEmpty(code) || StringUtils.isEmpty(channelCode)) {
-			return null;
-		}
+    @Test
+    void testGetInstitutionForProcess_WithValidInputs() {
+        InstitutionDTO institutionDTO = new InstitutionDTO();
+        when(institutionService.getInstitution(anyString(), anyString())).thenReturn(institutionDTO);
 
-		return processChannelService.findProcessChannel(code, channelCode);
-	}
+        InstitutionDTO result = processService.getInstitutionForProcess("productCode", "institutionCode");
 
-	@Override
-	@Cacheable(value = "getInstitutionProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionProcessDTO getInstitutionProcess(String productCode, String institutionCode, String code) {
-		if (StringUtils.isAnyEmpty(productCode, institutionCode, code)) {
-			return null;
-		}
+        assertNotNull(result);
+        assertEquals(institutionDTO, result);
+        verify(institutionService, times(1)).getInstitution("productCode", "institutionCode");
+    }
 
-		return institutionService.getInstitutionProcess(productCode, institutionCode, code);
-	}
+    @Test
+    void testGetInstitutionForProcess_WithInvalidInputs() {
+        InstitutionDTO result = processService.getInstitutionForProcess("", "");
 
-	@Override
-	@Cacheable(value = "getInstitutionChannelProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionChannelProcessDTO getInstitutionChannelProcess(Long institutionDebtTypeId,
-			String processCode, String channelCode) {
-		if (institutionDebtTypeId == null || StringUtils.isAnyEmpty(processCode, channelCode)) {
-			return null;
-		}
+        assertNull(result);
+        verify(institutionService, times(0)).getInstitution(anyString(), anyString());
+    }
 
-		return institutionService.getInstitutionChannelProcess(institutionDebtTypeId, processCode, channelCode);
-	}
+    @Test
+    void testGetInstitutionChannelForProcess_WithValidInputs() {
+        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
+        when(institutionService.getInstitutionChannel(anyLong(), anyString())).thenReturn(institutionChannelDTO);
 
-	@Override
-	@Cacheable(value = "getInstitutionDebtTypeForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
-	public InstitutionDebtTypeDTO getInstitutionDebtTypeForProcess(String productCode, String institutionCode,Long institutionDebtTypeId) {
-		if(institutionDebtTypeId != null) {
-			return institutionDebtTypeService.getDebtType(institutionDebtTypeId);
-		}
-		if(!StringUtils.isAnyEmpty(productCode,institutionCode)){
-			return institutionDebtTypeService.getDefaultDebtType(productCode,institutionCode);
-		}
-		return null;
-	}
+        InstitutionChannelDTO result = processService.getInstitutionChannelForProcess(1L, "channelCode");
+
+        assertNotNull(result);
+        assertEquals(institutionChannelDTO, result);
+        verify(institutionService, times(1)).getInstitutionChannel(1L, "channelCode");
+    }
+
+    @Test
+    void testGetInstitutionChannelForProcess_WithInvalidInputs() {
+        InstitutionChannelDTO result = processService.getInstitutionChannelForProcess(null, "");
+
+        assertNull(result);
+        verify(institutionService, times(0)).getInstitutionChannel(anyLong(), anyString());
+    }
+
+    @Test
+    void testGetProcessChannel_WithValidInputs() {
+        ProcessChannelDTO processChannelDTO = new ProcessChannelDTO();
+        when(processChannelService.findProcessChannel(anyString(), anyString())).thenReturn(processChannelDTO);
+
+        ProcessChannelDTO result = processService.getProcessChannel("code", "channelCode");
+
+        assertNotNull(result);
+        assertEquals(processChannelDTO, result);
+        verify(processChannelService, times(1)).findProcessChannel("code", "channelCode");
+    }
+
+    @Test
+    void testGetProcessChannel_WithInvalidInputs() {
+        ProcessChannelDTO result = processService.getProcessChannel("", "");
+
+        assertNull(result);
+        verify(processChannelService, times(0)).findProcessChannel(anyString(), anyString());
+    }
+
+    @Test
+    void testGetInstitutionProcess_WithValidInputs() {
+        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
+        when(institutionService.getInstitutionProcess(anyString(), anyString(), anyString())).thenReturn(institutionProcessDTO);
+
+        InstitutionProcessDTO result = processService.getInstitutionProcess("productCode", "institutionCode", "code");
+
+        assertNotNull(result);
+        assertEquals(institutionProcessDTO, result);
+        verify(institutionService, times(1)).getInstitutionProcess("productCode", "institutionCode", "code");
+    }
+
+    @Test
+    void testGetInstitutionProcess_WithInvalidInputs() {
+        InstitutionProcessDTO result = processService.getInstitutionProcess("", "", "");
+
+        assertNull(result);
+        verify(institutionService, times(0)).getInstitutionProcess(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testGetInstitutionChannelProcess_WithValidInputs() {
+        InstitutionChannelProcessDTO institutionChannelProcessDTO = new InstitutionChannelProcessDTO();
+        when(institutionService.getInstitutionChannelProcess(anyLong(), anyString(), anyString())).thenReturn(institutionChannelProcessDTO);
+
+        InstitutionChannelProcessDTO result = processService.getInstitutionChannelProcess(1L, "processCode", "channelCode");
+
+        assertNotNull(result);
+        assertEquals(institutionChannelProcessDTO, result);
+        verify(institutionService, times(1)).getInstitutionChannelProcess(1L, "processCode", "channelCode");
+    }
+
+    @Test
+    void testGetInstitutionChannelProcess_WithInvalidInputs() {
+        InstitutionChannelProcessDTO result = processService.getInstitutionChannelProcess(null, "", "");
+
+        assertNull(result);
+        verify(institutionService, times(0)).getInstitutionChannelProcess(anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_WithValidInstitutionDebtTypeId() {
+        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+        when(institutionDebtTypeService.getDebtType(anyLong())).thenReturn(institutionDebtTypeDTO);
+
+        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess("productCode", "institutionCode", 1L);
+
+        assertNotNull(result);
+        assertEquals(institutionDebtTypeDTO, result);
+        verify(institutionDebtTypeService, times(1)).getDebtType(1L);
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_WithNullInstitutionDebtTypeIdAndValidProductAndInstitutionCode() {
+        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+        when(institutionDebtTypeService.getDefaultDebtType(anyString(), anyString())).thenReturn(institutionDebtTypeDTO);
+
+        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess("productCode", "institutionCode", null);
+
+        assertNotNull(result);
+        assertEquals(institutionDebtTypeDTO, result);
+        verify(institutionDebtTypeService, times(1)).getDefaultDebtType("productCode", "institutionCode");
+    }
+
+    @Test
+    void testGetInstitutionDebtTypeForProcess_WithNullInputs() {
+        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess("", "", null);
+
+        assertNull(result);
+        verify(institutionDebtTypeService, times(0)).getDebtType(anyLong());
+        verify(institutionDebtTypeService, times(0)).getDefaultDebtType(anyString(), anyString());
+    }
 }
