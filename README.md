@@ -1,1 +1,5 @@
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+    BillPaymentReverseProcessTest.class,
+    AnotherTest.class
+})
