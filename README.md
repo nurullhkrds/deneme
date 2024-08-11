@@ -1,5 +1,4 @@
-
-    @Test
+@Test
     public void testGetProcessChannel_ValidInputs() {
         // Arrange
         String code = "testCode";
