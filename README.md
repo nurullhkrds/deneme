@@ -1,42 +1,29 @@
-@Test
-void testExecuteProcess_Debug() throws BillException {
-    // Mockları ayarlayın
-    when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
+@Service
+@RequiredArgsConstructor
+public class ProcessServiceImpl implements ProcessService {
 
-    QueriedBillDTO billDTO = new QueriedBillDTO();
-    billDTO.setBillNo("123");
-    billDTO.setBillAmount(BigDecimal.valueOf(100));
-    List<QueriedBillDTO> billList = new ArrayList<>();
-    billList.add(billDTO);
+	private final ProcessChannelService processChannelService;
+	private final InstitutionService institutionService;
+	private final InstitutionDebtTypeService institutionDebtTypeService;	
 
-    QueryBillsAdapterResponse response = new QueryBillsAdapterResponse();
-    response.setInternalResultCode("00");
-    response.setBills(billList);
 
-    when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString()))
-            .thenReturn(response);
+@Override
+	@Cacheable(value = "getProcessChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public ProcessChannelDTO getProcessChannel(String code, String channelCode) {
+		if (StringUtils.isEmpty(code) || StringUtils.isEmpty(channelCode)) {
+			return null;
+		}
 
-    when(provisionService.createProvisions(anyList())).thenReturn(new ArrayList<>());
-
-    process.setDataPack(new HashMap<>());
-    process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
-    process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
-    process.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
-
-    // Process'i çalıştırın ve adım adım kontrol edin
-    process.executeProcess();
-
-    // GatherData kontrolü
-    assertNotNull(process.getInstitution());
-    assertNotNull(process.getInstitutionProcess());
-
-    // QueriedBillDTOList'in dolu olup olmadığını kontrol edin
-    assertNotNull(process.getQueriedBillDTOList());
-    assertFalse(process.getQueriedBillDTOList().isEmpty(), "QueriedBillDTOList should not be empty");
-
-    // CreateProvisions adımının tetiklenip tetiklenmediğini kontrol edin
-    verify(provisionService, times(1)).createProvisions(anyList());
-
-    // Son olarak error'ın null olduğunu kontrol edin
-    assertNull(process.getExecutionOutput().getResult(), "Error should be null");
-}
+		return processChannelService.findProcessChannel(code, channelCode);
+	}
+	@Override
+	@Cacheable(value = "getInstitutionDebtTypeForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionDebtTypeDTO getInstitutionDebtTypeForProcess(String productCode, String institutionCode,Long institutionDebtTypeId) {
+		if(institutionDebtTypeId != null) {
+			return institutionDebtTypeService.getDebtType(institutionDebtTypeId);
+		}
+		if(!StringUtils.isAnyEmpty(productCode,institutionCode)){
+			return institutionDebtTypeService.getDefaultDebtType(productCode,institutionCode);
+		}
+		return null;
+	}
