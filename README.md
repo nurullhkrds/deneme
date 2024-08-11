@@ -1,67 +1,71 @@
-@Test
-    public void testGetProcessChannel_ValidInputs() {
-        // Arrange
-        String code = "testCode";
-        String channelCode = "testChannel";
-        ProcessChannelDTO expectedChannel = new ProcessChannelDTO();
-        
-        when(processChannelService.findProcessChannel(eq(code), eq(channelCode))).thenReturn(expectedChannel);
+@Service
+@RequiredArgsConstructor
+public class ProcessServiceImpl implements ProcessService {
 
-        // Act
-        ProcessChannelDTO result = processService.getProcessChannel(code, channelCode);
+	private final ProcessChannelService processChannelService;
+	private final InstitutionService institutionService;
+	private final InstitutionDebtTypeService institutionDebtTypeService;
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(expectedChannel, result);
-    }
+	@Override
+	@Cacheable(value = "getInstitutionForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionDTO getInstitutionForProcess(String productCode, String institutionCode) {
+		if (StringUtils.isAnyEmpty(productCode, institutionCode)) {
+			return null;
+		}
 
-    @Test
-    public void testGetProcessChannel_InvalidInputs() {
-        // Act
-        ProcessChannelDTO result = processService.getProcessChannel("", "");
+		return institutionService.getInstitution(productCode, institutionCode);
+	}
 
-        // Assert
-        assertNull(result);
-    }
+	@Override
+	@Cacheable(value = "getInstitutionChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionChannelDTO getInstitutionChannelForProcess(Long institutionDebtTypeId, String channelCode) {
+		if (institutionDebtTypeId == null || StringUtils.isEmpty(channelCode)) {
+			return null;
+		}
 
-    @Test
-    public void testGetInstitutionDebtTypeForProcess_WithDebtTypeId() {
-        // Arrange
-        Long debtTypeId = 1L;
-        InstitutionDebtTypeDTO expectedDebtType = new InstitutionDebtTypeDTO();
-        
-        when(institutionDebtTypeService.getDebtType(eq(debtTypeId))).thenReturn(expectedDebtType);
+		return institutionService.getInstitutionChannel(institutionDebtTypeId, channelCode);
+	}
 
-        // Act
-        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess(null, null, debtTypeId);
+	@Override
+	@Cacheable(value = "getProcessChannelForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public ProcessChannelDTO getProcessChannel(String code, String channelCode) {
+		if (StringUtils.isEmpty(code) || StringUtils.isEmpty(channelCode)) {
+			return null;
+		}
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(expectedDebtType, result);
-    }
+		return processChannelService.findProcessChannel(code, channelCode);
+	}
 
-    @Test
-    public void testGetInstitutionDebtTypeForProcess_WithoutDebtTypeId() {
-        // Arrange
-        String productCode = "productCode";
-        String institutionCode = "institutionCode";
-        InstitutionDebtTypeDTO expectedDebtType = new InstitutionDebtTypeDTO();
-        
-        when(institutionDebtTypeService.getDefaultDebtType(eq(productCode), eq(institutionCode))).thenReturn(expectedDebtType);
+	@Override
+	@Cacheable(value = "getInstitutionProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionProcessDTO getInstitutionProcess(String productCode, String institutionCode, String code) {
+		if (StringUtils.isAnyEmpty(productCode, institutionCode, code)) {
+			return null;
+		}
 
-        // Act
-        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess(productCode, institutionCode, null);
+		return institutionService.getInstitutionProcess(productCode, institutionCode, code);
+	}
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(expectedDebtType, result);
-    }
+	@Override
+	@Cacheable(value = "getInstitutionChannelProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionChannelProcessDTO getInstitutionChannelProcess(Long institutionDebtTypeId,
+			String processCode, String channelCode) {
+		if (institutionDebtTypeId == null || StringUtils.isAnyEmpty(processCode, channelCode)) {
+			return null;
+		}
 
-    @Test
-    public void testGetInstitutionDebtTypeForProcess_InvalidInputs() {
-        // Act
-        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess("", "", null);
+		return institutionService.getInstitutionChannelProcess(institutionDebtTypeId, processCode, channelCode);
+	}
 
-        // Assert
-        assertNull(result);
-    }
+	@Override
+	@Cacheable(value = "getInstitutionDebtTypeForProcess", cacheManager = CacheConstants.CACHE_MANAGER)
+	public InstitutionDebtTypeDTO getInstitutionDebtTypeForProcess(String productCode, String institutionCode,Long institutionDebtTypeId) {
+		if(institutionDebtTypeId != null) {
+			return institutionDebtTypeService.getDebtType(institutionDebtTypeId);
+		}
+		if(!StringUtils.isAnyEmpty(productCode,institutionCode)){
+			return institutionDebtTypeService.getDefaultDebtType(productCode,institutionCode);
+		}
+		return null;
+	}
+}
