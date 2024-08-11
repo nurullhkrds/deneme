@@ -1,72 +1,68 @@
-public class ProcessServiceImplTest {
 
-    @Mock
-    private ProcessChannelService processChannelService;
+    @Test
+    public void testGetProcessChannel_ValidInputs() {
+        // Arrange
+        String code = "testCode";
+        String channelCode = "testChannel";
+        ProcessChannelDTO expectedChannel = new ProcessChannelDTO();
+        
+        when(processChannelService.findProcessChannel(eq(code), eq(channelCode))).thenReturn(expectedChannel);
 
-    @Mock
-    private InstitutionService institutionService;
+        // Act
+        ProcessChannelDTO result = processService.getProcessChannel(code, channelCode);
 
-    @Mock
-    private InstitutionDebtTypeService institutionDebtTypeService;
-
-    @InjectMocks
-    private ProcessServiceImpl processServiceImpl;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        CacheManager cacheManager = new ConcurrentMapCacheManager();
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedChannel, result);
     }
 
     @Test
-    void testGetProcessChannel_ValidInput() {
-        ProcessChannelDTO expectedDto = new ProcessChannelDTO();
-        when(processChannelService.findProcessChannel(anyString(), anyString())).thenReturn(expectedDto);
+    public void testGetProcessChannel_InvalidInputs() {
+        // Act
+        ProcessChannelDTO result = processService.getProcessChannel("", "");
 
-        ProcessChannelDTO result = processServiceImpl.getProcessChannel("code", "channelCode");
-
-        assertEquals(expectedDto, result);
-    }
-
-    @Test
-    void testGetProcessChannel_EmptyCodeOrChannelCode() {
-        ProcessChannelDTO result1 = processServiceImpl.getProcessChannel("", "channelCode");
-        ProcessChannelDTO result2 = processServiceImpl.getProcessChannel("code", "");
-
-        assertNull(result1);
-        assertNull(result2);
-    }
-
-    @Test
-    void testGetInstitutionDebtTypeForProcess_WithDebtTypeId() {
-        InstitutionDebtTypeDTO expectedDto = new InstitutionDebtTypeDTO();
-        when(institutionDebtTypeService.getDebtType(anyLong())).thenReturn(expectedDto);
-
-        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess("productCode", "institutionCode", 1L);
-
-        assertEquals(expectedDto, result);
-    }
-
-    @Test
-    void testGetInstitutionDebtTypeForProcess_WithProductAndInstitutionCode() {
-        InstitutionDebtTypeDTO expectedDto = new InstitutionDebtTypeDTO();
-        when(institutionDebtTypeService.getDefaultDebtType(anyString(), anyString())).thenReturn(expectedDto);
-
-        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess("productCode", "institutionCode", null);
-
-        assertEquals(expectedDto, result);
-    }
-
-    @Test
-    void testGetInstitutionDebtTypeForProcess_EmptyProductOrInstitutionCode() {
-        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess("", "", null);
-
+        // Assert
         assertNull(result);
     }
 
     @Test
-    void testGetInstitutionDebtTypeForProcess_NullDebtTypeIdAndCodes() {
-        InstitutionDebtTypeDTO result = processServiceImpl.getInstitutionDebtTypeForProcess(null, null, null);
+    public void testGetInstitutionDebtTypeForProcess_WithDebtTypeId() {
+        // Arrange
+        Long debtTypeId = 1L;
+        InstitutionDebtTypeDTO expectedDebtType = new InstitutionDebtTypeDTO();
+        
+        when(institutionDebtTypeService.getDebtType(eq(debtTypeId))).thenReturn(expectedDebtType);
 
+        // Act
+        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess(null, null, debtTypeId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedDebtType, result);
+    }
+
+    @Test
+    public void testGetInstitutionDebtTypeForProcess_WithoutDebtTypeId() {
+        // Arrange
+        String productCode = "productCode";
+        String institutionCode = "institutionCode";
+        InstitutionDebtTypeDTO expectedDebtType = new InstitutionDebtTypeDTO();
+        
+        when(institutionDebtTypeService.getDefaultDebtType(eq(productCode), eq(institutionCode))).thenReturn(expectedDebtType);
+
+        // Act
+        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess(productCode, institutionCode, null);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(expectedDebtType, result);
+    }
+
+    @Test
+    public void testGetInstitutionDebtTypeForProcess_InvalidInputs() {
+        // Act
+        InstitutionDebtTypeDTO result = processService.getInstitutionDebtTypeForProcess("", "", null);
+
+        // Assert
         assertNull(result);
     }
