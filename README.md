@@ -1,6 +1,1 @@
-@AfterEach
-void tearDown() {
-    Mockito.reset(paymentUtilImpl, paymentService, paymentNotificationService, accountingService, applicationContext);
-}
-@SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.service.ChannelService.findChannelByChannelCode(String)" because "this.this$0.channelService" is null
