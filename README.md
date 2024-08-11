@@ -35,8 +35,10 @@ void setUp() throws NoSuchFieldException, IllegalAccessException {
     institutionDTO.setIsReverseAllowed(true);
     institutionDTO.setProduct(productDTO);
 
-    // Institution'ı BillPaymentReverseProcess'e set ediyoruz
-    billPaymentReverseProcess.setInstitution(institutionDTO);
+    // Reflection ile institution alanını set ediyoruz
+    Field institutionField = BillPaymentReverseProcess.class.getDeclaredField("institution");
+    institutionField.setAccessible(true);
+    institutionField.set(billPaymentReverseProcess, institutionDTO);
 
     when(channelService.findChannelByChannelCode(any())).thenReturn(channelDTO);
 
