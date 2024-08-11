@@ -52,22 +52,21 @@ class QueryBillsProcessTest {
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
 
-        SpringUtil springUtil=new SpringUtil();
-        springUtil.setApplicationContext(applicationContext); // ApplicationContext'i burada ayarlayın
+        SpringUtil springUtil = new SpringUtil();
+        springUtil.setApplicationContext(applicationContext);
 
-        lenient().when(getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
-        lenient().when(getBean(AdapterService.class)).thenReturn(adapterService);
-        lenient().when(getBean(ProvisionService.class)).thenReturn(provisionService);
-        lenient().when(getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        lenient().when(getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
-        lenient().when(getBean(PaymentRepository.class)).thenReturn(paymentRepository);
-        lenient().when(getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
+        lenient().when(applicationContext.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+        lenient().when(applicationContext.getBean(AdapterService.class)).thenReturn(adapterService);
+        lenient().when(applicationContext.getBean(ProvisionService.class)).thenReturn(provisionService);
+        lenient().when(applicationContext.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
+        lenient().when(applicationContext.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
+        lenient().when(applicationContext.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
+        lenient().when(applicationContext.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
 
-        lenient().when(getBean(PaymentMapper.class)).thenReturn(paymentMapper);
-        lenient().when(getBean(LimitationService.class)).thenReturn(limitationService);
-        lenient().when(getBean(ProcessService.class)).thenReturn(processService);
-        lenient().when(getBean(QueryBillsProcess.class)).thenReturn(process);
-
+        lenient().when(applicationContext.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
+        lenient().when(applicationContext.getBean(LimitationService.class)).thenReturn(limitationService);
+        lenient().when(applicationContext.getBean(ProcessService.class)).thenReturn(processService);
+        lenient().when(applicationContext.getBean(QueryBillsProcess.class)).thenReturn(process);
 
         institution = new InstitutionDTO();
         institution.setId(123L);
@@ -91,7 +90,6 @@ class QueryBillsProcessTest {
         partRequestDTO.setPartNo(123);
         subscriberNoPartList.add(partRequestDTO);
 
-
         process.setInstitution(institution);
         process.setInstitutionProcess(institutionProcess);
 
@@ -102,34 +100,23 @@ class QueryBillsProcessTest {
 
     @Test
     void testExecuteProcess_Success() throws BillException {
+        // Mocking necessary dependencies
         when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
-
+        when(provisionService.createProvisions(any())).thenReturn(new ArrayList<>());
+        
+        // Set the data pack
         process.setDataPack(new HashMap<>());
         process.getDataPack().put(ProcessDataPackKey.DEBT_TYPE_ID.getKey(), 123L);
         process.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
-
         process.getDataPack().put(ProcessDataPackKey.CONTRACT_NO.getKey(), 456L);
 
+        // Execute the process
         process.executeProcess();
 
-        verify(paymentEventPublisher).findPublishPaymentCancelEvent(any());
+        // Verify that the correct method was called
+        verify(paymentEventPublisher, times(1)).findPublishPaymentCancelEvent(any());
 
+        // Validate the execution output
         assertNull(process.getExecutionOutput());
     }
 }
-
-
-
-Wanted but not invoked:
-paymentEventPublisher.findPublishPaymentCancelEvent(
-    <any>
-);
--> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:173)
-Actually, there were zero interactions with this mock.
-
-Wanted but not invoked:
-paymentEventPublisher.findPublishPaymentCancelEvent(
-    <any>
-);
--> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:173)
-Actually, there were zero interactions with this mock.
