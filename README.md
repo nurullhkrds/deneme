@@ -1,1 +1,1 @@
-assertNotNull(channelService, "channelService should not be null");
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
