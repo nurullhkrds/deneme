@@ -1,4 +1,1 @@
-// Use reflection to set the stepHandler field
-        Field stepHandlerField = AbstractProcess.class.getDeclaredField("stepHandler");
-        stepHandlerField.setAccessible(true);
-        stepHandlerField.set(process, process.new ProcessStepHandler());
+java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.dto.InstitutionProcessDTO.getIsOnline()" because "this.institutionProcess" is null
