@@ -1,345 +1,145 @@
-public class QueryBillsProcess extends AbstractProcess {
+@ExtendWith(MockitoExtension.class)
+class QueryBillsProcessTest {
 
-    private AdapterService  adapterService;
+    @Mock
+    private AdapterService adapterService;
+
+    @Mock
     private ProvisionService provisionService;
+
+    @Mock
     private InstitutionUserIntService institutionUserIntService;
-    private InstitutionUserIntfMapper institutionUserIntMapper;   
+
+    @Mock
+    private InstitutionUserIntfMapper institutionUserIntMapper;
+
+    @Mock
     private BillPaymentRestFacade billPaymentRestFacade;
+
+    @Mock
     private PaymentRepository paymentRepository;
+
+    @Mock
     private PaymentMapper paymentMapper;
+
+    @Mock
     private LimitationService limitationService;
 
-    private Long customerNo;
-    private Long identityNo;
-    private String taxOfficeNo;
-    private String subscriberNo;
-    private List<SubscriberNoPartRequestDTO> subscriberNoPartList;
-    private String currency;
-    private List<QueriedBillDTO> queriedBillDTOList;
-
-    private List<ProvisionDTO>  provisionList;
-    private List<InstitutionUserIntfDTO> institutionUserIntListDTO;    
+    @Mock
     private PaymentEventPublisher paymentEventPublisher;
-    
-    private PaymentUtilImpl paymentUtilImpl;    
-    private boolean	isFomOperationEnabled;
 
+    @Mock
+    private PaymentUtilImpl paymentUtilImpl;
 
+    @Mock
+    private ApplicationContext applicationContext;
 
-    @Override
-    public void executeProcess() throws BillException {
-        addProcessStep(new GatherData());
-        addProcessStep(new FormatSubscriberNoPartList());
-        addProcessStep(new ValidateSubscriberNo());
-        addProcessStep(new CheckCustomerQueryLimit());
-        if(isOnlineProcess()){
-            addProcessStep(new QueryFromService());
-            addProcessStep(new EliminateBills());
-        }else{
-            addProcessStep(new QueryFromDatabase());
-        }
-        addProcessStep(new InvalidateNotPaidProvisions());
-        addProcessStep(new CreateProvisions());
-        addProcessStep(new UpdateCustomerQueryLimit());
-        executeSteps();
+    @InjectMocks
+    private QueryBillsProcess process;
+
+    private InstitutionDTO institution;
+    private InstitutionDebtTypeDTO institutionDebtType;
+    private Long institutionDebtTypeId;
+    private List<SubscriberNoPartRequestDTO> subscriberNoPartList;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize the data required for the test
+        institution = new InstitutionDTO();
+        institution.setId(123L);
+        institution.setInstitutionCode("123");
+
+        institutionDebtType = new InstitutionDebtTypeDTO();
+        institutionDebtType.setId(123L);
+        institutionDebtTypeId = institutionDebtType.getId();
+
+        subscriberNoPartList = new ArrayList<>();
+        SubscriberNoPartRequestDTO partRequestDTO = new SubscriberNoPartRequestDTO();
+        partRequestDTO.setPartNo(123);
+        subscriberNoPartList.add(partRequestDTO);
+
+        // Mock the ApplicationContext to return the mocks
+        lenient().when(applicationContext.getBean(AdapterService.class)).thenReturn(adapterService);
+        lenient().when(applicationContext.getBean(ProvisionService.class)).thenReturn(provisionService);
+        lenient().when(applicationContext.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
+        lenient().when(applicationContext.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
+        lenient().when(applicationContext.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
+        lenient().when(applicationContext.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
+        lenient().when(applicationContext.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
+        lenient().when(applicationContext.getBean(LimitationService.class)).thenReturn(limitationService);
+        lenient().when(applicationContext.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+        lenient().when(applicationContext.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
     }
 
-    private class GatherData implements ProcessStep {
+    @Test
+    void testExecuteProcess_Success() throws BillException {
+        // Mocking necessary dependencies
+        when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
 
-        @Override
-        public void executeStep() {
-            customerNo = (Long) dataPack.get(ProcessDataPackKey.CUSTOMER_NO.getKey());
-            identityNo = (Long) dataPack.get(ProcessDataPackKey.IDENTITY_NO.getKey());
-            taxOfficeNo = (String) dataPack.get(ProcessDataPackKey.TAX_ID.getKey());
-            subscriberNo = (String) dataPack.get(ProcessDataPackKey.SUBSCRIBER_NO.getKey());
-            subscriberNoPartList = (List<SubscriberNoPartRequestDTO>) dataPack.get((ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey()));
-            currency = (String) dataPack.get(ProcessDataPackKey.CURRENCY.getKey());
-            adapterService = SpringUtil.getBean(AdapterService.class);
-            institutionUserIntService = SpringUtil.getBean(InstitutionUserIntService.class);
-            institutionUserIntMapper = SpringUtil.getBean(InstitutionUserIntfMapper.class);
-            institutionUserIntListDTO = institutionUserIntService.getUserInterface(institutionDebtTypeId);
-            billPaymentRestFacade = SpringUtil.getBean(BillPaymentRestFacade.class);
-            paymentRepository = SpringUtil.getBean(PaymentRepository.class);
-            paymentMapper = SpringUtil.getBean(PaymentMapper.class);
-            limitationService=SpringUtil.getBean(LimitationService.class);
-            
-            paymentUtilImpl = SpringUtil.getBean(PaymentUtilImpl.class);
-			isFomOperationEnabled = paymentUtilImpl.isFomOperationEnabled(institution);
-          
-        }
+        QueriedBillDTO billDTO = new QueriedBillDTO();
+        billDTO.setBillNo("123");
+        billDTO.setBillAmount(BigDecimal.valueOf(100));
+        List<QueriedBillDTO> billList = new ArrayList<>();
+        billList.add(billDTO);
 
+        QueryBillsAdapterResponse response = new QueryBillsAdapterResponse();
+        response.setInternalResultCode("00");
+        response.setBills(billList);
+
+        when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString()))
+            .thenReturn(response);
+
+        when(provisionService.createProvisions(anyList())).thenReturn(new ArrayList<>());
+
+        process.setDataPack(new HashMap<>());
+        process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
+        process.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
+
+        process.executeProcess();
+
+        verify(provisionService, times(1)).createProvisions(anyList());
+        verify(paymentEventPublisher, times(1)).publishInquiryLimiationNotification(any());
+
+        assertEquals(EnumBillResult.SUCCESS, process.getExecutionOutput().getResult());
     }
 
-	private class FormatSubscriberNoPartList implements ProcessStep {
+    @Test
+    void testExecuteProcess_LimitReached() throws BillException {
+        when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
 
-		@Override
-		public void executeStep() {			
-			subscriberNo = SubscriberNumberUtils.formatSubscriberNumberParts(institutionUserIntListDTO, subscriberNoPartList);
-		}
+        PaymentAllowedResponse paymentAllowedResponse = new PaymentAllowedResponse();
+        paymentAllowedResponse.setPaymentAllowed(false);
+        when(limitationService.isPaymentAllowedWithoutDebtOwner(anyString(), anyInt(), any(), anyString()))
+            .thenReturn(paymentAllowedResponse);
 
-	}
+        process.setDataPack(new HashMap<>());
+        process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
 
-    private class ValidateSubscriberNo implements ProcessStep {
+        process.executeProcess();
 
-        @Override
-        public void executeStep() {
-        	boolean valid = SubscriberNumberUtils.checkSubscriberNumberParts(institutionUserIntListDTO, subscriberNoPartList);
-        	
-        	if(!valid) {
-        		error = EnumBillResult.SUBSCRIBER_NUMBER_INVALID;
-        	}
-        }
-
+        assertEquals(EnumBillResult.BILL_QUERY_LIMIT_REACHED, process.getExecutionOutput().getResult());
     }
 
-    private class CheckCustomerQueryLimit implements ProcessStep {
+    @Test
+    void testExecuteProcess_NoBillsFound() throws BillException {
+        when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
 
-        @Override
-        public void executeStep() {
-        	if (!isFomOperationEnabled) { // FOM operations are disabled for this product
-				return;
-			}
-        	
-            Integer customerInt=null;
-            if(customerNo!=null){
-                customerInt=customerNo.intValue();
-            }
+        QueryBillsAdapterResponse response = new QueryBillsAdapterResponse();
+        response.setInternalResultCode("00");
+        response.setBills(new ArrayList<>()); // No bills found
 
-            /** TODO identityNo tipi long olarak verilmis , degistiginde alttaki kod blogu silinmeli
-             */
-            String identityNoStr=null;
-            if(identityNo!=null){
-                identityNoStr=identityNo.toString();
-            }
+        when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString()))
+            .thenReturn(response);
 
-            /** TODO product code constant olacak
-                hata kodunun adk da maplendigi teyit edilcek
-             */
-            PaymentAllowedResponse paymentAllowedResponse = limitationService.isPaymentAllowedWithoutDebtOwner(identityNoStr,
-                    customerInt, null, "B0002");
-            if (!paymentAllowedResponse.isPaymentAllowed()) {
-                error = EnumBillResult.BILL_QUERY_LIMIT_REACHED;
-            }
+        process.setDataPack(new HashMap<>());
+        process.getDataPack().put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        process.getDataPack().put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
+        process.getDataPack().put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
 
-        }
+        process.executeProcess();
 
-    }
-
-    private class QueryFromService implements ProcessStep {
-        @Override
-        public void executeStep() throws BillException {    
-            QueryBillsAdapterRequest queryBillsAdapterRequest = prepareQueryBills();
-            
-            QueryBillsAdapterResponse queryBillsAdapterResponse = adapterService.queryBills(queryBillsAdapterRequest, channelTransactionId, channelSessionId);
-
-            if(EnumBillResult.SUCCESS.equals(EnumBillResult.parseValueByHmnCode(queryBillsAdapterResponse.getInternalResultCode()))) {
-                queriedBillDTOList = queryBillsAdapterResponse.getBills();
-            }else{
-                error = EnumBillResult.parseValueByHmnCode(queryBillsAdapterResponse.getInternalResultCode());
-            }
-           
-        }
-
-        private  QueryBillsAdapterRequest prepareQueryBills(){
-            QueryBillsAdapterRequest queryBillsAdapterRequest = new QueryBillsAdapterRequest();
-            queryBillsAdapterRequest.setCustomerNo(customerNo);
-            queryBillsAdapterRequest.setIdentityNo(identityNo);
-            queryBillsAdapterRequest.setSubscriberNoPartList(subscriberNoPartList);
-            queryBillsAdapterRequest.setRequestDate(LocalDateTime.now());
-            queryBillsAdapterRequest.setChannelCode(channelCode);
-            queryBillsAdapterRequest.setInstitutionDebtTypeId(institutionDebtTypeId);
-            queryBillsAdapterRequest.setInstitutionId(institution.getId());
-            queryBillsAdapterRequest.setOperatingBranchCode(branchCode);
-            queryBillsAdapterRequest.setInstitution(institutionCode);
-            queryBillsAdapterRequest.setProduct(productCode);
-            queryBillsAdapterRequest.setUserCode(agentCode);
-            queryBillsAdapterRequest.setSubscriberNo(subscriberNo);
-            queryBillsAdapterRequest.setTransactionDate(LocalDateTime.now());
-            return  queryBillsAdapterRequest;
-        }
-
-        
-
-    }
-
-	private class EliminateBills implements ProcessStep {
-
-		@Override
-		public void executeStep() {
-
-			if (CollectionUtils.isEmpty(queriedBillDTOList)) {
-				error = EnumBillResult.BILL_NOT_FOUND;
-				return;
-			}
-			ResponseGetCustomerPaidBillList harmoniPaidBills = billPaymentRestFacade
-					.getCustomerPaidBillList(productCode, institutionCode, subscriberNo);
-
-			List<HmnPaidBillDTO> harmoniPaidBillList = Optional.ofNullable(harmoniPaidBills.getBillDTOList())
-					.orElse(Collections.emptyList());
-
-			List<PaymentDTO> mikroPaidBillList = paymentRepository.findPaidBillList(subscriberNo, institutionDebtTypeId,EnumBillStatu.PAID.getValue())
-					.stream().map(paymentMapper::toDTO).toList();
-
-			queriedBillDTOList = queriedBillDTOList.stream()
-					.filter(queriedBillDTO -> harmoniPaidBillList.stream()
-							.noneMatch(harmoniPaidBillDTO -> queriedBillDTO.getBillDueDate()
-									.isEqual(harmoniPaidBillDTO.getBillDueDate().toInstant()
-											.atZone(ZoneId.systemDefault()).toLocalDate())
-									&& queriedBillDTO.getBillNo().equals(harmoniPaidBillDTO.getBillNo())))
-					.filter(queriedBillDTO -> mikroPaidBillList.stream().noneMatch(
-							microPaidDTO -> queriedBillDTO.getBillDueDate().isEqual(microPaidDTO.getBillDueDate())
-									&& queriedBillDTO.getBillNo().equals(microPaidDTO.getBillNo())))
-					.toList();
-
-			if (CollectionUtils.isEmpty(queriedBillDTOList)) {
-				error = EnumBillResult.BILL_NOT_FOUND;
-				return;
-			}
-       	 
-		}
-		
-		
-
-	}
-
-    private class QueryFromDatabase implements ProcessStep {
-
-        @Override
-        public void executeStep() {
-            //TODO: Offline borc sorgulama
-        }
-
-    }
-
-    private class InvalidateNotPaidProvisions implements ProcessStep {
-
-        @Override
-        public void executeStep() {
-            provisionService = SpringUtil.getBean(ProvisionService.class);
-            provisionService.invalidateNotPaidProvisions(institutionDebtTypeId,subscriberNo);
-        }
-
-    }
-
-    private class CreateProvisions implements ProcessStep {
-
-        private static final int MAX_LENGTH_OF_OLD_INFO_FIELD = 50;
-
-		@Override
-        public void executeStep() {
-            provisionService = SpringUtil.getBean(ProvisionService.class);
-            prepareProvision(queriedBillDTOList);
-            provisionList = provisionService.createProvisions(provisionList);
-        }
-        
-        private void prepareProvision(List<QueriedBillDTO> bills){
-            provisionList =  bills.stream().map(queriedBillDTO -> {
-                ProvisionDTO provisionDTO = new ProvisionDTO();
-                provisionDTO.setTaxId(taxOfficeNo);
-                provisionDTO.setCustomerNo(customerNo);
-                provisionDTO.setIdentityNo(identityNo);
-                provisionDTO.setInstitutionDebtTypeId(institutionDebtTypeId);
-                provisionDTO.setChannelTransactionId(channelTransactionId);
-                provisionDTO.setInstitutionId(institution.getId());
-                provisionDTO.setChannelCode(channelCode);
-                provisionDTO.setBranchCode(branchCode);
-                provisionDTO.setStatus(EnumProvisionStatus.NOT_PAID);
-                provisionDTO.setProvisionDate(LocalDate.now());
-                provisionDTO.setCurrency(EnumCurrencyCode.parse(queriedBillDTO.getCurrency()));
-                provisionDTO.setQueryStan(queriedBillDTO.getQueryStan());
-                provisionDTO.setBillNo(queriedBillDTO.getBillNo());
-                provisionDTO.setExplanation(queriedBillDTO.getExplanation());
-                provisionDTO.setBillTerm(queriedBillDTO.getBillTerm());
-                provisionDTO.setInstitutionQueryStan(queriedBillDTO.getInstitutionQueryStan());
-                provisionDTO.setBillDueDate(queriedBillDTO.getBillDueDate());
-                provisionDTO.setIsPayable(queriedBillDTO.isPayable());
-                provisionDTO.setBillIssueDate(queriedBillDTO.getBillIssueDate());
-                provisionDTO.setAmount(queriedBillDTO.getBillAmount());
-                provisionDTO.setSubscriberName(queriedBillDTO.getSubscriberName());
-                provisionDTO.setSubscriberNo(queriedBillDTO.getSubscriberNo());
-                
-                mapAdditionalInfoFields(provisionDTO, queriedBillDTO);
-                
-                return provisionDTO;
-            }).toList();
-        }
-
-		private void mapAdditionalInfoFields(ProvisionDTO provisionDTO, QueriedBillDTO queriedBillDTO) {
-			String additionalInfo1 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo1()).orElse("");
-			String additionalInfo2 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo2()).orElse("");
-			String additionalInfo3 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo3()).orElse("");
-			String additionalInfo4 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo4()).orElse("");
-			String additionalInfo5 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo5()).orElse("");
-			String additionalInfo6 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo6()).orElse("");
-			String additionalInfo7 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo7()).orElse("");
-			String additionalInfo8 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo8()).orElse("");
-			String additionalInfo9 = Optional.ofNullable(queriedBillDTO.getAdditionalInfo9()).orElse("");
-			
-
-			additionalInfo1 = StringUtils.rightPad(additionalInfo1, MAX_LENGTH_OF_OLD_INFO_FIELD);
-			additionalInfo2 = StringUtils.rightPad(additionalInfo2, MAX_LENGTH_OF_OLD_INFO_FIELD);
-			additionalInfo3 = StringUtils.rightPad(additionalInfo3, MAX_LENGTH_OF_OLD_INFO_FIELD);
-			additionalInfo4 = StringUtils.rightPad(additionalInfo4, MAX_LENGTH_OF_OLD_INFO_FIELD);			
-			
-			additionalInfo1 = additionalInfo1.concat(additionalInfo6);
-			additionalInfo2 = additionalInfo2.concat(additionalInfo7);
-			additionalInfo3 = additionalInfo3.concat(additionalInfo8);
-			additionalInfo4 = additionalInfo4.concat(additionalInfo9);
-			
-			provisionDTO.setAdditionalInfo1(StringUtils.trim(additionalInfo1));
-			provisionDTO.setAdditionalInfo2(StringUtils.trim(additionalInfo2));
-			provisionDTO.setAdditionalInfo3(StringUtils.trim(additionalInfo3));
-			provisionDTO.setAdditionalInfo4(StringUtils.trim(additionalInfo4));
-			provisionDTO.setAdditionalInfo5(StringUtils.trim(additionalInfo5));
-			
-		}
-
-    }
-
-    private class UpdateCustomerQueryLimit implements ProcessStep {
-
-        @Override
-        public void executeStep() {
-        	
-        	if (!isFomOperationEnabled) { // FOM operations are disabled for this product
-				return;
-			}
-        	
-        	paymentEventPublisher = SpringUtil.getBean(PaymentEventPublisher.class);
-        	NotifyInquiryLimitationRequest request = new NotifyInquiryLimitationRequest();
-			
-        	Integer customerInt = null;
-			if (customerNo != null) {
-				customerInt = customerNo.intValue();
-			}
-        	
-        	String identityNoStr = null;
-			if (identityNo != null) {
-				identityNoStr = identityNo.toString();
-			}
-        	
-        	request.setIdentityNo(identityNoStr);
-			request.setChannelCode(channelCode);
-			request.setClientNo(customerInt);
-			request.setCreatedBy(agentCode);
-			request.setProductCode("B0002");
-			request.setTransactionDate(LocalDateTime.now());
-			paymentEventPublisher.publishInquiryLimiationNotification(request);        	
-        	
-        }
-
-    }
-    
-    @Override
-    protected void prepareExecutionOutput() {
-        executionOutput = new QueryBillsProcessOutput();
-        executionOutput.setResult(error);
-        
-        ((QueryBillsProcessOutput) executionOutput).setProductCode(productCode);
-        ((QueryBillsProcessOutput) executionOutput).setInstitutionCode(institutionCode);
-        ((QueryBillsProcessOutput) executionOutput).setDebtTypeId(institutionDebtTypeId);
-        ((QueryBillsProcessOutput) executionOutput).setSubscriberNo(subscriberNo);
-        ((QueryBillsProcessOutput) executionOutput).setSubscriberNoPartList(subscriberNoPartList);
-        ((QueryBillsProcessOutput) executionOutput).setProvisionDTOList(provisionList);
+        assertEquals(EnumBillResult.BILL_NOT_FOUND, process.getExecutionOutput().getResult());
     }
 }
