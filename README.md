@@ -22,23 +22,23 @@ public class BillPaymentUtil {
 	private static Map<String, String> channelMap = new HashMap<String, String>();
 	
 	static {
-		channelMap.put("201", "NGI");
-		channelMap.put("202", "IFC");
-		channelMap.put("203", "DBI");
-		channelMap.put("301", "DBC");
-		channelMap.put("302", "IFCFNO");
-		channelMap.put("303", "NGIFNO");
-		channelMap.put("401", "MBL");
-		channelMap.put("402", "MBC");
-		channelMap.put("403", "DBM");
-		channelMap.put("501", "ATM");
-		channelMap.put("601", "SUBE");
-		channelMap.put("605", "TABLET");
-		channelMap.put("802", "SMS");
-		channelMap.put("1780", "CBOT");
-		channelMap.put("1780", "CBOT");
-		channelMap.put("1780", "CBOT");
-		channelMap.put("1780", "CBOT");
+		channelMap.put("2012", "ANGI");
+		channelMap.put("2032", "BIFC");
+		channelMap.put("2303", "CDBI");
+		channelMap.put("3401", "ADBC");
+		channelMap.put("3012", "XIFCFNO");
+		channelMap.put("3013", "CXNGIFNO");
+		channelMap.put("4031", "FMBL");
+		channelMap.put("4032", "VMBC");
+		channelMap.put("4403", "BDBM");
+		channelMap.put("5081", "SDATM");
+		channelMap.put("6031", "DSUBE");
+		channelMap.put("6705", "BTABLET");
+		channelMap.put("8602", "CSMS");
+		channelMap.put("15780", "BCBOT");
+		channelMap.put("17480", "BCBOT");
+		channelMap.put("17380", "BCBOT");
+		channelMap.put("17820", "BCBOT");
 
 	}
 	
