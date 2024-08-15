@@ -1,10 +1,9 @@
-	public static String getCustomerInteractionType(String channel) {
-		String channelCode = convertChannel(channel);
-		if (channelCode != null
-				&& (channelCode.equals("303") || channelCode.equals("301") || channelCode.equals("302"))) {
-			return  convertChannel(getCustomerInteractionTypeWithSession());
-
+	public static String getCustomerInteractionTypeWithSession() {
+		IChannelInfo channelInfo = (IChannelInfo) Session.getInstance().get(SessionKey.CHANNELINFO);
+		String customerInteractionType = null;
+		if (channelInfo != null) {
+			customerInteractionType = channelInfo.get(ChannelInfoKey.CUSTOMER_INTERACTION_TYPE);
+			return customerInteractionType;
 		}
-
 		return null;
 	}
