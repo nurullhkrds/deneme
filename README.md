@@ -1,21 +1,13 @@
-   public static String getCustomerInteractionType(String channel) {
-        
-        if ("303".equals(channel)) {
-            String subSessionChannel = getCustomerInteractionTypeWithSession();
-            
-            if (subSessionChannel != null && isSpecialCustomerType(subSessionChannel)) {
-                return subSessionChannel; // subSessionChannel BOB, KOB, VID veya CDB ise bunu return et
-            } else {
-                return channel; // Eğer subSessionChannel BOB, KOB, VID veya CDB değilse channel'i return et
-            }
-        }
-        
-        return null;  // Eğer channel 303 değilse subChannel'e yani customer_interaction_type hiç bakma
-    }
-
-    private static boolean isSpecialCustomerType(String subSessionChannel) {
-        return "BOB".equals(subSessionChannel) ||
-               "KOB".equals(subSessionChannel) ||
-               "VID".equals(subSessionChannel) ||
-               "CDB".equals(subSessionChannel);
-    }
+ ( 10014 ) Unknown Exception at [cps.WorkHistoryService]-[saveNonintegratedProcessHistory], jvmId: [343], transactionId:[3433722563527452] .Root Cause: [java.lang.NumberFormatException: For input string: "BOB"]
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Integer.parseInt(Integer.java:668)
+	at java.base/java.lang.Short.parseShort(Short.java:137)
+	at java.base/java.lang.Short.valueOf(Short.java:193)
+	at java.base/java.lang.Short.valueOf(Short.java:219)
+	at com.ykb.hmn.cps.workhistory.util.history.ConverterUtil.convertStringToShort(ConverterUtil.java:62)
+	at com.ykb.hmn.cps.workhistory.util.session.SessionUtil.getCustomerInteractionType(SessionUtil.java:37)
+	at com.ykb.hmn.cps.workhistory.util.journal.impl.NonintegratedProcessJournal.decorateNonintegratedProcessHistoryDTO(NonintegratedProcessJournal.java:125)
+	at com.ykb.hmn.cps.workhistory.service.WorkHistoryService.saveNonintegratedProcessHistory(WorkHistoryService.java:492)
+	at jdk.internal.reflect.GeneratedMethodAccessor13655.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
