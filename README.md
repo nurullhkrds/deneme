@@ -44,6 +44,7 @@ class QueryBillsProcessTest {
     private List<InstitutionUserIntfDTO> institutionUserIntListDTO;
     private InstitutionProcessDTO institutionProcessDTO;
 
+
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
@@ -60,9 +61,11 @@ class QueryBillsProcessTest {
         lenient().when(applicationContext.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
         lenient().when(applicationContext.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
         lenient().when(applicationContext.getBean(LimitationService.class)).thenReturn(limitationService);
-        
+        QueryBillsAdapterResponse adapterResponse=new QueryBillsAdapterResponse();
+        adapterResponse.setBills(queriedBillDTOList);
+        adapterResponse.setStatus("SUCCESS");
         // Additional mocking
-        lenient().when(adapterService.queryBills(any(), anyString(), anyString())).thenReturn(new QueryBillsAdapterResponse());
+        lenient().when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(adapterResponse);
         lenient().when(provisionService.createProvisions(any())).thenReturn(new ArrayList<>());
         lenient().when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(new ArrayList<>());
         lenient().when(billPaymentRestFacade.getCustomerPaidBillList(anyString(), anyString(), anyString()))
@@ -96,6 +99,9 @@ class QueryBillsProcessTest {
 
     @Test
     void testExecuteProcess_Success() throws BillException {
+        QueryBillsAdapterResponse adapterResponse=new QueryBillsAdapterResponse();
+        adapterResponse.setBills(queriedBillDTOList);
+        adapterResponse.setStatus("SUCCESS");
         Map<String, Object> dataPack = new HashMap<>();
         dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
         dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
@@ -106,6 +112,7 @@ class QueryBillsProcessTest {
 
         // Mock behavior
         when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
+        when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(adapterResponse);
 
         queryBillsProcess.executeProcess();
 
