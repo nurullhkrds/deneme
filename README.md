@@ -1,62 +1,15 @@
-class QueryBillsProcessTest {
-
-    @Mock
-    private AdapterService adapterService;
-
-    @Mock
-    private ProvisionService provisionService;
-
-    @Mock
-    private InstitutionUserIntService institutionUserIntService;
-
-    @Mock
-    private InstitutionUserIntfMapper institutionUserIntMapper;
-
-    @Mock
-    private BillPaymentRestFacade billPaymentRestFacade;
-
-    @Mock
-    private PaymentRepository paymentRepository;
-
-    @Mock
-    private PaymentMapper paymentMapper;
-
-    @Mock
-    private LimitationService limitationService;
-
-    @Mock
-    private PaymentEventPublisher paymentEventPublisher;
-
-    @Mock
-    private ApplicationContext applicationContext;
-
-    @Mock
-    private PaymentUtilImpl paymentUtilImpl;
-
-    @InjectMocks
-    private QueryBillsProcess queryBillsProcess;
-
-    private InstitutionDTO institution;
-    private List<QueriedBillDTO> queriedBillDTOList;
-    private List<ProvisionDTO> provisionList;
-    private List<InstitutionUserIntfDTO> institutionUserIntListDTO;
-    private List<SubscriberNoPartRequestDTO> subscriberNoPartList;
-
-    private InstitutionDebtTypeDTO institutionDebtType;
-
-    private InstitutionProcessDTO institutionProcess;
 
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
-        SpringUtil springUtil=new SpringUtil();
+        SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
 
+        // Mock Bean initialization
+        lenient().when(applicationContext.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+        lenient().when(applicationContext.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
+        lenient().when(applicationContext.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
 
-        lenient().when(getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
-        lenient().when(getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        lenient().when(getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
-    
         // Test setup
         institution = new InstitutionDTO();
         institution.setId(1L);
@@ -65,7 +18,7 @@ class QueryBillsProcessTest {
         institutionDebtType.setId(1L);
 
         institutionProcess = new InstitutionProcessDTO();
-        institutionProcess.setIsOnline(true);  // Burada isOnline alanını uygun şekilde ayarlıyoruz
+        institutionProcess.setIsOnline(true);  // Ensure isOnline is set to true
 
         queriedBillDTOList = new ArrayList<>();
         institutionUserIntListDTO = new ArrayList<>();
@@ -88,8 +41,11 @@ class QueryBillsProcessTest {
         stepHandlerField.setAccessible(true);
         stepHandlerField.set(queryBillsProcess, queryBillsProcess.new ProcessStepHandler());
 
-        // QueryBillsProcess sınıfına institutionProcess değerini ayarlıyoruz
+        // Assign institutionProcess to QueryBillsProcess
         queryBillsProcess.setInstitutionProcess(institutionProcess);
+
+        // Mock the isOnlineProcess method to return true to ensure QueryFromService step is executed
+        lenient().when(queryBillsProcess.isOnlineProcess()).thenReturn(true);
     }
 
 
@@ -116,25 +72,3 @@ class QueryBillsProcessTest {
 
         assertNotNull(queryBillsProcess.getExecutionOutput(), "Execution output should not be null");
     }
-    
-} BU TESTTE 
-
-
-"Wanted but not invoked:
-adapterService.queryBills(
-    <any>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:170)
-Actually, there were zero interactions with this mock.
-
-Wanted but not invoked:
-adapterService.queryBills(
-    <any>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:170)
-Actually, there were zero interactions with this mock.
-" HATASINI ALIYORUM
