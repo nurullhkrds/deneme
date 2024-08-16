@@ -52,6 +52,11 @@ class QueryBillsProcessTest {
         SpringUtil springUtil=new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
 
+
+        lenient().when(getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
+        lenient().when(getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
+        lenient().when(getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
+    
         // Test setup
         institution = new InstitutionDTO();
         institution.setId(1L);
@@ -111,27 +116,25 @@ class QueryBillsProcessTest {
 
         assertNotNull(queryBillsProcess.getExecutionOutput(), "Execution output should not be null");
     }
+    
+} BU TESTTE 
 
-    @Test
-    void testExecuteProcess_WithError() throws BillException {
-        // Prepare data that will trigger an error in one of the steps
-        Map<String, Object> dataPack = new HashMap<>();
-        dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
-        dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "invalidSubscriber");
 
-        queryBillsProcess.setDataPack(dataPack);
-        queryBillsProcess.setInstitution(institution);
+"Wanted but not invoked:
+adapterService.queryBills(
+    <any>,
+    <any string>,
+    <any string>
+);
+-> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:170)
+Actually, there were zero interactions with this mock.
 
-        QueryBillsAdapterResponse queryBillsAdapterResponse=new QueryBillsAdapterResponse();
-        when(adapterService.queryBills(any(), anyString(), anyString()))
-                .thenReturn(queryBillsAdapterResponse);
-
-        // Execute the process
-        queryBillsProcess.executeProcess();
-
-        // Assert that an error was set and process stopped
-        assertEquals(EnumBillResult.SUBSCRIBER_NUMBER_INVALID, queryBillsProcess.getExecutionOutput().getResult());
-    }
-
-    // Additional tests can be added for other steps and conditions
-java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.transaction.institution.service.InstitutionUserIntService.getUserInterface(java.lang.Long)" because "this.this$0.institutionUserIntService" is null
+Wanted but not invoked:
+adapterService.queryBills(
+    <any>,
+    <any string>,
+    <any string>
+);
+-> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:170)
+Actually, there were zero interactions with this mock.
+" HATASINI ALIYORUM
