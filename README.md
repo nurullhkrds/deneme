@@ -13,3 +13,8 @@ adapterService.queryBills(
     <any string>,
     <any string>
 );
+  Method isOnlineProcessMethod = QueryBillsProcess.class.getDeclaredMethod("isOnlineProcess");
+        isOnlineProcessMethod.setAccessible(true);
+
+        // Replace method to return true
+        lenient().doReturn(true).when(queryBillsProcess).isOnlineProcess();
