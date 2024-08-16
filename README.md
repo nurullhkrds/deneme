@@ -1,3 +1,4 @@
+@ExtendWith(MockitoExtension.class)
 class QueryBillsProcessTest {
 
     @Mock
@@ -23,6 +24,7 @@ class QueryBillsProcessTest {
 
     @Mock
     private LimitationService limitationService;
+
     @Mock
     private ApplicationContext applicationContext;
 
@@ -46,19 +48,20 @@ class QueryBillsProcessTest {
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
 
-        SpringUtil springUtil=new SpringUtil();
+        SpringUtil springUtil = new SpringUtil();
         springUtil.setApplicationContext(applicationContext);
 
+        // Mock SpringUtil's getBean methods
         lenient().when(applicationContext.getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
         lenient().when(applicationContext.getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
         lenient().when(applicationContext.getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
-
         lenient().when(applicationContext.getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
         lenient().when(applicationContext.getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
         lenient().when(applicationContext.getBean(PaymentRepository.class)).thenReturn(paymentRepository);
         lenient().when(applicationContext.getBean(PaymentMapper.class)).thenReturn(paymentMapper);
         lenient().when(applicationContext.getBean(LimitationService.class)).thenReturn(limitationService);
-        // Mocking SpringUtil's getBean methods
+        
+        // Additional mocking
         lenient().when(adapterService.queryBills(any(), anyString(), anyString())).thenReturn(new QueryBillsAdapterResponse());
         lenient().when(provisionService.createProvisions(any())).thenReturn(new ArrayList<>());
         lenient().when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(new ArrayList<>());
@@ -78,7 +81,7 @@ class QueryBillsProcessTest {
         queriedBillDTOList = new ArrayList<>();
         subscriberNoPartList = new ArrayList<>();
         institutionUserIntListDTO = new ArrayList<>();
-        institutionProcessDTO=new InstitutionProcessDTO();
+        institutionProcessDTO = new InstitutionProcessDTO();
         institutionProcessDTO.setIsOnline(true);
 
         queryBillsProcess.setInstitution(institution);
@@ -106,17 +109,12 @@ class QueryBillsProcessTest {
 
         queryBillsProcess.executeProcess();
 
-        verify(adapterService).queryBills(any(), anyString(), anyString());
-        verify(provisionService).createProvisions(any());
-        verify(paymentEventPublisher).publishInquiryLimiationNotification(any());
+        // Verify that the correct steps were taken
+        verify(adapterService, times(1)).queryBills(any(), anyString(), anyString());
+        verify(provisionService, times(1)).createProvisions(any());
+        verify(paymentEventPublisher, times(1)).publishInquiryLimiationNotification(any());
 
         assertNotNull(queryBillsProcess.getExecutionOutput(), "Execution output should not be null");
         assertNull(queryBillsProcess.getExecutionOutput().getResult(), "Execution output should not have errors");
-    }Wanted but not invoked:
-adapterService.queryBills(
-    <any>,
-    <any string>,
-    <any string>
-);
--> at com.ykb.payments.bill.transaction.process.query.QueryBillsProcessTest.testExecuteProcess_Success(QueryBillsProcessTest.java:172)
-Actually, there were zero interactions with this mock.
+    }
+}
