@@ -1,6 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import io.pivotal.cfenv.core.CfCredentials;
 import io.pivotal.cfenv.core.CfEnv;
@@ -54,7 +53,7 @@ public class RedisConfigTest {
         ReflectionTestUtils.setField(redisConfig, "institutionUserInterfaceListTtl", 2);
         ReflectionTestUtils.setField(redisConfig, "findChannelByChannelCodeTtl", 2);
 
-        // CfEnv ve CfService'i mockluyoruz.
+        // Mock CfEnv ve CfService
         when(cfEnv.findServiceByName("testServiceName")).thenReturn(cfService);
         when(cfService.getCredentials()).thenReturn(cfCredentials);
         when(cfCredentials.getHost()).thenReturn("localhost");
@@ -62,6 +61,9 @@ public class RedisConfigTest {
         when(cfCredentials.getPassword()).thenReturn("password");
         when(cfService.getPlan()).thenReturn("standard");
         when(cfCredentials.getName()).thenReturn("redis-test");
+
+        // RedisConfig sınıfında kullanılan cfEnv'i mockla
+        ReflectionTestUtils.setField(redisConfig, "cfEnv", cfEnv);
     }
 
     @Test
