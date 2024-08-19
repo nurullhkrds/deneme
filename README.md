@@ -60,6 +60,8 @@ public class RedisConfigTest {
         when(cfCredentials.getHost()).thenReturn("localhost");
         when(cfCredentials.getPort()).thenReturn("6379");
         when(cfCredentials.getPassword()).thenReturn("password");
+        when(cfService.getPlan()).thenReturn("standard");
+        when(cfCredentials.getName()).thenReturn("redis-test");
     }
 
     @Test
