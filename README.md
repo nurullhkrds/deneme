@@ -1,25 +1,18 @@
-public enum ResponseStatus {
+@Getter
+public enum Result {
 
-    SUCCESS(200, "Success"),
-    ERROR(500, "Internal Server Error"),
-    VALIDATION_ERROR(400, "Validation Error"),
-    NOT_FOUND(404, "Resource Not Found"),
-    UNAUTHORIZED(401, "Unauthorized"),
-    FORBIDDEN(403, "Forbidden");
+    SUCCESS("Başarılı"),
+    ERROR("Internal Server Error"),
+    VALIDATION_ERROR("Validation Error"),
+    NOT_FOUND( "Resource Not Found"),
+    FORBIDDEN( "Forbidden");
+    
 
-    private final int code;
     private final String message;
 
-    ResponseStatus(int code, String message) {
-        this.code = code;
+    Result(String message) {
         this.message = message;
     }
 
-    public int getCode() {
-        return code;
-    }
 
-    public String getMessage() {
-        return message;
-    }
 }
