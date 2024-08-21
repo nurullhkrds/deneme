@@ -1,27 +1,25 @@
-@Override
-public DataResult<BaseReturnMapDTO> createBaseReturnMap(CreateBaseReturnMapRequest request) {
+public enum ResponseStatus {
 
-    Optional<BaseReturnMap> existingReturnMap = baseReturnMapRepository.findByReturnMapCode(request.getReturnMapCode());
+    SUCCESS(200, "Success"),
+    ERROR(500, "Internal Server Error"),
+    VALIDATION_ERROR(400, "Validation Error"),
+    NOT_FOUND(404, "Resource Not Found"),
+    UNAUTHORIZED(401, "Unauthorized"),
+    FORBIDDEN(403, "Forbidden");
 
-    if (existingReturnMap.isPresent()) {
-        return new ErrorDataResult<>("Bu kod ile zaten bir kayıt mevcut.", null, 400);
+    private final int code;
+    private final String message;
+
+    ResponseStatus(int code, String message) {
+        this.code = code;
+        this.message = message;
     }
 
-    BaseReturnMap newReturnMap = new BaseReturnMap();
-    newReturnMap.setReturnMapCode(request.getReturnMapCode());
-    newReturnMap.setIsActive(request.getIsActive());
-
-    // Kayıt veritabanına eklenir
-    BaseReturnMap savedData = baseReturnMapRepository.save(newReturnMap);
-
-    // Saved data'dan DTO'ya dönüşüm yapılır
-    BaseReturnMapDTO dto = baseReturnMapMapper.toBaseReturnMapDTO(savedData);
-
-    // Eğer DTO null ise hata sonucu döndürülür
-    if (dto == null) {
-        return new ErrorDataResult<>("DTO'ya dönüştürme işlemi başarısız oldu.", null, 500);
+    public int getCode() {
+        return code;
     }
 
-    // Başarılı bir şekilde DTO döndürülür
-    return new SuccessDataResult<>(dto, "Kayıt başarıyla oluşturuldu.");
+    public String getMessage() {
+        return message;
+    }
 }
