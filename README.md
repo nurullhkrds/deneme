@@ -1,36 +1,14 @@
-create table BILL.RETURN_MAP_DEFINITION
-(
-ID NUMBER(16) not null,
-VERSION NUMBER(12),
-RETURN_MAP_CODE VARCHAR2(50),
-IS_ACTIVE VARCHAR2(1),
-CREATE_DATE DATE,
-CREATED_BY VARCHAR2(10),
-UPDATE_DATE DATE,
-UPDATED_BY VARCHAR2(10),
-constraint PK_RETURN_MAP_DEFINITION primary key (ID)
-);
+  @Override
+    public DataResult<BaseRetrunMapDTO> createBaseReturnMap(CreateBaseReturnMapRequest request) {
+        
+        return null;
+    }
 
-comment on table BILL.RETURN_MAP_DEFINITION is
-'Return map tanimlarinin tutuldugu tablodur';
+@Getter
+@Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CreateBaseReturnMapRequest {
+    private String returnMapCode;
+    private Boolean isActive;
 
-create index BILL.IDX_RETURN_MAP_DEFINITION_01 on BILL.RETURN_MAP_DEFINITION (
-RETURN_MAP_CODE ASC
-);
-/
-
-
-
-
-
-
-drop index BILL.IDX_RETURN_MAP_DEFINITION_01;
-
-alter table BILL.RETURN_MAP_DEFINITION
-drop primary key cascade;
-
-alter table BILL.RETURN_MAP_DEFINITION
-add constraint PK__RETURN_MAP_DEFINITION primary key (ID);
-
-alter table BILL.RETURN_MAP_DEFINITION
-add constraint UK_RETURN_MAP_DEFINITION_01 unique (RETURN_MAP_CODE);
+}
