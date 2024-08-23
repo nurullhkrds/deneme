@@ -63,3 +63,16 @@ public interface AdapterReturnMapDefinitionClient {
 
         return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), dto,200);
     }
+
+
+
+
+{
+  "exceptionData": {
+    "applicationName": "PAYMENTS.BILL.bill-bff",
+    "errorCode": -999,
+    "errorMessage": "Connection refused: no further information executing POST http://PAYMENTS.BILL.bill-transaction/returnMapDefinitions/createReturnMapDefinition",
+    "traceId": null
+  },
+  "parameters": {}
+}
