@@ -1,17 +1,33 @@
-@Converter(autoApply = true)
-public class EnumInterfaceTypeConverter implements AttributeConverter <EnumInterfaceType,String>{
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-	@Override
-	public String convertToDatabaseColumn(EnumInterfaceType attribute) {
-		return (attribute==null) ? null : attribute.name();
+public class EnumInterfaceTypeConverterTest {
 
-	}
+    private final EnumInterfaceTypeConverter converter = new EnumInterfaceTypeConverter();
 
-	@Override
-	public EnumInterfaceType convertToEntityAttribute(String dbData) {
-		return (dbData == null) ? null : EnumInterfaceType.valueOf(dbData);
-	}
-	
-	
+    @Test
+    public void testConvertToDatabaseColumn() {
+        // Enum değeri için test
+        EnumInterfaceType interfaceType = EnumInterfaceType.SOME_ENUM_VALUE; // EnumInterfaceType içinde var olan bir değeri kullanın
+        String expectedValue = "SOME_ENUM_VALUE"; // Enum değeri için beklenen string karşılığı
+        String actualValue = converter.convertToDatabaseColumn(interfaceType);
 
+        assertEquals(expectedValue, actualValue);
+
+        // Null değer için test
+        assertNull(converter.convertToDatabaseColumn(null));
+    }
+
+    @Test
+    public void testConvertToEntityAttribute() {
+        // String değeri için test
+        String dbData = "SOME_ENUM_VALUE"; // Enum değeri için kullanılan string karşılığı
+        EnumInterfaceType expectedType = EnumInterfaceType.SOME_ENUM_VALUE; // Enum değeri
+        EnumInterfaceType actualType = converter.convertToEntityAttribute(dbData);
+
+        assertEquals(expectedType, actualType);
+
+        // Null değeri için test
+        assertNull(converter.convertToEntityAttribute(null));
+    }
 }
