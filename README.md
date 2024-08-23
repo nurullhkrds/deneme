@@ -1,4 +1,8 @@
-2024-08-23 23:06:35,076 INFO [http-nio-8081-exec-1][[/]] Initializing Spring DispatcherServlet 'dispatcherServlet'
-Hibernate: select returnmapd0_.id as id1_59_, returnmapd0_.create_date as create_date2_59_, returnmapd0_.created_by as created_by3_59_, returnmapd0_.update_date as update_date4_59_, returnmapd0_.updated_by as updated_by5_59_, returnmapd0_.version as version6_59_, returnmapd0_.is_active as is_active7_59_, returnmapd0_.return_map_code as return_map_code8_59_ from return_map_definition returnmapd0_ where lower(returnmapd0_.return_map_code)=lower(?)
-Hibernate: SELECT i.* FROM INSTITUTION i WHERE i.id IN (SELECT ia.institution_id FROM INSTITUTION_ADAPTER ia JOIN ADAPTER_SERVICE a ON ia.adapter_id = a.adapter_id JOIN SERVICE s ON a.service_id = s.id WHERE s.return_map_code = ?)
-2024-08-23 23:06:35,304 ERROR [http-nio-8081-exec-1][PymExceptionHandler] An Exception occured org.springframework.core.convert.ConversionFailedException: Failed to convert from type [java.lang.Object[]] to type [com.ykb.payments.bill.transaction.institution.domain.Institution] for value [java.lang.Object[]@53e9e7f]; nested exception is org.springframework.core.convert.ConverterNotFoundException: No converter found capable of converting from type [java.math.BigDecimal] to type [com.ykb.payments.bill.transaction.institution.domain.Institution]
+@Query(value = "SELECT i.name FROM INSTITUTION i " +
+               "WHERE i.id IN (SELECT ia.institution_id " +
+               "FROM INSTITUTION_ADAPTER ia " +
+               "JOIN ADAPTER_SERVICE a ON ia.adapter_id = a.adapter_id " +
+               "JOIN SERVICE s ON a.service_id = s.id " +
+               "WHERE s.return_map_code = :returnMapCode)",
+        nativeQuery = true)
+List<String> findInstitutionNamesByReturnMapCode(@Param("returnMapCode") String returnMapCode);
