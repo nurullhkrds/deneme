@@ -1,23 +1,65 @@
-const handleOkForCreateDefinition = () => {
-  setModalDefinitionVisible(false);
+@Tag(name = "Management ReturnMapDefinition BFF Controller")
+@RequestMapping(RETURN_MAP_DEFINITION_PATH)
+@RestController
+public class ReturnMapDefinitionController {
 
-  sendcreateReturnMapDefinitionRequest(callApi, createDefinitionRequest)
-    .then(() => {
-      dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, { returnMapCode }));
-      Notification.success('Ekleme Başarılı', 3);
-    })
-    .catch(error => {
-      // Hata durumunda backend'den gelen mesajı yakala
-      if (error.response && error.response.data && error.response.data.message) {
-        // Backend'den dönen mesajı notification'a bas
-        Notification.error(error.response.data.message, 3);
-      } else {
-        // Eğer özel bir mesaj yoksa genel bir hata mesajı göster
-        Notification.error('Hatalı Ekleme', 3);
-      }
-      console.error('Error creating return map:', error);
-    });
+    private final AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient;
 
-  setDefinitionIsActive(false);
-  setReturnMapDefinition("");
-};
+    public ReturnMapDefinitionController(AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient) {
+        this.adapterReturnMapDefinitionClient = adapterReturnMapDefinitionClient;
+    }
+
+
+
+    @PostMapping("/createReturnMapDefinition")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> createReturnMapDefinition(
+            @RequestBody CreateReturnMapDefinitionRequest request) {
+        DataResult<ReturnMapDefinitionDTO> result = adapterReturnMapDefinitionClient.createReturnMapDefinition(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+
+
+@FeignClient(name = "PAYMENTS.BILL.bill-transaction", path = RETURN_MAP_DEFINITION_PATH, configuration = {MicroErrorDecoder.class})
+public interface AdapterReturnMapDefinitionClient {
+
+
+    @PostMapping("/createReturnMapDefinition")
+    DataResult<ReturnMapDefinitionDTO> createReturnMapDefinition(@RequestBody CreateReturnMapDefinitionRequest request);
+
+
+
+
+
+
+
+ @PostMapping("/createReturnMapDefinition")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> createReturnMapDefinition(
+            @RequestBody CreateReturnMapDefinitionRequest request) {
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.createReturnMapDefinition(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+ @Override
+    public DataResult<ReturnMapDefinitionDTO> createReturnMapDefinition(CreateReturnMapDefinitionRequest request) {
+
+        Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
+
+        if (existingReturnMap.isPresent()) {
+            return new ErrorDataResult<>(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), null, 400);
+        }
+
+        ReturnMapDefinition newReturnMap = new ReturnMapDefinition();
+        newReturnMap.setReturnMapCode(request.getReturnMapCode());
+        newReturnMap.setIsActive(request.getIsActive());
+
+        ReturnMapDefinition savedData = returnMapDefinitionRepository.save(newReturnMap);
+
+        ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(savedData);
+
+        if (dto == null) {
+            return new ErrorDataResult<>(ResultConstant.CONVERSION_FAILED.getMessage(), null, 500);
+        }
+
+        return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), dto,200);
+    }
