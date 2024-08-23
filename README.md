@@ -1,56 +1,81 @@
-@RestController
-@Tag(name = "ADK Bill Payment")
-@RequestMapping("/adkBillPayment")
-@RequiredArgsConstructor
-public class InstitutionAdkController {
-	private static final String X_TRACE_ID = "x-trace-id";
-	private static final String X_SESSION_ID = "x-session-id";
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-	private final ProductCityService productCityService;
-	private final InstitutionDetailService institutionDetailService;
-	private final RequestContext requestContext;
-	private final InstitutionService institutionService;
-	
-	private void fillMandatoryFields(BaseWebRequest webRequest, String channelTransactionId, String channelSessionId) {
-		requestContext.setChannelSessionId(channelSessionId);
-		requestContext.setChannelTransactionId(channelTransactionId);	
-		requestContext.setAgentCode(webRequest.getAgentCode());
-		requestContext.setChannelCode(webRequest.getChannelCode());
-		requestContext.setOperatingBranchCode(webRequest.getOperatingBranchCode());
-	}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-	@Operation(description = "Get product city list")
-	@GetMapping(path = "/getProductWithCityList")
-	public ResponseEntity<GetProductWithCityListResponse> getProductWithCityList(
-			@Validated GetProductWithCityListRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
+public class InstitutionAdkControllerTest {
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		GetProductWithCityListResponse response = productCityService.getProductWithCityList(request);
+    @Mock
+    private ProductCityService productCityService;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-	
-	@Operation(description = "Get institution list")
-	@GetMapping(path = "/getInstitutionDetailList")
-	public ResponseEntity<GetInstitutionDetailListResponse> getInstitutionDetailList(
-			@Validated GetInstitutionDetailListRequest request,
-			@RequestHeader(value = X_TRACE_ID) String channelTransactionId,
-			@RequestHeader(value = X_SESSION_ID) String channelSessionId) throws MicroException {
+    @Mock
+    private InstitutionDetailService institutionDetailService;
 
-		fillMandatoryFields(request, channelTransactionId, channelSessionId);
-		GetInstitutionDetailListResponse response = institutionDetailService.getInstitutionList(request);
+    @Mock
+    private RequestContext requestContext;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-	
-	@Operation(description = "Get institution-product list")
-	@GetMapping(path = "/getInstitutionProductList")
-	public ResponseEntity<GetProductWithInstitutionListResponse> getInstitutionDetailList() throws MicroException {
+    @Mock
+    private InstitutionService institutionService;
 
-		GetProductWithInstitutionListResponse response = institutionService.getInstitutionAndProductCodeList();
+    @InjectMocks
+    private InstitutionAdkController institutionAdkController;
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testGetProductWithCityList() throws MicroException {
+        // Arrange
+        GetProductWithCityListRequest request = new GetProductWithCityListRequest();
+        GetProductWithCityListResponse expectedResponse = new GetProductWithCityListResponse();
+        when(productCityService.getProductWithCityList(any())).thenReturn(expectedResponse);
+
+        // Act
+        ResponseEntity<GetProductWithCityListResponse> response = institutionAdkController.getProductWithCityList(request, "channelTransactionId", "channelSessionId");
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+        verify(requestContext).setChannelSessionId("channelSessionId");
+        verify(requestContext).setChannelTransactionId("channelTransactionId");
+    }
+
+    @Test
+    void testGetInstitutionDetailList() throws MicroException {
+        // Arrange
+        GetInstitutionDetailListRequest request = new GetInstitutionDetailListRequest();
+        GetInstitutionDetailListResponse expectedResponse = new GetInstitutionDetailListResponse();
+        when(institutionDetailService.getInstitutionList(any())).thenReturn(expectedResponse);
+
+        // Act
+        ResponseEntity<GetInstitutionDetailListResponse> response = institutionAdkController.getInstitutionDetailList(request, "channelTransactionId", "channelSessionId");
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+        verify(requestContext).setChannelSessionId("channelSessionId");
+        verify(requestContext).setChannelTransactionId("channelTransactionId");
+    }
+
+    @Test
+    void testGetInstitutionProductList() throws MicroException {
+        // Arrange
+        GetProductWithInstitutionListResponse expectedResponse = new GetProductWithInstitutionListResponse();
+        when(institutionService.getInstitutionAndProductCodeList()).thenReturn(expectedResponse);
+
+        // Act
+        ResponseEntity<GetProductWithInstitutionListResponse> response = institutionAdkController.getInstitutionDetailList();
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedResponse, response.getBody());
+    }
 }
