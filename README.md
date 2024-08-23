@@ -28,3 +28,8 @@ SELECT *
                        (SELECT id
                           FROM bill.service
                          where return_map_code = 'TAHSILAT_ITO_ALL')))
+
+
+
+  @Query("SELECT r FROM ReturnMapDefinition r WHERE LOWER(r.returnMapCode) = LOWER(:returnMapCode)")
+    Optional<ReturnMapDefinition> findByReturnMapCode(@Param("returnMapCode") String returnMapCode);
