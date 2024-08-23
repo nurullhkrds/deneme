@@ -1,41 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { fetchReturnMapDefinitionByReturnMapCode } from 'your-action-file'; // İlgili aksiyonu import edin
-import { Select, Form } from 'your-ui-library';
-const { Option } = Select;
+  <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapDefinitionServiceParametersSearch callApi={callApi} />
+        </Col>
+      </Row>
 
-const YourComponent = ({ returnMapOneData }) => {
-  const [definitionList, setDefinitionList] = useState([]);
-  const [definition, setDefinition] = useState(null);
-  const dispatch = useDispatch();
+      <div style={{ border: '1px solid #d9d9d9', background: "white", padding: '7px', borderRadius: '4px', marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
+        <h5 style={{ marginTop: "10px", textAlign: "center" }}>Hata Kodları Definition Parametreleri</h5>
+        <SecureButton permission="showModalDefinitionCreate" type="primary" onClick={showModalDefinitionCreate}>Ekle</SecureButton>
+      </div>
 
-  useEffect(() => {
-    // Veriyi çekmek için dispatch kullanın
-    const fetchData = async () => {
-      const response = await dispatch(fetchReturnMapDefinitionByReturnMapCode(returnMapOneData?.returnMapCode));
-      setDefinitionList(response); // Aldığınız listeyi state'e kaydedin
-      setDefinition(response.find(item => item.returnMapCode === returnMapOneData?.returnMapCode)); // Varsayılan seçili değeri ayarlayın
-    };
-    fetchData();
-  }, [dispatch, returnMapOneData]);
+      <Row >
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapDefinitionServiceParametersTable />
+        </Col>
+      </Row>
 
-  const handleChangeSelectDefinition = (value) => {
-    const selectedDefinition = definitionList.find(item => item.id === value);
-    setDefinition(selectedDefinition);
-    // İhtiyacınıza göre başka işlemler yapabilirsiniz
-  };
 
-  return (
-    <Form.Item label="ReturnMap Seç">
-      <Select value={definition?.id} onChange={handleChangeSelectDefinition}>
-        {definitionList.map(item => (
-          <Option key={item.id} value={item.id}>
-            {item.returnMapCode}
-          </Option>
-        ))}
-      </Select>
-    </Form.Item>
-  );
-};
 
-export default YourComponent;
+      <Row>
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersSearch callApi={callApi} handleSearchCriteria={handleSearchCriteria} />
+        </Col>
+      </Row>
+
+      <div style={{ border: '1px solid #d9d9d9', background: "white", padding: '7px', borderRadius: '4px', marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
+        <h5 style={{ marginTop: "10px", textAlign: "center" }}>Hata Kodları Parametreleri</h5>
+        <SecureButton permission="showModalCreate" type="primary" onClick={showModalCreate}>Ekle</SecureButton>
+      </div>
+
+      <Row >
+        <Col xs={24} sm={24} md={24} lg={24}>
+          <ReturnMapServiceParametersTable definitionList={definitionList} />
+        </Col>
+      </Row>
