@@ -1,24 +1,23 @@
-{
-  "success": true,
-  "message": "Veri getirildi",
-  "statusCode": 200,
-  "data": {
-    "id": 100095,
-    "returnMapCode": "TAHSILAT_ITO_ALL",
-    "isActive": true,
-    "institutions": [
-      "İstanbul Ticaret Odası"
-    ]
-  }
-}
-
-
 const handleClickOneDefinitionDelete = async (record) => {
     try {
-      console.log(record)
+      console.log(record);
+
+      // Institutions listesini kontrol et
+      const institutions = record.institutions;
+      let contentMessage;
+
+      if (institutions.length === 1) {
+        contentMessage = `${institutions[0]} kurumu bu returnMap'i kullanmakta. Silmek istediğinize emin misiniz?`;
+      } else if (institutions.length > 1) {
+        contentMessage = `${institutions.join(', ')} kurumları bu returnMap'i kullanmakta. Silmek istediğinize emin misiniz?`;
+      } else {
+        contentMessage = 'Kaydı silmek istediğinize emin misiniz?';
+      }
+
+      // Mesajı prompt olarak göster
       Message.prompt({
         title: 'Kayıt Silme',
-        content: 'Kaydı silmek istediğinize emin misiniz ?',
+        content: contentMessage,
         icon: <Icon name="warning-circle" colorType="warning" />,
         onClose: () => {
           console.log('onClose');
