@@ -1,101 +1,72 @@
-@ExtendWith(MockitoExtension.class)
-class PaymentNotificationEventProducerTest {
+@Entity
+@Getter
+@Setter
+public class ReturnMap extends UpdatableBaseEntity {
 
-    @Mock
-    private RabbitTemplate rabbitTemplate;
+	@Id
+	@Column(nullable = false, length = 16)
+	@SequenceGenerator(name = "RETURN_MAP_ID_GENERATOR", sequenceName = "SEQ_RETURN_MAP", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "RETURN_MAP_ID_GENERATOR")
+	private Long id;
 
-    @InjectMocks
-    private PaymentNotificationEventProducer paymentNotificationEventProducer;
+	@Column(length = 50, nullable = false)
+	private String returnMapCode;
 
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentNotificationEventExchangeName", "paymentNotificationEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentNotificationEventRoutingKey", "paymentNotificationEventRoutingKey");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentCancelNotificationEventExchangeName", "paymentCancelNotificationEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentCancelNotificationEventRoutingKey", "paymentCancelNotificationEventRoutingKey");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionACKEventExchangeName", "creditCardProvisionACKEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionACKEventRoutingKey", "creditCardProvisionACKEventRoutingKey");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionReverseEventExchangeName", "creditCardProvisionReverseEventExchange");
-        ReflectionTestUtils.setField(paymentNotificationEventProducer, "ccreditCardProvisionReverseEventRoutingKey", "creditCardProvisionReverseEventRoutingKey");
+	@Column(length = 255)
+	private String institutionReturnCode;
+
+	@Column(length = 500)
+	private String institutionReturnText;
+
+	@Column(length = 10)
+	private String bankReturnCode;
+
+	@Column(length = 250)
+	private String bankReturnText;
+
+	@Column(name = "RETURN_TYPE")
+	@Convert(converter = EnumReturnTypeConverter.class)
+	private EnumReturnType returnType;
+
+	@Column(nullable = false)
+	private Boolean isReversible;
+
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "return_map_definition_id",referencedColumnName = "ID", nullable = false)
+	private ReturnMapDefinition returnMapDefinition;
+
+
+
+}
+public class ReturnMapCriteria {
+
+
+    public static Specification<ReturnMap> hasReturnMapCode(String returnMapCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (returnMapCode == null || returnMapCode.isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(cb.lower(root.get("returnMapCode")), returnMapCode.toLowerCase());
+        };
     }
 
-    @Test
-    void testSendPaymentNotificationEvent_Success() {
-        PaymentNotificationEvent event = new PaymentNotificationEvent();
-        event.setPaymentNotificationId(123L);
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentNotificationEvent(event));
-
-        verify(rabbitTemplate).convertAndSend(eq("paymentNotificationEventExchange"), eq("paymentNotificationEventRoutingKey"), eq(event));
+    public static Specification<ReturnMap> hasBankErrorCode(String bankReturnCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (bankReturnCode == null || bankReturnCode.isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(cb.lower(root.get("bankReturnCode")), bankReturnCode.toLowerCase());
+        };
     }
 
-    @Test
-    void testSendPaymentNotificationEvent_Failure() {
-        PaymentNotificationEvent event = new PaymentNotificationEvent();
-        event.setPaymentNotificationId(123L);
-
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentNotificationEvent(event));
+    public static Specification<ReturnMap> hasInstitutionErrorCode(String institutionReturnCode) {
+        return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            if (institutionReturnCode == null || institutionReturnCode.isEmpty()) {
+                return cb.conjunction();
+            }
+            return cb.equal(cb.lower(root.get("institutionReturnCode")), institutionReturnCode.toLowerCase());
+        };
     }
 
-    @Test
-    void testSendPaymentCancelNotificationEvent_Success() {
-        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
-        event.setPaymentNotificationId(123L);
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(event));
-
-        verify(rabbitTemplate).convertAndSend(eq("paymentCancelNotificationEventExchange"), eq("paymentCancelNotificationEventRoutingKey"), eq(event));
-    }
-
-    @Test
-    void testSendPaymentCancelNotificationEvent_Failure() {
-        PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
-        event.setPaymentNotificationId(123L);
-
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(event));
-    }
-
-    @Test
-    void testSendCreditCardProvisionACKEvent_Success() {
-        CreditCardProvisionACKEventDTO event = new CreditCardProvisionACKEventDTO();
-        event.setPaymentId(123L);
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(event));
-
-        verify(rabbitTemplate).convertAndSend(eq("creditCardProvisionACKEventExchange"), eq("creditCardProvisionACKEventRoutingKey"), eq(event));
-    }
-
-    @Test
-    void testSendCreditCardProvisionACKEvent_Failure() {
-        CreditCardProvisionACKEventDTO event = new CreditCardProvisionACKEventDTO();
-        event.setPaymentId(123L);
-
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(event));
-    }
-
-    @Test
-    void testSendCreditCardProvisionReverseEvent_Success() {
-        CreditCardProvisionReverseEventDTO event = new CreditCardProvisionReverseEventDTO();
-        event.setPaymentCancelId(123L);
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(event));
-
-        verify(rabbitTemplate).convertAndSend(eq("creditCardProvisionReverseEventExchange"), eq("creditCardProvisionReverseEventRoutingKey"), eq(event));
-    }
-
-    @Test
-    void testSendCreditCardProvisionReverseEvent_Failure() {
-        CreditCardProvisionReverseEventDTO event = new CreditCardProvisionReverseEventDTO();
-        event.setPaymentCancelId(123L);
-
-        doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
-
-        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(event));
-    }
 }
