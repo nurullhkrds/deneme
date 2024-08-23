@@ -1,26 +1,20 @@
-const handleOkForCreateDefinition = () => {
-  setModalDefinitionVisible(false);
+ @Override
+    public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) {
+        
+        DataResult<ReturnMapDefinition> returnMapDefinitionDataResult=getReturnMapDefinitionByIdForServices(request.getId());
+        if (returnMapDefinitionDataResult.isSuccess()){
+            ReturnMapDefinition changedData=returnMapDefinitionDataResult.getData();
+            changedData.setIsActive(request.getIsActive());
+            changedData.setReturnMapCode(request.getReturnMapCode());
 
-  sendcreateReturnMapDefinitionRequest(callApi, createDefinitionRequest)
-    .then(() => {
-      dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, { returnMapCode }));
-      Notification.success('Ekleme Başarılı', 3);
-    })
-    .catch(error => {
-      // Hata durumunda backend'den gelen mesajı yakala
-      if (error.response && error.response.status === 400) {
-        // 400 hatası durumunda özel mesajı göster
-        Notification.error('Böyle bir veri zaten kayıtlı', 3);
-      } else if (error.response && error.response.data && error.response.data.message) {
-        // Diğer hatalar için backend'den dönen mesajı göster
-        Notification.error(error.response.data.message, 3);
-      } else {
-        // Eğer özel bir mesaj yoksa genel bir hata mesajı göster
-        Notification.error('Hatalı Ekleme', 3);
-      }
-      console.error('Error creating return map:', error);
-    });
+            ReturnMapDefinition updatedData=returnMapDefinitionRepository.save(changedData);
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
+            if (dto == null) {
+                return new ErrorDataResult<>(ResultConstant.CONVERSION_FAILED.getMessage(), null, 500);
+            }
 
-  setDefinitionIsActive(false);
-  setReturnMapDefinition("");
-};
+            return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), dto,200);
+
+        }
+        return new ErrorDataResult<>(ResultConstant.RECORD_NOT_FOUND.getMessage(), null,400);
+    }
