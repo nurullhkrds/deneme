@@ -4,11 +4,8 @@ class PaymentNotificationEventProducerTest {
     @Mock
     private RabbitTemplate rabbitTemplate;
 
-
-
     @InjectMocks
     private PaymentNotificationEventProducer paymentNotificationEventProducer;
-
 
     @BeforeEach
     void setUp() {
@@ -39,7 +36,7 @@ class PaymentNotificationEventProducerTest {
 
         doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
 
-        paymentNotificationEventProducer.sendPaymentNotificationEvent(event);
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentNotificationEvent(event));
     }
 
     @Test
@@ -52,7 +49,6 @@ class PaymentNotificationEventProducerTest {
         verify(rabbitTemplate).convertAndSend(eq("paymentCancelNotificationEventExchange"), eq("paymentCancelNotificationEventRoutingKey"), eq(event));
     }
 
-
     @Test
     void testSendPaymentCancelNotificationEvent_Failure() {
         PaymentCancelNotificationEvent event = new PaymentCancelNotificationEvent();
@@ -60,9 +56,7 @@ class PaymentNotificationEventProducerTest {
 
         doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
 
-        paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(event);
-
-
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(event));
     }
 
     @Test
@@ -82,9 +76,7 @@ class PaymentNotificationEventProducerTest {
 
         doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
 
-        paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(event);
-
-
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(event));
     }
 
     @Test
@@ -104,10 +96,6 @@ class PaymentNotificationEventProducerTest {
 
         doThrow(new RuntimeException("Exception")).when(rabbitTemplate).convertAndSend(any(String.class), any(String.class), any(Object.class));
 
-        paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(event);
-
-
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(event));
     }
-
-
 }
