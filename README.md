@@ -1,101 +1,74 @@
-@Component
-@RequiredArgsConstructor
-public class PaymentNotificationEventProducer {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
-    private static final Logger logger = LoggerFactory.getLogger(PaymentNotificationEventProducer.class);
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final RabbitTemplate rabbitTemplate;
+class PaymentNotificationEventProducerTest {
 
+    @Mock
+    private RabbitTemplate rabbitTemplate;
 
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentNotificationEvent.exchangeName}")
-    private String paymentNotificationEventExchangeName;
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentNotificationEvent.routingKey}")
-    private String paymentNotificationEventRoutingKey;
+    @InjectMocks
+    private PaymentNotificationEventProducer paymentNotificationEventProducer;
 
-    
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentCancelNotificationEvent.exchangeName}")
-    private String paymentCancelNotificationEventExchangeName;
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.paymentCancelNotificationEvent.routingKey}")
-    private String paymentCancelNotificationEventRoutingKey;
-    
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionACKEvent.exchangeName}")
-    private String creditCardProvisionACKEventExchangeName;
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionACKEvent.routingKey}")
-    private String creditCardProvisionACKEventRoutingKey;
-    
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionReverseEvent.exchangeName}")
-    private String creditCardProvisionReverseEventExchangeName;
-    @Value("${rabbitmq.services.billtransaction-rabbitmq.producers.creditCardProvisionReverseEvent.routingKey}")
-    private String ccreditCardProvisionReverseEventRoutingKey;
-  
-    @Async
-    public void sendPaymentNotificationEvent(PaymentNotificationEvent paymentNotificationEvent) {
-        try {
-            rabbitTemplate.convertAndSend(paymentNotificationEventExchangeName, paymentNotificationEventRoutingKey, paymentNotificationEvent);
-
-            logger.info("Published payment notification message." +
-                            " paymentNotificationId: '{}'" ,
-                            paymentNotificationEvent.getPaymentNotificationId());
-
-        } catch (Exception ex) {
-            logger.error("Error occurred while publishing payment notification message." +
-                            " paymentNotificationId: '{}'" +                         
-                            " Exception Detail: '{}'",
-                            paymentNotificationEvent.getPaymentNotificationId(),
-                    ExceptionUtils.getStackTrace(ex));
-        }
-
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        // Set up the values for the properties
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentNotificationEventExchangeName", "payment.exchange");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentNotificationEventRoutingKey", "payment.routingKey");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentCancelNotificationEventExchangeName", "payment.cancel.exchange");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "paymentCancelNotificationEventRoutingKey", "payment.cancel.routingKey");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionACKEventExchangeName", "creditCard.ack.exchange");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "creditCardProvisionACKEventRoutingKey", "creditCard.ack.routingKey");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "ccreditCardProvisionReverseEventExchangeName", "creditCard.reverse.exchange");
+        ReflectionTestUtils.setField(paymentNotificationEventProducer, "ccreditCardProvisionReverseEventRoutingKey", "creditCard.reverse.routingKey");
     }
-    
-	@Async
-	public void sendPaymentCancelNotificationEvent(PaymentCancelNotificationEvent paymentCancelNotificationEvent) {
 
-		try {
-			rabbitTemplate.convertAndSend(paymentCancelNotificationEventExchangeName,
-					paymentCancelNotificationEventRoutingKey, paymentCancelNotificationEvent);
-			logger.info("Published payment notification message." + " paymentNotificationId: '{}'",
-					paymentCancelNotificationEvent.getPaymentNotificationId());
+    @Test
+    void testSendPaymentNotificationEvent() {
+        PaymentNotificationEvent paymentNotificationEvent = mock(PaymentNotificationEvent.class);
+        when(paymentNotificationEvent.getPaymentNotificationId()).thenReturn("12345");
 
-		} catch (Exception e) {
-			logger.error(
-					"Error occurred while publishing payment notification message." + " paymentNotificationId: '{}'"
-							+ " Exception Detail: '{}'",
-					paymentCancelNotificationEvent.getPaymentNotificationId(), ExceptionUtils.getStackTrace(e));
-		}
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentNotificationEvent(paymentNotificationEvent));
 
-	}
-	
-    public void sendCreditCardProvisionACKEvent(CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO) {
-        try {
-           
-            rabbitTemplate.convertAndSend(creditCardProvisionACKEventExchangeName, creditCardProvisionACKEventRoutingKey, creditCardProvisionACKEventDTO);
-
-            logger.info("Published credit card provision ack message. Payment Id: '{}'", creditCardProvisionACKEventDTO.getPaymentId());
-
-        } catch (Exception ex) {
-            logger.error("Error occurred while publishing credit card provision ack message." +
-                            " Payment Id: '{}'" +
-                            " Exception Detail: '{}'",
-                    creditCardProvisionACKEventDTO.getPaymentId(),
-                    ExceptionUtils.getStackTrace(ex));
-        }
+        verify(rabbitTemplate).convertAndSend("payment.exchange", "payment.routingKey", paymentNotificationEvent);
     }
-    
-	public void sendCreditCardProvisionReverseEvent(CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO) {
-		try {
 
-			rabbitTemplate.convertAndSend(creditCardProvisionReverseEventExchangeName,
-					ccreditCardProvisionReverseEventRoutingKey, creditCardProvisionReverseEventDTO);
+    @Test
+    void testSendPaymentCancelNotificationEvent() {
+        PaymentCancelNotificationEvent paymentCancelNotificationEvent = mock(PaymentCancelNotificationEvent.class);
+        when(paymentCancelNotificationEvent.getPaymentNotificationId()).thenReturn("54321");
 
-			logger.info("Published credit card provision reverse message. Payment Cancel Id: '{}'",
-					creditCardProvisionReverseEventDTO.getPaymentCancelId());
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendPaymentCancelNotificationEvent(paymentCancelNotificationEvent));
 
-		} catch (Exception ex) {
-			logger.error(
-					"Error occurred while publishing credit card provision ack message." + " Payment Cancel Id: '{}'"
-							+ " Exception Detail: '{}'",
-					creditCardProvisionReverseEventDTO.getPaymentCancelId(), ExceptionUtils.getStackTrace(ex));
-		}
-	}
+        verify(rabbitTemplate).convertAndSend("payment.cancel.exchange", "payment.cancel.routingKey", paymentCancelNotificationEvent);
+    }
 
+    @Test
+    void testSendCreditCardProvisionACKEvent() {
+        CreditCardProvisionACKEventDTO creditCardProvisionACKEventDTO = mock(CreditCardProvisionACKEventDTO.class);
+        when(creditCardProvisionACKEventDTO.getPaymentId()).thenReturn("67890");
+
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionACKEvent(creditCardProvisionACKEventDTO));
+
+        verify(rabbitTemplate).convertAndSend("creditCard.ack.exchange", "creditCard.ack.routingKey", creditCardProvisionACKEventDTO);
+    }
+
+    @Test
+    void testSendCreditCardProvisionReverseEvent() {
+        CreditCardProvisionReverseEventDTO creditCardProvisionReverseEventDTO = mock(CreditCardProvisionReverseEventDTO.class);
+        when(creditCardProvisionReverseEventDTO.getPaymentCancelId()).thenReturn("09876");
+
+        assertDoesNotThrow(() -> paymentNotificationEventProducer.sendCreditCardProvisionReverseEvent(creditCardProvisionReverseEventDTO));
+
+        verify(rabbitTemplate).convertAndSend("creditCard.reverse.exchange", "creditCard.reverse.routingKey", creditCardProvisionReverseEventDTO);
+    }
 }
