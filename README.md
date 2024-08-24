@@ -1,17 +1,51 @@
-@Test
-void shouldHandleGenericUnknownErrorWhenExceptionOccurs() {
-    CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
-    inputDto.setDummyMerchant(true);
+@Mapper(componentModel = "spring")
+public interface ChannelMapper {
+    ChannelMapper INSTANCE = Mappers.getMapper(ChannelMapper.class);
 
-    // ServiceCallException oluşturup, RuntimeException'a sebep (cause) olarak ekleyin
-    ServiceCallException serviceCallException = new ServiceCallException(new ExceptionData());
-    RuntimeException runtimeException = new RuntimeException(serviceCallException);
+    ChannelDTO toDto(Channel channel);
+    
+    Channel toEntity(ChannelDTO channelDTO); 
+}
 
-    when(provisionNextService.makeReverseProvision(any(MakeReverseProvisionRequest.class)))
-            .thenThrow(runtimeException);
 
-    CreateReverseAccountingResultDTO resultDTO = cardReverseProvisionService.doReverseAccounting(inputDto);
 
-    assertEquals(false, resultDTO.isSuccess());
-    assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
+@Mapper(componentModel = "spring")
+public interface CityMapper {
+    CityMapper INSTANCE = Mappers.getMapper(CityMapper.class);
+
+    CityDTO toCityDTO(City city);
+  
+    City toCity(CityDTO cityDTO);
+}
+
+
+@Mapper(componentModel = "spring")
+public interface FeatureMapper {
+    FeatureMapper INSTANCE = Mappers.getMapper(FeatureMapper.class);
+
+    FeatureDTO toFeatureDTO(Feature feature);
+    
+    Feature toFeature(FeatureDTO entity);
+}
+
+
+
+@Mapper(componentModel = "spring")
+public interface InstitutionAccountingInfoMapper {
+    InstitutionAccountingInfoMapper INSTANCE = Mappers.getMapper(InstitutionAccountingInfoMapper.class);
+
+    InstitutionAccountingInfoDTO toInstitutionAccountingInfoDTO(InstitutionAccountingInfo institutionAccountingInfo);
+
+    InstitutionAccountingInfo toInstitutionAccountingInfo(InstitutionAccountingInfoDTO institutionAccountingInfoDTO);
+}
+
+
+@Mapper(componentModel = "spring")
+public interface InstitutionChannelMapper {
+    InstitutionChannelMapper INSTANCE = Mappers.getMapper(InstitutionChannelMapper.class);
+
+    InstitutionChannelDTO toDTO(InstitutionChannel institutionChannel);
+
+    InstitutionChannel toEntity(InstitutionChannelDTO institutionChannelDTO);
+
 }
