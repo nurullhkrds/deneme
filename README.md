@@ -1,67 +1,73 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+package com.ykb.payments.bill.transaction.adapter.criteria;
 
-import com.example.yourpackage.entity.ReturnMap;
-import com.example.yourpackage.entity.ReturnMapDefinition;
-import org.junit.jupiter.api.BeforeEach;
+import com.ykb.payments.bill.transaction.adapter.domain.ReturnMap;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 
-public class ReturnMapSpecificationTest {
+import static org.mockito.Mockito.*;
 
-    private Root<ReturnMap> root;
-    private CriteriaQuery<?> query;
-    private CriteriaBuilder criteriaBuilder;
-    private Join<ReturnMap, ReturnMapDefinition> join;
+@ExtendWith(MockitoExtension.class)
+public class ReturnMapCriteriaTest {
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        root = mock(Root.class);
-        query = mock(CriteriaQuery.class);
-        criteriaBuilder = mock(CriteriaBuilder.class);
-        join = mock(Join.class);
+
+
+    
+    
+    @Test
+    void testHasBankErrorCode_withValidCode() {
+        String bankReturnCode = "BANK123";
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).equal(cb.lower(root.get("bankReturnCode")), bankReturnCode.toLowerCase());
     }
 
     @Test
-    void testHasReturnMapDefinitionCode_WithCode() {
-        String returnMapCode = "testCode";
+    void testHasBankErrorCode_withNullCode() {
+        String bankReturnCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
-        when(root.join("returnMapDefinition", JoinType.LEFT)).thenReturn(join);
-        when(criteriaBuilder.lower(join.get("returnMapCode"))).thenReturn(mock(javax.persistence.criteria.Expression.class));
-        when(criteriaBuilder.equal(any(javax.persistence.criteria.Expression.class), eq(returnMapCode.toLowerCase())))
-                .thenReturn(mock(javax.persistence.criteria.Predicate.class));
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
+        spec.toPredicate(root, query, cb);
 
-        Specification<ReturnMap> specification = ReturnMapSpecification.hasReturnMapDefinitionCode(returnMapCode);
-        specification.toPredicate(root, query, criteriaBuilder);
-
-        verify(root).join("returnMapDefinition", JoinType.LEFT);
-        verify(criteriaBuilder).equal(any(javax.persistence.criteria.Expression.class), eq(returnMapCode.toLowerCase()));
+        verify(cb).conjunction();
     }
 
     @Test
-    void testHasReturnMapDefinitionCode_WithNullCode() {
-        String returnMapCode = null;
+    void testHasInstitutionErrorCode_withValidCode() {
+        String institutionReturnCode = "INST123";
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
-        Specification<ReturnMap> specification = ReturnMapSpecification.hasReturnMapDefinitionCode(returnMapCode);
-        specification.toPredicate(root, query, criteriaBuilder);
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        spec.toPredicate(root, query, cb);
 
-        verify(criteriaBuilder).conjunction();
+        verify(cb).equal(cb.lower(root.get("institutionReturnCode")), institutionReturnCode.toLowerCase());
     }
 
     @Test
-    void testHasReturnMapDefinitionCode_WithEmptyCode() {
-        String returnMapCode = "";
+    void testHasInstitutionErrorCode_withNullCode() {
+        String institutionReturnCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
-        Specification<ReturnMap> specification = ReturnMapSpecification.hasReturnMapDefinitionCode(returnMapCode);
-        specification.toPredicate(root, query, criteriaBuilder);
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        spec.toPredicate(root, query, cb);
 
-        verify(criteriaBuilder).conjunction();
+        verify(cb).conjunction();
     }
 }
