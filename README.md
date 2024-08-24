@@ -1,76 +1,210 @@
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+package com.ykb.payments.bill.transaction.institution.util;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.IOException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.ykb.payments.bill.transaction.payment.web.response.SubsrciberNoPartResponseWebDTO;
+import org.apache.commons.lang3.Range;
+import org.apache.commons.lang3.StringUtils;
 
-class EnumExpenseTypeConverterTest {
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionUserIntfDTO;
+import com.ykb.payments.bill.transaction.payment.dto.SubscriberNoPartRequestDTO;
 
-    EnumExpenseTypeConverter converter;
+public class SubscriberNumberUtils {
 
-    @BeforeEach
-    void setUp() {
-        converter = new EnumExpenseTypeConverter();
-    }
+	public static List<SubsrciberNoPartResponseWebDTO> parseSubscriberNoIntoParts(List<InstitutionUserIntfDTO> subscriberInfolist, String subscriberNumber){
+		List<SubsrciberNoPartResponseWebDTO> subscriberNoPartList = new ArrayList<>();
+		SubsrciberNoPartResponseWebDTO subscriberNoPartRequestDTO ;
+		if(subscriberInfolist.size() == 1 ){
+			subscriberNoPartRequestDTO = new SubsrciberNoPartResponseWebDTO();
+			subscriberNoPartRequestDTO.setPartNo(subscriberInfolist.get(0).getScreenOrderNo());
+			subscriberNoPartRequestDTO.setPartKey(subscriberInfolist.get(0).getLabel());
+			subscriberNoPartRequestDTO.setPartValue(subscriberNumber);
+			subscriberNoPartList.add(subscriberNoPartRequestDTO);
+			return subscriberNoPartList;
+		}
+		String subscriberNoPart = null;
+		for (InstitutionUserIntfDTO subscriberPartInfo : subscriberInfolist) {
+			Pattern pattern = Pattern.compile(subscriberPartInfo.getRegex());
+			List<String> namedGroups = getNamedGroup(subscriberPartInfo.getRegex());
+			Matcher matcher = pattern.matcher(subscriberNumber);
+			if (matcher.find()) {
+				for (String namedGroup : namedGroups) {
+					subscriberNoPart = subscriberNoPart + matcher.group(namedGroup);
+				}
+			}
+			subscriberNoPartRequestDTO  = new SubsrciberNoPartResponseWebDTO();
+			subscriberNoPartRequestDTO.setPartNo(subscriberPartInfo.getScreenOrderNo());
+			subscriberNoPartRequestDTO.setPartKey(subscriberPartInfo.getLabel());
+			subscriberNoPartRequestDTO.setPartValue(subscriberNoPart);
+			subscriberNoPartList.add(subscriberNoPartRequestDTO);
 
-    @Test
-    void testConvertToDatabaseColumn() {
-        EnumExpenseType expenseType = EnumExpenseType.SOME_ENUM_VALUE; // EnumExpenseType içinde var olan bir değeri kullanın
-        String expectedValue = "SOME_ENUM_VALUE_STRING"; // Enum değerine karşılık gelen string değeri yazın
-        String actualValue = converter.convertToDatabaseColumn(expenseType);
+		}
+		return  subscriberNoPartList;
+	}
 
-        assertEquals(expectedValue, actualValue);
-        assertNull(converter.convertToDatabaseColumn(null));
-    }
+	public static String formatSubscriberNumberParts(List<InstitutionUserIntfDTO> subscriberInfolist,
+			List<SubscriberNoPartRequestDTO> subscriberNoPartList) {
+		String mergedSubscriberNumber ;
+		
+		for (InstitutionUserIntfDTO subscriberPartInfo : subscriberInfolist) {
+			Optional<SubscriberNoPartRequestDTO> subscriberNoPartDTO = subscriberNoPartList.stream()
+					.filter(subscriberNoPart -> subscriberNoPart.getPartNo() == subscriberPartInfo.getScreenOrderNo())
+					.findFirst();
 
-    @Test
-    void testConvertToEntityAttribute() {
-        String dbData = "SOME_ENUM_VALUE_STRING"; // Enum değeri için kullanılan string karşılığı
-        EnumExpenseType expectedType = EnumExpenseType.SOME_ENUM_VALUE; // Enum değeri
-        EnumExpenseType actualType = converter.convertToEntityAttribute(dbData);
+			if (subscriberNoPartDTO.isPresent()) {
+				if (subscriberNoPartDTO.get().getPartValue().length() <= subscriberPartInfo.getMaxLength()
+						&& subscriberPartInfo.getCompleteLengthFlag()) {
+					subscriberNoPartDTO.get().setPartValue(StringUtils.leftPad(subscriberNoPartDTO.get().getPartValue(),
+							subscriberPartInfo.getMaxLength(), '0'));
 
-        assertEquals(expectedType, actualType);
-        assertNull(converter.convertToEntityAttribute(null));
-    }
+				}
+			}
 
-    @Test
-    void testWrite() throws IOException {
-        EnumExpenseType expenseType = EnumExpenseType.SOME_ENUM_VALUE; // EnumExpenseType içinde var olan bir değeri kullanın
-        StringWriter stringWriter = new StringWriter();
-        JsonWriter jsonWriter = new JsonWriter(stringWriter);
+		}
+		mergedSubscriberNumber = mergeSubscriberNumberParts(subscriberNoPartList);
 
-        converter.write(jsonWriter, expenseType);
-        jsonWriter.close();
+		return mergedSubscriberNumber;
 
-        String expectedJson = "\"SOME_ENUM_VALUE_STRING\""; // Enum değerine karşılık gelen JSON string değeri yazın
-        assertEquals(expectedJson, stringWriter.toString());
-    }
+	}
 
-    @Test
-    void testRead() throws IOException {
-        String json = "\"SOME_ENUM_VALUE_STRING\""; // Enum değeri için kullanılan JSON string karşılığı
-        JsonReader jsonReader = new JsonReader(new StringReader(json));
+	public static String mergeSubscriberNumberParts(List<SubscriberNoPartRequestDTO> subscriberNoPartList) {	
+		return StringUtils
+				.join(subscriberNoPartList.stream().sorted(Comparator.comparingInt(SubscriberNoPartRequestDTO::getPartNo))
+						.map(SubscriberNoPartRequestDTO::getPartValue).toArray(String[]::new));
+	
+	}
+	
+	public static boolean checkSubscriberNumberParts(List<InstitutionUserIntfDTO> institutionUserIntListDTO,
+			List<SubscriberNoPartRequestDTO> subscriberNoPartList) {
+		boolean valid = false;	
+			for (InstitutionUserIntfDTO subscriberPartInfo : institutionUserIntListDTO) {
+				
+				valid = subscriberNoPartList.stream().filter(
+						subscriberNoPart -> subscriberNoPart.getPartNo() == subscriberPartInfo.getScreenOrderNo())
+						.filter(subscriberNoPart -> applyLengthControl(subscriberNoPart.getPartValue(),
+								subscriberPartInfo.getMaxLength(), subscriberPartInfo.getMinLength()))
+						.filter(subscriberNoPart -> applyNumericAndNegativeValueControl(subscriberNoPart.getPartValue(),
+								subscriberPartInfo.getIsNumeric()))
+						.filter(subscriberNoPart -> applyRegexPatternControl(subscriberNoPart.getPartValue(),
+								subscriberPartInfo.getRegex()))
+						.findAny().isPresent();
+			}		
+		
+		return valid;
+	}
+	
+	private static boolean applyLengthControl(String subscriberNo, Integer subscriberNoMaxLength,
+			Integer subscriberNoMinLength) {		
+		return Range.between(subscriberNoMinLength, subscriberNoMaxLength).contains(subscriberNo.length());
+	}
+	
+	private static boolean applyNumericAndNegativeValueControl(String subscriberNo, Boolean numericFlag) {
+		boolean isSubscriberNoNumeric = StringUtils.isNumeric(subscriberNo);
+		boolean isSubscriberNoPositive = false;
 
-        EnumExpenseType expectedType = EnumExpenseType.SOME_ENUM_VALUE; // Enum değeri
-        EnumExpenseType actualType = converter.read(jsonReader);
+		if (isSubscriberNoNumeric) {
+			isSubscriberNoPositive = Long.valueOf(subscriberNo) >= 0;
+		}
 
-        assertEquals(expectedType, actualType);
-    }
+		return (numericFlag && isSubscriberNoNumeric && isSubscriberNoPositive)
+				|| (!numericFlag && !isSubscriberNoNumeric);
+		
+	}
+	
+	private static boolean applyRegexPatternControl(String subscriberNo, String regexPattern) {
+		return StringUtils.isNotEmpty(regexPattern) ? subscriberNo.matches(regexPattern) :true;
+			
+	}
+	//TODO: Regex Util yazilmali, barcode da kullaniliyor.
+	private static List<String> getNamedGroup(String regex) {
+		List<String> namedGroups = new ArrayList<String>();
 
-    @Test
-    void testInvalidJsonValue() throws IOException {
-        String invalidJson = "\"INVALID_VALUE\"";
-        JsonReader jsonReader = new JsonReader(new StringReader(invalidJson));
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            converter.read(jsonReader);
-        });
-    }
+		Matcher m = Pattern.compile("\\(\\?<([a-zA-Z][a-zA-Z0-9]*)>").matcher(regex);
+		while (m.find()) {
+			namedGroups.add(m.group(1));
+		}
+		Collections.sort(namedGroups);
+		return namedGroups;
+	}
+	
 }
+
+
+
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("Unit tests for SubscriberNumberUtils methods.")
+public class SubscriberNumberUtilsTest {
+
+
+    @Test
+    void shouldParseSubscriberNoIntoPartsWhenSubscriberInfolistSizeIsOne2(){
+
+        InstitutionUserIntfDTO institutionUserIntfDto = getInstitutionUserIntfDto();
+        List<SubsrciberNoPartResponseWebDTO> actual = SubscriberNumberUtils.parseSubscriberNoIntoParts(List.of(institutionUserIntfDto, institutionUserIntfDto), "123");
+        Assertions.assertEquals(2, actual.size());
+    }
+
+    @Test
+    void shouldParseSubscriberNoIntoPartsWhenSubscriberInfolistSizeIsOne3(){
+        SubscriberNoPartRequestDTO subscriberNoPartRequestDTO = getSubscriberNoPartRequestDTO();
+        InstitutionUserIntfDTO institutionUserIntfDto = getInstitutionUserIntfDto();
+        boolean actual = SubscriberNumberUtils.checkSubscriberNumberParts(List.of(institutionUserIntfDto, institutionUserIntfDto), List.of(subscriberNoPartRequestDTO));
+        Assertions.assertFalse(actual);
+    }
+
+
+    @Test
+    void shouldParseSubscriberNoIntoPartsWhenSubscriberInfolistSizeIsOne(){
+
+        List<InstitutionUserIntfDTO> intfDTOS = List.of(getInstitutionUserIntfDto());
+        List<SubsrciberNoPartResponseWebDTO> actual = SubscriberNumberUtils.parseSubscriberNoIntoParts(intfDTOS, "123");
+        Assertions.assertEquals(1, actual.size());
+    }
+
+    @Test
+    void shouldMergeSubscriberNumberParts(){
+        List<SubscriberNoPartRequestDTO> intfDTOS = List.of(getSubscriberNoPartRequestDTO());
+        String actual = SubscriberNumberUtils.mergeSubscriberNumberParts(intfDTOS);
+        Assertions.assertEquals(3, actual.length());
+    }
+
+    private InstitutionUserIntfDTO getInstitutionUserIntfDto() {
+        InstitutionUserIntfDTO dto = new InstitutionUserIntfDTO();
+        dto.setScreenOrderNo(1);
+        dto.setLabel("testLabel");
+        dto.setRegex("testRegex");
+        dto.setMinLength(1);
+        dto.setMaxLength(10);
+        dto.setIsNumeric(true);
+
+        return dto;
+    }
+
+    private SubscriberNoPartRequestDTO getSubscriberNoPartRequestDTO(){
+        SubscriberNoPartRequestDTO dto = new SubscriberNoPartRequestDTO();
+        dto.setPartNo(1);
+        dto.setPartValue("123");
+        dto.setPartKey("partKey");
+        return dto;
+    }
+
+}
+  buda bunun testi fakat 
+"	for (InstitutionUserIntfDTO subscriberPartInfo : subscriberInfolist) {
+			Optional<SubscriberNoPartRequestDTO> subscriberNoPartDTO = subscriberNoPartList.stream()
+					.filter(subscriberNoPart -> subscriberNoPart.getPartNo() == subscriberPartInfo.getScreenOrderNo())
+					.findFirst();
+
+			if (subscriberNoPartDTO.isPresent()) {
+				if (subscriberNoPartDTO.get().getPartValue().length() <= subscriberPartInfo.getMaxLength()
+						&& subscriberPartInfo.getCompleteLengthFlag()) {
+					subscriberNoPartDTO.get().setPartValue(StringUtils.leftPad(subscriberNoPartDTO.get().getPartValue(),
+							subscriberPartInfo.getMaxLength(), '0'));
+
+				}
+			}
+
+		}" buranın testi yapılmamış
