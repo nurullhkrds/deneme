@@ -1,36 +1,31 @@
-	@Override
-	public void write(JsonWriter out, EnumAccountingSource value) throws IOException {
-		if (value != null) {
-			out.jsonValue(value.getValue());
-		}
-		
-	}
 
+    @Test
+    public void testWrite_withNonNullValue() throws IOException {
+        // Create a mock JsonWriter
+        JsonWriter jsonWriter = mock(JsonWriter.class);
 
-@Converter(autoApply = true)
-public class EnumAccountingSourceConverter extends TypeAdapter<EnumAccountingSource> implements AttributeConverter <EnumAccountingSource,String> {
+        // Create a sample EnumAccountingSource value
+        EnumAccountingSource enumValue = EnumAccountingSource.SAMPLE; // Replace SAMPLE with an actual enum value
 
-	@Override
-	public String convertToDatabaseColumn(EnumAccountingSource attribute) {
-		return (attribute==null) ? null : attribute.getValue();
-	}
+        // Call the write method
+        converter.write(jsonWriter, enumValue);
 
-	@Override
-	public EnumAccountingSource convertToEntityAttribute(String dbData) {
-		return (dbData == null) ? null : EnumAccountingSource.parse(dbData);
-	}
+        // Capture the argument passed to jsonWriter.jsonValue()
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(jsonWriter).jsonValue(argumentCaptor.capture());
 
-	@Override
-	public void write(JsonWriter out, EnumAccountingSource value) throws IOException {
-		if (value != null) {
-			out.jsonValue(value.getValue());
-		}
-		
-	}
+        // Assert that the correct value was passed to jsonValue()
+        assertEquals(enumValue.getValue(), argumentCaptor.getValue());
+    }
 
-	@Override
-	public EnumAccountingSource read(JsonReader in) throws IOException {
-		return EnumAccountingSource.parse(in.nextString());
-	}
+    @Test
+    public void testWrite_withNullValue() throws IOException {
+        // Create a mock JsonWriter
+        JsonWriter jsonWriter = mock(JsonWriter.class);
 
-}
+        // Call the write method with a null value
+        converter.write(jsonWriter, null);
+
+        // Verify that jsonValue was not called
+        verify(jsonWriter, never()).jsonValue(anyString());
+    }
