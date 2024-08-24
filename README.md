@@ -1,22 +1,52 @@
-
-    @Test
-    void testHasReturnMapDefinitionCode_withValidCode() {
-        String returnMapCode = "MAP123";
+@Test
+    void testHasBankErrorCode_withValidCode() {
+        String bankReturnCode = "BANK123";
         Root<ReturnMap> root = mock(Root.class);
         CriteriaQuery<?> query = mock(CriteriaQuery.class);
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Join<ReturnMap, ReturnMapDefinition> join = mock(Join.class);  // Join nesnesini mockluyoruz.
 
-        // Burada root.join metodundan dönen değeri casting ile Join türüne dönüştürüyoruz.
-        when(root.join(eq("returnMapDefinition"), eq(JoinType.LEFT))).thenReturn((Join) join); 
-
-        when(cb.lower(join.get("returnMapCode"))).thenReturn(mock(javax.persistence.criteria.Expression.class));
-        when(cb.equal(any(javax.persistence.criteria.Expression.class), eq(returnMapCode.toLowerCase())))
-                .thenReturn(mock(javax.persistence.criteria.Predicate.class));
-
-        Specification<ReturnMap> spec = ReturnMapCriteria.hasReturnMapDefinitionCode(returnMapCode);
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
         spec.toPredicate(root, query, cb);
 
-        verify(root).join("returnMapDefinition", JoinType.LEFT);
-        verify(cb).equal(any(javax.persistence.criteria.Expression.class), eq(returnMapCode.toLowerCase()));
+        verify(cb).equal(cb.lower(root.get("bankReturnCode")), bankReturnCode.toLowerCase());
     }
+
+    @Test
+    void testHasBankErrorCode_withNullCode() {
+        String bankReturnCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void testHasInstitutionErrorCode_withValidCode() {
+        String institutionReturnCode = "INST123";
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).equal(cb.lower(root.get("institutionReturnCode")), institutionReturnCode.toLowerCase());
+    }
+
+    @Test
+    void testHasInstitutionErrorCode_withNullCode() {
+        String institutionReturnCode = null;
+        Root<ReturnMap> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+
+        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).conjunction();
+    }
+}
