@@ -1,135 +1,128 @@
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+@Service
+public class ReturnMapDefinitionService implements IReturnMapDefinitionService {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+    private final ReturnMapDefinitionRepository returnMapDefinitionRepository;
 
-import java.util.Arrays;
-import java.util.List;
+    private final ReturnMapDefinitionMapper returnMapDefinitionMapper;
 
-public class ReturnMapDefinitionControllerTest {
-
-    private MockMvc mockMvc;
-
-    @Mock
-    private IReturnMapDefinitionService returnMapDefinitionService;
-
-    @InjectMocks
-    private ReturnMapDefinitionController returnMapDefinitionController;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(returnMapDefinitionController).build();
+    public ReturnMapDefinitionService(ReturnMapDefinitionRepository returnMapDefinitionRepository, ReturnMapDefinitionMapper returnMapDefinitionMapper) {
+        this.returnMapDefinitionRepository = returnMapDefinitionRepository;
+        this.returnMapDefinitionMapper = returnMapDefinitionMapper;
     }
 
-    @Test
-    void testGetAllReturnMapDefinitionReturnMap() throws Exception {
-        List<ReturnMapDefinitionDTO> returnMapDefinitions = Arrays.asList(new ReturnMapDefinitionDTO());
-        DataResult<List<ReturnMapDefinitionDTO>> dataResult = new DataResult<>(returnMapDefinitions, true, "Success", 200);
 
-        when(returnMapDefinitionService.getAllReturnMapDefinitionReturnMap()).thenReturn(dataResult);
 
-        mockMvc.perform(get("/returnMapDefinitions/getAllReturnMapDefinitionReturnMap"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isArray());
-        
-        verify(returnMapDefinitionService, times(1)).getAllReturnMapDefinitionReturnMap();
+    @Override
+    public DataResult<List<ReturnMapDefinitionDTO>> getAllReturnMapDefinitionReturnMap() {
+        List<ReturnMapDefinition> definitionList= returnMapDefinitionRepository.findAll();
+        List<ReturnMapDefinitionDTO> dtoList=returnMapDefinitionMapper.toReturnMapDefinitionDTOList(definitionList);
+        return new SuccessDataResult<>(ResultConstant.DATA_LISTED.getMessage(),dtoList,200);
+    }
+    @Override
+    public DataResult<ReturnMapDefinitionDTO> getReturnMapDefinitionByReturnMapCode(String returnMapCode) {
+        Optional<ReturnMapDefinition> optionalReturnMapDefinition = returnMapDefinitionRepository.findByReturnMapCode(returnMapCode);
+
+        if (optionalReturnMapDefinition.isPresent()) {
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(optionalReturnMapDefinition.get());
+
+            List<String> institutions = returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode);
+
+            if (dto != null) {
+                dto.setInstitutions(institutions);
+                return new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), dto, 200);
+            } else {
+                return new ErrorDataResult<>(ResultConstant.CONVERSION_FAILED.getMessage(), null, 500);
+            }
+        } else {
+            return new ErrorDataResult<>(ResultConstant.RECORD_NOT_FOUND.getMessage(), null, 200);
+        }
     }
 
-    @Test
-    void testGetReturnMapDefinitionByReturnMapCode() throws Exception {
-        String returnMapCode = "exampleCode";
-        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
-        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(returnMapDefinitionDTO, true, "Success", 200);
 
-        when(returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode)).thenReturn(dataResult);
+    @Override
+    public DataResult<ReturnMapDefinitionDTO> getReturnMapDefinitionById(Long id) {
+        Optional<ReturnMapDefinition> returnMapDefinitionOptional=returnMapDefinitionRepository.findById(id);
 
-        mockMvc.perform(get("/returnMapDefinitions/getReturnMapDefinitionByReturnMapCode")
-                        .param("returnMapCode", returnMapCode))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isNotEmpty());
-
-        verify(returnMapDefinitionService, times(1)).getReturnMapDefinitionByReturnMapCode(returnMapCode);
+        if (returnMapDefinitionOptional.isPresent()){
+            ReturnMapDefinitionDTO dto= returnMapDefinitionMapper.toReturnMapDefinitionDTO(returnMapDefinitionOptional.get());
+            return new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), dto,200);
+        }
+        return new ErrorDataResult<>(ResultConstant.RECORD_NOT_FOUND.getMessage(), null,400);
     }
 
-    @Test
-    void testGetReturnMapDefinitionById() throws Exception {
-        Long id = 1L;
-        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
-        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(returnMapDefinitionDTO, true, "Success", 200);
-
-        when(returnMapDefinitionService.getReturnMapDefinitionById(id)).thenReturn(dataResult);
-
-        mockMvc.perform(get("/returnMapDefinitions/getReturnMapDefinitionById")
-                        .param("id", id.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isNotEmpty());
-
-        verify(returnMapDefinitionService, times(1)).getReturnMapDefinitionById(id);
+    @Override
+    public DataResult<ReturnMapDefinition> getReturnMapDefinitionByIdForServices(Long id) {
+        Optional<ReturnMapDefinition> returnMapDefinitionOptional=returnMapDefinitionRepository.findById(id);
+        return returnMapDefinitionOptional.<DataResult<ReturnMapDefinition>>map(returnMapDefinition -> new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), returnMapDefinition, 200)).orElse(null);
     }
 
-    @Test
-    void testCreateReturnMapDefinition() throws Exception {
-        CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
-        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
-        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(returnMapDefinitionDTO, true, "Success", 201);
+    @Override
+    public DataResult<ReturnMapDefinitionDTO> createReturnMapDefinition(CreateReturnMapDefinitionRequest request) {
 
-        when(returnMapDefinitionService.createReturnMapDefinition(any())).thenReturn(dataResult);
+        Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
 
-        mockMvc.perform(post("/returnMapDefinitions/createReturnMapDefinition")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isNotEmpty());
+        if (existingReturnMap.isPresent()) {
+            return new ErrorDataResult<>(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), null, 400);
+        }
 
-        verify(returnMapDefinitionService, times(1)).createReturnMapDefinition(any());
+        ReturnMapDefinition newReturnMap = new ReturnMapDefinition();
+        newReturnMap.setReturnMapCode(request.getReturnMapCode());
+        newReturnMap.setIsActive(request.getIsActive());
+
+        ReturnMapDefinition savedData = returnMapDefinitionRepository.save(newReturnMap);
+
+        ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(savedData);
+
+        if (dto == null) {
+            return new ErrorDataResult<>(ResultConstant.CONVERSION_FAILED.getMessage(), null, 500);
+        }
+
+        return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), dto,200);
     }
 
-    @Test
-    void testUpdateReturnMapDefinition() throws Exception {
-        UpdateReturnMapDefinitionRequest request = new UpdateReturnMapDefinitionRequest();
-        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
-        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(returnMapDefinitionDTO, true, "Success", 200);
+    @Override
+    public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) {
 
-        when(returnMapDefinitionService.updateReturnMapDefinition(any())).thenReturn(dataResult);
+        DataResult<ReturnMapDefinition> returnMapDefinitionDataResult = getReturnMapDefinitionByIdForServices(request.getId());
 
-        mockMvc.perform(put("/returnMapDefinitions/updateReturnMapDefinition")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isNotEmpty());
+        if (returnMapDefinitionDataResult.isSuccess()) {
+            ReturnMapDefinition changedData = returnMapDefinitionDataResult.getData();
+            Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
 
-        verify(returnMapDefinitionService, times(1)).updateReturnMapDefinition(any());
+            if (existingReturnMap.isPresent() && !existingReturnMap.get().getId().equals(request.getId())) {
+                return new ErrorDataResult<>(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), null, 400);
+            }
+
+            changedData.setIsActive(request.getIsActive());
+            changedData.setReturnMapCode(request.getReturnMapCode());
+
+            ReturnMapDefinition updatedData = returnMapDefinitionRepository.save(changedData);
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
+
+            if (dto == null) {
+                return new ErrorDataResult<>(ResultConstant.CONVERSION_FAILED.getMessage(), null, 500);
+            }
+
+            return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), dto, 200);
+        }
+
+        return new ErrorDataResult<>(ResultConstant.RECORD_NOT_FOUND.getMessage(), null, 400);
     }
 
-    @Test
-    void testDeleteReturnMapDefinitions() throws Exception {
-        DeleteIdsRequest request = new DeleteIdsRequest();
-        Result result = new Result(true, "Deleted successfully", 200);
 
-        when(returnMapDefinitionService.deleteReturnMapDefinitions(any())).thenReturn(result);
-
-        mockMvc.perform(delete("/returnMapDefinitions/delete")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Deleted successfully"));
-
-        verify(returnMapDefinitionService, times(1)).deleteReturnMapDefinitions(any());
+    @Override
+    public Result deleteReturnMapDefinitions(DeleteIdsRequest request) {
+        try{
+            List<ReturnMapDefinition> returnMapsToDelete = returnMapDefinitionRepository.findAllById(request.getIds());
+            returnMapDefinitionRepository.deleteAll(returnMapsToDelete);
+            return new SuccessResult(ResultConstant.SUCCESSFULLY_DELETED.getMessage(), 200);
+        }
+        catch (Exception e){
+            return new ErrorResult("Error ! "+e.getMessage(),400);
+        }
     }
+
+
+
+
 }
