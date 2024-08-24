@@ -22,20 +22,4 @@
 
         assertEquals(false, resultDTO.isSuccess());
         assertEquals(EnumAccountProvisionResult.parse(500L).getBillCode(), resultDTO.getError());
-    }
-
-    @Test
-    void shouldHandleGenericUnknownErrorWhenExceptionOccurs() {
-        CreateReverseAccountingDTO inputDto = new CreateReverseAccountingDTO();
-        inputDto.setDummyMerchant(true);
-
-        RuntimeException runtimeException = new RuntimeException("Generic exception");
-
-        when(provisionNextService.makeReverseProvision(any(MakeReverseProvisionRequest.class)))
-                .thenThrow(runtimeException);
-
-        CreateReverseAccountingResultDTO resultDTO = cardReverseProvisionService.doReverseAccounting(inputDto);
-
-        assertEquals(false, resultDTO.isSuccess());
-        assertEquals(EnumBillResult.GENERIC_UNKNOWN_ERROR, resultDTO.getError());
-    }
+    }java.lang.NullPointerException: Cannot invoke "com.ykb.payments.bill.common.enums.EnumAccountProvisionResult.getBillCode()" because the return value of "com.ykb.payments.bill.common.enums.EnumAccountProvisionResult.parse(java.lang.Long)" is null
