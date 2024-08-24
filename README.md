@@ -1,10 +1,28 @@
-    @Override
-    public DataResult<ReturnMapDefinitionDTO> getReturnMapDefinitionById(Long id) {
-        Optional<ReturnMapDefinition> returnMapDefinitionOptional=returnMapDefinitionRepository.findById(id);
+    @Test
+    void testGetReturnMapDefinitionById_RecordExists() {
+        Long id = 1L;
+        ReturnMapDefinition mockEntity = new ReturnMapDefinition();
+        ReturnMapDefinitionDTO mockDto = new ReturnMapDefinitionDTO();
 
-        if (returnMapDefinitionOptional.isPresent()){
-            ReturnMapDefinitionDTO dto= returnMapDefinitionMapper.toReturnMapDefinitionDTO(returnMapDefinitionOptional.get());
-            return new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), dto,200);
-        }
-        return new ErrorDataResult<>(ResultConstant.RECORD_NOT_FOUND.getMessage(), null,400);
+        when(returnMapDefinitionRepository.findById(id)).thenReturn(Optional.of(mockEntity));
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(mockEntity)).thenReturn(mockDto);
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionById(id);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDto, result.getData());
+    }
+
+    @Test
+    void testGetReturnMapDefinitionById_RecordNotExists() {
+        Long id = 1L;
+
+        when(returnMapDefinitionRepository.findById(id)).thenReturn(Optional.empty());
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionById(id);
+
+        assertFalse(result.isSuccess());
+        assertEquals(400, result.getStatusCode());
+        assertNull(result.getData());
     }
