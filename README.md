@@ -1,52 +1,36 @@
-@Test
-    void testHasBankErrorCode_withValidCode() {
-        String bankReturnCode = "BANK123";
-        Root<ReturnMap> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
 
-        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
-        spec.toPredicate(root, query, cb);
 
-        verify(cb).equal(cb.lower(root.get("bankReturnCode")), bankReturnCode.toLowerCase());
+
+    @Override
+    public DataResult<ReturnMapDTO> getReturnMapById(Long returnMapCodeId) {
+        Optional<ReturnMap> returnMapOptional=returnMapRepository.findById(returnMapCodeId);
+        if (returnMapOptional.isPresent()){
+            ReturnMapDTO dto=returnMapMapper.toReturnMapDTO(returnMapOptional.get());
+            return new SuccessDataResult<>("result found",dto,200 );
+        }
+        return new ErrorDataResult<>("result not found !",null,400);
     }
 
-    @Test
-    void testHasBankErrorCode_withNullCode() {
-        String bankReturnCode = null;
-        Root<ReturnMap> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+    @Override
+    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
+        Specification<ReturnMap> spec = Specification.where(null);
 
-        Specification<ReturnMap> spec = ReturnMapCriteria.hasBankErrorCode(bankReturnCode);
-        spec.toPredicate(root, query, cb);
+        if (returnMapCode != null && !returnMapCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasReturnMapDefinitionCode(returnMapCode));
+        }
+        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
+        }
+        if (institutionReturnCode != null && !institutionReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode));
+        }
 
-        verify(cb).conjunction();
+        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
+
+        if (returnMapDTOList.isEmpty()) {
+            return new ErrorDataResult<>("Listed is empty", returnMapDTOList, 200);
+        }
+
+        return new SuccessDataResult<>("Result listed", returnMapDTOList, 200);
     }
-
-    @Test
-    void testHasInstitutionErrorCode_withValidCode() {
-        String institutionReturnCode = "INST123";
-        Root<ReturnMap> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
-
-        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
-        spec.toPredicate(root, query, cb);
-
-        verify(cb).equal(cb.lower(root.get("institutionReturnCode")), institutionReturnCode.toLowerCase());
-    }
-
-    @Test
-    void testHasInstitutionErrorCode_withNullCode() {
-        String institutionReturnCode = null;
-        Root<ReturnMap> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
-
-        Specification<ReturnMap> spec = ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode);
-        spec.toPredicate(root, query, cb);
-
-        verify(cb).conjunction();
-    }
-}
