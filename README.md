@@ -1,20 +1,50 @@
-@Mapper(componentModel = "spring")
-public interface PaymentNotificationMapper {
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-	PaymentNotificationMapper INSTANCE = Mappers.getMapper(PaymentNotificationMapper.class);
-	
-	PaymentNotification toEntity(PaymentNotificationDTO dto);
+class PaymentNotificationMapperTest {
 
-	PaymentNotificationDTO toDTO(PaymentNotification entity);
+    private final PaymentNotificationMapper mapper = PaymentNotificationMapper.INSTANCE;
+
+    @Test
+    void testToEntity() {
+        PaymentNotificationDTO dto = new PaymentNotificationDTO();
+        PaymentNotification entity = mapper.toEntity(dto);
+        
+        assertNotNull(entity);
+    }
+
+    @Test
+    void testToDTO() {
+        PaymentNotification entity = new PaymentNotification();
+        PaymentNotificationDTO dto = mapper.toDTO(entity);
+        
+        assertNotNull(dto);
+    }
 }
 
-@Mapper(componentModel = "spring")
-public interface PaymentCancelMapper {
 
-	PaymentCancelMapper INSTANCE = Mappers.getMapper(PaymentCancelMapper.class);
-	
-	PaymentCancel toEntity(PaymentCancelDTO dto);
 
-	PaymentCancelDTO toDTO(PaymentCancel entity);
 
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+class PaymentCancelMapperTest {
+
+    private final PaymentCancelMapper mapper = PaymentCancelMapper.INSTANCE;
+
+    @Test
+    void testToEntity() {
+        PaymentCancelDTO dto = new PaymentCancelDTO();
+        PaymentCancel entity = mapper.toEntity(dto);
+        
+        assertNotNull(entity);
+    }
+
+    @Test
+    void testToDTO() {
+        PaymentCancel entity = new PaymentCancel();
+        PaymentCancelDTO dto = mapper.toDTO(entity);
+        
+        assertNotNull(dto);
+    }
 }
