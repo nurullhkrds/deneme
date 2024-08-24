@@ -1,31 +1,52 @@
+@RestController
+@RequestMapping("/returnMapDefinitions")
+public class ReturnMapDefinitionController {
 
-    @Test
-    public void testWrite_withNonNullValue() throws IOException {
-        // Create a mock JsonWriter
-        JsonWriter jsonWriter = mock(JsonWriter.class);
+    private final IReturnMapDefinitionService returnMapDefinitionService;
 
-        // Create a sample EnumAccountingSource value
-        EnumAccountingSource enumValue = EnumAccountingSource.SAMPLE; // Replace SAMPLE with an actual enum value
-
-        // Call the write method
-        converter.write(jsonWriter, enumValue);
-
-        // Capture the argument passed to jsonWriter.jsonValue()
-        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(jsonWriter).jsonValue(argumentCaptor.capture());
-
-        // Assert that the correct value was passed to jsonValue()
-        assertEquals(enumValue.getValue(), argumentCaptor.getValue());
+    public ReturnMapDefinitionController(IReturnMapDefinitionService returnMapDefinitionService) {
+        this.returnMapDefinitionService = returnMapDefinitionService;
     }
 
-    @Test
-    public void testWrite_withNullValue() throws IOException {
-        // Create a mock JsonWriter
-        JsonWriter jsonWriter = mock(JsonWriter.class);
 
-        // Call the write method with a null value
-        converter.write(jsonWriter, null);
-
-        // Verify that jsonValue was not called
-        verify(jsonWriter, never()).jsonValue(anyString());
+    @GetMapping("getAllReturnMapDefinitionReturnMap")
+    public ResponseEntity<DataResult<List<ReturnMapDefinitionDTO>>> getAllReturnMapDefinitionReturnMap() {
+        DataResult<List<ReturnMapDefinitionDTO>> result = returnMapDefinitionService.getAllReturnMapDefinitionReturnMap();
+        return ResponseEntity.status(result.getStatusCode()).body(result);
     }
+    @GetMapping("getReturnMapDefinitionByReturnMapCode")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> getReturnMapDefinitionByReturnMapCode(@RequestParam String returnMapCode) {
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+    @GetMapping("/getReturnMapDefinitionById")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> getReturnMapDefinitionById(@RequestParam Long id) {
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionById(id);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+
+    @PostMapping("/createReturnMapDefinition")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> createReturnMapDefinition(
+            @RequestBody CreateReturnMapDefinitionRequest request) {
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.createReturnMapDefinition(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+
+    @PutMapping("/updateReturnMapDefinition")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> updateReturnMapDefinition(
+            @RequestBody UpdateReturnMapDefinitionRequest request) {
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.updateReturnMapDefinition(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Result> deleteReturnMapDefinitions(@RequestBody DeleteIdsRequest request) {
+        Result result = returnMapDefinitionService.deleteReturnMapDefinitions(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+
+
+    }
+}
