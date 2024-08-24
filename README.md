@@ -1,83 +1,20 @@
-@Test
-void testSendAckForCreditCardProvision_MicroException() throws BusinessException, ServiceCallException {
-    PaymentDTO paymentDTO = new PaymentDTO();
-    paymentDTO.setProvisionRequestId("1");
-    paymentDTO.setChannelTransactionId("1");
-    paymentDTO.setChannelSessionId("1");
-    when(paymentService.getPayment(anyLong())).thenReturn(paymentDTO);
+@Mapper(componentModel = "spring")
+public interface PaymentNotificationMapper {
 
-    PaymentNotification paymentNotification = new PaymentNotification();
-    paymentNotification.setRetryCount(1);
-    when(repository.findById(anyLong())).thenReturn(Optional.of(paymentNotification));
-    
-    MicroException microException = new MicroException(new ExceptionData("500", "Microservice error"));
-    when(cardProvisionService.doProvisionAcknowledge(any(CardProvisionAcknowledgeRequest.class), anyString(), anyString()))
-            .thenThrow(microException);
-    
-    mockFieldValue(paymentNotificationService, "creditCardProvisionACKNotificationMaxTryCount", 3);
+	PaymentNotificationMapper INSTANCE = Mappers.getMapper(PaymentNotificationMapper.class);
+	
+	PaymentNotification toEntity(PaymentNotificationDTO dto);
 
-    Assertions.assertThrows(ReQueueException.class, () -> {
-        paymentNotificationService.sendAckForCreditCardProvision(1L, 1L, false);
-    });
-
-    assertEquals(EnumPaymentNotificationStatu.ERROR, paymentNotification.getNotificationStatus());
-    assertEquals("500", paymentNotification.getResponseCode());
-    assertEquals("Microservice error", paymentNotification.getResponseMessage());
-    verify(repository, Mockito.atLeast(1)).save(any(PaymentNotification.class));
+	PaymentNotificationDTO toDTO(PaymentNotification entity);
 }
 
-@Test
-void testSendAckForCreditCardProvision_GenericException() throws BusinessException, ServiceCallException {
-    PaymentDTO paymentDTO = new PaymentDTO();
-    paymentDTO.setProvisionRequestId("1");
-    paymentDTO.setChannelTransactionId("1");
-    paymentDTO.setChannelSessionId("1");
-    when(paymentService.getPayment(anyLong())).thenReturn(paymentDTO);
+@Mapper(componentModel = "spring")
+public interface PaymentCancelMapper {
 
-    PaymentNotification paymentNotification = new PaymentNotification();
-    paymentNotification.setRetryCount(1);
-    when(repository.findById(anyLong())).thenReturn(Optional.of(paymentNotification));
+	PaymentCancelMapper INSTANCE = Mappers.getMapper(PaymentCancelMapper.class);
+	
+	PaymentCancel toEntity(PaymentCancelDTO dto);
 
-    when(cardProvisionService.doProvisionAcknowledge(any(CardProvisionAcknowledgeRequest.class), anyString(), anyString()))
-            .thenThrow(new RuntimeException("Unexpected error"));
+	PaymentCancelDTO toDTO(PaymentCancel entity);
 
-    mockFieldValue(paymentNotificationService, "creditCardProvisionACKNotificationMaxTryCount", 3);
-
-    Assertions.assertThrows(ReQueueException.class, () -> {
-        paymentNotificationService.sendAckForCreditCardProvision(1L, 1L, false);
-    });
-
-    assertEquals(EnumPaymentNotificationStatu.ERROR, paymentNotification.getNotificationStatus());
-    assertEquals("-999", paymentNotification.getResponseCode());
-    assertEquals("Unexpected error", paymentNotification.getResponseMessage());
-    verify(repository, Mockito.atLeast(1)).save(any(PaymentNotification.class));
-}
-
-@Test
-void testCreditCardReverseProvision_MicroException() throws BusinessException, ServiceCallException {
-    PaymentDTO paymentDTO = new PaymentDTO();
-    paymentDTO.setProvisionRequestId("1");
-    paymentDTO.setChannelTransactionId("1");
-    paymentDTO.setChannelSessionId("1");
-    when(paymentService.getPayment(anyLong())).thenReturn(paymentDTO);
-    when(paymentService.getPaymentCancel(anyLong())).thenReturn(new PaymentCancelDTO());
-
-    PaymentNotification paymentNotification = new PaymentNotification();
-    paymentNotification.setRetryCount(1);
-    when(repository.findById(anyLong())).thenReturn(Optional.of(paymentNotification));
-
-    MicroException microException = new MicroException(new ExceptionData("500", "Microservice error"));
-    when(cardProvisionService.doReverseProvision(any(CardReverseProvisionRequest.class)))
-            .thenThrow(microException);
-    
-    mockFieldValue(paymentNotificationService, "creditCardReverseProvisionNotificationMaxTryCount", 3);
-
-    Assertions.assertDoesNotThrow(() -> {
-        paymentNotificationService.creditCardReverseProvision(1L, 1L, 1L, true);
-    });
-
-    assertEquals(EnumPaymentNotificationStatu.ERROR, paymentNotification.getNotificationStatus());
-    assertEquals("500", paymentNotification.getResponseCode());
-    assertEquals("Microservice error", paymentNotification.getResponseMessage());
-    verify(repository, Mockito.atLeast(1)).save(any(PaymentNotification.class));
 }
