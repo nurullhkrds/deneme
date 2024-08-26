@@ -1,65 +1,30 @@
-useEffect(() => {
-  if (formRef.current) {
-    const normalizedData = normalizeReturnMapOneData(returnMapOneData);
-    formRef.current.setFieldsValue(normalizedData.formValues);
-    setFormState(normalizedData.stateValues);
-  }
-}, [returnMapOneData]);
+     <Form.Item label="ReturnMap Seç">
+                <Select value={definitionId} onChange={handleChangeSelectDefinition}>
+                  {definitionList.map(item => (
+                    <Option key={item.id} value={item.id}>
+                      {item.returnMapCode}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
 
-const normalizeReturnMapOneData = (data) => {
-  const {
-    returnMapCode = '',
-    institutionReturnCode = '',
-    institutionReturnText = '',
-    bankReturnCode = '',
-    bankReturnText = '',
-    isReversible = false,
-    returnType = '',
-    returnMapDefinition = {}
-  } = data || {};
 
-  return {
-    formValues: {
-      returnMapCode,
-      institutionReturnCode,
-      institutionReturnText,
-      bankReturnCode,
-      bankReturnText,
-      isReversible,
-      returnType,
-      definitionId: returnMapDefinition.id || ''
-    },
-    stateValues: {
-      returnMapCode,
-      institutionReturnCode,
-      institutionReturnText,
-      bankReturnCode,
-      bankReturnText,
-      isReversible,
-      returnType,
-      definitionId: returnMapDefinition.id
-    }
-  };
-};
 
-const setFormState = (stateValues) => {
-  const {
-    returnMapCode,
-    institutionReturnCode,
-    institutionReturnText,
-    bankReturnCode,
-    bankReturnText,
-    isReversible,
-    returnType,
-    definitionId
-  } = stateValues;
+ <Form.Item label="Geri Dönüş Tipi">
+                <Select defaultValue={returnType}
 
-  setReturnMapCode(returnMapCode);
-  setInstitutionReturnCode(institutionReturnCode);
-  setInstitutionReturnText(institutionReturnText);
-  setBankReturnCode(bankReturnCode);
-  setBankReturnText(bankReturnText);
-  setIsReversible(isReversible);
-  setReturnType(returnType);
-  setDefinitionId(definitionId);
-};
+                  value={returnType}
+                  onChange={handleSelectReturnType}>
+                  <Option value="SUCCESS">
+                    Başarılı
+                  </Option>
+                  <Option value="ERROR" >
+                    Başarısız
+                  </Option>
+                </Select>
+              </Form.Item>
+
+
+
+ERROR
+ResizeObserver loop completed with undelivered notifications.
