@@ -1,10 +1,5 @@
-
-  const handleDefinitionSearch = () => {
-    if (!returnMapCode) {
-    } else {
-      dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, returnMapCode));
-    }
-
-
-  };
-Empty block statement.
+const handleDefinitionSearch = () => {
+  if (returnMapCode) {
+    dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, returnMapCode));
+  }
+};
