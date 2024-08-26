@@ -1,61 +1,34 @@
-<Form.Item label="ReturnMap Seç">
-  <Select
-    value={definitionId}
-    onChange={handleChangeSelectDefinition}
-    virtual={false}  // Sanal listelemeyi devre dışı bırakır
-    dropdownMatchSelectWidth={false}  // Açılır menünün genişliğini devre dışı bırakır
-  >
-    {definitionList.map(item => (
-      <Option key={item.id} value={item.id}>
-        {item.returnMapCode}
-      </Option>
-    ))}
-  </Select>
-</Form.Item>
+useLayoutEffect(() => {
+  if (formRef.current) {
+    const {
+      returnMapCode,
+      institutionReturnCode,
+      institutionReturnText,
+      bankReturnCode,
+      bankReturnText,
+      isReversible,
+      returnType,
+      returnMapDefinition
+    } = returnMapOneData || {};
 
-<Form.Item label="Geri Dönüş Tipi">
-  <Select
-    value={returnType}
-    onChange={handleSelectReturnType}
-    virtual={false}
-    dropdownMatchSelectWidth={false}
-  >
-    <Option value="SUCCESS">Başarılı</Option>
-    <Option value="ERROR">Başarısız</Option>
-  </Select>
-</Form.Item>
+    formRef.current.setFieldsValue({
+      returnMapCode: returnMapCode || '',
+      institutionReturnCode: institutionReturnCode || '',
+      institutionReturnText: institutionReturnText || '',
+      bankReturnCode: bankReturnCode || '',
+      bankReturnText: bankReturnText || '',
+      isReversible: isReversible || false,
+      returnType: returnType || '',
+      definitionId: returnMapDefinition?.id || '',
+    });
 
-
-
-<Form.Item label="ReturnMap Seç">
-  <Select
-    value={definitionId}
-    onChange={handleChangeSelectDefinition}
-    dropdownRender={menu => (
-      <div>
-        {menu}
-      </div>
-    )}
-  >
-    {definitionList.map(item => (
-      <Option key={item.id} value={item.id}>
-        {item.returnMapCode}
-      </Option>
-    ))}
-  </Select>
-</Form.Item>
-
-<Form.Item label="Geri Dönüş Tipi">
-  <Select
-    value={returnType}
-    onChange={handleSelectReturnType}
-    dropdownRender={menu => (
-      <div>
-        {menu}
-      </div>
-    )}
-  >
-    <Option value="SUCCESS">Başarılı</Option>
-    <Option value="ERROR">Başarısız</Option>
-  </Select>
-</Form.Item>
+    setReturnMapCode(returnMapCode || '');
+    setInstitutionReturnCode(institutionReturnCode || '');
+    setInstitutionReturnText(institutionReturnText || '');
+    setBankReturnCode(bankReturnCode || '');
+    setBankReturnText(bankReturnText || '');
+    setIsReversible(isReversible || false);
+    setReturnType(returnType || '');
+    setDefinitionId(returnMapDefinition?.id);
+  }
+}, [returnMapOneData]);
