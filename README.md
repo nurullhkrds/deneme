@@ -1,14 +1,31 @@
-  <select
-    id="definitionId"
-    name="definitionId"
-    value={definitionId}
-    onChange={(e) => handleChangeSelectDefinition(e.target.value)}
-    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #dcdcdc' }}
-  >
-    <option value="" selected={definitionId === ""}>Seç</option>
-    {definitionList.map(item => (
-      <option key={item.id} value={item.id} selected={definitionId === item.id}>
-        {item.returnMapCode}
-      </option>
-    ))}
-  </select>
+ useEffect(() => {
+Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.
+    if (formRef.current) {
+      const {
+        returnMapCode,
+        institutionReturnCode,
+        institutionReturnText,
+        bankReturnCode,
+        bankReturnText,
+        isReversible,
+        returnType,
+        returnMapDefinition
+      } = returnMapOneData || {};
+      formRef.current.setFieldsValue({
+        institutionReturnCode: institutionReturnCode || '',
+        institutionReturnText: institutionReturnText || '',
+        bankReturnCode: bankReturnCode || '',
+        bankReturnText: bankReturnText || '',
+        isReversible: isReversible || false,
+        returnType: returnType || '',
+        definitionId: definitionId || '',
+      });
+      setReturnMapCode(returnMapCode || '');
+      setInstitutionReturnCode(institutionReturnCode || '');
+      setInstitutionReturnText(institutionReturnText || '');
+      setBankReturnCode(bankReturnCode || '');
+      setBankReturnText(bankReturnText || '');
+      setIsReversible(isReversible || false);
+      setReturnType(returnType || '');
+      setDefinitionId(returnMapDefinition?.id)
+    }
