@@ -1,35 +1,11 @@
-useEffect(() => {
-    if (formRef.current && returnMapOneData) {
-      const {
-        returnMapCode = '',
-        institutionReturnCode = '',
-        institutionReturnText = '',
-        bankReturnCode = '',
-        bankReturnText = '',
-        isReversible = false,
-        returnType = '',
-        returnMapDefinition = {}
-      } = returnMapOneData;
-
-      const newFields = {
-        institutionReturnCode,
-        institutionReturnText,
-        bankReturnCode,
-        bankReturnText,
-        isReversible,
-        returnType,
-        definitionId: returnMapDefinition?.id || ''
-      };
-
-      formRef.current.setFieldsValue(newFields);
-
-      setReturnMapCode(returnMapCode);
-      setInstitutionReturnCode(institutionReturnCode);
-      setInstitutionReturnText(institutionReturnText);
-      setBankReturnCode(bankReturnCode);
-      setBankReturnText(bankReturnText);
-      setIsReversible(isReversible);
-      setReturnType(returnType);
-      setDefinitionId(returnMapDefinition?.id || '');
-    }
-}, [returnMapOneData]);
+      <select
+                  id="returnType"
+                  name="returnType"
+                  value={returnType}
+                  onChange={(e) => handleSelectReturnType(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #dcdcdc' }}
+                >
+                  <option value="" selected={returnType === ""}>Seç</option>
+                  <option value="SUCCESS" selected={returnType === "SUCCESS"}>Başarılı</option>
+                  <option value="ERROR" selected={returnType === "ERROR"}>Başarısız</option>
+                </select>
