@@ -1,24 +1,53 @@
-@Service
-@RequiredArgsConstructor
-public class LoggingServiceImpl implements LoggingService {
+@ExtendWith(MockitoExtension.class)
+public class LoggingServiceImplTest {
 
-	private final BusinessLoggingService businessLogService;
-	private final ServiceLoggingService serviceLogService;
-	private final ProcessLoggingService processLogService;
-	
-	@Override
-	public void saveBusinessLog(BusinessLogDTO businessLog) {
-		businessLogService.saveBusinessLog(businessLog);
-	}
+    @Mock
+    private BusinessLoggingService businessLogService;
 
-	@Override
-	public void saveServiceLog(ServiceLogDTO serviceLog) {
-		serviceLogService.saveServiceLog(serviceLog);
-	}
+    @Mock
+    private ServiceLoggingService serviceLogService;
 
-	@Override
-	public void saveProcessLog(ProcessLogDTO processLog) {
-		processLogService.saveProcessLog(processLog);
-	}
+    @Mock
+    private ProcessLoggingService processLogService;
 
+    @InjectMocks
+    private LoggingServiceImpl loggingService;
+
+    private BusinessLogDTO businessLogDTO;
+    private ServiceLogDTO serviceLogDTO;
+    private ProcessLogDTO processLogDTO;
+
+    @BeforeEach
+    void setUp() {
+        businessLogDTO = new BusinessLogDTO();
+        serviceLogDTO = new ServiceLogDTO();
+        processLogDTO = new ProcessLogDTO();
+    }
+
+    @Test
+    void testSaveBusinessLog() {
+        // Act
+        loggingService.saveBusinessLog(businessLogDTO);
+
+        // Assert
+        verify(businessLogService, times(1)).saveBusinessLog(businessLogDTO);
+    }
+
+    @Test
+    void testSaveServiceLog() {
+        // Act
+        loggingService.saveServiceLog(serviceLogDTO);
+
+        // Assert
+        verify(serviceLogService, times(1)).saveServiceLog(serviceLogDTO);
+    }
+
+    @Test
+    void testSaveProcessLog() {
+        // Act
+        loggingService.saveProcessLog(processLogDTO);
+
+        // Assert
+        verify(processLogService, times(1)).saveProcessLog(processLogDTO);
+    }
 }
