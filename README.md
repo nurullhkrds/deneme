@@ -1,54 +1,109 @@
-@Service
-@RequiredArgsConstructor
-public class BusinessLoggingServiceImpl implements BusinessLoggingService {
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-	private final BusinessLogRepository repository;
-	private final BusinessLogMapper mapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-	@Async
-	@Transactional
-	@Override
-	public void saveBusinessLog(BusinessLogDTO businessLog) {
-		String requestData = businessLog.getRequestData();
+import com.example.dto.BusinessLogDTO;
+import com.example.entity.BusinessLogEntity;
+import com.example.exception.MicroException;
+import com.example.mapper.BusinessLogMapper;
+import com.example.repository.BusinessLogRepository;
+import com.example.service.impl.BusinessLoggingServiceImpl;
 
-		if (StringUtils.isNotBlank(requestData) && requestData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
-			businessLog.setRequestData(StringUtils.substring(requestData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
-		}
+import java.time.Duration;
 
-		long currentTime = System.nanoTime();
-		businessLog.setElapsedTime(Duration.ofNanos(currentTime - businessLog.getStartTime()).toMillis());
+@ExtendWith(MockitoExtension.class)
+class BusinessLoggingServiceImplTest {
 
-		if (businessLog.getException() != null) {
-			resolveExceptionForLog(businessLog);
-		}
+    @Mock
+    private BusinessLogRepository repository;
 
-		repository.save(mapper.toEntity(businessLog));
-	}
+    @Mock
+    private BusinessLogMapper mapper;
 
-	private void resolveExceptionForLog(BusinessLogDTO businessLog) {
-		Exception exception = businessLog.getException();
+    @InjectMocks
+    private BusinessLoggingServiceImpl service;
 
-		if (exception instanceof MicroException) {
-			MicroException microException = (MicroException) exception;
-			businessLog.setErrorCode(microException.getExceptionData().getErrorCode().intValue());
-			businessLog.setErrorMessage(microException.getExceptionData().getErrorMessage());
+    private BusinessLogDTO businessLogDTO;
 
-			String stackTrace = ExceptionUtils.getStackTrace(microException);
-			businessLog.setErrorDetail(stackTrace.length() > LoggingConstants.MAX_LOGGING_LENGHT
-					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: stackTrace);
-		}
+    @BeforeEach
+    void setUp() {
+        businessLogDTO = new BusinessLogDTO();
+        businessLogDTO.setRequestData("Some request data");
+        businessLogDTO.setStartTime(System.nanoTime());
+    }
 
-		else {
-			businessLog.setErrorCode(LoggingConstants.UNKNOWN_ERROR_CODE);
-			businessLog.setErrorMessage(LoggingConstants.UNKNOWN_ERROR_MESSAGE);
+    @Test
+    void testSaveBusinessLog_withLongRequestData_shouldTruncateData() {
+        // Given
+        businessLogDTO.setRequestData("a".repeat(LoggingConstants.MAX_LOGGING_LENGHT + 10));
 
-			String stackTrace = ExceptionUtils.getStackTrace(exception);
-			businessLog.setErrorDetail(stackTrace.length() > LoggingConstants.MAX_LOGGING_LENGHT
-					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: stackTrace);
-		}
+        BusinessLogEntity entity = new BusinessLogEntity();
+        when(mapper.toEntity(any(BusinessLogDTO.class))).thenReturn(entity);
 
-	}
+        // When
+        service.saveBusinessLog(businessLogDTO);
 
+        // Then
+        verify(repository).save(entity);
+        assertEquals(LoggingConstants.MAX_LOGGING_LENGHT, businessLogDTO.getRequestData().length());
+    }
+
+    @Test
+    void testSaveBusinessLog_shouldSetElapsedTime() {
+        // Given
+        BusinessLogEntity entity = new BusinessLogEntity();
+        when(mapper.toEntity(any(BusinessLogDTO.class))).thenReturn(entity);
+
+        // When
+        service.saveBusinessLog(businessLogDTO);
+
+        // Then
+        verify(repository).save(entity);
+        assertTrue(businessLogDTO.getElapsedTime() >= 0);
+    }
+
+    @Test
+    void testSaveBusinessLog_withException_shouldSetErrorDetails() {
+        // Given
+        MicroException exception = new MicroException("Test Exception", 123, "Test Error");
+        businessLogDTO.setException(exception);
+
+        BusinessLogEntity entity = new BusinessLogEntity();
+        when(mapper.toEntity(any(BusinessLogDTO.class))).thenReturn(entity);
+
+        // When
+        service.saveBusinessLog(businessLogDTO);
+
+        // Then
+        verify(repository).save(entity);
+        assertEquals(123, businessLogDTO.getErrorCode());
+        assertEquals("Test Error", businessLogDTO.getErrorMessage());
+        assertNotNull(businessLogDTO.getErrorDetail());
+    }
+
+    @Test
+    void testSaveBusinessLog_withUnknownException_shouldSetUnknownErrorDetails() {
+        // Given
+        Exception exception = new RuntimeException("Test RuntimeException");
+        businessLogDTO.setException(exception);
+
+        BusinessLogEntity entity = new BusinessLogEntity();
+        when(mapper.toEntity(any(BusinessLogDTO.class))).thenReturn(entity);
+
+        // When
+        service.saveBusinessLog(businessLogDTO);
+
+        // Then
+        verify(repository).save(entity);
+        assertEquals(LoggingConstants.UNKNOWN_ERROR_CODE, businessLogDTO.getErrorCode());
+        assertEquals(LoggingConstants.UNKNOWN_ERROR_MESSAGE, businessLogDTO.getErrorMessage());
+        assertNotNull(businessLogDTO.getErrorDetail());
+    }
 }
