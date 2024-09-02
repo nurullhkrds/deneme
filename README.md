@@ -1,53 +1,68 @@
-@ExtendWith(MockitoExtension.class)
-public class LoggingServiceImplTest {
+@Service
+@RequiredArgsConstructor
+public class ProcessLoggingServiceImpl implements ProcessLoggingService {
 
-    @Mock
-    private BusinessLoggingService businessLogService;
+	private final ProcessLogRepository repo;
+	private final ProcessLogMapper mapper;
 
-    @Mock
-    private ServiceLoggingService serviceLogService;
+	@Async
+	@Transactional
+	@Override
+	public void saveProcessLog(ProcessLogDTO processLog) {
+		if (processLog == null) {
+			return;
+		}
 
-    @Mock
-    private ProcessLoggingService processLogService;
+		processLog.setElapsedTime(Duration.ofMillis(processLog.getFinishTime() - processLog.getStartTime()).toMillis());
 
-    @InjectMocks
-    private LoggingServiceImpl loggingService;
+		String requestData = processLog.getRequestData();
+		if (StringUtils.isNotBlank(requestData) && requestData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
+			processLog.setRequestData(StringUtils.substring(requestData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
+		}
 
-    private BusinessLogDTO businessLogDTO;
-    private ServiceLogDTO serviceLogDTO;
-    private ProcessLogDTO processLogDTO;
+		String responseData = processLog.getResponseData1();
+		if (StringUtils.isNotBlank(responseData) && responseData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
 
-    @BeforeEach
-    void setUp() {
-        businessLogDTO = new BusinessLogDTO();
-        serviceLogDTO = new ServiceLogDTO();
-        processLogDTO = new ProcessLogDTO();
-    }
+			String responseData1 = StringUtils.substring(responseData, 0, LoggingConstants.MAX_LOGGING_LENGHT);
+			String responseData2 = StringUtils.substring(responseData, LoggingConstants.MAX_LOGGING_LENGHT);
+			responseData2 = responseData2.length() > LoggingConstants.MAX_LOGGING_LENGHT
+					? StringUtils.substring(responseData2, 0, LoggingConstants.MAX_LOGGING_LENGHT)
+					: responseData2;
+			processLog.setResponseData1(responseData1);
+			processLog.setResponseData2(responseData2);
+		}
 
-    @Test
-    void testSaveBusinessLog() {
-        // Act
-        loggingService.saveBusinessLog(businessLogDTO);
+		if (processLog.getException() != null) {
+			resolveExceptionForLog(processLog);
+		}
 
-        // Assert
-        verify(businessLogService, times(1)).saveBusinessLog(businessLogDTO);
-    }
+		repo.save(mapper.toEntity(processLog));
+	}
 
-    @Test
-    void testSaveServiceLog() {
-        // Act
-        loggingService.saveServiceLog(serviceLogDTO);
+	private void resolveExceptionForLog(ProcessLogDTO processLog) {
+		Exception exception = processLog.getException();
 
-        // Assert
-        verify(serviceLogService, times(1)).saveServiceLog(serviceLogDTO);
-    }
+		if (exception instanceof MicroException) {
+			MicroException microException = (MicroException) exception;
 
-    @Test
-    void testSaveProcessLog() {
-        // Act
-        loggingService.saveProcessLog(processLogDTO);
+			processLog.setResultCode(microException.getExceptionData().getErrorCode().toString());
+			processLog.setResultText(microException.getExceptionData().getErrorMessage());
 
-        // Assert
-        verify(processLogService, times(1)).saveProcessLog(processLogDTO);
-    }
+			String stackTrace = ExceptionUtils.getStackTrace(microException);
+			processLog.setExceptionTrace(stackTrace.length() > 4000
+					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
+					: stackTrace);
+
+		} else {
+			processLog.setResultCode(LoggingConstants.UNKNOWN_ERROR_CODE.toString());
+			processLog.setResultText(LoggingConstants.UNKNOWN_ERROR_MESSAGE);
+
+			String stackTrace = ExceptionUtils.getStackTrace(exception);
+			processLog.setExceptionTrace(stackTrace.length() > 4000
+					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
+					: stackTrace);
+		}
+
+	}
+
 }
