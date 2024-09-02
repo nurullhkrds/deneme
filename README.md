@@ -1,20 +1,10 @@
-@Test
-void testSaveProcessLog_withValidData() {
-    // Arrange
-    ProcessLog processLogEntity = new ProcessLog();
-    when(mapper.toEntity(any(ProcessLogDTO.class))).thenReturn(processLogEntity);
-    when(repo.save(any(ProcessLog.class))).thenReturn(processLogEntity);
+	if (StringUtils.isNotBlank(responseData) && responseData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
 
-    // Act
-    service.saveProcessLog(processLogDTO);
-
-    // Assert
-    assertNotNull(processLogDTO.getElapsedTime());
-    assertTrue(processLogDTO.getRequestData().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
-    
-    if (processLogDTO.getResponseData2() != null) {
-        assertTrue(processLogDTO.getResponseData2().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
-    } else {
-        assertNull(processLogDTO.getResponseData2());
-    }
-}
+			String responseData1 = StringUtils.substring(responseData, 0, LoggingConstants.MAX_LOGGING_LENGHT);
+			String responseData2 = StringUtils.substring(responseData, LoggingConstants.MAX_LOGGING_LENGHT);
+			responseData2 = responseData2.length() > LoggingConstants.MAX_LOGGING_LENGHT
+					? StringUtils.substring(responseData2, 0, LoggingConstants.MAX_LOGGING_LENGHT)
+					: responseData2;
+			processLog.setResponseData1(responseData1);
+			processLog.setResponseData2(responseData2);
+		}
