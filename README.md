@@ -1,68 +1,94 @@
-@Service
-@RequiredArgsConstructor
-public class ProcessLoggingServiceImpl implements ProcessLoggingService {
+@ExtendWith(MockitoExtension.class)
+public class ProcessLoggingServiceImplTest {
 
-	private final ProcessLogRepository repo;
-	private final ProcessLogMapper mapper;
+    @Mock
+    private ProcessLogRepository repo;
 
-	@Async
-	@Transactional
-	@Override
-	public void saveProcessLog(ProcessLogDTO processLog) {
-		if (processLog == null) {
-			return;
-		}
+    @Mock
+    private ProcessLogMapper mapper;
 
-		processLog.setElapsedTime(Duration.ofMillis(processLog.getFinishTime() - processLog.getStartTime()).toMillis());
+    @InjectMocks
+    private ProcessLoggingServiceImpl service;
 
-		String requestData = processLog.getRequestData();
-		if (StringUtils.isNotBlank(requestData) && requestData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
-			processLog.setRequestData(StringUtils.substring(requestData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
-		}
+    private ProcessLogDTO processLogDTO;
 
-		String responseData = processLog.getResponseData1();
-		if (StringUtils.isNotBlank(responseData) && responseData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
+    @BeforeEach
+    void setUp() {
+        processLogDTO = new ProcessLogDTO();
+        processLogDTO.setStartTime(System.currentTimeMillis());
+        processLogDTO.setFinishTime(System.currentTimeMillis() + 1000);
+        processLogDTO.setRequestData("Sample request data");
+        processLogDTO.setResponseData1("Sample response data that is too long and should be truncated.");
+    }
 
-			String responseData1 = StringUtils.substring(responseData, 0, LoggingConstants.MAX_LOGGING_LENGHT);
-			String responseData2 = StringUtils.substring(responseData, LoggingConstants.MAX_LOGGING_LENGHT);
-			responseData2 = responseData2.length() > LoggingConstants.MAX_LOGGING_LENGHT
-					? StringUtils.substring(responseData2, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: responseData2;
-			processLog.setResponseData1(responseData1);
-			processLog.setResponseData2(responseData2);
-		}
+    @Test
+    void testSaveProcessLog_withValidData() {
+        // Arrange
+        ProcessLog processLogEntity = new ProcessLog();
+        when(mapper.toEntity(any(ProcessLogDTO.class))).thenReturn(processLogEntity);
+        when(repo.save(any(ProcessLog.class))).thenReturn(processLogEntity);
 
-		if (processLog.getException() != null) {
-			resolveExceptionForLog(processLog);
-		}
+        // Act
+        service.saveProcessLog(processLogDTO);
 
-		repo.save(mapper.toEntity(processLog));
-	}
+        // Assert
+        verify(mapper, times(1)).toEntity(any(ProcessLogDTO.class));
+        verify(repo, times(1)).save(any(ProcessLog.class));
+        assertNotNull(processLogDTO.getElapsedTime());
+        assertTrue(processLogDTO.getRequestData().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+        assertTrue(processLogDTO.getResponseData1().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+        assertTrue(processLogDTO.getResponseData2().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+    }
 
-	private void resolveExceptionForLog(ProcessLogDTO processLog) {
-		Exception exception = processLog.getException();
+    @Test
+    void testSaveProcessLog_withException() {
+        // Arrange
+        ExceptionData exceptionData = new ExceptionData(1001L, "Error message");
+        MicroException microException = mock(MicroException.class);
+        when(microException.getExceptionData()).thenReturn(exceptionData);
+        processLogDTO.setException(microException);
 
-		if (exception instanceof MicroException) {
-			MicroException microException = (MicroException) exception;
+        ProcessLog processLogEntity = new ProcessLog();
+        when(mapper.toEntity(any(ProcessLogDTO.class))).thenReturn(processLogEntity);
+        when(repo.save(any(ProcessLog.class))).thenReturn(processLogEntity);
 
-			processLog.setResultCode(microException.getExceptionData().getErrorCode().toString());
-			processLog.setResultText(microException.getExceptionData().getErrorMessage());
+        // Act
+        service.saveProcessLog(processLogDTO);
 
-			String stackTrace = ExceptionUtils.getStackTrace(microException);
-			processLog.setExceptionTrace(stackTrace.length() > 4000
-					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: stackTrace);
+        // Assert
+        verify(mapper, times(1)).toEntity(any(ProcessLogDTO.class));
+        verify(repo, times(1)).save(any(ProcessLog.class));
+        assertEquals("1001", processLogDTO.getResultCode());
+        assertEquals("Error message", processLogDTO.getResultText());
+    }
 
-		} else {
-			processLog.setResultCode(LoggingConstants.UNKNOWN_ERROR_CODE.toString());
-			processLog.setResultText(LoggingConstants.UNKNOWN_ERROR_MESSAGE);
+    @Test
+    void testSaveProcessLog_withUnknownException() {
+        // Arrange
+        Exception exception = new Exception("Unknown error");
+        processLogDTO.setException(exception);
 
-			String stackTrace = ExceptionUtils.getStackTrace(exception);
-			processLog.setExceptionTrace(stackTrace.length() > 4000
-					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: stackTrace);
-		}
+        ProcessLog processLogEntity = new ProcessLog();
+        when(mapper.toEntity(any(ProcessLogDTO.class))).thenReturn(processLogEntity);
+        when(repo.save(any(ProcessLog.class))).thenReturn(processLogEntity);
 
-	}
+        // Act
+        service.saveProcessLog(processLogDTO);
 
+        // Assert
+        verify(mapper, times(1)).toEntity(any(ProcessLogDTO.class));
+        verify(repo, times(1)).save(any(ProcessLog.class));
+        assertEquals(LoggingConstants.UNKNOWN_ERROR_CODE.toString(), processLogDTO.getResultCode());
+        assertEquals(LoggingConstants.UNKNOWN_ERROR_MESSAGE, processLogDTO.getResultText());
+    }
+
+    @Test
+    void testSaveProcessLog_withNullProcessLog() {
+        // Act
+        service.saveProcessLog(null);
+
+        // Assert
+        verify(repo, never()).save(any());
+        verify(mapper, never()).toEntity(any());
+    }
 }
