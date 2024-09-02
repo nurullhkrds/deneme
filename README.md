@@ -1,60 +1,122 @@
-@Service
-@RequiredArgsConstructor
-public class ServiceLoggingServiceImpl implements ServiceLoggingService {
+@ExtendWith(MockitoExtension.class)
+public class ServiceLoggingServiceImplTest {
 
-	private final ServiceLogRepository repo;
-	private final ServiceLogMapper mapper;
+    @Mock
+    private ServiceLogRepository repo;
 
-	@Override
-	@Async
-	@Transactional
-	public void saveServiceLog(ServiceLogDTO serviceLog) {
-		if (serviceLog == null) {
-			return;
-		}
+    @Mock
+    private ServiceLogMapper mapper;
 
-		//long currentTimeMillis = System.currentTimeMillis();
-		//serviceLog.setElapsedTime(currentTimeMillis - serviceLog.getStartTime());
+    @InjectMocks
+    private ServiceLoggingServiceImpl service;
 
-		String requestData = serviceLog.getRequestData();
-		if (StringUtils.isNotBlank(requestData) && requestData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
-			serviceLog.setRequestData(StringUtils.substring(requestData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
-		}
+    private ServiceLogDTO serviceLogDTO;
 
-		String responseData = serviceLog.getResponseData();
-		if (StringUtils.isNotBlank(responseData) && responseData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
-			serviceLog.setResponseData(StringUtils.substring(responseData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
-		}
+    @BeforeEach
+    void setUp() {
+        serviceLogDTO = new ServiceLogDTO();
+        serviceLogDTO.setRequestData("Sample request data");
+        serviceLogDTO.setResponseData("Sample response data");
+    }
 
-		if (serviceLog.getException() != null) {
-			resolveExceptionForLog(serviceLog);
-		}
+    @Test
+    void testSaveServiceLog_withValidData() {
+        // Arrange
+        ServiceLog serviceLogEntity = new ServiceLog();
+        when(mapper.toEntity(any(ServiceLogDTO.class))).thenReturn(serviceLogEntity);
+        when(repo.save(any(ServiceLog.class))).thenReturn(serviceLogEntity);
 
-		repo.save(mapper.toEntity(serviceLog));
-	}
+        // Act
+        service.saveServiceLog(serviceLogDTO);
 
-	private void resolveExceptionForLog(ServiceLogDTO serviceLog) {
-		Exception exception = serviceLog.getException();
+        // Assert
+        verify(mapper, times(1)).toEntity(any(ServiceLogDTO.class));
+        verify(repo, times(1)).save(any(ServiceLog.class));
+        assertTrue(serviceLogDTO.getRequestData().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+        assertTrue(serviceLogDTO.getResponseData().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+    }
 
-		serviceLog.setReturnCode(LoggingConstants.UNKNOWN_ERROR_CODE);
-		serviceLog.setResultType(EnumLoggingResultType.ERROR);
+    @Test
+    void testSaveServiceLog_withLongRequestData() {
+        // Arrange
+        String longRequestData = "a".repeat(LoggingConstants.MAX_LOGGING_LENGHT + 10);
+        serviceLogDTO.setRequestData(longRequestData);
 
-		if (exception instanceof MicroException) {
-			MicroException microException = (MicroException) exception;
+        ServiceLog serviceLogEntity = new ServiceLog();
+        when(mapper.toEntity(any(ServiceLogDTO.class))).thenReturn(serviceLogEntity);
+        when(repo.save(any(ServiceLog.class))).thenReturn(serviceLogEntity);
 
-			serviceLog.setResultCode(microException.getExceptionData().getErrorCode().toString());
-			String stackTrace = ExceptionUtils.getStackTrace(microException);
-			serviceLog.setResponseData(stackTrace.length() > 4000
-					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: stackTrace);
-		} else {
-			serviceLog.setResultCode(LoggingConstants.UNKNOWN_ERROR_CODE.toString());
-			String stackTrace = ExceptionUtils.getStackTrace(exception);
-			serviceLog.setResponseData(stackTrace.length() > 4000
-					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
-					: stackTrace);
-		}
+        // Act
+        service.saveServiceLog(serviceLogDTO);
 
-	}
+        // Assert
+        assertEquals(LoggingConstants.MAX_LOGGING_LENGHT, serviceLogDTO.getRequestData().length());
+    }
 
+    @Test
+    void testSaveServiceLog_withLongResponseData() {
+        // Arrange
+        String longResponseData = "a".repeat(LoggingConstants.MAX_LOGGING_LENGHT + 10);
+        serviceLogDTO.setResponseData(longResponseData);
+
+        ServiceLog serviceLogEntity = new ServiceLog();
+        when(mapper.toEntity(any(ServiceLogDTO.class))).thenReturn(serviceLogEntity);
+        when(repo.save(any(ServiceLog.class))).thenReturn(serviceLogEntity);
+
+        // Act
+        service.saveServiceLog(serviceLogDTO);
+
+        // Assert
+        assertEquals(LoggingConstants.MAX_LOGGING_LENGHT, serviceLogDTO.getResponseData().length());
+    }
+
+    @Test
+    void testSaveServiceLog_withException() {
+        // Arrange
+        ExceptionData exceptionData = new ExceptionData(1001L, "Error message");
+        MicroException microException = mock(MicroException.class);
+        when(microException.getExceptionData()).thenReturn(exceptionData);
+        serviceLogDTO.setException(microException);
+
+        ServiceLog serviceLogEntity = new ServiceLog();
+        when(mapper.toEntity(any(ServiceLogDTO.class))).thenReturn(serviceLogEntity);
+        when(repo.save(any(ServiceLog.class))).thenReturn(serviceLogEntity);
+
+        // Act
+        service.saveServiceLog(serviceLogDTO);
+
+        // Assert
+        assertEquals("1001", serviceLogDTO.getResultCode());
+        assertTrue(serviceLogDTO.getResponseData().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+        assertEquals(EnumLoggingResultType.ERROR, serviceLogDTO.getResultType());
+    }
+
+    @Test
+    void testSaveServiceLog_withUnknownException() {
+        // Arrange
+        Exception exception = new Exception("Unknown error");
+        serviceLogDTO.setException(exception);
+
+        ServiceLog serviceLogEntity = new ServiceLog();
+        when(mapper.toEntity(any(ServiceLogDTO.class))).thenReturn(serviceLogEntity);
+        when(repo.save(any(ServiceLog.class))).thenReturn(serviceLogEntity);
+
+        // Act
+        service.saveServiceLog(serviceLogDTO);
+
+        // Assert
+        assertEquals(LoggingConstants.UNKNOWN_ERROR_CODE.toString(), serviceLogDTO.getResultCode());
+        assertTrue(serviceLogDTO.getResponseData().length() <= LoggingConstants.MAX_LOGGING_LENGHT);
+        assertEquals(EnumLoggingResultType.ERROR, serviceLogDTO.getResultType());
+    }
+
+    @Test
+    void testSaveServiceLog_withNullServiceLog() {
+        // Act
+        service.saveServiceLog(null);
+
+        // Assert
+        verify(repo, never()).save(any());
+        verify(mapper, never()).toEntity(any());
+    }
 }
