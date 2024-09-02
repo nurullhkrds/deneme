@@ -1,35 +1,60 @@
-@Test
-void testSaveProcessLog_withLongResponseData() {
-    // Arrange
-    String longResponseData = "a".repeat(LoggingConstants.MAX_LOGGING_LENGHT * 2);
-    processLogDTO.setResponseData1(longResponseData);
+@Service
+@RequiredArgsConstructor
+public class ServiceLoggingServiceImpl implements ServiceLoggingService {
 
-    ProcessLog processLogEntity = new ProcessLog();
-    when(mapper.toEntity(any(ProcessLogDTO.class))).thenReturn(processLogEntity);
-    when(repo.save(any(ProcessLog.class))).thenReturn(processLogEntity);
+	private final ServiceLogRepository repo;
+	private final ServiceLogMapper mapper;
 
-    // Act
-    service.saveProcessLog(processLogDTO);
+	@Override
+	@Async
+	@Transactional
+	public void saveServiceLog(ServiceLogDTO serviceLog) {
+		if (serviceLog == null) {
+			return;
+		}
 
-    // Assert
-    assertEquals(LoggingConstants.MAX_LOGGING_LENGHT, processLogDTO.getResponseData1().length());
-    assertEquals(LoggingConstants.MAX_LOGGING_LENGHT, processLogDTO.getResponseData2().length());
-}
+		//long currentTimeMillis = System.currentTimeMillis();
+		//serviceLog.setElapsedTime(currentTimeMillis - serviceLog.getStartTime());
 
-@Test
-void testSaveProcessLog_withShortResponseData() {
-    // Arrange
-    String shortResponseData = "a".repeat(LoggingConstants.MAX_LOGGING_LENGHT - 10);
-    processLogDTO.setResponseData1(shortResponseData);
+		String requestData = serviceLog.getRequestData();
+		if (StringUtils.isNotBlank(requestData) && requestData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
+			serviceLog.setRequestData(StringUtils.substring(requestData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
+		}
 
-    ProcessLog processLogEntity = new ProcessLog();
-    when(mapper.toEntity(any(ProcessLogDTO.class))).thenReturn(processLogEntity);
-    when(repo.save(any(ProcessLog.class))).thenReturn(processLogEntity);
+		String responseData = serviceLog.getResponseData();
+		if (StringUtils.isNotBlank(responseData) && responseData.length() > LoggingConstants.MAX_LOGGING_LENGHT) {
+			serviceLog.setResponseData(StringUtils.substring(responseData, 0, LoggingConstants.MAX_LOGGING_LENGHT));
+		}
 
-    // Act
-    service.saveProcessLog(processLogDTO);
+		if (serviceLog.getException() != null) {
+			resolveExceptionForLog(serviceLog);
+		}
 
-    // Assert
-    assertEquals(shortResponseData, processLogDTO.getResponseData1());
-    assertNull(processLogDTO.getResponseData2());
+		repo.save(mapper.toEntity(serviceLog));
+	}
+
+	private void resolveExceptionForLog(ServiceLogDTO serviceLog) {
+		Exception exception = serviceLog.getException();
+
+		serviceLog.setReturnCode(LoggingConstants.UNKNOWN_ERROR_CODE);
+		serviceLog.setResultType(EnumLoggingResultType.ERROR);
+
+		if (exception instanceof MicroException) {
+			MicroException microException = (MicroException) exception;
+
+			serviceLog.setResultCode(microException.getExceptionData().getErrorCode().toString());
+			String stackTrace = ExceptionUtils.getStackTrace(microException);
+			serviceLog.setResponseData(stackTrace.length() > 4000
+					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
+					: stackTrace);
+		} else {
+			serviceLog.setResultCode(LoggingConstants.UNKNOWN_ERROR_CODE.toString());
+			String stackTrace = ExceptionUtils.getStackTrace(exception);
+			serviceLog.setResponseData(stackTrace.length() > 4000
+					? StringUtils.substring(stackTrace, 0, LoggingConstants.MAX_LOGGING_LENGHT)
+					: stackTrace);
+		}
+
+	}
+
 }
