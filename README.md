@@ -1,70 +1,30 @@
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+@Getter
+@Setter
+public abstract class BaseLogDTO extends CreatableBaseDTO {
 
-public class BusinessLogMapperTest {
+	private Long institutionId;
 
-    private final BusinessLogMapper mapper = BusinessLogMapper.INSTANCE;
+	private Long institutionDebtTypeId;
 
-    @Test
-    void testToEntity() {
-        BusinessLogDTO dto = new BusinessLogDTO();
-        // DTO nesnesinin gerekli alanlarını doldurun
-        dto.setId(1L);
-        dto.setLogData("Test Log Data");
+	private String subscriberNo;
 
-        BusinessLog entity = mapper.toEntity(dto);
+	private LocalDate logDate;
 
-        assertNotNull(entity);
-        assertEquals(dto.getId(), entity.getId());
-        assertEquals(dto.getLogData(), entity.getLogData());
-    }
-}
+	private String branchCode;
 
+	private String channelCode;
 
+	private String channelTransactionId;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+	private String channelSessionId;
 
-public class ProcessLogMapperTest {
-
-    private final ProcessLogMapper mapper = ProcessLogMapper.INSTANCE;
-
-    @Test
-    void testToEntity() {
-        ProcessLogDTO dto = new ProcessLogDTO();
-        // DTO nesnesinin gerekli alanlarını doldurun
-        dto.setId(1L);
-        dto.setProcessData("Test Process Data");
-
-        ProcessLog entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertEquals(dto.getId(), entity.getId());
-        assertEquals(dto.getProcessData(), entity.getProcessData());
-    }
-}
-
-
-
-
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-public class ServiceLogMapperTest {
-
-    private final ServiceLogMapper mapper = ServiceLogMapper.INSTANCE;
-
-    @Test
-    void testToEntity() {
-        ServiceLogDTO dto = new ServiceLogDTO();
-        // DTO nesnesinin gerekli alanlarını doldurun
-        dto.setId(1L);
-        dto.setServiceData("Test Service Data");
-
-        ServiceLog entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertEquals(dto.getId(), entity.getId());
-        assertEquals(dto.getServiceData(), entity.getServiceData());
-    }
+	private Long elapsedTime;
+	
+	private long startTime = System.currentTimeMillis();
+	
+	private long lastLoggingTime = this.startTime;
+	
+	private long finishTime = 0l;
+	
+	private Exception exception;
 }
