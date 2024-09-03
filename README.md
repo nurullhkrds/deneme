@@ -1,21 +1,13 @@
-  @Test
-    void testValidateConditionWithArgsFalseWithParameters() {
-        // EnumBillResult sabitini doğrudan kullanıyoruz
-        EnumBillResult error = EnumBillResult.SOME_ERROR_CONSTANT_WITH_PARAMS;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-        // `validateConditionWithArgs` metodunu test ediyoruz
-        BillException exception = assertThrows(BillException.class, () -> 
-            BillValidationUtil.validateConditionWithArgs("AppName", false, error, "Arg1", "Arg2"));
+@Component
+public class ScheduledTasks {
 
-        // Sonuçları kontrol ediyoruz
-        assertEquals("AppName", exception.getAppName());
-        assertEquals(error, exception.getBillResult());
-
-        // Beklenen hata mesajı ve parametreleri kontrol ediyoruz
-        String expectedErrorMessage = error.getExplanation().replace("{0}", "Arg1").replace("{1}", "Arg2");
-        assertEquals(expectedErrorMessage, exception.getErrorMessage());
-
-        // Parametrelerin doğru eşleştirildiğini kontrol ediyoruz
-        Map<String, String> expectedParams = Map.of("Param1", "Arg1", "Param2", "Arg2");
-        assertEquals(expectedParams, exception.getParameters());
+    // Her gün saat 12:00'de çalışır
+    @Scheduled(cron = "0 0 12 * * ?")
+    public void executeDailyTask() {
+        System.out.println("Bu görev her gün saat 12:00'de çalışır.");
+        // Buraya çalıştırmak istediğiniz işlevselliği ekleyin
     }
+}
