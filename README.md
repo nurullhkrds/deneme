@@ -1,24 +1,70 @@
-@Mapper(componentModel = "spring")
-public interface BusinessLogMapper {
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-	BusinessLogMapper INSTANCE = Mappers.getMapper(BusinessLogMapper.class);
+public class BusinessLogMapperTest {
 
-	BusinessLog toEntity(BusinessLogDTO dto);
+    private final BusinessLogMapper mapper = BusinessLogMapper.INSTANCE;
+
+    @Test
+    void testToEntity() {
+        BusinessLogDTO dto = new BusinessLogDTO();
+        // DTO nesnesinin gerekli alanlarını doldurun
+        dto.setId(1L);
+        dto.setLogData("Test Log Data");
+
+        BusinessLog entity = mapper.toEntity(dto);
+
+        assertNotNull(entity);
+        assertEquals(dto.getId(), entity.getId());
+        assertEquals(dto.getLogData(), entity.getLogData());
+    }
 }
 
 
-@Mapper(componentModel = "spring")
-public interface ProcessLogMapper {
-	ProcessLogMapper INSTANCE = Mappers.getMapper(ProcessLogMapper.class);
 
-	ProcessLog toEntity(ProcessLogDTO dto);
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ProcessLogMapperTest {
+
+    private final ProcessLogMapper mapper = ProcessLogMapper.INSTANCE;
+
+    @Test
+    void testToEntity() {
+        ProcessLogDTO dto = new ProcessLogDTO();
+        // DTO nesnesinin gerekli alanlarını doldurun
+        dto.setId(1L);
+        dto.setProcessData("Test Process Data");
+
+        ProcessLog entity = mapper.toEntity(dto);
+
+        assertNotNull(entity);
+        assertEquals(dto.getId(), entity.getId());
+        assertEquals(dto.getProcessData(), entity.getProcessData());
+    }
 }
 
 
-@Mapper(componentModel = "spring")
-public interface ServiceLogMapper {
 
-	ServiceLogMapper INSTANCE = Mappers.getMapper(ServiceLogMapper.class);
 
-	ServiceLog toEntity(ServiceLogDTO dto);
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ServiceLogMapperTest {
+
+    private final ServiceLogMapper mapper = ServiceLogMapper.INSTANCE;
+
+    @Test
+    void testToEntity() {
+        ServiceLogDTO dto = new ServiceLogDTO();
+        // DTO nesnesinin gerekli alanlarını doldurun
+        dto.setId(1L);
+        dto.setServiceData("Test Service Data");
+
+        ServiceLog entity = mapper.toEntity(dto);
+
+        assertNotNull(entity);
+        assertEquals(dto.getId(), entity.getId());
+        assertEquals(dto.getServiceData(), entity.getServiceData());
+    }
 }
