@@ -1,27 +1,4 @@
-@ExtendWith(MockitoExtension.class)
-public class LogUtilTest {
-
-    private BusinessLogDTO businessLogDTO;
-    private ProcessLogDTO processLogDTO;
-
-    @BeforeEach
-    void setUp() {
-        businessLogDTO = new BusinessLogDTO();
-        processLogDTO = new ProcessLogDTO();
-    }
-
-    @Test
-    void testAppendBusinessLog() {
-        businessLogDTO.setLastLoggingTime(System.nanoTime());
-        String logText = "Test Log";
-
-        LogUtil.appendBusinessLog(businessLogDTO, logText);
-
-        assertNotNull(businessLogDTO.getRequestData());
-        assertTrue(businessLogDTO.getRequestData().contains(logText));
-    }
-
-    @Test
+@Test
     void testSaveBusinessLog() {
         try (MockedStatic<SpringUtil> mockedSpringUtil = mockStatic(SpringUtil.class)) {
             LoggingService mockLoggingService = mock(LoggingService.class);
@@ -33,28 +10,10 @@ public class LogUtilTest {
         }
     }
 
-    @Test
-    void testAppendProcessLog() {
-        processLogDTO.setLastLoggingTime(System.currentTimeMillis());
-        String logText = "Process Log";
 
-        LogUtil.appendProcessLog(processLogDTO, logText);
+org.mockito.exceptions.base.MockitoException: 
+The used MockMaker SubclassByteBuddyMockMaker does not support the creation of static mocks
 
-        assertNotNull(processLogDTO.getResponseData1());
-        assertTrue(processLogDTO.getResponseData1().contains(logText));
-    }
-
-    @Test
-    void testSaveProcessLog() {
-        try (MockedStatic<SpringUtil> mockedSpringUtil = mockStatic(SpringUtil.class)) {
-            LoggingService mockLoggingService = mock(LoggingService.class);
-            mockedSpringUtil.when(() -> SpringUtil.getBean(LoggingService.class)).thenReturn(mockLoggingService);
-
-            String processInput = "Process Input";
-            LogUtil.saveProcessLog(processLogDTO, processInput);
-
-            assertEquals(processInput, processLogDTO.getRequestData());
-            verify(mockLoggingService, times(1)).saveProcessLog(processLogDTO);
-        }
-    }
-}
+Mockito's inline mock maker supports static mocks based on the Instrumentation API.
+You can simply enable this mock mode, by placing the 'mockito-inline' artifact where you are currently using 'mockito-core'.
+Note that Mockito's inline mock maker is not supported on Android.
