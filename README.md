@@ -1,30 +1,60 @@
-@Getter
-@Setter
-public abstract class BaseLogDTO extends CreatableBaseDTO {
+public class BaseLogDTOTest {
 
-	private Long institutionId;
+    private BaseLogDTO baseLogDTO;
 
-	private Long institutionDebtTypeId;
+    @BeforeEach
+    void setUp() {
+        // Anonim sınıf oluşturuyoruz
+        baseLogDTO = new BaseLogDTO() {
+            // Gerekirse anonim sınıfın metotlarını override edebilirsiniz
+        };
+    }
 
-	private String subscriberNo;
+    @Test
+    void testDefaultValues() {
+        // Başlangıçta set edilen değerleri kontrol ediyoruz
+        assertNotNull(baseLogDTO);
+        assertEquals(System.currentTimeMillis(), baseLogDTO.getStartTime(), 1000); // 1000ms tolerans
+        assertEquals(baseLogDTO.getStartTime(), baseLogDTO.getLastLoggingTime());
+        assertEquals(0L, baseLogDTO.getFinishTime());
+        assertNull(baseLogDTO.getException());
+    }
 
-	private LocalDate logDate;
+    @Test
+    void testSettersAndGetters() {
+        // Değerleri set ediyoruz
+        baseLogDTO.setInstitutionId(1L);
+        baseLogDTO.setInstitutionDebtTypeId(2L);
+        baseLogDTO.setSubscriberNo("123456");
+        baseLogDTO.setLogDate(LocalDate.now());
+        baseLogDTO.setBranchCode("BR001");
+        baseLogDTO.setChannelCode("CH001");
+        baseLogDTO.setChannelTransactionId("TX123");
+        baseLogDTO.setChannelSessionId("SESS123");
+        baseLogDTO.setElapsedTime(3000L);
+        baseLogDTO.setException(new RuntimeException("Test Exception"));
 
-	private String branchCode;
+        // Değerleri kontrol ediyoruz
+        assertEquals(1L, baseLogDTO.getInstitutionId());
+        assertEquals(2L, baseLogDTO.getInstitutionDebtTypeId());
+        assertEquals("123456", baseLogDTO.getSubscriberNo());
+        assertEquals(LocalDate.now(), baseLogDTO.getLogDate());
+        assertEquals("BR001", baseLogDTO.getBranchCode());
+        assertEquals("CH001", baseLogDTO.getChannelCode());
+        assertEquals("TX123", baseLogDTO.getChannelTransactionId());
+        assertEquals("SESS123", baseLogDTO.getChannelSessionId());
+        assertEquals(3000L, baseLogDTO.getElapsedTime());
+        assertEquals("Test Exception", baseLogDTO.getException().getMessage());
+    }
 
-	private String channelCode;
+    @Test
+    void testTimeUpdates() {
+        long newLastLoggingTime = System.currentTimeMillis() + 1000;
+        baseLogDTO.setLastLoggingTime(newLastLoggingTime);
+        assertEquals(newLastLoggingTime, baseLogDTO.getLastLoggingTime());
 
-	private String channelTransactionId;
-
-	private String channelSessionId;
-
-	private Long elapsedTime;
-	
-	private long startTime = System.currentTimeMillis();
-	
-	private long lastLoggingTime = this.startTime;
-	
-	private long finishTime = 0l;
-	
-	private Exception exception;
+        long newFinishTime = System.currentTimeMillis() + 2000;
+        baseLogDTO.setFinishTime(newFinishTime);
+        assertEquals(newFinishTime, baseLogDTO.getFinishTime());
+    }
 }
