@@ -1,48 +1,79 @@
-public final class BillValidationUtil {
+public class BillValidationUtilTest {
 
-	public static void validateCondition(boolean condition, EnumBillResult error, String appName)
-			throws BillException {
-		if (!condition) {
-			throwBillException(appName, error);
-		}
-	}
+    @Test
+    void testValidateConditionTrue() {
+        assertDoesNotThrow(() -> 
+            BillValidationUtil.validateCondition(true, mock(EnumBillResult.class), "AppName"));
+    }
 
-	public static void validateConditionWithArgs(String appName, boolean condition, EnumBillResult error,
-			Object... args) throws BillException {
-		if (!condition) {
-			Long errorCode = error.getCode();
-			String errorMessage = error.getExplanation();
-			String errorMessageWithArguments = errorMessage;
+    @Test
+    void testValidateConditionFalse() {
+        EnumBillResult mockError = mock(EnumBillResult.class);
+        doReturn("Error Explanation").when(mockError).getExplanation();
 
-			if (args != null) {
-				for (int i = 0; i < args.length; i++) {
-					String searchString = "{" + i + "}";
-					errorMessageWithArguments = StringUtils.replace(errorMessageWithArguments, searchString,
-							args[i].toString());
-				}
-			}
+        BillException exception = assertThrows(BillException.class, () -> 
+            BillValidationUtil.validateCondition(false, mockError, "AppName"));
 
-			if (CollectionUtils.isEmpty(error.getParameterKey())) {
-				throw new BillException(appName,error, errorCode, errorMessageWithArguments);
-			}
+        assertEquals("AppName", exception.getAppName());
+        assertEquals(mockError, exception.getBillResult());
+    }
 
-			else {
-				Map<String, String> paramaters = new HashMap<>();
-				for (int i = 0; i < error.getParameterKey().size(); i++) {
-					paramaters.put(error.getParameterKey().get(i), args[i].toString());
-				}
-				throw new BillException(appName, error,  errorCode, errorMessageWithArguments, paramaters);
+    @Test
+    void testValidateConditionWithArgsTrue() {
+        assertDoesNotThrow(() -> 
+            BillValidationUtil.validateConditionWithArgs("AppName", true, mock(EnumBillResult.class)));
+    }
 
-			}
+    @Test
+    void testValidateConditionWithArgsFalseWithoutParameters() {
+        EnumBillResult mockError = mock(EnumBillResult.class);
+        doReturn(100L).when(mockError).getCode();
+        doReturn("Error Explanation").when(mockError).getExplanation();
+        doReturn(null).when(mockError).getParameterKey();
 
-		}
-	}
-	
-	public static void throwBillException(String appName, EnumBillResult billResult) throws BillException {
-		throw new BillException(appName, billResult);
-	}
-	
-	public static void throwBillException(String appName, Exception ex) throws BillException {
-		throw new BillException(appName, ex);
-	}
+        BillException exception = assertThrows(BillException.class, () -> 
+            BillValidationUtil.validateConditionWithArgs("AppName", false, mockError, "Arg1"));
+
+        assertEquals("AppName", exception.getAppName());
+        assertEquals(mockError, exception.getBillResult());
+        assertEquals("Error Explanation", exception.getErrorMessage());
+    }
+
+    @Test
+    void testValidateConditionWithArgsFalseWithParameters() {
+        EnumBillResult mockError = mock(EnumBillResult.class);
+        doReturn(100L).when(mockError).getCode();
+        doReturn("Error Explanation with {0}").when(mockError).getExplanation();
+        doReturn(List.of("Param1")).when(mockError).getParameterKey();
+
+        BillException exception = assertThrows(BillException.class, () -> 
+            BillValidationUtil.validateConditionWithArgs("AppName", false, mockError, "Arg1"));
+
+        assertEquals("AppName", exception.getAppName());
+        assertEquals(mockError, exception.getBillResult());
+        assertEquals("Error Explanation with Arg1", exception.getErrorMessage());
+        assertEquals("Arg1", exception.getParameters().get("Param1"));
+    }
+
+    @Test
+    void testThrowBillExceptionWithBillResult() {
+        EnumBillResult mockError = mock(EnumBillResult.class);
+        
+        BillException exception = assertThrows(BillException.class, () -> 
+            BillValidationUtil.throwBillException("AppName", mockError));
+
+        assertEquals("AppName", exception.getAppName());
+        assertEquals(mockError, exception.getBillResult());
+    }
+
+    @Test
+    void testThrowBillExceptionWithException() {
+        Exception mockException = new Exception("Test Exception");
+        
+        BillException exception = assertThrows(BillException.class, () -> 
+            BillValidationUtil.throwBillException("AppName", mockException));
+
+        assertEquals("AppName", exception.getAppName());
+        assertEquals(mockException, exception.getCause());
+    }
 }
