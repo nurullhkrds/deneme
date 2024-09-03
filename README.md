@@ -1,19 +1,55 @@
-@Test
-    void testSaveBusinessLog() {
-        try (MockedStatic<SpringUtil> mockedSpringUtil = mockStatic(SpringUtil.class)) {
-            LoggingService mockLoggingService = mock(LoggingService.class);
-            mockedSpringUtil.when(() -> SpringUtil.getBean(LoggingService.class)).thenReturn(mockLoggingService);
+ private BusinessLogDTO businessLogDTO;
+    private ProcessLogDTO processLogDTO;
 
-            LogUtil.saveBusinessLog(businessLogDTO);
+    @Mock
+    private LoggingService mockLoggingService;
 
-            verify(mockLoggingService, times(1)).saveBusinessLog(businessLogDTO);
-        }
+    @BeforeEach
+    void setUp() {
+        businessLogDTO = new BusinessLogDTO();
+        processLogDTO = new ProcessLogDTO();
     }
 
+    @Test
+    void testAppendBusinessLog() {
+        businessLogDTO.setLastLoggingTime(System.nanoTime());
+        String logText = "Test Log";
 
-org.mockito.exceptions.base.MockitoException: 
-The used MockMaker SubclassByteBuddyMockMaker does not support the creation of static mocks
+        LogUtil.appendBusinessLog(businessLogDTO, logText);
 
-Mockito's inline mock maker supports static mocks based on the Instrumentation API.
-You can simply enable this mock mode, by placing the 'mockito-inline' artifact where you are currently using 'mockito-core'.
-Note that Mockito's inline mock maker is not supported on Android.
+        assertNotNull(businessLogDTO.getRequestData());
+        assertTrue(businessLogDTO.getRequestData().contains(logText));
+    }
+
+    @Test
+    void testSaveBusinessLog() {
+        // Instead of mocking static methods, we directly interact with mockLoggingService
+        SpringUtil.setBean(LoggingService.class, mockLoggingService);  // Hypothetical method to inject dependency
+        
+        LogUtil.saveBusinessLog(businessLogDTO);
+
+        verify(mockLoggingService, times(1)).saveBusinessLog(businessLogDTO);
+    }
+
+    @Test
+    void testAppendProcessLog() {
+        processLogDTO.setLastLoggingTime(System.currentTimeMillis());
+        String logText = "Process Log";
+
+        LogUtil.appendProcessLog(processLogDTO, logText);
+
+        assertNotNull(processLogDTO.getResponseData1());
+        assertTrue(processLogDTO.getResponseData1().contains(logText));
+    }
+
+    @Test
+    void testSaveProcessLog() {
+        // Instead of mocking static methods, we directly interact with mockLoggingService
+        SpringUtil.setBean(LoggingService.class, mockLoggingService);  // Hypothetical method to inject dependency
+        
+        String processInput = "Process Input";
+        LogUtil.saveProcessLog(processLogDTO, processInput);
+
+        assertEquals(processInput, processLogDTO.getRequestData());
+        verify(mockLoggingService, times(1)).saveProcessLog(processLogDTO);
+    }
