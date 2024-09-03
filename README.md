@@ -1,24 +1,31 @@
-@Test
-void testNotNullFields() {
-    // Yeni test stratejisi:
-    try {
-        new BusinessLogDTO(null, "ServiceName", "MethodName");
-        fail("Expected NullPointerException for null applicationName");
-    } catch (NullPointerException e) {
-        assertEquals("applicationName is marked non-null but is null", e.getMessage());
-    }
+@Getter
+@Setter
+@RequiredArgsConstructor
+public class ProcessLogDTO extends BaseLogDTO {
+	private Long id;
 
-    try {
-        new BusinessLogDTO("AppName", null, "MethodName");
-        fail("Expected NullPointerException for null serviceName");
-    } catch (NullPointerException e) {
-        assertEquals("serviceName is marked non-null but is null", e.getMessage());
-    }
+	private String subscriberNo;
 
-    try {
-        new BusinessLogDTO("AppName", "ServiceName", null);
-        fail("Expected NullPointerException for null methodName");
-    } catch (NullPointerException e) {
-        assertEquals("methodName is marked non-null but is null", e.getMessage());
-    }
+	private final String processCode;
+
+	private Long customerNo;
+
+	private Long identityNo;
+
+	private String taxId;
+
+	private String returnType;
+
+	private String resultCode;
+
+	private String resultText;
+
+	private String requestData;
+
+	private String responseData1 = "";
+
+	private String responseData2;
+
+	private String exceptionTrace;
+
 }
