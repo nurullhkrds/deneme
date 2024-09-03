@@ -1,61 +1,48 @@
-public class ServiceLogDTOTest {
+public final class BillValidationUtil {
 
-    private ServiceLogDTO serviceLogDTO;
+	public static void validateCondition(boolean condition, EnumBillResult error, String appName)
+			throws BillException {
+		if (!condition) {
+			throwBillException(appName, error);
+		}
+	}
 
-    @BeforeEach
-    void setUp() {
-        serviceLogDTO = new ServiceLogDTO("AppName", "ServiceName", "MethodName");
-    }
+	public static void validateConditionWithArgs(String appName, boolean condition, EnumBillResult error,
+			Object... args) throws BillException {
+		if (!condition) {
+			Long errorCode = error.getCode();
+			String errorMessage = error.getExplanation();
+			String errorMessageWithArguments = errorMessage;
 
-    @Test
-    void testConstructorAndGetters() {
-        assertEquals("AppName", serviceLogDTO.getApplicationName());
-        assertEquals("ServiceName", serviceLogDTO.getServiceName());
-        assertEquals("MethodName", serviceLogDTO.getMethodName());
-    }
+			if (args != null) {
+				for (int i = 0; i < args.length; i++) {
+					String searchString = "{" + i + "}";
+					errorMessageWithArguments = StringUtils.replace(errorMessageWithArguments, searchString,
+							args[i].toString());
+				}
+			}
 
-    @Test
-    void testSetterAndGetters() {
-        serviceLogDTO.setId(1L);
-        serviceLogDTO.setServiceDirection("INTERNAL");
-        serviceLogDTO.setKey1("Key1Value");
-        serviceLogDTO.setKey2("Key2Value");
-        serviceLogDTO.setKey3("Key3Value");
-        serviceLogDTO.setKey4("Key4Value");
-        serviceLogDTO.setKey5("Key5Value");
-        serviceLogDTO.setReturnCode(200);
-        serviceLogDTO.setResultCode("ResultCode");
-        serviceLogDTO.setResultType(EnumLoggingResultType.SUCCESS);
-        serviceLogDTO.setRequestData("RequestData");
-        serviceLogDTO.setResponseData("ResponseData");
+			if (CollectionUtils.isEmpty(error.getParameterKey())) {
+				throw new BillException(appName,error, errorCode, errorMessageWithArguments);
+			}
 
-        assertEquals(1L, serviceLogDTO.getId());
-        assertEquals("INTERNAL", serviceLogDTO.getServiceDirection());
-        assertEquals("Key1Value", serviceLogDTO.getKey1());
-        assertEquals("Key2Value", serviceLogDTO.getKey2());
-        assertEquals("Key3Value", serviceLogDTO.getKey3());
-        assertEquals("Key4Value", serviceLogDTO.getKey4());
-        assertEquals("Key5Value", serviceLogDTO.getKey5());
-        assertEquals(200, serviceLogDTO.getReturnCode());
-        assertEquals("ResultCode", serviceLogDTO.getResultCode());
-        assertEquals(EnumLoggingResultType.SUCCESS, serviceLogDTO.getResultType());
-        assertEquals("RequestData", serviceLogDTO.getRequestData());
-        assertEquals("ResponseData", serviceLogDTO.getResponseData());
-    }
+			else {
+				Map<String, String> paramaters = new HashMap<>();
+				for (int i = 0; i < error.getParameterKey().size(); i++) {
+					paramaters.put(error.getParameterKey().get(i), args[i].toString());
+				}
+				throw new BillException(appName, error,  errorCode, errorMessageWithArguments, paramaters);
 
-    @Test
-    void testNotNullFinalFields() {
-        assertThrows(NullPointerException.class, () -> new ServiceLogDTO(null, "ServiceName", "MethodName"));
-        assertThrows(NullPointerException.class, () -> new ServiceLogDTO("AppName", null, "MethodName"));
-        assertThrows(NullPointerException.class, () -> new ServiceLogDTO("AppName", "ServiceName", null));
-    }
+			}
 
-    @Test
-    void testInheritance() {
-        serviceLogDTO.setInstitutionId(1L);
-        assertEquals(1L, serviceLogDTO.getInstitutionId());
-
-        long currentTime = System.currentTimeMillis();
-        assertTrue(serviceLogDTO.getStartTime() <= currentTime);
-    }
+		}
+	}
+	
+	public static void throwBillException(String appName, EnumBillResult billResult) throws BillException {
+		throw new BillException(appName, billResult);
+	}
+	
+	public static void throwBillException(String appName, Exception ex) throws BillException {
+		throw new BillException(appName, ex);
+	}
 }
