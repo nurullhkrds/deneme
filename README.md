@@ -1,21 +1,3 @@
-import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-public class LoggingConstantsTest {
-
-    @Test
-    void testPrivateConstructor() throws NoSuchMethodException {
-        Constructor<LoggingConstants> constructor = LoggingConstants.class.getDeclaredConstructor();
-        assertTrue(constructor.isAccessible() || !constructor.canAccess(null));
-
-        // Private constructor'ı erişilebilir yapıyoruz
-        constructor.setAccessible(true);
-
-        // Private constructor'ı çağırıyoruz ve IllegalStateException fırlattığından emin oluyoruz
-        assertThrows(InvocationTargetException.class, constructor::newInstance);
-    }
-}
+	public static Integer UNKNOWN_ERROR_CODE = -999;
+	public static String  UNKNOWN_ERROR_MESSAGE = "Bilinmeyen hata olustu";
+	public static Integer MAX_LOGGING_LENGHT = 4000;
