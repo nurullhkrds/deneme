@@ -1,56 +1,60 @@
-public class LogUtil {
+@ExtendWith(MockitoExtension.class)
+public class LogUtilTest {
 
-	private LogUtil() {
-		throw new IllegalStateException("LogUtil: Utility class");
-	}
+    private BusinessLogDTO businessLogDTO;
+    private ProcessLogDTO processLogDTO;
 
-	public static void appendBusinessLog(BusinessLogDTO logDTO, String logText) {
-		if (logDTO == null) {
-			return;
-		}
+    @BeforeEach
+    void setUp() {
+        businessLogDTO = new BusinessLogDTO();
+        processLogDTO = new ProcessLogDTO();
+    }
 
-		long currentTime = System.nanoTime();
-		
-		logDTO.setRequestData(
-				new StringBuilder().append(logDTO.getRequestData()).append(String.format("%-40s", logText)).append("  ")
-						.append(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)).append("  ")
-						.append(Duration.ofNanos(currentTime - logDTO.getLastLoggingTime()).toMillis()).append(" ms").append("\n")
-						.toString());
-		logDTO.setLastLoggingTime(System.currentTimeMillis());
-	}
+    @Test
+    void testAppendBusinessLog() {
+        businessLogDTO.setLastLoggingTime(System.nanoTime());
+        String logText = "Test Log";
 
-	public static void saveBusinessLog(BusinessLogDTO businessLog) {
-		if (businessLog == null) {
-			return;
-		}
+        LogUtil.appendBusinessLog(businessLogDTO, logText);
 
-		SpringUtil.getBean(LoggingService.class).saveBusinessLog(businessLog);
-	}
+        assertNotNull(businessLogDTO.getRequestData());
+        assertTrue(businessLogDTO.getRequestData().contains(logText));
+    }
 
-	public static void appendProcessLog(ProcessLogDTO logDTO, String logText) {
-		if (logDTO == null) {
-			return;
-		}
+    @Test
+    void testSaveBusinessLog() {
+        try (MockedStatic<SpringUtil> mockedSpringUtil = mockStatic(SpringUtil.class)) {
+            LoggingService mockLoggingService = mock(LoggingService.class);
+            mockedSpringUtil.when(() -> SpringUtil.getBean(LoggingService.class)).thenReturn(mockLoggingService);
 
-		long currentTime = System.currentTimeMillis();
-		
-		logDTO.setResponseData1(
-				new StringBuilder().append(logDTO.getResponseData1()).append(logText)
-						//.append("  ").append(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-						.append("  ").append(Duration.ofMillis(currentTime-logDTO.getLastLoggingTime()).toMillis()).append(" ms")
-						.append("\n").toString());
-		logDTO.setLastLoggingTime(System.currentTimeMillis());
-	}
+            LogUtil.saveBusinessLog(businessLogDTO);
 
-	/**
-	 * TODO: process altyap geliştirildğinde buraya obje gönderelim
-	 */
-	public static void saveProcessLog(ProcessLogDTO processLogDTO, String processInput) {
-		if (processLogDTO == null) {
-			return;
-		}
-		processLogDTO.setRequestData(processInput);
+            verify(mockLoggingService, times(1)).saveBusinessLog(businessLogDTO);
+        }
+    }
 
-		SpringUtil.getBean(LoggingService.class).saveProcessLog(processLogDTO);
-	}
+    @Test
+    void testAppendProcessLog() {
+        processLogDTO.setLastLoggingTime(System.currentTimeMillis());
+        String logText = "Process Log";
+
+        LogUtil.appendProcessLog(processLogDTO, logText);
+
+        assertNotNull(processLogDTO.getResponseData1());
+        assertTrue(processLogDTO.getResponseData1().contains(logText));
+    }
+
+    @Test
+    void testSaveProcessLog() {
+        try (MockedStatic<SpringUtil> mockedSpringUtil = mockStatic(SpringUtil.class)) {
+            LoggingService mockLoggingService = mock(LoggingService.class);
+            mockedSpringUtil.when(() -> SpringUtil.getBean(LoggingService.class)).thenReturn(mockLoggingService);
+
+            String processInput = "Process Input";
+            LogUtil.saveProcessLog(processLogDTO, processInput);
+
+            assertEquals(processInput, processLogDTO.getRequestData());
+            verify(mockLoggingService, times(1)).saveProcessLog(processLogDTO);
+        }
+    }
 }
