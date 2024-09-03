@@ -1,21 +1,31 @@
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+@AllArgsConstructor
+@JsonAdapter(EnumLoggingResultTypeConverter.class)
+@ToString
+public enum EnumLoggingResultType {
 
-public class EnumServiceDirectionTypeTest {
+	SUCCESS("S", "SUCCESS"),
+	ERROR("E", "ERROR");
+	
+	@Getter
+	@JsonValue
+	private String value;
+	
+	@Getter
+	private String explanation;
+	
+	private static final Map<String, EnumLoggingResultType> paramaters;
 
-    @Test
-    void testEnumValues() {
-        assertEquals("ADK-TO-INTERNAL", EnumServiceDirectionType.ADK_TO_INTERNAL.getValue());
-        assertEquals("EXTERNAL-TO-INTERNAL", EnumServiceDirectionType.EXTERNAL_TO_INTERNAL.getValue());
-        assertEquals("INTERNAL-TO-EXTERNAL", EnumServiceDirectionType.INTERNAL_TO_EXTERNAL.getValue());
-        assertEquals("INTERNAL-TO-INTERNAL", EnumServiceDirectionType.INTERNAL_TO_INTERNAL.getValue());
-    }
+	static {
+		paramaters = new LinkedHashMap<>();
 
-    @Test
-    void testEnumFromString() {
-        assertEquals(EnumServiceDirectionType.ADK_TO_INTERNAL, EnumServiceDirectionType.valueOf("ADK_TO_INTERNAL"));
-        assertEquals(EnumServiceDirectionType.EXTERNAL_TO_INTERNAL, EnumServiceDirectionType.valueOf("EXTERNAL_TO_INTERNAL"));
-        assertEquals(EnumServiceDirectionType.INTERNAL_TO_EXTERNAL, EnumServiceDirectionType.valueOf("INTERNAL_TO_EXTERNAL"));
-        assertEquals(EnumServiceDirectionType.INTERNAL_TO_INTERNAL, EnumServiceDirectionType.valueOf("INTERNAL_TO_INTERNAL"));
-    }
+		for (EnumLoggingResultType each : EnumLoggingResultType.values()) {
+			paramaters.put(each.value, each);
+		}
+
+	}	
+
+	@JsonCreator
+	public static EnumLoggingResultType parse(String value) {
+		return paramaters.get(value);
+	}
 }
