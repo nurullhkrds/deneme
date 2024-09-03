@@ -1,1 +1,4 @@
-java.lang.StringIndexOutOfBoundsException: begin 0, end 7, length 1
+	@Override
+	public EnumLoggingResultType read(JsonReader in) throws IOException {
+		return EnumLoggingResultType.parse(in.nextString());
+	}
