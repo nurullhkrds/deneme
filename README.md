@@ -1,14 +1,28 @@
-   @Test
-    void testUnknownErrorCode() {
-        assertEquals(-999, LoggingConstants.UNKNOWN_ERROR_CODE);
-    }
+@Converter(autoApply = true)
+public class EnumLoggingResultTypeConverter extends TypeAdapter<EnumLoggingResultType>
+		implements AttributeConverter<EnumLoggingResultType, String> {
 
-    @Test
-    void testUnknownErrorMessage() {
-        assertEquals("Bilinmeyen hata olustu", LoggingConstants.UNKNOWN_ERROR_MESSAGE);
-    }
+	@Override
+	public String convertToDatabaseColumn(EnumLoggingResultType attribute) {
+		return (attribute==null) ? null : attribute.getValue();
+	}
 
-    @Test
-    void testMaxLoggingLength() {
-        assertEquals(4000, LoggingConstants.MAX_LOGGING_LENGHT);
-    }
+	@Override
+	public EnumLoggingResultType convertToEntityAttribute(String dbData) {
+		return (dbData == null) ? null : EnumLoggingResultType.parse(dbData);
+	}
+
+	@Override
+	public void write(JsonWriter out, EnumLoggingResultType value) throws IOException {
+		if (value != null) {
+			out.jsonValue(value.getValue());
+		}
+
+	}
+
+	@Override
+	public EnumLoggingResultType read(JsonReader in) throws IOException {
+		return EnumLoggingResultType.parse(in.nextString());
+	}
+
+}
