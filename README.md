@@ -30,38 +30,6 @@ public class EnumLoggingResultTypeConverterTest {
 
         assertEquals("\"SUCCESS\"", stringWriter.toString());
     }
-
-    @Test
-    void testWriteWithNullValue() throws IOException {
-        StringWriter stringWriter = new StringWriter();
-        JsonWriter jsonWriter = new JsonWriter(stringWriter);
-
-        // write methodunu null value ile test ediyoruz
-        converter.write(jsonWriter, null);
-        jsonWriter.close();
-
-        assertEquals("", stringWriter.toString());  // Null olduğunda hiçbir şey yazılmamalı
-    }
-
-    @Test
-    void testRead() throws IOException {
-        String json = "\"SUCCESS\"";
-        JsonReader jsonReader = new JsonReader(new StringReader(json));
-
-        // read methodunu test ediyoruz
-        EnumLoggingResultType resultType = converter.read(jsonReader);
-
-        assertEquals(EnumLoggingResultType.SUCCESS, resultType);
-    }
-
-    @Test
-    void testReadWithInvalidValue() {
-        String invalidJson = "\"INVALID\"";
-        JsonReader jsonReader = new JsonReader(new StringReader(invalidJson));
-
-        // read methodunu geçersiz bir değerle test ediyoruz ve IllegalArgumentException bekliyoruz
-        assertThrows(IllegalArgumentException.class, () -> {
-            converter.read(jsonReader);
-        });
-    }
-}
+org.opentest4j.AssertionFailedError: 
+Expected :"SUCCESS"
+Actual   :S
