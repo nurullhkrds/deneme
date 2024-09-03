@@ -1,14 +1,10 @@
- @Test
-    void testRead() throws IOException {
-        String json = "\"SUCCESS\"";  // JSON formatındaki string
-        JsonReader jsonReader = new JsonReader(new StringReader(json));
+@Getter
+@RequiredArgsConstructor
+public enum EnumServiceDirectionType {
+	
+	ADK_TO_INTERNAL("ADK-TO-INTERNAL"), EXTERNAL_TO_INTERNAL("EXTERNAL-TO-INTERNAL"),
+	INTERNAL_TO_EXTERNAL("INTERNAL-TO-EXTERNAL"), INTERNAL_TO_INTERNAL("INTERNAL-TO-INTERNAL");
 
-        // read methodunu test ediyoruz
-        EnumLoggingResultType resultType = converter.read(jsonReader);
+	private final String value;
 
-        assertEquals(EnumLoggingResultType.SUCCESS, resultType);
-    }
-
-org.opentest4j.AssertionFailedError: 
-Expected :EnumLoggingResultType.SUCCESS(value=S, explanation=SUCCESS)
-Actual   :null
+}
