@@ -1,31 +1,50 @@
-@AllArgsConstructor
-@JsonAdapter(EnumLoggingResultTypeConverter.class)
-@ToString
-public enum EnumLoggingResultType {
+public class EnumLoggingResultTypeTest {
 
-	SUCCESS("S", "SUCCESS"),
-	ERROR("E", "ERROR");
-	
-	@Getter
-	@JsonValue
-	private String value;
-	
-	@Getter
-	private String explanation;
-	
-	private static final Map<String, EnumLoggingResultType> paramaters;
+    private Gson gson;
 
-	static {
-		paramaters = new LinkedHashMap<>();
+    @BeforeEach
+    void setUp() {
+        gson = new GsonBuilder().create();
+    }
 
-		for (EnumLoggingResultType each : EnumLoggingResultType.values()) {
-			paramaters.put(each.value, each);
-		}
+    @Test
+    void testEnumValues() {
+        assertEquals("S", EnumLoggingResultType.SUCCESS.getValue());
+        assertEquals("SUCCESS", EnumLoggingResultType.SUCCESS.getExplanation());
+        
+        assertEquals("E", EnumLoggingResultType.ERROR.getValue());
+        assertEquals("ERROR", EnumLoggingResultType.ERROR.getExplanation());
+    }
 
-	}	
+    @Test
+    void testParseMethod() {
+        assertEquals(EnumLoggingResultType.SUCCESS, EnumLoggingResultType.parse("S"));
+        assertEquals(EnumLoggingResultType.ERROR, EnumLoggingResultType.parse("E"));
+        
+        assertNull(EnumLoggingResultType.parse("UNKNOWN"));
+    }
 
-	@JsonCreator
-	public static EnumLoggingResultType parse(String value) {
-		return paramaters.get(value);
-	}
+    @Test
+    void testToStringMethod() {
+        assertEquals("EnumLoggingResultType(value=S, explanation=SUCCESS)", EnumLoggingResultType.SUCCESS.toString());
+        assertEquals("EnumLoggingResultType(value=E, explanation=ERROR)", EnumLoggingResultType.ERROR.toString());
+    }
+
+    @Test
+    void testJsonSerialization() {
+        String successJson = gson.toJson(EnumLoggingResultType.SUCCESS);
+        String errorJson = gson.toJson(EnumLoggingResultType.ERROR);
+
+        assertEquals("\"S\"", successJson);
+        assertEquals("\"E\"", errorJson);
+    }
+
+    @Test
+    void testJsonDeserialization() {
+        EnumLoggingResultType successType = gson.fromJson("\"S\"", EnumLoggingResultType.class);
+        EnumLoggingResultType errorType = gson.fromJson("\"E\"", EnumLoggingResultType.class);
+
+        assertEquals(EnumLoggingResultType.SUCCESS, successType);
+        assertEquals(EnumLoggingResultType.ERROR, errorType);
+    }
 }
