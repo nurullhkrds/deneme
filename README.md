@@ -1,31 +1,58 @@
-@Getter
-@Setter
-@RequiredArgsConstructor
-public class ProcessLogDTO extends BaseLogDTO {
-	private Long id;
+public class ProcessLogDTOTest {
 
-	private String subscriberNo;
+    private ProcessLogDTO processLogDTO;
 
-	private final String processCode;
+    @BeforeEach
+    void setUp() {
+        processLogDTO = new ProcessLogDTO("ProcessCode1");
+    }
 
-	private Long customerNo;
+    @Test
+    void testConstructorAndGetters() {
+        assertEquals("ProcessCode1", processLogDTO.getProcessCode());
+        assertEquals("", processLogDTO.getResponseData1()); // Varsayılan değer kontrolü
+    }
 
-	private Long identityNo;
+    @Test
+    void testSetterAndGetters() {
+        processLogDTO.setId(1L);
+        processLogDTO.setSubscriberNo("1234567890");
+        processLogDTO.setCustomerNo(987654321L);
+        processLogDTO.setIdentityNo(12345678901L);
+        processLogDTO.setTaxId("TR1234567890");
+        processLogDTO.setReturnType("ReturnType");
+        processLogDTO.setResultCode("ResultCode");
+        processLogDTO.setResultText("ResultText");
+        processLogDTO.setRequestData("RequestData");
+        processLogDTO.setResponseData1("ResponseData1");
+        processLogDTO.setResponseData2("ResponseData2");
+        processLogDTO.setExceptionTrace("ExceptionTrace");
 
-	private String taxId;
+        assertEquals(1L, processLogDTO.getId());
+        assertEquals("1234567890", processLogDTO.getSubscriberNo());
+        assertEquals(987654321L, processLogDTO.getCustomerNo());
+        assertEquals(12345678901L, processLogDTO.getIdentityNo());
+        assertEquals("TR1234567890", processLogDTO.getTaxId());
+        assertEquals("ReturnType", processLogDTO.getReturnType());
+        assertEquals("ResultCode", processLogDTO.getResultCode());
+        assertEquals("ResultText", processLogDTO.getResultText());
+        assertEquals("RequestData", processLogDTO.getRequestData());
+        assertEquals("ResponseData1", processLogDTO.getResponseData1());
+        assertEquals("ResponseData2", processLogDTO.getResponseData2());
+        assertEquals("ExceptionTrace", processLogDTO.getExceptionTrace());
+    }
 
-	private String returnType;
+    @Test
+    void testNotNullFinalField() {
+        assertThrows(NullPointerException.class, () -> new ProcessLogDTO(null));
+    }
 
-	private String resultCode;
+    @Test
+    void testInheritance() {
+        processLogDTO.setInstitutionId(1L);
+        assertEquals(1L, processLogDTO.getInstitutionId());
 
-	private String resultText;
-
-	private String requestData;
-
-	private String responseData1 = "";
-
-	private String responseData2;
-
-	private String exceptionTrace;
-
+        long currentTime = System.currentTimeMillis();
+        assertTrue(processLogDTO.getStartTime() <= currentTime);
+    }
 }
