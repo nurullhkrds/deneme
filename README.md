@@ -1,92 +1,129 @@
-@XmlAccessorType(XmlAccessType.PROPERTY)
-public abstract class BaseDTO {
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-    public String toString() {
+import java.util.ArrayList;
+import java.util.List;
 
-        StringBuilder tabGap = new StringBuilder("  ");
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-        StringBuilder sb = new StringBuilder();
+class BaseDTOTest {
 
-        try {
-            Class clz = this.getClass();
+    private TestDTO testDTO;
+    private SubDTO subDTO;
 
-            sb.append("\n").append("(").append(clz.getName()).append(":");
-
-            boolean isFirstObjectFirstField = true;
-
-            while (clz != null && clz != BaseDTO.class) {
-                Field[] fields = clz.getDeclaredFields();
-
-                for (int i = 0; i < fields.length; i++) {
-
-                    if (isFirstObjectFirstField) {
-                        sb.append("\n").append(tabGap).append(tabGap);
-
-                        isFirstObjectFirstField = false;
-                    } else {
-                        sb.append("\n").append(tabGap).append(", ");
-                    }
-
-                    boolean isFieldAccessible = fields[i].isAccessible();
-
-                    if (!isFieldAccessible) {
-                        ReflectionUtils.makeAccessible(fields[i]);
-                    }
-
-                    Field field = fields[i];
-
-                    Class<?> clazz = field.getType();
-
-                    Object obj = field.get(this);
-
-                    if (obj != null) {
-                        if (clazz.isPrimitive()) {
-                            sb.append(new StringBuilder().append(field.getName()).append(": ").append(obj));
-                        } else {
-                            if (obj instanceof ArrayList || obj instanceof List) {
-                                ArrayList<?> list = (ArrayList<?>) obj;
-                                sb.append(new StringBuilder().append(field.getName()).append(": "));
-                                if (!CollectionUtils.isEmpty(list)) {
-                                    for (int j = 0; j < list.size(); j++) {
-                                        if (list != null && list.get(j) != null) {
-                                            if (list.get(j).getClass().isPrimitive()) {
-                                                sb.append(list);
-                                            } else {
-                                                String innerObjectString = list.get(j).toString().replace("\n",
-                                                        "\n    ");
-
-                                                sb.append(innerObjectString);
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                String innerObjectString = obj.toString().replace("\n", "\n    ");
-
-                                sb.append(new StringBuilder().append(field.getName()).append(": ")
-                                        .append(innerObjectString));
-                            }
-                        }
-                    } else {
-                        sb.append(new StringBuilder().append(field.getName()).append(": ")).append("null");
-                    }
-
-                    if (!isFieldAccessible) {
-                        ReflectionUtils.makeAccessible(fields[i]);
-                    }
-                }
-
-                clz = clz.getSuperclass();
-            }
-
-            sb.append("\n").append(")");
-
-            return sb.toString();
-
-        } catch (Exception e) {
-            /** Is this method should be empty? */
-        }
-        return "\n";
+    @BeforeEach
+    void setUp() {
+        testDTO = new TestDTO();
+        subDTO = new SubDTO();
     }
 
+    @Test
+    void testToString_withNonNullFields() {
+        // Non-null alanların test edilmesi
+        testDTO.setField1("Test Field");
+        testDTO.setField2(100);
+
+        String result = testDTO.toString();
+
+        assertTrue(result.contains("field1: Test Field"));
+        assertTrue(result.contains("field2: 100"));
+    }
+
+    @Test
+    void testToString_withNullFields() {
+        // Alanların null olması durumu
+        String result = testDTO.toString();
+
+        assertTrue(result.contains("field1: null"));
+        assertTrue(result.contains("field2: null"));
+    }
+
+    @Test
+    void testToString_withListField() {
+        // List alanının test edilmesi
+        List<String> list = new ArrayList<>();
+        list.add("item1");
+        list.add("item2");
+
+        testDTO.setListField(list);
+
+        String result = testDTO.toString();
+
+        assertTrue(result.contains("listField:"));
+        assertTrue(result.contains("item1"));
+        assertTrue(result.contains("item2"));
+    }
+
+    @Test
+    void testToString_withInheritedFields() {
+        // Miras alınan alanların test edilmesi
+        subDTO.setSubField("Sub Field Test");
+
+        String result = subDTO.toString();
+
+        assertTrue(result.contains("subField: Sub Field Test"));
+    }
+
+    @Test
+    void testToString_withEmptyListField() {
+        // Boş listelerin test edilmesi
+        testDTO.setListField(new ArrayList<>());
+
+        String result = testDTO.toString();
+
+        assertTrue(result.contains("listField: null"));
+    }
+}
+
+
+
+
+
+import java.util.List;
+
+class TestDTO extends BaseDTO {
+    private String field1;
+    private int field2;
+    private List<String> listField;
+
+    // Getter ve Setter'lar
+    public String getField1() {
+        return field1;
+    }
+
+    public void setField1(String field1) {
+        this.field1 = field1;
+    }
+
+    public int getField2() {
+        return field2;
+    }
+
+    public void setField2(int field2) {
+        this.field2 = field2;
+    }
+
+    public List<String> getListField() {
+        return listField;
+    }
+
+    public void setListField(List<String> listField) {
+        this.listField = listField;
+    }
+}
+
+
+
+
+class SubDTO extends BaseDTO {
+    private String subField;
+
+    // Getter ve Setter'lar
+    public String getSubField() {
+        return subField;
+    }
+
+    public void setSubField(String subField) {
+        this.subField = subField;
+    }
 }
