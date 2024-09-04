@@ -11,6 +11,7 @@
   outline: none; /* Focus olduğunda dış çizgi olmasın */
   -webkit-appearance: none; /* Tarayıcı varsayılan stilini kaldır */
   -moz-appearance: none; /* Tarayıcı varsayılan stilini kaldır */
+  color: #000; /* Varsayılan metin rengi */
 }
 
 /* Select elementinin üzerine gelindiğinde */
@@ -23,7 +24,7 @@
   padding: 10px; /* Dikey ve yatay boşluk */
   font-size: 14px;
   background-color: #fff;
-  color: #000;
+  color: #000; /* Varsayılan yazı rengi siyah */
   border: none; /* Kenarlık olmadan */
 }
 
@@ -37,4 +38,18 @@
 .custom-select option:hover {
   background-color: #f5f5f5; /* Hover için açık gri arka plan */
   color: #000; /* Hover olduğunda siyah yazı */
+}
+
+/* Scroll bar stili */
+.custom-select::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-select::-webkit-scrollbar-thumb {
+  background-color: #40a9ff; /* Scroll thumb mavi */
+  border-radius: 4px;
+}
+
+.custom-select::-webkit-scrollbar-track {
+  background-color: #f5f5f5; /* Scroll track için açık gri */
 }
