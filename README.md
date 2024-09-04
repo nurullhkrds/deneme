@@ -9,6 +9,8 @@
   background-color: #fff; /* Beyaz arka plan */
   font-size: 14px; /* Font boyutu */
   outline: none; /* Focus olduğunda dış çizgi olmasın */
+  -webkit-appearance: none; /* Tarayıcı varsayılan stilini kaldır */
+  -moz-appearance: none; /* Tarayıcı varsayılan stilini kaldır */
 }
 
 /* Select elementinin üzerine gelindiğinde */
@@ -18,7 +20,21 @@
 
 /* Option elementlerine genel stil ver */
 .custom-select option {
-  padding: 8px;
+  padding: 10px; /* Dikey ve yatay boşluk */
   font-size: 14px;
   background-color: #fff;
+  color: #000;
+  border: none; /* Kenarlık olmadan */
+}
+
+/* Seçili option stilini ayarla */
+.custom-select option:checked {
+  background-color: #e6f7ff; /* Ant Design'daki mavi arka plan */
+  color: #1890ff; /* Ant Design'daki seçili yazı rengi */
+}
+
+/* Option hover stili */
+.custom-select option:hover {
+  background-color: #f5f5f5; /* Hover için açık gri arka plan */
+  color: #000; /* Hover olduğunda siyah yazı */
 }
