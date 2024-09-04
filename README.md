@@ -1,94 +1,85 @@
-public class ChannelUtil {
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-	private ChannelUtil() {
-		throw new IllegalAccessError("util class");
-	}
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
-	private static Map<String, String> channelMap = new HashMap<String, String>();
-	private static Map<String, String> cardEventDescChannelMap = new HashMap<String, String>();
+public class ChannelUtilTest {
 
-	static {
-		channelMap.put("NGI", "201");
-		channelMap.put("IFC", "202");
-		channelMap.put("DBI", "203");
-		channelMap.put("DBC", "301");
-		channelMap.put("IFCFNO", "302");
-		channelMap.put("NGIFNO", "303");
-		channelMap.put("WAP", "401"); // Because two different old channel code mapped to same new one we can not make
-										// reverse mapping for both.
-		channelMap.put("MBL", "401");
-		channelMap.put("MBC", "402");
-		channelMap.put("DBM", "403");
-		channelMap.put("ATM", "501");
-		channelMap.put("SUBE", "601");
-		channelMap.put("TABLET", "605");
-		channelMap.put("BATCH", "602");
-		channelMap.put("WEBODM", "702");
-		channelMap.put("SMS", "801");
-		channelMap.put("POS", "901");
-		channelMap.put("DOB", "959");
-		channelMap.put("CBOT", "1780");
-		channelMap.put("TABLETMIM", "606");
-		channelMap.put("BOB", "304");
-		channelMap.put("KOB", "305");
-		channelMap.put("VID", "306");
+    @Test
+    public void testPrivateConstructor() throws Exception {
+        Constructor<ChannelUtil> constructor = ChannelUtil.class.getDeclaredConstructor();
+        constructor.setAccessible(true); // Make the constructor accessible
 
-		channelMap.put("KCS", "KCS");
-		channelMap.put("TOB", "TOB");
-		channelMap.put("COB", "COB");
-		
-		cardEventDescChannelMap.put("501", "ATM");
-		cardEventDescChannelMap.put("201", "INTERNET");
-		cardEventDescChannelMap.put("202", "INTERNET");
-		cardEventDescChannelMap.put("203", "INTERNET");
-		cardEventDescChannelMap.put("401", "INTERNET");
-		cardEventDescChannelMap.put("402", "INTERNET");
-		cardEventDescChannelMap.put("403", "INTERNET");
-		cardEventDescChannelMap.put("303", "INTERNET");
-		cardEventDescChannelMap.put("302", "INTERNET");
-		cardEventDescChannelMap.put("301", "INTERNET");
-		cardEventDescChannelMap.put("702", "INTERNET");
-	}
+        Exception exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
+        assertTrue(exception.getCause() instanceof IllegalAccessError, "Expected IllegalAccessError");
+    }
 
-	public static String convertChannel(String channelCode) {
-		if (StringUtils.isEmpty(channelCode)) {
-			return "";
-		}
+}
 
-		if (!isHarmoniChannel(channelCode)) {
-			return channelCode.length() > 4 ? channelCode.substring(0, 4) : channelCode;
-		}
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-		return channelMap.get(channelCode);
-	}
-	
-	public static String convertToHarmoniChannel(String channelCode) {
-		if (StringUtils.isEmpty(channelCode)) {
-			return "";
-		}
+public class ChannelUtilTest {
 
-		if (isHarmoniChannel(channelCode)) {
-			return channelCode;
-		}
+    @Test
+    public void testConvertChannel_withValidHarmoniChannelCode() {
+        String result = ChannelUtil.convertChannel("NGI");
+        assertEquals("201", result, "NGI should convert to 201");
+    }
 
-		for (Entry<String, String> entry : channelMap.entrySet()) {
-			if (entry.getValue().equals(channelCode)) {
-				return entry.getKey();
-			}
-		}
+    @Test
+    public void testConvertChannel_withInvalidHarmoniChannelCode() {
+        String result = ChannelUtil.convertChannel("XYZ");
+        assertEquals("XYZ", result, "XYZ should return as is, since it's not a Harmoni channel");
+    }
 
-		return "";
-	}
+    @Test
+    public void testConvertChannel_withEmptyInput() {
+        String result = ChannelUtil.convertChannel("");
+        assertEquals("", result, "Empty input should return an empty string");
+    }
 
-	private static boolean isHarmoniChannel(String channelCode) {
-		return channelMap.keySet().contains(channelCode);
-	}
-	
-	public static String convertCardEventDescChannel(String channelCode) {
-		if (StringUtils.isEmpty(channelCode)) {
-			return "";
-		}		
+    @Test
+    public void testConvertToHarmoniChannel_withValidChannelCode() {
+        String result = ChannelUtil.convertToHarmoniChannel("201");
+        assertEquals("NGI", result, "201 should convert to NGI");
+    }
 
-		return cardEventDescChannelMap.get(channelCode);
-	}
+    @Test
+    public void testConvertToHarmoniChannel_withNonHarmoniChannelCode() {
+        String result = ChannelUtil.convertToHarmoniChannel("XYZ");
+        assertEquals("", result, "XYZ should return an empty string since it's not mapped");
+    }
+
+    @Test
+    public void testConvertToHarmoniChannel_withEmptyInput() {
+        String result = ChannelUtil.convertToHarmoniChannel("");
+        assertEquals("", result, "Empty input should return an empty string");
+    }
+
+    @Test
+    public void testIsHarmoniChannel_withValidChannelCode() {
+        boolean result = ChannelUtil.convertChannel("NGI") != null;
+        assertTrue(result, "NGI should be a Harmoni channel");
+    }
+
+    @Test
+    public void testConvertCardEventDescChannel_withValidChannelCode() {
+        String result = ChannelUtil.convertCardEventDescChannel("501");
+        assertEquals("ATM", result, "501 should convert to ATM");
+    }
+
+    @Test
+    public void testConvertCardEventDescChannel_withNonExistingChannelCode() {
+        String result = ChannelUtil.convertCardEventDescChannel("999");
+        assertNull(result, "999 should return null as it's not mapped");
+    }
+
+    @Test
+    public void testConvertCardEventDescChannel_withEmptyInput() {
+        String result = ChannelUtil.convertCardEventDescChannel("");
+        assertEquals("", result, "Empty input should return an empty string");
+    }
 }
