@@ -1,66 +1,92 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import javax.validation.ConstraintValidatorContext;
+@XmlAccessorType(XmlAccessType.PROPERTY)
+public abstract class BaseDTO {
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+    public String toString() {
 
-class ChannelCodeValidatorTest {
+        StringBuilder tabGap = new StringBuilder("  ");
 
-    private ChannelCodeValidator channelCodeValidator;
-    private ConstraintValidatorContext context;
+        StringBuilder sb = new StringBuilder();
 
-    @BeforeEach
-    void setUp() {
-        channelCodeValidator = new ChannelCodeValidator();
-        context = mock(ConstraintValidatorContext.class);  // Mocking the ConstraintValidatorContext
-    }
+        try {
+            Class clz = this.getClass();
 
-    @Test
-    void testIsValid_WithValidChannelCode_ShouldReturnTrue() {
-        String validChannelCode = "VALID_CODE";
+            sb.append("\n").append("(").append(clz.getName()).append(":");
 
-        // Mocking static method EnumChannel.parseValue
-        try (MockedStatic<EnumChannel> mockedEnumChannel = Mockito.mockStatic(EnumChannel.class)) {
-            mockedEnumChannel.when(() -> EnumChannel.parseValue(validChannelCode)).thenReturn(new EnumChannel());
+            boolean isFirstObjectFirstField = true;
 
-            boolean result = channelCodeValidator.isValid(validChannelCode, context);
+            while (clz != null && clz != BaseDTO.class) {
+                Field[] fields = clz.getDeclaredFields();
 
-            assertTrue(result);
+                for (int i = 0; i < fields.length; i++) {
+
+                    if (isFirstObjectFirstField) {
+                        sb.append("\n").append(tabGap).append(tabGap);
+
+                        isFirstObjectFirstField = false;
+                    } else {
+                        sb.append("\n").append(tabGap).append(", ");
+                    }
+
+                    boolean isFieldAccessible = fields[i].isAccessible();
+
+                    if (!isFieldAccessible) {
+                        ReflectionUtils.makeAccessible(fields[i]);
+                    }
+
+                    Field field = fields[i];
+
+                    Class<?> clazz = field.getType();
+
+                    Object obj = field.get(this);
+
+                    if (obj != null) {
+                        if (clazz.isPrimitive()) {
+                            sb.append(new StringBuilder().append(field.getName()).append(": ").append(obj));
+                        } else {
+                            if (obj instanceof ArrayList || obj instanceof List) {
+                                ArrayList<?> list = (ArrayList<?>) obj;
+                                sb.append(new StringBuilder().append(field.getName()).append(": "));
+                                if (!CollectionUtils.isEmpty(list)) {
+                                    for (int j = 0; j < list.size(); j++) {
+                                        if (list != null && list.get(j) != null) {
+                                            if (list.get(j).getClass().isPrimitive()) {
+                                                sb.append(list);
+                                            } else {
+                                                String innerObjectString = list.get(j).toString().replace("\n",
+                                                        "\n    ");
+
+                                                sb.append(innerObjectString);
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                String innerObjectString = obj.toString().replace("\n", "\n    ");
+
+                                sb.append(new StringBuilder().append(field.getName()).append(": ")
+                                        .append(innerObjectString));
+                            }
+                        }
+                    } else {
+                        sb.append(new StringBuilder().append(field.getName()).append(": ")).append("null");
+                    }
+
+                    if (!isFieldAccessible) {
+                        ReflectionUtils.makeAccessible(fields[i]);
+                    }
+                }
+
+                clz = clz.getSuperclass();
+            }
+
+            sb.append("\n").append(")");
+
+            return sb.toString();
+
+        } catch (Exception e) {
+            /** Is this method should be empty? */
         }
+        return "\n";
     }
 
-    @Test
-    void testIsValid_WithInvalidChannelCode_ShouldReturnFalse() {
-        String invalidChannelCode = "INVALID_CODE";
-
-        // Mocking static method EnumChannel.parseValue
-        try (MockedStatic<EnumChannel> mockedEnumChannel = Mockito.mockStatic(EnumChannel.class)) {
-            mockedEnumChannel.when(() -> EnumChannel.parseValue(invalidChannelCode)).thenReturn(null);
-
-            boolean result = channelCodeValidator.isValid(invalidChannelCode, context);
-
-            assertFalse(result);
-        }
-    }
-
-    @Test
-    void testIsValid_WithEmptyChannelCode_ShouldReturnFalse() {
-        String emptyChannelCode = "";
-
-        boolean result = channelCodeValidator.isValid(emptyChannelCode, context);
-
-        assertFalse(result);
-    }
-
-    @Test
-    void testIsValid_WithNullChannelCode_ShouldReturnFalse() {
-        String nullChannelCode = null;
-
-        boolean result = channelCodeValidator.isValid(nullChannelCode, context);
-
-        assertFalse(result);
-    }
 }
