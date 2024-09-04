@@ -1,35 +1,35 @@
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
+public class JsonUtil {
+	private static final Logger LOGGER = LoggerFactory.getLogger(JsonUtil.class);
+	
+	public static String convertObjectToJsonString(Object object) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		//XMLGregorianCalendar type converts to millisecond such as 2011-05-31T00:00:00+03:00 to => 1338411600000.
+		//That's unreadable at the online_service_logs table.
+		mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-public class CurrencyUtilTest {
 
-    @Test
-    public void testCurrencyConverter_withNullCurrency() {
-        String result = CurrencyUtil.currencyConverter(null);
-        assertEquals("YTL", result, "Null currency should return YTL (Turkish Lira)");
+		return mapper.writeValueAsString(object);
+	}
+	
+    public static <T> T convertStringToObject(String rawJson, Class<T> clazz) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return objectMapper.readValue(rawJson, clazz);
     }
+    
+    
+	public static String convertObjectToJsonStringWithoutException(Object object){
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+		mapper.setSerializationInclusion(Include.NON_NULL);
 
-    @Test
-    public void testCurrencyConverter_withTurkishLiraCurrencyCode() {
-        String result = CurrencyUtil.currencyConverter("TL");
-        assertEquals("YTL", result, "TL should convert to YTL");
-    }
 
-    @Test
-    public void testCurrencyConverter_withTurkishLiraTRYCurrencyCode() {
-        String result = CurrencyUtil.currencyConverter("TRY");
-        assertEquals("YTL", result, "TRY should convert to YTL");
-    }
-
-    @Test
-    public void testCurrencyConverter_withDifferentCurrencyCode() {
-        String result = CurrencyUtil.currencyConverter("USD");
-        assertEquals("USD", result, "USD should remain as USD and not convert");
-    }
-
-    @Test
-    public void testCurrencyConverter_withEmptyString() {
-        String result = CurrencyUtil.currencyConverter("");
-        assertEquals("", result, "Empty string should return as is");
-    }
+		try {
+			return mapper.writeValueAsString(object);
+		} catch (JsonProcessingException e) {
+			return "";
+		}
+	}
 }
