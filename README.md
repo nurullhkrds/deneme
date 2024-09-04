@@ -38,18 +38,5 @@
 .custom-select option:hover {
   background-color: #f5f5f5; /* Hover için açık gri arka plan */
   color: #000; /* Hover olduğunda siyah yazı */
-}
-
-/* Scroll bar stili */
-.custom-select::-webkit-scrollbar {
-  width: 8px;
-}
-
-.custom-select::-webkit-scrollbar-thumb {
-  background-color: #40a9ff; /* Scroll thumb mavi */
-  border-radius: 4px;
-}
-
-.custom-select::-webkit-scrollbar-track {
-  background-color: #f5f5f5; /* Scroll track için açık gri */
+  cursor: pointer;
 }
