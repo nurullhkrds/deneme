@@ -1,18 +1,12 @@
-const ReturnMapDefinitionServiceParametersSearch = ({ callApi }) => {
+import { Select, Form } from 'antd';
+import { useDispatch, useSelector } from 'react-redux';
+import { useState, useRef } from 'react';
+
+const ReturnMapDefinitionServiceParametersSearch = ({ callApi, dataList }) => {
   const dispatch = useDispatch();
-  const ref = useRef(null)
+  const ref = useRef(null);
   const [returnMapCode, setReturnMapCode] = useState('');
   const definitionList = useSelector((state) => state.returnMap.returnMapDefinitionList);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target || {};
-    if (name === 'returnMapCode') {
-      setReturnMapCode(value);
-    }
-
-
-  };
-
 
   const handleDefinitionSearch = () => {
     if (returnMapCode) {
@@ -21,55 +15,45 @@ const ReturnMapDefinitionServiceParametersSearch = ({ callApi }) => {
   };
 
   const handleDefinitionReset = () => {
-
     setReturnMapCode('');
     if (ref.current) {
-      ref.current.setFieldsValue("")
+      ref.current.setFieldsValue('');
     }
-    dispatch(setReturnMapDefinitionData(null))
-
+    dispatch(setReturnMapDefinitionData(null));
   };
-  const handleChangeSelectDefinitionId = (value) => {
-    console.log(value)
-  }
+
+  const handleSelectChange = (value) => {
+    setReturnMapCode(value); // Seçilen değeri state'e set et
+  };
+
   return (
-    <div >
-      <Form ref={ref} >
-        <Form.Item colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
-          label="Dönüş Kodu"  >
-          <input
-            name="returnMapCode"
+    <div>
+      <Form ref={ref}>
+        <Form.Item colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }} label="Dönüş Kodu">
+          <Select
             value={returnMapCode}
-            onChange={handleInputChange}
-            style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%', }}
-          />
-
-
+            onChange={handleSelectChange}
+            placeholder="Bir dönüş kodu seçin"
+            style={{ width: '100%' }}
+          >
+            {dataList.map((item) => (
+              <Select.Option key={item.id} value={item.returnMapCode}>
+                {item.name} {/* item.name ya da gösterilecek veri */}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
-        <Form.Item label="" colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}
-        >
-          <SecureButton
-            type="secondary"
-            permission="handleDefinitionReset"
-            onClick={handleDefinitionReset}
-          >
+        <Form.Item colSpan={{ xs: 24, sm: 24, md: 6, lg: 6 }}>
+          <SecureButton type="secondary" permission="handleDefinitionReset" onClick={handleDefinitionReset}>
             Temizle
           </SecureButton>
           <SecureButton type="primary" permission="handleDefinitionSearch" onClick={handleDefinitionSearch}>
             Listele
-
           </SecureButton>
-
-
         </Form.Item>
-
       </Form>
-
     </div>
-
-
-
   );
 };
 
