@@ -1,4 +1,3 @@
-
 const ReturnMapDefinitionServiceParametersTable = () => {
   const returnMapDefinitionData = useSelector((state) => state.returnMap.returnMapDefinition);
   const spinnig = useSelector((state) => state.returnMap.spinning);
@@ -12,44 +11,50 @@ const ReturnMapDefinitionServiceParametersTable = () => {
   const [isActive, setIsActive] = useState();
   const [updatedId, setUpdatedId] = useState();
   const [dataList, setDataList] = useState([]);
-
-
-
+  const [isChanged, setIsChanged] = useState(false); // Değişiklik kontrolü için eklenen state
 
   const updateData = {
     id: updatedId,
     returnMapCode: returnMapCode,
     isActive: isActive
-  }
-
+  };
 
   useEffect(() => {
-
     if (returnMapDefinitionData) {
-      setDataList([returnMapDefinitionData])
-
-    }
-    else {
-      setDataList([])
+      setDataList([returnMapDefinitionData]);
+    } else {
+      setDataList([]);
     }
   }, [returnMapDefinitionData]);
 
+  useEffect(() => {
+    const initialData = {
+      returnMapCode: returnMapDefinitionData?.returnMapCode,
+      isActive: returnMapDefinitionData?.isActive,
+    };
+  
+    const currentData = {
+      returnMapCode,
+      isActive,
+    };
+
+    setIsChanged(JSON.stringify(initialData) !== JSON.stringify(currentData)); // Değişiklik kontrolü
+  }, [returnMapCode, isActive, returnMapDefinitionData]);
 
   const handleDefinitionEdit = async (record) => {
-    showModal()
-    setReturnMapCode(record.returnMapCode)
-    setIsActive(record.isActive)
-    setUpdatedId(record.id)
+    showModal();
+    setReturnMapCode(record.returnMapCode);
+    setIsActive(record.isActive);
+    setUpdatedId(record.id);
   };
-
-
 
   const showModal = () => {
     setModalVisible(true);
   };
 
-
   const handleOkForDefinitionUpdate = (record) => {
+    if (!isChanged) return; // Eğer değişiklik yoksa güncelleme işlemi yapılmaz
+
     setModalVisible(false);
     sendUpdateReturnMapDefinitionRequest(callApi, updateData)
       .then(() => {
@@ -57,7 +62,7 @@ const ReturnMapDefinitionServiceParametersTable = () => {
         Notification.success('Güncelleme Başarılı', 3);
       })
       .catch(error => {
-        Notification.error('Hatalı güncelleme ! Böyle bir kayıt zaten var.', 5);
+        Notification.error('Hatalı güncelleme! Böyle bir kayıt zaten var.', 5);
       });
   };
 
@@ -65,16 +70,13 @@ const ReturnMapDefinitionServiceParametersTable = () => {
     setModalVisible(false);
   };
 
-
   const handleReturnMapCode = (e) => {
-    setReturnMapCode(e.target.value)
-  }
-
-  const handleIsActive = value => {
-    setIsActive(!isActive)
+    setReturnMapCode(e.target.value);
   };
 
-
+  const handleIsActive = value => {
+    setIsActive(!isActive);
+  };
 
   const columns = [
     {
@@ -84,7 +86,6 @@ const ReturnMapDefinitionServiceParametersTable = () => {
       width: 200,
       resizable: true,
     },
-
     {
       title: 'Aktif',
       dataIndex: 'isActive',
@@ -113,7 +114,6 @@ const ReturnMapDefinitionServiceParametersTable = () => {
       key: 'actions',
       width: 5,
       align: "center",
-
       render: (text, record) => (
         <DeleteButton
           type="danger"
@@ -129,9 +129,6 @@ const ReturnMapDefinitionServiceParametersTable = () => {
       )
     }
   ];
-
-
-
 
   const handleClickOneDefinitionDelete = async (record) => {
     try {
@@ -153,8 +150,6 @@ const ReturnMapDefinitionServiceParametersTable = () => {
           console.log('onClose');
         },
         onOk: () => {
-
-
           const deleteReturnMapDefinitionRequest = {
             ids: [record.id]
           };
@@ -162,13 +157,12 @@ const ReturnMapDefinitionServiceParametersTable = () => {
             .then(() => {
               dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, { returnMapCode }));
               Notification.success('Silme Başarılı', 3);
-              dispatch(setReturnMapDefinitionData(null))
+              dispatch(setReturnMapDefinitionData(null));
             })
             .catch(error => {
               console.error('Error creating return map:', error);
-              Notification.error('Hatalı silme işlemi !', 3);
+              Notification.error('Hatalı silme işlemi!', 3);
             });
-
         },
         onCancel: () => {
           console.log('onCancel');
@@ -181,13 +175,11 @@ const ReturnMapDefinitionServiceParametersTable = () => {
     }
   };
 
-
-
-
   return (
-
     <>
-      <Table columns={columns} data={dataList}
+      <Table
+        columns={columns}
+        data={dataList}
         loading={{ text: 'Veriler listeleniyor...', status: spinnig }}
       />
 
@@ -200,12 +192,11 @@ const ReturnMapDefinitionServiceParametersTable = () => {
             <SecureButton permission="handleCancelDefinitionForUpdate" key="cancel" onClick={handleCancelDefinitionForUpdate}>
               İptal
             </SecureButton>,
-            <SecureButton permission="handleOkForDefinitionUpdate" key="ok" type="primary" onClick={handleOkForDefinitionUpdate}>
+            <SecureButton permission="handleOkForDefinitionUpdate" key="ok" type="primary" onClick={handleOkForDefinitionUpdate} disabled={!isChanged}>
               Kaydet
             </SecureButton>
           ]}
         >
-
           <div>
             <Form ref={formRef}>
               <Form.Item label="Dönüş Kodu">
@@ -217,14 +208,12 @@ const ReturnMapDefinitionServiceParametersTable = () => {
                 />
               </Form.Item>
 
-
               <Form.Item label="Aktiflik">
                 <Checkbox checked={isActive} onChange={handleIsActive} />
               </Form.Item>
             </Form>
           </div>
         </Modal>
-
       </section>
     </>
   );
