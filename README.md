@@ -20,20 +20,9 @@ const ReturnMapServiceParametersTable = ({ definitionList }) => {
   const { callApi } = useShellCommunicator();
   const formRef = React.useRef(null);
 
-  const updateData = {
-    id: updatedId,
-    institutionReturnCode,
-    institutionReturnText,
-    bankReturnCode,
-    bankReturnText,
-    returnType,
-    isReversible,
-    returnMapDefinitionId: definitionId
-  };
-
-  // Değişiklik kontrolü için useEffect
+  // Değişiklik kontrolü ve ilk veri set edilmesi için useEffect
   useEffect(() => {
-    if (formRef.current && returnMapOneData) {
+    if (returnMapOneData) {
       const {
         returnMapCode = '',
         institutionReturnCode = '',
@@ -45,18 +34,6 @@ const ReturnMapServiceParametersTable = ({ definitionList }) => {
         returnMapDefinition = {}
       } = returnMapOneData;
 
-      const newFields = {
-        institutionReturnCode,
-        institutionReturnText,
-        bankReturnCode,
-        bankReturnText,
-        isReversible,
-        returnType,
-        definitionId: returnMapDefinition?.id || ''
-      };
-
-      formRef.current.setFieldsValue(newFields);
-
       setReturnMapCode(returnMapCode);
       setInstitutionReturnCode(institutionReturnCode);
       setInstitutionReturnText(institutionReturnText);
@@ -65,28 +42,47 @@ const ReturnMapServiceParametersTable = ({ definitionList }) => {
       setIsReversible(isReversible);
       setReturnType(returnType);
       setDefinitionId(returnMapDefinition?.id || '');
-
-      // Değişiklik kontrolü
-      setIsChanged(
-        JSON.stringify(newFields) !== JSON.stringify({
-          institutionReturnCode,
-          institutionReturnText,
-          bankReturnCode,
-          bankReturnText,
-          isReversible,
-          returnType,
-          definitionId: returnMapDefinition?.id || ''
-        })
-      );
     }
-  }, [returnMapOneData, institutionReturnCode, institutionReturnText, bankReturnCode, bankReturnText, isReversible, returnType, definitionId]);
+  }, [returnMapOneData]); // Sadece returnMapOneData değiştiğinde çalışır
+
+  // Değişiklik kontrolü
+  useEffect(() => {
+    setIsChanged(
+      JSON.stringify({
+        institutionReturnCode,
+        institutionReturnText,
+        bankReturnCode,
+        bankReturnText,
+        isReversible,
+        returnType,
+        definitionId
+      }) !== JSON.stringify({
+        institutionReturnCode: returnMapOneData?.institutionReturnCode,
+        institutionReturnText: returnMapOneData?.institutionReturnText,
+        bankReturnCode: returnMapOneData?.bankReturnCode,
+        bankReturnText: returnMapOneData?.bankReturnText,
+        isReversible: returnMapOneData?.isReversible,
+        returnType: returnMapOneData?.returnType,
+        definitionId: returnMapOneData?.returnMapDefinition?.id || ''
+      })
+    );
+  }, [institutionReturnCode, institutionReturnText, bankReturnCode, bankReturnText, isReversible, returnType, definitionId, returnMapOneData]);
 
   // Değişiklik yapılmamışsa güncelleme yapılmasını engeller
   const handleOkForUpdate = () => {
     if (!isChanged) return; // Eğer değişiklik yoksa güncelleme yapılmasın
 
     setModalVisible(false);
-    sendUpdateReturnMapRequest(callApi, updateData)
+    sendUpdateReturnMapRequest(callApi, {
+      id: updatedId,
+      institutionReturnCode,
+      institutionReturnText,
+      bankReturnCode,
+      bankReturnText,
+      returnType,
+      isReversible,
+      returnMapDefinitionId: definitionId
+    })
       .then(() => {
         dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode }));
         Notification.success('Güncelleme Başarılı', 3);
