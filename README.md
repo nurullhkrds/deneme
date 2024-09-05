@@ -1,46 +1,7 @@
-const handleClickOneDefinitionDelete = async (record) => {
-  console.log("tıklandı");
-  try {
-    const institutions = record.institutions || []; // institutions null ise boş bir dizi atıyoruz
-    let contentMessage;
-
-    if (institutions.length === 1) {
-      contentMessage = `${institutions[0]} kurumu bu returnMap'i kullanmakta. Silmek istediğinize emin misiniz?`;
-    } else if (institutions.length > 1) {
-      contentMessage = `${institutions.join(', ')} kurumları bu returnMap'i kullanmakta. Silmek istediğinize emin misiniz?`;
+  useEffect(() => {
+    if (returnMapDefinitionData) {
+      setDataList([returnMapDefinitionData]);
     } else {
-      contentMessage = 'Kaydı silmek istediğinize emin misiniz?';
+      setDataList(definitionList);
     }
-
-    Message.prompt({
-      title: 'Kayıt Silme',
-      content: contentMessage,
-      icon: <Icon name="warning-circle" colorType="warning" />,
-      onClose: () => {
-        console.log('onClose');
-      },
-      onOk: () => {
-        const deleteReturnMapDefinitionRequest = {
-          ids: [record.id],
-        };
-        sendDeleteReturnMapDefinitionRequest(callApi, deleteReturnMapDefinitionRequest)
-          .then(() => {
-            dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, { returnMapCode }));
-            Notification.success('Silme Başarılı', 3);
-            dispatch(setReturnMapDefinitionData(null));
-          })
-          .catch((error) => {
-            console.error('Error creating return map:', error);
-            Notification.error('Hatalı silme işlemi!', 3);
-          });
-      },
-      onCancel: () => {
-        console.log('onCancel');
-      },
-      okText: 'Evet',
-      cancelText: 'Vazgeç',
-    });
-  } catch (error) {
-    console.error('Error fetching return map by id:', error);
-  }
-};
+  }, [returnMapDefinitionData, definitionList]);
