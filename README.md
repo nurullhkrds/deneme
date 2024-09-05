@@ -1,12 +1,3 @@
-public static Specification<ReturnMap> hasReturnMapDefinitionCode(String returnMapCode) {
-    return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
-        if (returnMapCode == null || returnMapCode.isEmpty()) {
-            return cb.conjunction();
-        }
+select * from bill.return_map_definition where return_map_code = 'BELEDİYE_NEVŞEHİR_QUERY_SUBSCRIBER'
 
-        // INNER JOIN kullanarak sadece eşleşen kayıtları getiriyoruz
-        Join<ReturnMap, ReturnMapDefinition> returnMapDefinitionJoin = root.join("returnMapDefinition", JoinType.INNER);
-
-        return cb.equal(cb.lower(returnMapDefinitionJoin.get("returnMapCode")), returnMapCode.toLowerCase());
-    };
-}
+select * from bill.return_map where return_map_code='BELEDİYE_NEVŞEHİR_QUERY_SUBSCRIBER'
