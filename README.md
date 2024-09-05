@@ -1,1 +1,19 @@
-Unable to locate Attribute  with the the given name [returnMapDefinitionId] on this ManagedType [com.ykb.payments.bill.common.domain.BaseEntity]; nested exception is java.lang.IllegalArgumentException: Unable to locate Attribute  with the the given name [returnMapDefinitionId] on this ManagedType [com.ykb.payments.bill.common.domain.BaseEntity]",
+public static Specification<ReturnMap> hasReturnMapDefinitionCode(String returnMapCode) {
+    return (Root<ReturnMap> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+        if (returnMapCode == null || returnMapCode.isEmpty()) {
+            return cb.conjunction(); // Eğer parametre boşsa, tüm sonuçları döndür
+        }
+
+        // ReturnMapDefinition ile INNER JOIN yaparak id eşleşmesini sağlıyoruz
+        Join<ReturnMap, ReturnMapDefinition> returnMapDefinitionJoin = root.join("returnMapDefinition", JoinType.INNER);
+
+        // returnMapDefinition'daki id alanına erişim ve eşleşme yapılması
+        Predicate idMatch = cb.equal(returnMapDefinitionJoin.get("id"), returnMapDefinitionJoin.get("id"));
+
+        // Gelen stringi küçük harfe çevirip, case-insensitive karşılaştırma yapıyoruz
+        Predicate returnMapCodeMatch = cb.equal(cb.lower(returnMapDefinitionJoin.get("returnMapCode")), returnMapCode.toLowerCase());
+
+        // İki şartı birleştirip dönüyoruz
+        return cb.and(idMatch, returnMapCodeMatch);
+    };
+}
