@@ -1,19 +1,2 @@
-@Override
-public Result deleteReturnMapDefinitions(DeleteIdsRequest request) {
-    try {
-        // Id'lere göre ReturnMapDefinition nesnelerini bul
-        List<ReturnMapDefinition> returnMapsToDelete = returnMapDefinitionRepository.findAllById(request.getIds());
-
-        // Her bir nesnenin isActive alanını false yap
-        returnMapsToDelete.forEach(returnMap -> returnMap.setIsActive(false));
-
-        // Değişiklikleri kaydet
-        returnMapDefinitionRepository.saveAll(returnMapsToDelete);
-
-        // Başarılı sonucu döndür
-        return new SuccessResult(ResultConstant.SUCCESSFULLY_DELETED.getMessage(), 200);
-    } catch (Exception e) {
-        // Hata durumunda hata sonucu döndür
-        return new ErrorResult("Error ! " + e.getMessage(), 400);
-    }
-}
+    List<ReturnMapDefinition> findAllByIsActive();
+Caused by: java.lang.IllegalArgumentException: Failed to create query for method public abstract java.util.List com.ykb.payments.bill.transaction.adapter.repository.ReturnMapDefinitionRepository.findAllByIsActive()! Method public abstract java.util.List com.ykb.payments.bill.transaction.adapter.repository.ReturnMapDefinitionRepository.findAllByIsActive() expects at least 1 arguments but only found 0. This leaves an operator of type SIMPLE_PROPERTY for property isActive unbound.
