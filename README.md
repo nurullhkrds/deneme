@@ -1,66 +1,57 @@
 const lang = {
   returnMapHead: {
-    label: "Hata Kodları Parametreleri"
+    label: "Error Code Parameters",
   },
   returnMap: {
-    label: "Dönüş Kodu",
+    label: "Return Code",
   },
   institutionReturnCode: {
-    label: "Kurum Hata Kodu",
+    label: "Institution Error Code",
   },
   institutionReturnText: {
-    label: "Kurum Hata Açıklaması",
+    label: "Institution Error Description",
   },
   bankReturnCode: {
-    label: "Banka Hata Kodu",
+    label: "Bank Error Code",
   },
-
-  bankRetubankReturnTextrnCode: {
-    label: "Banka Hata Açıklaması",
+  bankReturnText: {
+    label: "Bank Error Description",
   },
   returnType: {
-    label: "Geri Dönüş Tipi",
+    label: "Return Type",
     options: {
-      success: "Başarılı",
-      error: "Başarısız",
+      success: "Successful",
+      error: "Failed",
     },
   },
-
   reversible: {
-    label: "Geri Dönüşüm"
+    label: "Reversible",
   },
-
-
   messages: {
-    createSuccessMessage: "Ekleme Başarılı.",
-    createErrorMessage: 'Hatalı Ekleme !',
-    createSelectDefinition: 'Lütfen bir dönüş kodu seçin!',
-    createFullAlan: "Lütfen tüm alanları doldurun!",
-    createAlreadyExist: "Böyle bir veri zaten kayıtlı",
-    createMaxMın: "Dönüş kodu en az 5 karakter olabilir !",
-    selectDefinitionValidatedMessage: "Lütfen bir dönüş kodu seçin!",
-    institutionReturnCodeValidated: "Kurum Hata Kodu alanına sadece rakam girebilirsiniz!",
-    bankReturnCodeValidated: "Banka Hata Kodu alanına sadece rakam girebilirsiniz!",
-
-    updateSuccessMessage: "Güncelleme Başarılı",
-    updateErrorMessage: "Hatalı Güncelleme !",
-    updatedAlreadyExist: "Hatalı güncelleme! Böyle bir kayıt zaten var.",
-
-    deleteTitle: "Kayıt Silme",
-    deleteContent: "Kaydı silmek istediğinize emin misiniz ?",
-    deleteSuccess: "Silme Başarılı",
-    deleteError: "Hatalı silme işlemi !",
-
+    createSuccessMessage: "Addition Successful.",
+    createErrorMessage: "Failed Addition!",
+    createSelectDefinition: "Please select a return code!",
+    createFullAlan: "Please fill in all fields!",
+    createAlreadyExist: "Such data is already registered.",
+    createMaxMın: "Return code must be at least 5 characters!",
+    selectDefinitionValidatedMessage: "Please select a return code!",
+    institutionReturnCodeValidated: "Only numbers are allowed in the Institution Error Code field!",
+    bankReturnCodeValidated: "Only numbers are allowed in the Bank Error Code field!",
+    updateSuccessMessage: "Update Successful.",
+    updateErrorMessage: "Failed Update!",
+    updatedAlreadyExist: "Failed update! Such a record already exists.",
+    deleteTitle: "Delete Record",
+    deleteContent: "Are you sure you want to delete the record?",
+    deleteSuccess: "Delete Successful.",
+    deleteError: "Failed deletion process!",
     performOnlyPackageGroupWithOfflineInquiryTypeWarningMessage:
-      "Sadece OFFLINE Sorgulama Tipi Olan Paket Grubu İçin İşlem Yapılabilir",
+      "Only actions for the Package Group with OFFLINE Inquiry Type can be performed.",
   },
-
-  dataListed: "Veriler Listeleniyor...",
-
-  closeButton: "KAPAT",
-  cancelButton: "VAZGEÇ",
-  submitButton: "KAYDET",
-  okButton: "TAMAM",
+  dataListed: "Data is being listed...",
+  closeButton: "CLOSE",
+  cancelButton: "CANCEL",
+  submitButton: "SAVE",
+  okButton: "OK",
 };
 
 export default lang;
