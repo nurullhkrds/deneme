@@ -30,10 +30,10 @@
             value={institutionReturnCode}
             onChange={(e) => {
               const value = e.target.value;
-              if (/^[A-Za-z]*$/.test(value)) {
-                handleInstitutionReturnCode(e); // Sadece harfler olduğunda state'i güncelle
+              if (/^\d*$/.test(value)) {
+                handleInstitutionReturnCode(e); // Sadece rakamlar olduğunda state'i güncelle
               } else {
-                alert("Kurum Kodu alanına sadece harf girebilirsiniz!");
+                alert("Kurum Kodu alanına sadece rakam girebilirsiniz!");
               }
             }}
             style={{
@@ -67,10 +67,10 @@
             value={bankReturnCode}
             onChange={(e) => {
               const value = e.target.value;
-              if (/^[A-Za-z]*$/.test(value)) {
-                handleBankReturnCode(e); // Sadece harfler olduğunda state'i güncelle
+              if (/^\d*$/.test(value)) {
+                handleBankReturnCode(e); // Sadece rakamlar olduğunda state'i güncelle
               } else {
-                alert("Banka Kodu alanına sadece harf girebilirsiniz!");
+                alert("Banka Kodu alanına sadece rakam girebilirsiniz!");
               }
             }}
             style={{
