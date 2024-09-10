@@ -1,7 +1,6 @@
-  const returnMapCodeDefinitionSearch = useSelector((state) => state.returnMap.returnMapCode);
-  useEffect(() => {
-    setReturnMapCode(returnMapCodeDefinitionSearch)
+const returnMapCode = useSelector((state) => state.returnMap.returnMapCode);
+const [localReturnMapCode, setLocalReturnMapCode] = useState(returnMapCode || "");
 
-  }, [returnMapCodeDefinitionSearch])
-
-  const [returnMapCode, setReturnMapCode] = useState(returnMapCodeDefinitionSearch ?returnMapCodeDefinitionSearch :""  );
+useEffect(() => {
+  setLocalReturnMapCode(returnMapCode);
+}, [returnMapCode]);
