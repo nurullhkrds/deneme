@@ -1,11 +1,1 @@
-@Test
-void testCreateReturnMapDefinition_RecordAlreadyExists() throws DataConflictException {
-    CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
-    request.setReturnMapCode("existingCode");
-
-    when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.of(new ReturnMapDefinition()));
-
-    assertThrows(DataConflictException.class, () -> {
-        returnMapDefinitionService.createReturnMapDefinition(request);
-    });
-}
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown ==> expected: <com.ykb.architecture.micro.error.exception.DataConflictException> but was: <java.lang.NumberFormatException>
