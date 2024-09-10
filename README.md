@@ -1,39 +1,32 @@
-@Tag(name = "Management ReturnMapDefinition BFF Controller")
-@RequestMapping(RETURN_MAP_DEFINITION_PATH)
-@RestController
-public class ReturnMapDefinitionController {
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-    private final AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-    private final IUserContext userContext;
+class ReturnMapDefinitionControllerTest {
 
+    @Mock
+    private AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient;
 
-    public ReturnMapDefinitionController(AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient, IUserContext userContext) {
-        this.adapterReturnMapDefinitionClient = adapterReturnMapDefinitionClient;
-        this.userContext = userContext;
+    @Mock
+    private IUserContext userContext;
+
+    @InjectMocks
+    private ReturnMapDefinitionController returnMapDefinitionController;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(returnMapDefinitionController).build();
     }
-
-    @PostMapping("/createReturnMapDefinition")
-    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> createReturnMapDefinition(
-            @RequestBody CreateReturnMapDefinitionRequest request) throws InvalidRequestException {
-        request.setCreateUser(userContext.getUserCode());
-        DataResult<ReturnMapDefinitionDTO> result = adapterReturnMapDefinitionClient.createReturnMapDefinition(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-
-    @PutMapping("/updateReturnMapDefinition")
-    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> updateReturnMapDefinition(
-            @RequestBody UpdateReturnMapDefinitionRequest request) {
-        request.setUpdateUser(userContext.getUserCode());
-        DataResult<ReturnMapDefinitionDTO> result = adapterReturnMapDefinitionClient.updateReturnMapDefinition(request);
-        return ResponseEntity.status(result.getStatusCode()).body(result);
-    }
-
-
-
-
-
 
     @Test
     void testCreateReturnMapDefinition() throws Exception {
@@ -41,7 +34,9 @@ public class ReturnMapDefinitionController {
         ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
         DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(true, "Success", returnMapDefinitionDTO, 200);
 
-        when(returnMapDefinitionService.createReturnMapDefinition(any())).thenReturn(dataResult);
+        // Mock userContext.getUserCode()
+        when(userContext.getUserCode()).thenReturn("testUserCode");
+        when(adapterReturnMapDefinitionClient.createReturnMapDefinition(any())).thenReturn(dataResult);
 
         mockMvc.perform(post("/returnMapDefinitions/createReturnMapDefinition")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -50,7 +45,7 @@ public class ReturnMapDefinitionController {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isNotEmpty());
 
-        verify(returnMapDefinitionService, times(1)).createReturnMapDefinition(any());
+        verify(adapterReturnMapDefinitionClient, times(1)).createReturnMapDefinition(any());
     }
 
     @Test
@@ -59,7 +54,9 @@ public class ReturnMapDefinitionController {
         ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
         DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(true, "Success", returnMapDefinitionDTO, 200);
 
-        when(returnMapDefinitionService.updateReturnMapDefinition(any())).thenReturn(dataResult);
+        // Mock userContext.getUserCode()
+        when(userContext.getUserCode()).thenReturn("testUserCode");
+        when(adapterReturnMapDefinitionClient.updateReturnMapDefinition(any())).thenReturn(dataResult);
 
         mockMvc.perform(put("/returnMapDefinitions/updateReturnMapDefinition")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -68,8 +65,6 @@ public class ReturnMapDefinitionController {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isNotEmpty());
 
-        verify(returnMapDefinitionService, times(1)).updateReturnMapDefinition(any());
+        verify(adapterReturnMapDefinitionClient, times(1)).updateReturnMapDefinition(any());
     }
-
-
-org.springframework.web.util.NestedServletException: Request processing failed; nested exception is java.lang.NullPointerException: Cannot invoke "com.ykb.architecture.micro.microsecurity.entity.user.IUserContext.getUserCode()" because "this.userContext" is null
+}
