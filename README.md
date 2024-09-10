@@ -1,82 +1,75 @@
-@ExtendWith(MockitoExtension.class)
-public class BillPaymentRestFacadeClientTest {
+@Tag(name = "Management ReturnMapDefinition BFF Controller")
+@RequestMapping(RETURN_MAP_DEFINITION_PATH)
+@RestController
+public class ReturnMapDefinitionController {
 
-    @Mock
-    private RestTemplate restTemplate;
+    private final AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient;
 
-    @InjectMocks
-    private BillPaymentRestFacadeClient billPaymentRestFacadeClient;
+    private final IUserContext userContext;
 
-    @BeforeEach
-    public void setUp() throws NoSuchFieldException, IllegalAccessException {
-        setField(billPaymentRestFacadeClient, "address", "http://localhost:8080");
-        setField(billPaymentRestFacadeClient, "readTimeout", 1000L);
-        setField(billPaymentRestFacadeClient, "connectionTimeout", 1001L);
+
+    public ReturnMapDefinitionController(AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient, IUserContext userContext) {
+        this.adapterReturnMapDefinitionClient = adapterReturnMapDefinitionClient;
+        this.userContext = userContext;
+    }
+
+    @PostMapping("/createReturnMapDefinition")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> createReturnMapDefinition(
+            @RequestBody CreateReturnMapDefinitionRequest request) throws InvalidRequestException {
+        request.setCreateUser(userContext.getUserCode());
+        DataResult<ReturnMapDefinitionDTO> result = adapterReturnMapDefinitionClient.createReturnMapDefinition(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+
+    @PutMapping("/updateReturnMapDefinition")
+    public ResponseEntity<DataResult<ReturnMapDefinitionDTO>> updateReturnMapDefinition(
+            @RequestBody UpdateReturnMapDefinitionRequest request) {
+        request.setUpdateUser(userContext.getUserCode());
+        DataResult<ReturnMapDefinitionDTO> result = adapterReturnMapDefinitionClient.updateReturnMapDefinition(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
+
+
+
+
+
+
+    @Test
+    void testCreateReturnMapDefinition() throws Exception {
+        CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
+        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
+        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(true, "Success", returnMapDefinitionDTO, 200);
+
+        when(returnMapDefinitionService.createReturnMapDefinition(any())).thenReturn(dataResult);
+
+        mockMvc.perform(post("/returnMapDefinitions/createReturnMapDefinition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isNotEmpty());
+
+        verify(returnMapDefinitionService, times(1)).createReturnMapDefinition(any());
     }
 
     @Test
-    public void testGetCustomerPaidBillList() {
-        RequestGetCustomerPaidBillList request = new RequestGetCustomerPaidBillList();
+    void testUpdateReturnMapDefinition() throws Exception {
+        UpdateReturnMapDefinitionRequest request = new UpdateReturnMapDefinitionRequest();
+        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
+        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(true, "Success", returnMapDefinitionDTO, 200);
 
-        // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), any(RequestGetCustomerPaidBillList.class), eq(ResponseGetCustomerPaidBillList.class)))
-                .thenThrow(new ResourceAccessException("Timeout occurred"));
+        when(returnMapDefinitionService.updateReturnMapDefinition(any())).thenReturn(dataResult);
 
-        // Assert that ResourceAccessException is thrown
-        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.getCustomerPaidBillList(request));
+        mockMvc.perform(put("/returnMapDefinitions/updateReturnMapDefinition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isNotEmpty());
+
+        verify(returnMapDefinitionService, times(1)).updateReturnMapDefinition(any());
     }
 
-    @Test
-    public void testQueryBills() {
-        RequestQueryBillsHmn request = new RequestQueryBillsHmn();
 
-        // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), any(RequestQueryBillsHmn.class), eq(ResponseQueryBillsHmn.class)))
-                .thenThrow(new ResourceAccessException("Timeout occurred"));
-
-        // Assert that ResourceAccessException is thrown
-        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.queryBills(request));
-    }
-
-    @Test
-    public void testGetBillPaymentExpense() {
-        RequestBillPaymentExpenseHmn request = new RequestBillPaymentExpenseHmn();
-
-        // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), any(RequestBillPaymentExpenseHmn.class), eq(ResponseBillPaymentExpenseHmn.class)))
-                .thenThrow(new ResourceAccessException("Timeout occurred"));
-
-        // Assert that ResourceAccessException is thrown
-        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.getBillPaymentExpense(request));
-    }
-
-    @Test
-    public void testPayBill() {
-        RequestPayBillHmn request = new RequestPayBillHmn();
-
-        // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), any(RequestPayBillHmn.class), eq(ResponsePayBillHmn.class)))
-                .thenThrow(new ResourceAccessException("Timeout occurred"));
-
-        // Assert that ResourceAccessException is thrown
-        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.payBill(request));
-    }
-
-    @Test
-    public void testReverseBillPayment() {
-        RequestQueryBillsHmn request = new RequestQueryBillsHmn();
-
-        // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), any(RequestQueryBillsHmn.class), eq(ResponseQueryBillsHmn.class)))
-                .thenThrow(new ResourceAccessException("Timeout occurred"));
-
-        // Assert that ResourceAccessException is thrown
-        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.reverseBillPayment(request));
-    }
-
-    private void setField(Object target, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
-}
+org.springframework.web.util.NestedServletException: Request processing failed; nested exception is java.lang.NullPointerException: Cannot invoke "com.ykb.architecture.micro.microsecurity.entity.user.IUserContext.getUserCode()" because "this.userContext" is null
