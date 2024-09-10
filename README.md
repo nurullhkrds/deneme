@@ -1,99 +1,14 @@
-class BillPaymentRestFacadeClientTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    @Mock
-    private RestTemplateBuilder restTemplateBuilder;
+import java.net.URI;
+import java.time.Duration;
 
-    @Mock
-    private RestTemplate restTemplate;
-
-    @InjectMocks
-    private BillPaymentRestFacadeClient billPaymentRestFacadeClient;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
-        when(restTemplateBuilder.setConnectTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
-        when(restTemplateBuilder.setReadTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
-        when(restTemplateBuilder.build()).thenReturn(restTemplate);
-    }
-
-    @Test
-    void testGetCustomerPaidBillList() {
-        RequestGetCustomerPaidBillList request = new RequestGetCustomerPaidBillList();
-        ResponseGetCustomerPaidBillList expectedResponse = new ResponseGetCustomerPaidBillList();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "getCustomerPaidBillList").build().toUri();
-
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseGetCustomerPaidBillList.class)))
-                .thenReturn(expectedResponse);
-
-        ResponseGetCustomerPaidBillList actualResponse = billPaymentRestFacadeClient.getCustomerPaidBillList(request);
-
-        assertEquals(expectedResponse, actualResponse);
-    }
-
-    @Test
-    void testQueryBills() {
-        RequestQueryBillsHmn request = new RequestQueryBillsHmn();
-        ResponseQueryBillsHmn expectedResponse = new ResponseQueryBillsHmn();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "queryBills").build().toUri();
-
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseQueryBillsHmn.class)))
-                .thenReturn(expectedResponse);
-
-        ResponseQueryBillsHmn actualResponse = billPaymentRestFacadeClient.queryBills(request);
-
-        assertEquals(expectedResponse, actualResponse);
-    }
-
-    @Test
-    void testGetBillPaymentExpense() {
-        RequestBillPaymentExpenseHmn request = new RequestBillPaymentExpenseHmn();
-        ResponseBillPaymentExpenseHmn expectedResponse = new ResponseBillPaymentExpenseHmn();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "getBillPaymentExpense").build().toUri();
-
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseBillPaymentExpenseHmn.class)))
-                .thenReturn(expectedResponse);
-
-        ResponseBillPaymentExpenseHmn actualResponse = billPaymentRestFacadeClient.getBillPaymentExpense(request);
-
-        assertEquals(expectedResponse, actualResponse);
-    }
-
-    @Test
-    void testPayBill() {
-        RequestPayBillHmn request = new RequestPayBillHmn();
-        ResponsePayBillHmn expectedResponse = new ResponsePayBillHmn();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "payBill").build().toUri();
-
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponsePayBillHmn.class)))
-                .thenReturn(expectedResponse);
-
-        ResponsePayBillHmn actualResponse = billPaymentRestFacadeClient.payBill(request);
-
-        assertEquals(expectedResponse, actualResponse);
-    }
-
-    @Test
-    void testReverseBillPayment() {
-        RequestQueryBillsHmn request = new RequestQueryBillsHmn();
-        ResponseQueryBillsHmn expectedResponse = new ResponseQueryBillsHmn();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "reverseBillPayment").build().toUri();
-
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseQueryBillsHmn.class)))
-                .thenReturn(expectedResponse);
-
-        ResponseQueryBillsHmn actualResponse = billPaymentRestFacadeClient.reverseBillPayment(request);
-
-        assertEquals(expectedResponse, actualResponse);
-    }
-}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
