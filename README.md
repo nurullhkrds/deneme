@@ -1,14 +1,17 @@
-@Test
-void testCreateReturnMapDefinition_RecordAlreadyExists() throws DataConflictException {
-    CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
-    request.setReturnMapCode("existingCode");
+  @Test
+    void testCreateReturnMapDefinition_RecordAlreadyExists() {
+        CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
+        request.setReturnMapCode("existingCode");
 
-    ReturnMapDefinition existingReturnMap = new ReturnMapDefinition();
-    when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.of(existingReturnMap));
+        // Mocking the repository to return an existing return map
+        when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode()))
+                .thenReturn(Optional.of(new ReturnMapDefinition()));
 
-    DataConflictException thrown = assertThrows(DataConflictException.class, () -> {
-        returnMapDefinitionService.createReturnMapDefinition(request);
-    });
+        // Expect the DataConflictException to be thrown
+        DataConflictException thrown = assertThrows(DataConflictException.class, () -> {
+            returnMapDefinitionService.createReturnMapDefinition(request);
+        });
 
-    assertEquals(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), thrown.getMessage());
-}
+        // Asserting the exception message
+        assertEquals(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), thrown.getMessage());
+    }
