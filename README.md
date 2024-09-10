@@ -1,59 +1,99 @@
-@Component
-public class BillPaymentRestFacadeClient {
+class BillPaymentRestFacadeClientTest {
 
-	@Value("${external.billPaymentRestFacade.address}")
-	private String address;
+    @Mock
+    private RestTemplateBuilder restTemplateBuilder;
 
-	@Value("${external.billPaymentRestFacade.service.readTimeout}")
-	private Long readTimeout;
+    @Mock
+    private RestTemplate restTemplate;
 
-	@Value("${external.billPaymentRestFacade.service.connectTimeout}")
-	private Long connectionTimeout;
+    @InjectMocks
+    private BillPaymentRestFacadeClient billPaymentRestFacadeClient;
 
-	public ResponseGetCustomerPaidBillList getCustomerPaidBillList(RequestGetCustomerPaidBillList request) {
-		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "getCustomerPaidBillList").build().toUri();
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+        when(restTemplateBuilder.setConnectTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
+        when(restTemplateBuilder.setReadTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
+        when(restTemplateBuilder.build()).thenReturn(restTemplate);
+    }
 
-		RestTemplate restTemplate = new RestTemplateBuilder()
-				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
-				.build();
-		return restTemplate.postForObject(uri, request, ResponseGetCustomerPaidBillList.class);
-	}
+    @Test
+    void testGetCustomerPaidBillList() {
+        RequestGetCustomerPaidBillList request = new RequestGetCustomerPaidBillList();
+        ResponseGetCustomerPaidBillList expectedResponse = new ResponseGetCustomerPaidBillList();
 
-	public ResponseQueryBillsHmn queryBills(RequestQueryBillsHmn request) {
-		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "queryBills").build().toUri();
+        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
+                .queryParam("operationName", "getCustomerPaidBillList").build().toUri();
 
-		RestTemplate restTemplate = new RestTemplateBuilder()
-				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
-				.build();
-		return restTemplate.postForObject(uri, request, ResponseQueryBillsHmn.class);
-	}
+        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseGetCustomerPaidBillList.class)))
+                .thenReturn(expectedResponse);
 
+        ResponseGetCustomerPaidBillList actualResponse = billPaymentRestFacadeClient.getCustomerPaidBillList(request);
 
-	public ResponseBillPaymentExpenseHmn getBillPaymentExpense(RequestBillPaymentExpenseHmn request) {
-		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "getBillPaymentExpense").build().toUri();
+        assertEquals(expectedResponse, actualResponse);
+    }
 
-		RestTemplate restTemplate = new RestTemplateBuilder()
-				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
-				.build();
-		return restTemplate.postForObject(uri, request, ResponseBillPaymentExpenseHmn.class);
-	}
+    @Test
+    void testQueryBills() {
+        RequestQueryBillsHmn request = new RequestQueryBillsHmn();
+        ResponseQueryBillsHmn expectedResponse = new ResponseQueryBillsHmn();
 
-	public ResponsePayBillHmn payBill(RequestPayBillHmn request) {
-		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "payBill").build().toUri();
+        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
+                .queryParam("operationName", "queryBills").build().toUri();
 
-		RestTemplate restTemplate = new RestTemplateBuilder()
-				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
-				.build();
-		return restTemplate.postForObject(uri, request, ResponsePayBillHmn.class);
-	}
+        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseQueryBillsHmn.class)))
+                .thenReturn(expectedResponse);
 
-	public ResponseQueryBillsHmn reverseBillPayment(RequestQueryBillsHmn request) {
-		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "reverseBillPayment").build().toUri();
+        ResponseQueryBillsHmn actualResponse = billPaymentRestFacadeClient.queryBills(request);
 
-		RestTemplate restTemplate = new RestTemplateBuilder()
-				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
-				.build();
-		return restTemplate.postForObject(uri, request, ResponseQueryBillsHmn.class);
-	}
+        assertEquals(expectedResponse, actualResponse);
+    }
 
+    @Test
+    void testGetBillPaymentExpense() {
+        RequestBillPaymentExpenseHmn request = new RequestBillPaymentExpenseHmn();
+        ResponseBillPaymentExpenseHmn expectedResponse = new ResponseBillPaymentExpenseHmn();
+
+        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
+                .queryParam("operationName", "getBillPaymentExpense").build().toUri();
+
+        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseBillPaymentExpenseHmn.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseBillPaymentExpenseHmn actualResponse = billPaymentRestFacadeClient.getBillPaymentExpense(request);
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void testPayBill() {
+        RequestPayBillHmn request = new RequestPayBillHmn();
+        ResponsePayBillHmn expectedResponse = new ResponsePayBillHmn();
+
+        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
+                .queryParam("operationName", "payBill").build().toUri();
+
+        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponsePayBillHmn.class)))
+                .thenReturn(expectedResponse);
+
+        ResponsePayBillHmn actualResponse = billPaymentRestFacadeClient.payBill(request);
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void testReverseBillPayment() {
+        RequestQueryBillsHmn request = new RequestQueryBillsHmn();
+        ResponseQueryBillsHmn expectedResponse = new ResponseQueryBillsHmn();
+
+        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
+                .queryParam("operationName", "reverseBillPayment").build().toUri();
+
+        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseQueryBillsHmn.class)))
+                .thenReturn(expectedResponse);
+
+        ResponseQueryBillsHmn actualResponse = billPaymentRestFacadeClient.reverseBillPayment(request);
+
+        assertEquals(expectedResponse, actualResponse);
+    }
 }
