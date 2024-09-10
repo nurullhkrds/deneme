@@ -5,7 +5,7 @@
 
         // Mocking the repository to return an existing return map
         when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode()))
-                .thenReturn(Optional.of(new ReturnMapDefinition()));
+                .thenReturn(Optional.of(new ReturnMapDefinition()));  
 
         // Expect the DataConflictException to be thrown
         DataConflictException thrown = assertThrows(DataConflictException.class, () -> {
@@ -15,3 +15,4 @@
         // Asserting the exception message
         assertEquals(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), thrown.getMessage());
     }
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown ==> expected: <com.ykb.architecture.micro.error.exception.DataConflictException> but was: <java.lang.NumberFormatException>
