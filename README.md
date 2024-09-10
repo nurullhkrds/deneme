@@ -1,70 +1,83 @@
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+@Tag(name = "Management ReturnMap BFF Controller")
+@RequestMapping(RETURN_MAP_PATH)
+@RestController
+public class ReturnMapController {
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+    private final AdapterReturnMapClient adapterReturnMapClient;
+    private final IUserContext userContext;
 
-class ReturnMapDefinitionControllerTest {
 
-    @Mock
-    private AdapterReturnMapDefinitionClient adapterReturnMapDefinitionClient;
+  @Autowired
+    public ReturnMapController(AdapterReturnMapClient adapterReturnMapClient, IUserContext userContext) {
+        this.adapterReturnMapClient = adapterReturnMapClient;
+        this.userContext = userContext;
+    }
+    
+    @PostMapping("/createReturnMap")
+    public ResponseEntity<DataResult<ReturnMapDTO>> createReturnMap(
+            @RequestBody CreateReturnMapRequest request)
+            throws MicroException {
+        request.setCreateUser(userContext.getUserCode());
+        DataResult<ReturnMapDTO> result = adapterReturnMapClient.createReturnMap(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
 
-    @Mock
-    private IUserContext userContext;
+    @PutMapping("/updateReturnMap")
+    public ResponseEntity<DataResult<ReturnMapDTO>> updateReturnMap(
+            @RequestBody UpdateReturnMapRequest request)
+            throws MicroException {
+        request.setUpdateUser(userContext.getUserCode());
+        DataResult<ReturnMapDTO> result = adapterReturnMapClient.updateReturnMap(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
 
-    @InjectMocks
-    private ReturnMapDefinitionController returnMapDefinitionController;
 
-    private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(returnMapDefinitionController).build();
+
+
+    @Test
+     void testCreateReturnMap() throws Exception {
+        CreateReturnMapRequest request = new CreateReturnMapRequest();
+        ReturnMapDTO returnMapDTO = new ReturnMapDTO();
+        DataResult<ReturnMapDTO> dataResult = new DataResult<>(true, "Created", returnMapDTO, HttpStatus.CREATED.value());
+
+        when(returnMapService.createReturnMap(any(CreateReturnMapRequest.class))).thenReturn(dataResult);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(post("/returnMaps/createReturnMap")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.CREATED.value()))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Created"));
+
+        verify(returnMapService, times(1)).createReturnMap(any(CreateReturnMapRequest.class));
     }
 
     @Test
-    void testCreateReturnMapDefinition() throws Exception {
-        CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
-        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
-        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(true, "Success", returnMapDefinitionDTO, 200);
+     void testUpdateReturnMap() throws Exception {
+        UpdateReturnMapRequest request = new UpdateReturnMapRequest();
+        ReturnMapDTO returnMapDTO = new ReturnMapDTO();
+        DataResult<ReturnMapDTO> dataResult = new DataResult<>(true, "Updated", returnMapDTO, HttpStatus.OK.value());
 
-        // Mock userContext.getUserCode()
-        when(userContext.getUserCode()).thenReturn("testUserCode");
-        when(adapterReturnMapDefinitionClient.createReturnMapDefinition(any())).thenReturn(dataResult);
+        when(returnMapService.updateReturnMap(any(UpdateReturnMapRequest.class))).thenReturn(dataResult);
 
-        mockMvc.perform(post("/returnMapDefinitions/createReturnMapDefinition")
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
+        mockMvc.perform(put("/returnMaps/updateReturnMap")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request)))
+                        .content(jsonRequest))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusCode").value(HttpStatus.OK.value()))
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isNotEmpty());
+                .andExpect(jsonPath("$.message").value("Updated"));
 
-        verify(adapterReturnMapDefinitionClient, times(1)).createReturnMapDefinition(any());
+        verify(returnMapService, times(1)).updateReturnMap(any(UpdateReturnMapRequest.class));
     }
 
-    @Test
-    void testUpdateReturnMapDefinition() throws Exception {
-        UpdateReturnMapDefinitionRequest request = new UpdateReturnMapDefinitionRequest();
-        ReturnMapDefinitionDTO returnMapDefinitionDTO = new ReturnMapDefinitionDTO();
-        DataResult<ReturnMapDefinitionDTO> dataResult = new DataResult<>(true, "Success", returnMapDefinitionDTO, 200);
 
-        // Mock userContext.getUserCode()
-        when(userContext.getUserCode()).thenReturn("testUserCode");
-        when(adapterReturnMapDefinitionClient.updateReturnMapDefinition(any())).thenReturn(dataResult);
-
-        mockMvc.perform(put("/returnMapDefinitions/updateReturnMapDefinition")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isNotEmpty());
-
-        verify(adapterReturnMapDefinitionClient, times(1)).updateReturnMapDefinition(any());
-    }
-}
+org.springframework.web.util.NestedServletException: Request processing failed; nested exception is java.lang.NullPointerException: Cannot invoke "com.ykb.architecture.micro.microsecurity.entity.user.IUserContext.getUserCode()" because "this.userContext" is null
