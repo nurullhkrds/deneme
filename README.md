@@ -19,7 +19,7 @@ public class BillPaymentRestFacadeClientTest {
         RequestGetCustomerPaidBillList request = new RequestGetCustomerPaidBillList();
 
         // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseGetCustomerPaidBillList.class)))
+        when(restTemplate.postForObject(any(URI.class), any(RequestGetCustomerPaidBillList.class), eq(ResponseGetCustomerPaidBillList.class)))
                 .thenThrow(new ResourceAccessException("Timeout occurred"));
 
         // Assert that ResourceAccessException is thrown
@@ -31,7 +31,7 @@ public class BillPaymentRestFacadeClientTest {
         RequestQueryBillsHmn request = new RequestQueryBillsHmn();
 
         // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseQueryBillsHmn.class)))
+        when(restTemplate.postForObject(any(URI.class), any(RequestQueryBillsHmn.class), eq(ResponseQueryBillsHmn.class)))
                 .thenThrow(new ResourceAccessException("Timeout occurred"));
 
         // Assert that ResourceAccessException is thrown
@@ -43,7 +43,7 @@ public class BillPaymentRestFacadeClientTest {
         RequestBillPaymentExpenseHmn request = new RequestBillPaymentExpenseHmn();
 
         // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseBillPaymentExpenseHmn.class)))
+        when(restTemplate.postForObject(any(URI.class), any(RequestBillPaymentExpenseHmn.class), eq(ResponseBillPaymentExpenseHmn.class)))
                 .thenThrow(new ResourceAccessException("Timeout occurred"));
 
         // Assert that ResourceAccessException is thrown
@@ -55,7 +55,7 @@ public class BillPaymentRestFacadeClientTest {
         RequestPayBillHmn request = new RequestPayBillHmn();
 
         // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponsePayBillHmn.class)))
+        when(restTemplate.postForObject(any(URI.class), any(RequestPayBillHmn.class), eq(ResponsePayBillHmn.class)))
                 .thenThrow(new ResourceAccessException("Timeout occurred"));
 
         // Assert that ResourceAccessException is thrown
@@ -67,7 +67,7 @@ public class BillPaymentRestFacadeClientTest {
         RequestQueryBillsHmn request = new RequestQueryBillsHmn();
 
         // Mock RestTemplate to throw ResourceAccessException
-        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseQueryBillsHmn.class)))
+        when(restTemplate.postForObject(any(URI.class), any(RequestQueryBillsHmn.class), eq(ResponseQueryBillsHmn.class)))
                 .thenThrow(new ResourceAccessException("Timeout occurred"));
 
         // Assert that ResourceAccessException is thrown
