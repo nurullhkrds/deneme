@@ -1,41 +1,59 @@
-@Override
-public DataResult<ReturnMapDefinitionDTO> createReturnMapDefinition(CreateReturnMapDefinitionRequest request) throws DataConflictException {
-    Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
+@Component
+public class BillPaymentRestFacadeClient {
 
-    if (existingReturnMap.isPresent()) {
-        // Long.valueOf() yerine doğrudan hata mesajı ile exception fırlatıyoruz
-        throw new DataConflictException(ResultConstant.RECORD_ALREADY_EXISTS.getMessage());
-    }
+	@Value("${external.billPaymentRestFacade.address}")
+	private String address;
 
-    ReturnMapDefinition newReturnMap = new ReturnMapDefinition();
-    newReturnMap.setReturnMapCode(request.getReturnMapCode());
-    newReturnMap.setIsActive(request.getIsActive());
-    newReturnMap.setCreatedBy(request.getCreateUser());
+	@Value("${external.billPaymentRestFacade.service.readTimeout}")
+	private Long readTimeout;
 
-    ReturnMapDefinition savedData = returnMapDefinitionRepository.save(newReturnMap);
+	@Value("${external.billPaymentRestFacade.service.connectTimeout}")
+	private Long connectionTimeout;
 
-    ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(savedData);
+	public ResponseGetCustomerPaidBillList getCustomerPaidBillList(RequestGetCustomerPaidBillList request) {
+		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "getCustomerPaidBillList").build().toUri();
 
-    if (dto == null) {
-        throw new DataConflictException(ResultConstant.RECORD_ALREADY_EXISTS.getMessage());
-    }
+		RestTemplate restTemplate = new RestTemplateBuilder()
+				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
+				.build();
+		return restTemplate.postForObject(uri, request, ResponseGetCustomerPaidBillList.class);
+	}
 
-    return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), dto, 200);
-}
-@Test
-void testCreateReturnMapDefinition_RecordAlreadyExists() {
-    CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
-    request.setReturnMapCode("existingCode");
+	public ResponseQueryBillsHmn queryBills(RequestQueryBillsHmn request) {
+		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "queryBills").build().toUri();
 
-    // Mocking the repository to return an existing return map
-    when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode()))
-            .thenReturn(Optional.of(new ReturnMapDefinition()));
+		RestTemplate restTemplate = new RestTemplateBuilder()
+				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
+				.build();
+		return restTemplate.postForObject(uri, request, ResponseQueryBillsHmn.class);
+	}
 
-    // Expect the DataConflictException to be thrown
-    DataConflictException thrown = assertThrows(DataConflictException.class, () -> {
-        returnMapDefinitionService.createReturnMapDefinition(request);
-    });
 
-    // Asserting the exception message
-    assertEquals(ResultConstant.RECORD_ALREADY_EXISTS.getMessage(), thrown.getMessage());
+	public ResponseBillPaymentExpenseHmn getBillPaymentExpense(RequestBillPaymentExpenseHmn request) {
+		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "getBillPaymentExpense").build().toUri();
+
+		RestTemplate restTemplate = new RestTemplateBuilder()
+				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
+				.build();
+		return restTemplate.postForObject(uri, request, ResponseBillPaymentExpenseHmn.class);
+	}
+
+	public ResponsePayBillHmn payBill(RequestPayBillHmn request) {
+		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "payBill").build().toUri();
+
+		RestTemplate restTemplate = new RestTemplateBuilder()
+				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
+				.build();
+		return restTemplate.postForObject(uri, request, ResponsePayBillHmn.class);
+	}
+
+	public ResponseQueryBillsHmn reverseBillPayment(RequestQueryBillsHmn request) {
+		URI uri = UriComponentsBuilder.fromHttpUrl(address).path("billPaymentRestFacade").queryParam("operationName", "reverseBillPayment").build().toUri();
+
+		RestTemplate restTemplate = new RestTemplateBuilder()
+				.setConnectTimeout(Duration.ofMillis(connectionTimeout)).setReadTimeout(Duration.ofMillis(readTimeout))
+				.build();
+		return restTemplate.postForObject(uri, request, ResponseQueryBillsHmn.class);
+	}
+
 }
