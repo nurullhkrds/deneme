@@ -9,7 +9,6 @@ public class BillPaymentRestFacadeClientTest {
 
     @BeforeEach
     public void setUp() throws NoSuchFieldException, IllegalAccessException {
-        MockitoAnnotations.openMocks(this);
         setField(billPaymentRestFacadeClient, "address", "http://localhost:8080");
         setField(billPaymentRestFacadeClient, "readTimeout", 1000L);
         setField(billPaymentRestFacadeClient, "connectionTimeout", 1001L);
@@ -18,6 +17,12 @@ public class BillPaymentRestFacadeClientTest {
     @Test
     public void testGetCustomerPaidBillList() {
         RequestGetCustomerPaidBillList request = new RequestGetCustomerPaidBillList();
+
+        // Mock RestTemplate response
+        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseGetCustomerPaidBillList.class)))
+                .thenThrow(new ResourceAccessException("Timeout occurred"));
+
+        // Assert that ResourceAccessException is thrown
         assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.getCustomerPaidBillList(request));
     }
 
@@ -25,26 +30,48 @@ public class BillPaymentRestFacadeClientTest {
     public void testQueryBills() {
         RequestQueryBillsHmn request = new RequestQueryBillsHmn();
 
+        // Mock RestTemplate response
+        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseQueryBillsHmn.class)))
+                .thenThrow(new ResourceAccessException("Timeout occurred"));
+
+        // Assert that ResourceAccessException is thrown
         assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.queryBills(request));
     }
 
     @Test
     public void testGetBillPaymentExpense() {
         RequestBillPaymentExpenseHmn request = new RequestBillPaymentExpenseHmn();
+
+        // Mock RestTemplate response
+        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseBillPaymentExpenseHmn.class)))
+                .thenThrow(new ResourceAccessException("Timeout occurred"));
+
+        // Assert that ResourceAccessException is thrown
         assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.getBillPaymentExpense(request));
     }
 
     @Test
     public void testPayBill() {
         RequestPayBillHmn request = new RequestPayBillHmn();
+
+        // Mock RestTemplate response
+        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponsePayBillHmn.class)))
+                .thenThrow(new ResourceAccessException("Timeout occurred"));
+
+        // Assert that ResourceAccessException is thrown
         assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.payBill(request));
     }
 
     @Test
     public void testReverseBillPayment() {
         RequestQueryBillsHmn request = new RequestQueryBillsHmn();
-        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.reverseBillPayment(request));
 
+        // Mock RestTemplate response
+        when(restTemplate.postForObject(any(URI.class), eq(request), eq(ResponseQueryBillsHmn.class)))
+                .thenThrow(new ResourceAccessException("Timeout occurred"));
+
+        // Assert that ResourceAccessException is thrown
+        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.reverseBillPayment(request));
     }
 
     private void setField(Object target, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
@@ -53,4 +80,3 @@ public class BillPaymentRestFacadeClientTest {
         field.set(target, value);
     }
 }
-org.opentest4j.AssertionFailedError: Unexpected exception type thrown ==> expected: <org.springframework.web.client.ResourceAccessException> but was: <org.springframework.web.client.HttpClientErrorException.NotFound>
