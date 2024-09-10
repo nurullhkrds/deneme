@@ -1,20 +1,10 @@
-@Test
-void testCreateReturnMapDefinition_RecordAlreadyExists() {
-    CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
-    request.setReturnMapCode("existingCode");
+org.mockito.exceptions.misusing.MissingMethodInvocationException: 
+when() requires an argument which has to be 'a method call on a mock'.
+For example:
+    when(mock.getArticles()).thenReturn(articles);
 
-    // Mocking the repository to return an existing return map
-    when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode()))
-            .thenReturn(Optional.of(new ReturnMapDefinition()));
-
-    // Mocking the constant to return a numeric string to avoid NumberFormatException
-    when(ResultConstant.RECORD_ALREADY_EXISTS.getMessage()).thenReturn("123");
-
-    // Expect the DataConflictException to be thrown
-    DataConflictException thrown = assertThrows(DataConflictException.class, () -> {
-        returnMapDefinitionService.createReturnMapDefinition(request);
-    });
-
-    // Asserting the exception message
-    assertEquals("123", thrown.getMessage());
-}
+Also, this error might show up because:
+1. you stub either of: final/private/equals()/hashCode() methods.
+   Those methods *cannot* be stubbed/verified.
+   Mocking methods declared on non-public parent classes is not supported.
+2. inside when() you don't call method on mock but on some other object.
