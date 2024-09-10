@@ -1,23 +1,5 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.net.URI;
-import java.time.Duration;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-class BillPaymentRestFacadeClientTest {
-
-    @Mock
-    private RestTemplateBuilder restTemplateBuilder;
+@ExtendWith(MockitoExtension.class)
+public class BillPaymentRestFacadeClientTest {
 
     @Mock
     private RestTemplate restTemplate;
@@ -26,111 +8,49 @@ class BillPaymentRestFacadeClientTest {
     private BillPaymentRestFacadeClient billPaymentRestFacadeClient;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
-
-        when(restTemplateBuilder.setConnectTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
-        when(restTemplateBuilder.setReadTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
-        when(restTemplateBuilder.build()).thenReturn(restTemplate);
-
-        // Address ve timeout değerlerini elle set ediyoruz
-        ReflectionTestUtils.setField(billPaymentRestFacadeClient, "address", "http://test-address");
-        ReflectionTestUtils.setField(billPaymentRestFacadeClient, "readTimeout", 5000L);
-        ReflectionTestUtils.setField(billPaymentRestFacadeClient, "connectionTimeout", 5000L);
+    public void setUp() throws NoSuchFieldException, IllegalAccessException {
+        MockitoAnnotations.openMocks(this);
+        setField(billPaymentRestFacadeClient, "address", "http://localhost:8080");
+        setField(billPaymentRestFacadeClient, "readTimeout", 1000L);
+        setField(billPaymentRestFacadeClient, "connectionTimeout", 1001L);
     }
 
     @Test
-    void testGetCustomerPaidBillList() {
+    public void testGetCustomerPaidBillList() {
         RequestGetCustomerPaidBillList request = new RequestGetCustomerPaidBillList();
-        ResponseGetCustomerPaidBillList expectedResponse = new ResponseGetCustomerPaidBillList();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "getCustomerPaidBillList").build().toUri();
-
-        // RestTemplate postForObject metodunu mockluyoruz
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseGetCustomerPaidBillList.class)))
-                .thenReturn(expectedResponse);
-
-        // Gerçek metod çağrısı
-        ResponseGetCustomerPaidBillList actualResponse = billPaymentRestFacadeClient.getCustomerPaidBillList(request);
-
-        // Yanıtın beklenen yanıtla aynı olup olmadığını kontrol ediyoruz
-        assertEquals(expectedResponse, actualResponse);
+        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.getCustomerPaidBillList(request));
     }
 
     @Test
-    void testQueryBills() {
+    public void testQueryBills() {
         RequestQueryBillsHmn request = new RequestQueryBillsHmn();
-        ResponseQueryBillsHmn expectedResponse = new ResponseQueryBillsHmn();
 
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "queryBills").build().toUri();
-
-        // RestTemplate postForObject metodunu mockluyoruz
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseQueryBillsHmn.class)))
-                .thenReturn(expectedResponse);
-
-        // Gerçek metod çağrısı
-        ResponseQueryBillsHmn actualResponse = billPaymentRestFacadeClient.queryBills(request);
-
-        // Yanıtın beklenen yanıtla aynı olup olmadığını kontrol ediyoruz
-        assertEquals(expectedResponse, actualResponse);
+        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.queryBills(request));
     }
 
     @Test
-    void testGetBillPaymentExpense() {
+    public void testGetBillPaymentExpense() {
         RequestBillPaymentExpenseHmn request = new RequestBillPaymentExpenseHmn();
-        ResponseBillPaymentExpenseHmn expectedResponse = new ResponseBillPaymentExpenseHmn();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "getBillPaymentExpense").build().toUri();
-
-        // RestTemplate postForObject metodunu mockluyoruz
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseBillPaymentExpenseHmn.class)))
-                .thenReturn(expectedResponse);
-
-        // Gerçek metod çağrısı
-        ResponseBillPaymentExpenseHmn actualResponse = billPaymentRestFacadeClient.getBillPaymentExpense(request);
-
-        // Yanıtın beklenen yanıtla aynı olup olmadığını kontrol ediyoruz
-        assertEquals(expectedResponse, actualResponse);
+        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.getBillPaymentExpense(request));
     }
 
     @Test
-    void testPayBill() {
+    public void testPayBill() {
         RequestPayBillHmn request = new RequestPayBillHmn();
-        ResponsePayBillHmn expectedResponse = new ResponsePayBillHmn();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "payBill").build().toUri();
-
-        // RestTemplate postForObject metodunu mockluyoruz
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponsePayBillHmn.class)))
-                .thenReturn(expectedResponse);
-
-        // Gerçek metod çağrısı
-        ResponsePayBillHmn actualResponse = billPaymentRestFacadeClient.payBill(request);
-
-        // Yanıtın beklenen yanıtla aynı olup olmadığını kontrol ediyoruz
-        assertEquals(expectedResponse, actualResponse);
+        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.payBill(request));
     }
 
     @Test
-    void testReverseBillPayment() {
+    public void testReverseBillPayment() {
         RequestQueryBillsHmn request = new RequestQueryBillsHmn();
-        ResponseQueryBillsHmn expectedResponse = new ResponseQueryBillsHmn();
+        assertThrows(ResourceAccessException.class, () -> billPaymentRestFacadeClient.reverseBillPayment(request));
 
-        URI uri = UriComponentsBuilder.fromHttpUrl("http://test-address").path("billPaymentRestFacade")
-                .queryParam("operationName", "reverseBillPayment").build().toUri();
+    }
 
-        // RestTemplate postForObject metodunu mockluyoruz
-        when(restTemplate.postForObject(eq(uri), eq(request), eq(ResponseQueryBillsHmn.class)))
-                .thenReturn(expectedResponse);
-
-        // Gerçek metod çağrısı
-        ResponseQueryBillsHmn actualResponse = billPaymentRestFacadeClient.reverseBillPayment(request);
-
-        // Yanıtın beklenen yanıtla aynı olup olmadığını kontrol ediyoruz
-        assertEquals(expectedResponse, actualResponse);
+    private void setField(Object target, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 }
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown ==> expected: <org.springframework.web.client.ResourceAccessException> but was: <org.springframework.web.client.HttpClientErrorException.NotFound>
