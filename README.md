@@ -1,4 +1,1 @@
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-
-import java.net.URI;
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown ==> expected: <org.springframework.web.client.ResourceAccessException> but was: <org.springframework.web.client.HttpClientErrorException.NotFound>
