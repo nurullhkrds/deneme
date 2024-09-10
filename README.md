@@ -1,40 +1,45 @@
-@Test
-void testHasReturnMapDefinitionCode_withValidCode() {
-    String returnMapCode = "MAP123";
-    Root<ReturnMap> root = mock(Root.class);
-    CriteriaQuery<?> query = mock(CriteriaQuery.class);
-    CriteriaBuilder cb = mock(CriteriaBuilder.class);
-    Join<ReturnMap, ReturnMapDefinition> join = mock(Join.class);
-    Path<String> returnMapCodePath = mock(Path.class); // Mock Path<String> for returnMapCode
-    Path<Object> pathToReturnMapDefinition = mock(Path.class); // Mock the path to returnMapDefinition
+ @Override
+    public DataResult<ReturnMapDefinitionDTO> createReturnMapDefinition(CreateReturnMapDefinitionRequest request) throws DataConflictException {
 
-    // Correct stubbing for root.join with actual parameters
-    when(root.join(eq("returnMapDefinition"), eq(JoinType.INNER))).thenReturn(join);
+        Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
 
-    // Mock the return value of the get method on join to return Path<String> for returnMapCode
-    when(join.get("returnMapCode")).thenReturn(returnMapCodePath);
+        if (existingReturnMap.isPresent()) {
+            throw new DataConflictException(Long.valueOf(ResultConstant.RECORD_ALREADY_EXISTS.getMessage()));
+        }
 
-    // Mock CriteriaBuilder's upper method to work with Path<String>
-    Expression<String> upperExpression = mock(Expression.class);
-    when(cb.upper(returnMapCodePath)).thenReturn(upperExpression);
+        ReturnMapDefinition newReturnMap = new ReturnMapDefinition();
+        newReturnMap.setReturnMapCode(request.getReturnMapCode());
+        newReturnMap.setIsActive(request.getIsActive());
+        newReturnMap.setCreatedBy(request.getCreateUser());
 
-    // Mock root.get("returnMapDefinition") to return a mock object
-    when(root.get("returnMapDefinition")).thenReturn(pathToReturnMapDefinition);
-    Path<Object> idPath = mock(Path.class);
-    when(pathToReturnMapDefinition.get("id")).thenReturn(idPath);
+        ReturnMapDefinition savedData = returnMapDefinitionRepository.save(newReturnMap);
 
-    // Mock the CriteriaBuilder equal method for id and returnMapCode comparisons
-    Predicate predicateReturnMapCode = mock(Predicate.class);
-    Predicate predicateIdMatch = mock(Predicate.class);
-    when(cb.equal(upperExpression, returnMapCode.toUpperCase())).thenReturn(predicateReturnMapCode);
-    when(cb.equal(root.get("returnMapDefinition").get("id"), join.get("id"))).thenReturn(predicateIdMatch);
+        ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(savedData);
 
-    // Execute the test
-    Specification<ReturnMap> spec = ReturnMapCriteria.hasReturnMapDefinitionCode(returnMapCode);
-    spec.toPredicate(root, query, cb);
+        if (dto == null) {
+            throw new DataConflictException(Long.valueOf(ResultConstant.RECORD_ALREADY_EXISTS.getMessage()));
+        }
 
-    // Verify interactions
-    verify(root).join("returnMapDefinition", JoinType.INNER);
-    verify(cb).equal(upperExpression, returnMapCode.toUpperCase()); // Match the actual arguments
-    verify(cb).equal(root.get("returnMapDefinition").get("id"), join.get("id"));
-}
+        return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), dto,200);
+    }
+
+
+
+
+  @Test
+    void testCreateReturnMapDefinition_RecordAlreadyExists() throws DataConflictException {
+        CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
+        request.setReturnMapCode("existingCode");
+
+        when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.of(new ReturnMapDefinition()));
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.createReturnMapDefinition(request);
+
+        assertFalse(result.isSuccess());
+        assertEquals(400, result.getStatusCode());
+    }
+
+
+
+ttestinde bu hatayı alıyorum "java.lang.NumberFormatException: For input string: "Böyle bir kayıt zaten var"
+"
