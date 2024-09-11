@@ -1,15 +1,7 @@
-WITH SabloHesaplar AS (
-    SELECT M.MUSTERINO, M.GIRISTARIH, M.URUN, M.KURUM, M.ABONENO, M.SABLONTIPI, M.KARTNO,
-           (SELECT LISTAGG(S.HESAPNO, ',') WITHIN GROUP(ORDER BY S.URUN, S.KURUM, S.ABONENO) SABLONHESAP
-              FROM OTOLIVE.SABLON S
-             WHERE S.URUN(+) = M.URUN
-               AND S.KURUM(+) = M.KURUM
-               AND S.ABONENO(+) = M.ABONENO) AS SABLONHESAP
-      FROM OTOLIVE.V_T_OTO_ABONE M
-     WHERE M.MUSTERINO = '3693'
-       AND M.URUN NOT IN ('DBS','SGK','SİGORTA','HAVALE')
-       AND M.STATU = 'A'
-)
-SELECT *
-  FROM SabloHesaplar
- WHERE SABLONHESAP = '1231231231232';
+SELECT * FROM OTOLIVE.v_t_oto_abone s WHERE musterino='3693' and statu='A'
+and urun not in ('HAVALE','SGK','DBS','SİGORTA') and (s.aboneno,s.urun,s.kurum) IN
+(select * from otolive.sablon a where  cifno = 3693
+       and hesapno ='00169935');
+
+
+
