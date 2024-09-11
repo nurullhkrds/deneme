@@ -1,6 +1,4 @@
-INSERT INTO OTOLIVE.v_t_oto_abone (MUSTERINO, STATU, URUN, ABONENO, KURUM, GIRISTARIH, KARTNO, SABLONTIPI)
-VALUES ('4555', 'A', 'URUN_DEGERI', 'ABONE_NO', 'KURUM_DEGERI', SYSDATE, 'KART_NO', 'SABLON_TIPI');
-
-
-INSERT INTO OTOLIVE.sablon (CIFNO, HESAPNO, URUN, ABONENO, KURUM)
-VALUES (4555, '05050505', 'URUN_DEGERI', 'ABONE_NO', 'KURUM_DEGERI');
+SELECT * FROM OTOLIVE.v_t_oto_abone s WHERE musterino='4740' and statu='A'
+and urun not in ('HAVALE','SGK','DBS','SİGORTA') and (s.aboneno,s.urun,s.kurum) IN
+(select * from otolive.sablon a where  cifno = 3693
+       and hesapno ='00102814');
