@@ -1,28 +1,26 @@
-const ReturnMapDefinitionServiceParametersSearch = ({ callApi, definitionList }) => {
-  const dispatch = useDispatch();
-  const ref = useRef(null);
+const handleDefinitionSearch = () => {
+  if (returnMapCode) {
+    // definitionList içinde aratılan returnMapCode'yi buluyoruz
+    const foundDefinition = definitionList.find(
+      (definition) => definition.returnMapCode === returnMapCode
+    );
 
-
-
-  const returnMapCodeSearch = useSelector((state) => state.returnMap.returnMapCode);
-  const [returnMapCode, setReturnMapCode] = useState(returnMapCodeSearch || "");
-
-  useEffect(() => {
-    setReturnMapCode(returnMapCodeSearch);
-  }, [returnMapCodeSearch]);
-
-  const { i18n } = useIntl();
-  const { ReturnMapFormLocale } = i18n;
-
-  const handleDefinitionSearch = () => {
-    if (returnMapCode) {
-      dispatch(setReturnMapCodeReducer(returnMapCode))
-      dispatch(toggleSubTableActive(true))
-      dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, returnMapCode));
-      dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: returnMapCode }));
+    // Eğer definition bulunduysa ve isActive durumu true ise toggleSubTableActive'i true yap
+    if (foundDefinition && foundDefinition.isActive) {
+      dispatch(toggleSubTableActive(true));
+    } else {
+      // Bulunmadıysa veya isActive değilse toggleSubTableActive'i false yap
+      dispatch(toggleSubTableActive(false));
     }
-    else {
-      dispatch(fetchAllReturnMapDefinition(dispatch, callApi))
-    }
-    dispatch(toggleSearchTrigger(true))
-  };
+
+    // Diğer işlemleri gerçekleştir
+    dispatch(setReturnMapCodeReducer(returnMapCode));
+    dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, returnMapCode));
+    dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: returnMapCode }));
+  } else {
+    // Eğer returnMapCode boş ise tüm kayıtları getir
+    dispatch(fetchAllReturnMapDefinition(dispatch, callApi));
+  }
+
+  dispatch(toggleSearchTrigger(true));
+};
