@@ -1,9 +1,6 @@
-
 const ReturnMapDefinitionServiceParametersSearch = ({ callApi, definitionList }) => {
   const dispatch = useDispatch();
   const ref = useRef(null);
-
-
 
   const returnMapCodeSearch = useSelector((state) => state.returnMap.returnMapCode);
   const [returnMapCode, setReturnMapCode] = useState(returnMapCodeSearch || "");
@@ -21,18 +18,19 @@ const ReturnMapDefinitionServiceParametersSearch = ({ callApi, definitionList })
         (definition) => definition.returnMapCode === returnMapCode
       );
 
-      if (foundDefinition && foundDefinition.isActive) {
-        dispatch(toggleSubTableActive(true));
-      } else {
-        dispatch(toggleSubTableActive(false));
-      }
+      // Aktiflik durumunu hemen dispatch et
+      dispatch(toggleSubTableActive(!!(foundDefinition && foundDefinition.isActive)));
 
+      // Diğer işlemleri yap
       dispatch(setReturnMapCodeReducer(returnMapCode));
       dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, returnMapCode));
       dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: returnMapCode }));
     } else {
+      // Eğer returnMapCode boşsa tüm ReturnMapDefinition'ları getir
       dispatch(fetchAllReturnMapDefinition(dispatch, callApi));
     }
 
+    // Arama tetikleyiciyi aç
     dispatch(toggleSearchTrigger(true));
   };
+};
