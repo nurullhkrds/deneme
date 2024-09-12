@@ -1,36 +1,21 @@
-const ReturnMapDefinitionServiceParametersSearch = ({ callApi, definitionList }) => {
-  const dispatch = useDispatch();
-  const ref = useRef(null);
+  {
+        subTableActive &&
+        <>
+          <Row>
+            <Col xs={24} sm={24} md={24} lg={24}>
+              <ReturnMapServiceParametersSearch callApi={callApi} handleSearchCriteria={handleSearchCriteria} />
+            </Col>
+          </Row>
 
-  const returnMapCodeSearch = useSelector((state) => state.returnMap.returnMapCode);
-  const [returnMapCode, setReturnMapCode] = useState(returnMapCodeSearch || "");
+          <div style={{ border: '1px solid #d9d9d9', background: "white", padding: '7px', borderRadius: '4px', marginTop: '15px', display: 'flex', justifyContent: 'space-between' }}>
+            <h5 style={{ marginTop: "10px", textAlign: "center" }}>{ReturnMapFormLocale.returnMapHead.label}</h5>
+            <SecureButton permission="showModalCreate" type="primary" onClick={showModalCreate}>{ReturnMapFormLocale.createButton}</SecureButton>
+          </div>
 
-  useEffect(() => {
-    setReturnMapCode(returnMapCodeSearch);
-  }, [returnMapCodeSearch]);
-
-  const { i18n } = useIntl();
-  const { ReturnMapFormLocale } = i18n;
-
-  const handleDefinitionSearch = () => {
-    if (returnMapCode) {
-      const foundDefinition = definitionList.find(
-        (definition) => definition.returnMapCode === returnMapCode
-      );
-
-      // Aktiflik durumunu hemen dispatch et
-      dispatch(toggleSubTableActive(!!(foundDefinition && foundDefinition.isActive)));
-
-      // Diğer işlemleri yap
-      dispatch(setReturnMapCodeReducer(returnMapCode));
-      dispatch(fetchReturnMapDefinitionByReturnMapCode(dispatch, callApi, returnMapCode));
-      dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: returnMapCode }));
-    } else {
-      // Eğer returnMapCode boşsa tüm ReturnMapDefinition'ları getir
-      dispatch(fetchAllReturnMapDefinition(dispatch, callApi));
-    }
-
-    // Arama tetikleyiciyi aç
-    dispatch(toggleSearchTrigger(true));
-  };
-};
+          <Row >
+            <Col xs={24} sm={24} md={24} lg={24}>
+              <ReturnMapServiceParametersTable definitionList={definitionListIsActiveTrue} />
+            </Col>
+          </Row>
+        </>
+      }
