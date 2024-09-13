@@ -1,26 +1,24 @@
-alter table BILL.RETURN_MAP
-drop unique (INSTITUTION_RETURN_CODE) cascade;
-alter table BILL.RETURN_MAP
-add constraint UK_RETURN_MAP_01 unique (RETURN_MAP_DEFINITION_ID, INSTITUTION_RETURN_CODE); 
+DECLARE
+  CURSOR cur_duplicates IS
+    SELECT RETURN_MAP_DEFINITION_ID, INSTITUTION_RETURN_CODE, COUNT(*) AS cnt
+    FROM BILL.RETURN_MAP
+    GROUP BY RETURN_MAP_DEFINITION_ID, INSTITUTION_RETURN_CODE
+    HAVING COUNT(*) > 1; -- Aynı institution_code ve return_map_definition_id olanlar
 
-
-
- declare
-  cursor cur_map is 
-    select  distinct(RETURN_MAP_CODE) rmc from BILL.RETURN_MAP ;
+BEGIN
+  FOR rec IN cur_duplicates LOOP
+    -- Aynı institution_code ve return_map_definition_id olan diğer kayıtları bul
+    DELETE FROM BILL.RETURN_MAP 
+    WHERE ROWID NOT IN (
+      SELECT MIN(ROWID)
+      FROM BILL.RETURN_MAP
+      WHERE RETURN_MAP_DEFINITION_ID = rec.RETURN_MAP_DEFINITION_ID
+      AND INSTITUTION_RETURN_CODE = rec.INSTITUTION_RETURN_CODE
+    )
+    AND RETURN_MAP_DEFINITION_ID = rec.RETURN_MAP_DEFINITION_ID
+    AND INSTITUTION_RETURN_CODE = rec.INSTITUTION_RETURN_CODE;
     
- vseqNo number;
-begin
-     for rec_map in cur_map loop  
-        select BILL.SEQ_RETURN_MAP_DEFINITION.nextval into vseqNo from dual;
-
-      insert into BILL.RETURN_MAP_DEFINITION (ID, VERSION, RETURN_MAP_CODE, IS_ACTIVE, CREATE_DATE, CREATED_BY, UPDATE_DATE, UPDATED_BY)
-      values (vseqNo, 0,rec_map.rmc , '1', sysdate, 'U068014', null, null);
-      
-      update  BILL.RETURN_MAP set RETURN_MAP_DEFINITION_ID = vseqNo where RETURN_MAP_CODE = rec_map.rmc ;
- 
-    END LOOP;
- 
-   commit;  
-end;
-/
+  END LOOP;
+  
+  COMMIT;
+END;
