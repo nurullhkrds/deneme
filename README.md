@@ -1,39 +1,45 @@
-@Test
-void testUpdateReturnMap_Success() throws DataNotFoundException, DataConflictException {
-    // Arrange
-    UpdateReturnMapRequest request = new UpdateReturnMapRequest();
-    request.setId(1L);
-    request.setReturnMapDefinitionId(1L);
-    request.setInstitutionReturnCode("123");
-    request.setInstitutionReturnText("Text");
-    request.setBankReturnCode("456");
-    request.setBankReturnText("Bank Text");
-    request.setIsReversible(true);
-    request.setReturnType("SUCCESS");
-    request.setUpdateUser("User");
+  const handleOkForCreate = () => {
+    if (!definitionId) {
+      Notification.error(ReturnMapFormLocale.messages.createSelectDefinition);
+      return;
+    }
+    const definition = definitionList.find(definition => definition.id === definitionId)
 
-    // Mocking ReturnMapDefinitionService to return SuccessDataResult
-    ReturnMapDefinition returnMapDefinition = new ReturnMapDefinition();
-    returnMapDefinition.setReturnMapCode("MapCode");
-    DataResult<ReturnMapDefinition> definitionDataResult = new SuccessDataResult<>("success", returnMapDefinition, 200);
-    Mockito.when(returnMapDefinitionService.getReturnMapDefinitionByIdForServices(1L))
-            .thenReturn(definitionDataResult);
 
-    // Mocking returnMapRepository to return an existing ReturnMap
-    ReturnMap returnMap = new ReturnMap();
-    returnMap.setId(1L);
-    Mockito.when(returnMapRepository.findById(1L)).thenReturn(Optional.of(returnMap));
+    if (!institutionReturnCode || !bankReturnCode || !institutionReturnText || !bankReturnText) {
+      Notification.error(ReturnMapFormLocale.messages.createFullAlan);
+      return;
+    }
 
-    // Mocking save operation and mapping
-    Mockito.when(returnMapRepository.save(any(ReturnMap.class))).thenReturn(returnMap);
-    ReturnMapDTO returnMapDTO = new ReturnMapDTO();
-    Mockito.when(returnMapMapper.toReturnMapDTO(returnMap)).thenReturn(returnMapDTO);
 
-    // Act
-    DataResult<ReturnMapDTO> result = returnMapService.updateReturnMap(request);
+    setModalVisible(false);
 
-    // Assert
-    assertTrue(result.isSuccess());
-    assertEquals(200, result.getStatusCode());
-    assertNotNull(result.getData());
+    sendcreateReturnMapRequest(callApi, createRequest)
+      .then(() => {
+        dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: definition.returnMapCode }));
+
+        Notification.success(ReturnMapFormLocale.messages.createSuccessMessage, 5);
+      })
+      .catch(error => {
+        console.error('Error creating return map:', error);
+        Notification.error(ReturnMapFormLocale.messages.createErrorMessage, 5);
+      });
+
+    setbankReturnCode("");
+    setIsReversible(false);
+    setReturnMapCode("");
+    setbankReturnText("");
+    setinstitutionReturnCode("");
+    setinstitutionReturnText("");
+  };
+
+
+{
+  "exceptionData": {
+    "applicationName": "ReturnMapService",
+    "errorCode": 409,
+    "errorMessage": "Bu Returnmap için aynı kurum hata kodu zaten tanımlı ",
+    "traceId": null
+  },
+  "parameters": {}
 }
