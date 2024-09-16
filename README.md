@@ -1,76 +1,103 @@
-  
-public class ReturnMapService implements IReturnMapService {
-    private final ReturnMapRepository returnMapRepository;
-    private final ReturnMapMapper returnMapMapper;
-    private final IReturnMapDefinitionService returnMapDefinitionService;
+ @Test
+    public void testCreateReturnMap_Success() throws DataNotFoundException, DataConflictException {
+        CreateReturnMapRequest request = new CreateReturnMapRequest();
+        request.setReturnMapDefinitionId(1L);
+        request.setInstitutionReturnCode("123");
+        request.setInstitutionReturnText("Text");
+        request.setBankReturnCode("456");
+        request.setBankReturnText("Bank Text");
+        request.setIsReversible(true);
+        request.setReturnType("SUCCESS");
+        request.setCreateUser("User");
 
+        ReturnMapDefinition returnMapDefinition = new ReturnMapDefinition();
+        returnMapDefinition.setReturnMapCode("MapCode");
 
- @Transactional
-    public DataResult<ReturnMapDTO> createReturnMap(CreateReturnMapRequest request) throws DataNotFoundException, DataConflictException {
-        DataResult<ReturnMapDefinition> definitionDataResult = returnMapDefinitionService.getReturnMapDefinitionByIdForServices(request.getReturnMapDefinitionId());
-        if (request.getReturnMapDefinitionId() != null && !definitionDataResult.isSuccess()) {
-            throw new DataNotFoundException(Long.valueOf(ResultConstant.RECORD_NOT_FOUND.getMessage()));
-        }
+        DataResult<ReturnMapDefinition> definitionDataResult = new SuccessDataResult<>(returnMapDefinition);
 
-        Optional<ReturnMap> existingReturnMap = returnMapRepository.findByReturnMapDefinitionIdAndInstitutionReturnCode(
-                request.getReturnMapDefinitionId(), request.getInstitutionReturnCode());
+        Mockito.when(returnMapDefinitionService.getReturnMapDefinitionByIdForServices(1L))
+                .thenReturn(definitionDataResult);
 
-        if (existingReturnMap.isPresent()) {
-            throw  new DataConflictException(Long.valueOf(ResultConstant.RECORD_ALREADY_EXISTS_SECOND.getMessage())) ;
-        }
+        Mockito.when(returnMapRepository.findByReturnMapDefinitionIdAndInstitutionReturnCode(1L, "123"))
+                .thenReturn(Optional.empty());
+
         ReturnMap returnMap = new ReturnMap();
-        returnMap.setReturnMapCode(definitionDataResult.getData().getReturnMapCode());
-        returnMap.setInstitutionReturnCode(request.getInstitutionReturnCode());
-        returnMap.setCreatedBy(request.getCreateUser());
-        returnMap.setInstitutionReturnText(request.getInstitutionReturnText());
-        returnMap.setBankReturnCode(request.getBankReturnCode());
-        returnMap.setBankReturnText(request.getBankReturnText());
-        returnMap.setIsReversible(request.getIsReversible());
-        returnMap.setReturnMapDefinition(definitionDataResult.getData());
-        returnMap.setReturnType(Objects.equals(request.getReturnType(), "SUCCESS") ? EnumReturnType.SUCCESS : EnumReturnType.ERROR);
+        Mockito.when(returnMapRepository.save(any(ReturnMap.class))).thenReturn(returnMap);
 
-        ReturnMap result = returnMapRepository.save(returnMap);
-        ReturnMapDTO resultDto = returnMapMapper.toReturnMapDTO(result);
+        ReturnMapDTO returnMapDTO = new ReturnMapDTO();
+        Mockito.when(returnMapMapper.toReturnMapDTO(returnMap)).thenReturn(returnMapDTO);
 
-        if (resultDto != null) {
-            return new SuccessDataResult<>("ReturnMap Added", resultDto, 200);
-        }
-        return new ErrorDataResult<>("ReturnMap not be added", null, 400);
+        DataResult<ReturnMapDTO> result = returnMapService.createReturnMap(request);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
     }
 
+    @Test(expected = DataConflictException.class)
+    public void testCreateReturnMap_Conflict() throws DataNotFoundException, DataConflictException {
+        CreateReturnMapRequest request = new CreateReturnMapRequest();
+        request.setReturnMapDefinitionId(1L);
+        request.setInstitutionReturnCode("123");
 
-   @Transactional
-    public DataResult<ReturnMapDTO> updateReturnMap(UpdateReturnMapRequest request) throws DataConflictException, DataNotFoundException {
-        DataResult<ReturnMap> returnMapDataResult = getReturnMapByIdSecond(request.getId());
-        DataResult<ReturnMapDefinition> definitionDataResult = returnMapDefinitionService.getReturnMapDefinitionByIdForServices(request.getReturnMapDefinitionId());
+        ReturnMap returnMap = new ReturnMap();
 
-        if (request.getReturnMapDefinitionId() != null && !definitionDataResult.isSuccess()) {
-            throw new DataNotFoundException(Long.valueOf(ResultConstant.RECORD_NOT_FOUND.getMessage()));
-        }
+        Mockito.when(returnMapRepository.findByReturnMapDefinitionIdAndInstitutionReturnCode(1L, "123"))
+                .thenReturn(Optional.of(returnMap));
 
-        Optional<ReturnMap> existingReturnMap = returnMapRepository.findByReturnMapDefinitionIdAndInstitutionReturnCode(
-                request.getReturnMapDefinitionId(), request.getInstitutionReturnCode());
-
-        if (existingReturnMap.isPresent() && !existingReturnMap.get().getId().equals(request.getId())) {
-            throw  new DataConflictException(Long.valueOf(ResultConstant.RECORD_ALREADY_EXISTS_SECOND.getMessage())) ;
-        }
-
-        ReturnMap returnMap = returnMapDataResult.getData();
-        returnMap.setReturnMapCode(definitionDataResult.getData().getReturnMapCode());
-        returnMap.setInstitutionReturnCode(request.getInstitutionReturnCode());
-        returnMap.setInstitutionReturnText(request.getInstitutionReturnText());
-        returnMap.setBankReturnCode(request.getBankReturnCode());
-        returnMap.setUpdatedBy(request.getUpdateUser());
-        returnMap.setBankReturnText(request.getBankReturnText());
-        returnMap.setReturnType(Objects.equals(request.getReturnType(), "SUCCESS") ? EnumReturnType.SUCCESS : EnumReturnType.ERROR);
-        returnMap.setIsReversible(request.getIsReversible());
-        returnMap.setReturnMapDefinition(definitionDataResult.getData());
-
-        ReturnMap result = returnMapRepository.save(returnMap);
-        ReturnMapDTO resultDto = returnMapMapper.toReturnMapDTO(result);
-
-        if (resultDto != null) {
-            return new SuccessDataResult<>("ReturnMap updated", resultDto, 200);
-        }
-        return new ErrorDataResult<>("ReturnMap not be updated", null, 400);
+        returnMapService.createReturnMap(request); // Should throw DataConflictException
     }
+
+    @Test(expected = DataNotFoundException.class)
+    public void testCreateReturnMap_DefinitionNotFound() throws DataNotFoundException, DataConflictException {
+        CreateReturnMapRequest request = new CreateReturnMapRequest();
+        request.setReturnMapDefinitionId(1L);
+
+        DataResult<ReturnMapDefinition> definitionDataResult = new ErrorDataResult<>(null);
+
+        Mockito.when(returnMapDefinitionService.getReturnMapDefinitionByIdForServices(1L))
+                .thenReturn(definitionDataResult);
+
+        returnMapService.createReturnMap(request); // Should throw DataNotFoundException
+    }
+
+@Test
+public void testUpdateReturnMap_Success() throws DataNotFoundException, DataConflictException {
+    UpdateReturnMapRequest request = new UpdateReturnMapRequest();
+    request.setId(1L);
+    request.setReturnMapDefinitionId(1L);
+    request.setInstitutionReturnCode("123");
+    request.setInstitutionReturnText("Text");
+    request.setBankReturnCode("456");
+    request.setBankReturnText("Bank Text");
+    request.setIsReversible(true);
+    request.setReturnType("SUCCESS");
+    request.setUpdateUser("User");
+
+    ReturnMapDefinition returnMapDefinition = new ReturnMapDefinition();
+    returnMapDefinition.setReturnMapCode("MapCode");
+
+    DataResult<ReturnMapDefinition> definitionDataResult = new SuccessDataResult<>(returnMapDefinition);
+    Mockito.when(returnMapDefinitionService.getReturnMapDefinitionByIdForServices(1L))
+            .thenReturn(definitionDataResult);
+
+    ReturnMap returnMap = new ReturnMap();
+    returnMap.setId(1L);
+
+    DataResult<ReturnMap> returnMapDataResult = new SuccessDataResult<>(returnMap);
+    Mockito.when(returnMapRepository.findById(1L)).thenReturn(Optional.of(returnMap));
+
+    Mockito.when(returnMapRepository.findByReturnMapDefinitionIdAndInstitutionReturnCode(1L, "123"))
+            .thenReturn(Optional.of(returnMap));
+
+    Mockito.when(returnMapRepository.save(any(ReturnMap.class))).thenReturn(returnMap);
+
+    ReturnMapDTO returnMapDTO = new ReturnMapDTO();
+    Mockito.when(returnMapMapper.toReturnMapDTO(returnMap)).thenReturn(returnMapDTO);
+
+    DataResult<ReturnMapDTO> result = returnMapService.updateReturnMap(request);
+
+    assertTrue(result.isSuccess());
+    assertEquals(200, result.getCode());
+    assertNotNull(result.getData());
+}
