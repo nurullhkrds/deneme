@@ -2,7 +2,7 @@
 public enum ResultConstant {
 
     RECORD_ALREADY_EXISTS("Böyle bir kayıt zaten var"),
-    RECORD_ALREADY_EXISTS_SECOND("Bu Returnmap için aynı kurum hata kodu zaten tanımlı "),
+    RECORD_ALREADY_EXISTS_SECOND("Bu Returnmap için aynı kurum hata kodu zaten tanımlı"),
     RECORD_NOT_FOUND("Kayıt bulunumadı"),
     CONVERSION_FAILED("Dönüştürme işlemi başarısız"),
     SUCCESSFULLY_ADDED("Başarıyla eklendi"),
@@ -11,24 +11,29 @@ public enum ResultConstant {
     ERROR("Hata"),
     DATA_RETRIEVED("Veri getirildi"),
     LISTED_EMPTY("Liste boş"),
-
     DATA_LISTED("Veriler listelendi"),
     INSTITUTION_CREATED("Kurum başarıyla oluşturuldu"),
     INSTITUTION_UPDATED("Kurum başarıyla güncellendi"),
     INSTITUTION_DELETED("Kurum başarıyla silindi"),
     INSTITUTION_NOT_FOUND("Kurum bulunamadı"),
-
-
-
+    
     PRODUCT_NOT_FOUND("Ürün bulunamadı"),
-    OWNER_DEPARTMENT_NOT_FOUND("Sahip departman bulunamadı")
+    OWNER_DEPARTMENT_NOT_FOUND("Sahip departman bulunamadı"),
 
-    ;
-
-
+    // Yeni eklenen spesifik mesaj
+    DUPLICATE_INSTITUTION_PRODUCT("Bu kurum koduna (%s) ve bu ürün koduna (%s) ait bir kayıt zaten mevcut.");
 
     private final String message;
 
     ResultConstant(String message) {
         this.message = message;
     }
+
+    public String getMessage(Object... args) {
+        return String.format(message, args);
+    }
+}
+
+
+    error.setErrorMessage(ResultConstant.DUPLICATE_INSTITUTION_PRODUCT.getMessage(request.getInstitutionCode(), request.getProductCode()));
+
