@@ -125,3 +125,12 @@ public DataResult<AdapterInstitutionDTO> updateInstitution(UpdateInstitutionRequ
     // 7. Başarı mesajı ve DTO'yu dönüyoruz
     return new SuccessDataResult<>(ResultConstant.INSTITUTION_UPDATED.getMessage(), dto, 200);
 }
+
+
+
+
+   @PutMapping("/updateInstitution")
+    public ResponseEntity<DataResult<AdapterInstitutionDTO>> updateInstitution(@RequestBody UpdateInstitutionRequest request) throws MicroException {
+        DataResult<AdapterInstitutionDTO> result = adapterInstitutionService.updateInstitution(request);
+        return ResponseEntity.status(result.getStatusCode()).body(result);
+    }
