@@ -1,12 +1,42 @@
- // Mevcut Institution entity'sini DTO ile güncelleme (Product ve OwnerDepartment ile)
+@Mapper(componentModel = "spring")
+public interface InstitutionMapper {
+
+    // Create ve Update Request'ten DTO'ya dönüşüm
+    @Mapping(source = "productCode", target = "product.code")
+    @Mapping(source = "ownerDepartmentCode", target = "ownerDepartment.code")
+    @Mapping(source = "createUser", target = "createdBy")
+    InstitutionDTO toInstitutionDTO(CreateInstitutionRequest request);
+
+    @Mapping(source = "productCode", target = "product.code")
+    @Mapping(source = "ownerDepartmentCode", target = "ownerDepartment.code")
+    @Mapping(source = "updateUser", target = "updatedBy")
+    @Mapping(source = "id", target = "id")  // ID'yi de DTO'ya ekliyoruz
+    InstitutionDTO toInstitutionDTO(UpdateInstitutionRequest request);
+
+    // DTO'dan Entity'ye dönüşüm
+    Institution toInstitution(InstitutionDTO dto);
+
+    // Entity'den DTO'ya dönüşüm
+    InstitutionDTO toInstitutionDTO(Institution institution);
+
+    // ProductDTO'dan Product entity'ye dönüşüm
+    Product toProductEntity(ProductDTO productDTO);
+
+    // OwnerDepartmentDTO'dan OwnerDepartment entity'ye dönüşüm
+    OwnerDepartment toOwnerDepartmentEntity(OwnerDepartmentDTO ownerDepartmentDTO);
+
+    // Entity'den ProductDTO'ya dönüşüm
+    ProductDTO toProductDTO(Product product);
+
+    // Entity'den OwnerDepartmentDTO'ya dönüşüm
+    OwnerDepartmentDTO toOwnerDepartmentDTO(OwnerDepartment ownerDepartment);
+
+    // Mevcut Institution entity'sini DTO ile güncelleme
     @Mapping(target = "id", ignore = true)  // ID'yi değiştirmek istemiyoruz
     @Mapping(target = "createDate", ignore = true)  // createDate'i koruyoruz
     @Mapping(target = "updateDate", expression = "java(java.time.LocalDateTime.now())")  // updateDate'i güncelleyerek set ediyoruz
-    @Mapping(source = "productCode", target = "product.code")  // Product DTO'yu set ediyoruz
-    @Mapping(source = "ownerDepartmentCode", target = "ownerDepartment.code")  // OwnerDepartment DTO'yu set ediyoruz
     void updateInstitutionFromDTO(UpdateInstitutionRequest dto, @MappingTarget Institution institution);
-
-
+}
 @Override
 public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest request) throws MicroException {
     // 1. Mevcut institution kontrolü
@@ -29,13 +59,37 @@ public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest req
         throw new DataConflictException(error);
     }
 
-    // 3. Mevcut Institution kaydını DTO'dan güncelle (Product ve OwnerDepartment alanları ile birlikte)
-    institutionMapper.updateInstitutionFromDTO(request, existingInstitution);  // DTO'dan mevcut kayda güncelleme yapılıyor
+    // 3. Product ve OwnerDepartment DTO'ları ile kontrol ve setleme
+    ProductDTO productDTO = productRepository.findByCode(request.getProductCode())
+        .map(productMapper::toProductDTO)
+        .orElseThrow(() -> {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(400L);
+            error.setErrorMessage(ResultConstant.PRODUCT_NOT_FOUND.getMessage());
+            error.setApplicationName(SERVICE_NAME);
+            return new DataNotFoundException(error);
+        });
 
-    // 4. Güncellenmiş institution veritabanına kaydediliyor
+    OwnerDepartmentDTO ownerDepartmentDTO = ownerDepartmentRepository.findByCode(request.getOwnerDepartmentCode())
+        .map(ownerDepartmentMapper::toOwnerDepartmentDTO)
+        .orElseThrow(() -> {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(400L);
+            error.setErrorMessage(ResultConstant.OWNER_DEPARTMENT_NOT_FOUND.getMessage());
+            error.setApplicationName(SERVICE_NAME);
+            return new DataNotFoundException(error);
+        });
+
+    // 4. Mevcut Institution kaydını DTO'dan güncelle
+    institutionMapper.updateInstitutionFromDTO(request, existingInstitution);  // DTO'dan mevcut kayda güncelleme yapılıyor
+    existingInstitution.setProduct(institutionMapper.toProductEntity(productDTO));  // Product DTO'dan entity'ye dönüşüm ve setleme
+    existingInstitution.setOwnerDepartment(institutionMapper.toOwnerDepartmentEntity(ownerDepartmentDTO));  // OwnerDepartment DTO'dan entity'ye dönüşüm ve setleme
+    existingInstitution.setUpdateDate(LocalDateTime.now());  // Update tarihi güncelleniyor
+
+    // 5. Güncellenmiş institution veritabanına kaydediliyor
     institutionRepository.save(existingInstitution);
 
-    // 5. Güncellenmiş entity'yi DTO'ya çevir ve geri döndür
+    // 6. Güncellenmiş entity'yi DTO'ya çevir ve geri döndür
     InstitutionDTO updatedDTO = institutionMapper.toInstitutionDTO(existingInstitution);
 
     return new SuccessDataResult<>(ResultConstant.INSTITUTION_UPDATED.getMessage(), updatedDTO, 200);
