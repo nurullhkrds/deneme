@@ -1,43 +1,34 @@
-Hibernate: select institutio0_.id as id1_11_, institutio0_.create_date as create_date2_11_, institutio0_.created_by as created_by3_11_, institutio0_.update_date as update_date4_11_, institutio0_.updated_by as updated_by5_11_, institutio0_.version as version6_11_, institutio0_.customer_no as customer_no7_11_, institutio0_.explanation as explanation8_11_, institutio0_.has_debt_type as has_debt_type9_11_, institutio0_.icon_text as icon_text10_11_, institutio0_.institution_code as institution_code11_11_, institutio0_.is_active as is_active12_11_, institutio0_.is_order_allowed as is_order_allowed13_11_, institutio0_.is_reverse_allowed as is_reverse_allowe14_11_, institutio0_.name as name15_11_, institutio0_.owner_department_code as owner_department_18_11_, institutio0_.product_code as product_code19_11_, institutio0_.protocol_end_date as protocol_end_date16_11_, institutio0_.protocol_start_date as protocol_start_da17_11_ from institution institutio0_
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-Hibernate: select product0_.code as code1_54_0_, product0_.account_inquiry_code as account_inquiry_co2_54_0_, product0_.bank_product_code as bank_product_code3_54_0_, product0_.city_relation_required as city_relation_requ4_54_0_, product0_.explanation as explanation5_54_0_, product0_.fom_check_flag as fom_check_flag6_54_0_, product0_.is_active as is_active7_54_0_, product0_.name as name8_54_0_, product0_.product_campaign_code as product_campaign_c9_54_0_, product0_.product_family_code as product_family_co10_54_0_ from product product0_ where product0_.code=?
-2024-09-17 13:26:02,326 ERROR [http-nio-8081-exec-2][PymExceptionHandler] An Exception occured org.springframework.web.util.NestedServletException: Handler dispatch failed; nested exception is java.lang.NoSuchMethodError: 'void com.ykb.payments.bill.transaction.adapter.dto.AdapterInstitutionDTO.setProduct(com.ykb.payments.bill.transaction.institution.domain.Product)'
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1087)
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:965)
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)
-	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:898)
-	at javax.servlet.http.HttpServlet.service(HttpServlet.java:529)
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)
-	at javax.servlet.http.HttpServlet.service(HttpServlet.java:623)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:209)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:153)
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:178)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:153)
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:178)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:153)
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:178)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:153)
-	at org.springframework.boot.actuate.metrics.web.servlet.WebMvcMetricsFilter.doFilterInternal(WebMvcMetricsFilter.java:96)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:178)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:153)
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:178)
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:153)
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:481)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdapterInstitutionDTO {
+
+    private Long id;
+
+    private Product product;
+
+    private String institutionCode;
+
+    private Long customerNo;
+
+    private String name;
+
+    private String explanation;
+
+    private OwnerDepartment ownerDepartment;
+
+    private LocalDate protocolStartDate;
+
+    private LocalDate protocolEndDate;
+
+    private Boolean isReverseAllowed;
+
+    private Boolean isOrderAllowed;
+
+    private Boolean hasDebtType;
+
+    private String iconText;
+
+    private Boolean isActive;
+}
