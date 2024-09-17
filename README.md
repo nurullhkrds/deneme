@@ -1,59 +1,62 @@
 @Override
-	public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest request) throws MicroException {
-		Institution existingInstitution = institutionRepository.findById(request.getId())
-				.orElseThrow(() -> {
-					ExceptionData error = new ExceptionData();
-					error.setErrorCode(404L);
-					error.setErrorMessage(ResultConstant.INSTITUTION_NOT_FOUND.getMessage());
-					error.setApplicationName(SERVICE_NAME);
-					return new DataNotFoundException(error);
-				});
+public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest request) throws MicroException {
+    // Mevcut institution kontrolü
+    Institution existingInstitution = institutionRepository.findById(request.getId())
+        .orElseThrow(() -> {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(404L);
+            error.setErrorMessage(ResultConstant.INSTITUTION_NOT_FOUND.getMessage());
+            error.setApplicationName(SERVICE_NAME);
+            return new DataNotFoundException(error);
+        });
 
-		Optional<Institution> duplicateInstitution = institutionRepository.findByProductCodeAndInstitutionCode(request.getProductCode(), request.getInstitutionCode());
-		if (duplicateInstitution.isPresent() && !duplicateInstitution.get().getId().equals(request.getId())) {
-			ExceptionData error = new ExceptionData();
-			error.setErrorCode(409L);
-			error.setErrorMessage(ResultConstant.DUPLICATE_INSTITUTION_PRODUCT.getMessage(request.getInstitutionCode(), request.getProductCode()));
-			error.setApplicationName(SERVICE_NAME);
-			throw new DataConflictException(error);
-		}
+    // Duplicate institution kontrolü
+    Optional<Institution> duplicateInstitution = institutionRepository.findByProductCodeAndInstitutionCode(request.getProductCode(), request.getInstitutionCode());
+    if (duplicateInstitution.isPresent() && !duplicateInstitution.get().getId().equals(request.getId())) {
+        ExceptionData error = new ExceptionData();
+        error.setErrorCode(409L);
+        error.setErrorMessage(ResultConstant.DUPLICATE_INSTITUTION_PRODUCT.getMessage(request.getInstitutionCode(), request.getProductCode()));
+        error.setApplicationName(SERVICE_NAME);
+        throw new DataConflictException(error);
+    }
 
-		Product product = productRepository.findByCode(request.getProductCode())
-				.orElseThrow(() -> {
-					ExceptionData error = new ExceptionData();
-					error.setErrorCode(400L);
-					error.setErrorMessage(ResultConstant.PRODUCT_NOT_FOUND.getMessage());
-					error.setApplicationName(SERVICE_NAME);
-					return new DataNotFoundException(error);
-				});
+    // Product DTO ve OwnerDepartment DTO üzerinden kontrol
+    ProductDTO productDTO = productRepository.findByCode(request.getProductCode())
+        .map(product -> new ProductDTO(product.getCode(), product.getName()))
+        .orElseThrow(() -> {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(400L);
+            error.setErrorMessage(ResultConstant.PRODUCT_NOT_FOUND.getMessage());
+            error.setApplicationName(SERVICE_NAME);
+            return new DataNotFoundException(error);
+        });
 
-		OwnerDepartment ownerDepartment = ownerDepartmentRepository.findByCode(request.getOwnerDepartmentCode())
-				.orElseThrow(() -> {
-					ExceptionData error = new ExceptionData();
-					error.setErrorCode(400L);
-					error.setErrorMessage(ResultConstant.OWNER_DEPARTMENT_NOT_FOUND.getMessage());
-					error.setApplicationName(SERVICE_NAME);
-					return new DataNotFoundException(error);
-				});
+    OwnerDepartmentDTO ownerDepartmentDTO = ownerDepartmentRepository.findByCode(request.getOwnerDepartmentCode())
+        .map(department -> new OwnerDepartmentDTO(department.getCode(), department.getName()))
+        .orElseThrow(() -> {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(400L);
+            error.setErrorMessage(ResultConstant.OWNER_DEPARTMENT_NOT_FOUND.getMessage());
+            error.setApplicationName(SERVICE_NAME);
+            return new DataNotFoundException(error);
+        });
 
-		existingInstitution.setProduct(product);
-		existingInstitution.setInstitutionCode(request.getInstitutionCode());
-		existingInstitution.setCustomerNo(request.getCustomerNo());
-		existingInstitution.setName(request.getName());
-		existingInstitution.setExplanation(request.getExplanation());
-		existingInstitution.setOwnerDepartment(ownerDepartment);
-		existingInstitution.setProtocolStartDate(request.getProtocolStartDate());
-		existingInstitution.setProtocolEndDate(request.getProtocolEndDate());
-		existingInstitution.setIsReverseAllowed(request.getIsReverseAllowed());
-		existingInstitution.setIsOrderAllowed(request.getIsOrderAllowed());
-		existingInstitution.setHasDebtType(request.getHasDebtType());
-		existingInstitution.setIconText(request.getIconText());
-		existingInstitution.setIsActive(request.getIsActive());
-		existingInstitution.setUpdateDate(LocalDateTime.now());
+    // Request'ten DTO'ya MapStruct ile dönüşüm
+    InstitutionDTO institutionDTO = institutionMapper.toInstitutionDTO(request);
+    institutionDTO.setProduct(productDTO);
+    institutionDTO.setOwnerDepartment(ownerDepartmentDTO);
 
-		institutionRepository.save(existingInstitution);
+    // DTO'dan entity'ye dönüşüm
+    Institution updatedInstitution = institutionMapper.toInstitution(institutionDTO);
+    updatedInstitution.setId(existingInstitution.getId());  // Güncelleme sırasında aynı ID'yi kullanıyoruz
+    updatedInstitution.setCreateDate(existingInstitution.getCreateDate()); // Orijinal creation date'i koruyoruz
+    updatedInstitution.setUpdateDate(LocalDateTime.now());  // Update date'i güncelliyoruz
 
-		InstitutionDTO dto = institutionMapper.toInstitutionDTO(existingInstitution);
+    // Veritabanına kaydediliyor
+    institutionRepository.save(updatedInstitution);
 
-		return new SuccessDataResult<>(ResultConstant.INSTITUTION_UPDATED.getMessage(), dto, 200);
-	}
+    // Güncellenmiş entity'yi DTO'ya çeviriyoruz
+    InstitutionDTO updatedDTO = institutionMapper.toInstitutionDTO(updatedInstitution);
+
+    return new SuccessDataResult<>(ResultConstant.INSTITUTION_UPDATED.getMessage(), updatedDTO, 200);
+}
