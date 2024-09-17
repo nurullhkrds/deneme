@@ -1,12 +1,13 @@
-const CloseTabButton = () => {
-  const closeTab = () => {
-    // Sekmeyi kapatmayı dener
-    window.close();
-  };
+@Mapper(componentModel = "spring")
+public interface AdapterInstitutionMapper {
 
-  return (
-    <button onClick={closeTab}>
-      Bu Sekmeyi Kapat
-    </button>
-  );
-};
+    AdapterInstitutionDTO toInstitutionDTO(Institution entity);
+
+    Institution toInstitution (AdapterInstitutionDTO dto);
+
+    List<AdapterInstitutionDTO> toInstitutionDTOList (List<Institution> entityList);
+
+}
+
+
+java: Can't map property "Product product" to "String product". Consider to declare/implement a mapping method: "String map(Product value)".
