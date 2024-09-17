@@ -1,7 +1,16 @@
+ // Mevcut Institution entity'sini DTO ile güncelleme (Product ve OwnerDepartment ile)
+    @Mapping(target = "id", ignore = true)  // ID'yi değiştirmek istemiyoruz
+    @Mapping(target = "createDate", ignore = true)  // createDate'i koruyoruz
+    @Mapping(target = "updateDate", expression = "java(java.time.LocalDateTime.now())")  // updateDate'i güncelleyerek set ediyoruz
+    @Mapping(source = "productCode", target = "product.code")  // Product DTO'yu set ediyoruz
+    @Mapping(source = "ownerDepartmentCode", target = "ownerDepartment.code")  // OwnerDepartment DTO'yu set ediyoruz
+    void updateInstitutionFromDTO(UpdateInstitutionRequest dto, @MappingTarget Institution institution);
+
+
 @Override
 public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest request) throws MicroException {
-    // Mevcut institution kontrolü (Bu aşamada sadece varlık kontrolü yapılıyor)
-    institutionRepository.findById(request.getId())
+    // 1. Mevcut institution kontrolü
+    Institution existingInstitution = institutionRepository.findById(request.getId())
         .orElseThrow(() -> {
             ExceptionData error = new ExceptionData();
             error.setErrorCode(404L);
@@ -10,7 +19,7 @@ public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest req
             return new DataNotFoundException(error);
         });
 
-    // Duplicate institution kontrolü (Aynı productCode ve institutionCode ile başka bir kaydın olup olmadığını kontrol ediyoruz)
+    // 2. Duplicate institution kontrolü (Mevcut kayıt dışında benzersizlik kontrolü)
     Optional<Institution> duplicateInstitution = institutionRepository.findByProductCodeAndInstitutionCode(request.getProductCode(), request.getInstitutionCode());
     if (duplicateInstitution.isPresent() && !duplicateInstitution.get().getId().equals(request.getId())) {
         ExceptionData error = new ExceptionData();
@@ -20,41 +29,14 @@ public DataResult<InstitutionDTO> updateInstitution(UpdateInstitutionRequest req
         throw new DataConflictException(error);
     }
 
-    // Product DTO ve OwnerDepartment DTO üzerinden kontrol
-    ProductDTO productDTO = productRepository.findByCode(request.getProductCode())
-        .map(productMapper::toProductDTO)
-        .orElseThrow(() -> {
-            ExceptionData error = new ExceptionData();
-            error.setErrorCode(400L);
-            error.setErrorMessage(ResultConstant.PRODUCT_NOT_FOUND.getMessage());
-            error.setApplicationName(SERVICE_NAME);
-            return new DataNotFoundException(error);
-        });
+    // 3. Mevcut Institution kaydını DTO'dan güncelle (Product ve OwnerDepartment alanları ile birlikte)
+    institutionMapper.updateInstitutionFromDTO(request, existingInstitution);  // DTO'dan mevcut kayda güncelleme yapılıyor
 
-    OwnerDepartmentDTO ownerDepartmentDTO = ownerDepartmentRepository.findByCode(request.getOwnerDepartmentCode())
-        .map(ownerDepartmentMapper::toOwnerDepartmentDTO)
-        .orElseThrow(() -> {
-            ExceptionData error = new ExceptionData();
-            error.setErrorCode(400L);
-            error.setErrorMessage(ResultConstant.OWNER_DEPARTMENT_NOT_FOUND.getMessage());
-            error.setApplicationName(SERVICE_NAME);
-            return new DataNotFoundException(error);
-        });
+    // 4. Güncellenmiş institution veritabanına kaydediliyor
+    institutionRepository.save(existingInstitution);
 
-    // UpdateInstitutionRequest'ten DTO'ya dönüşüm (ID dahil)
-    InstitutionDTO institutionDTO = institutionMapper.toInstitutionDTO(request);
-    institutionDTO.setProduct(productDTO);
-    institutionDTO.setOwnerDepartment(ownerDepartmentDTO);
-    institutionDTO.setUpdateDate(LocalDateTime.now());
-
-    // DTO'dan entity'ye dönüşüm
-    Institution updatedInstitution = institutionMapper.toInstitution(institutionDTO);
-
-    // Güncellenmiş institution veritabanına kaydediliyor
-    institutionRepository.save(updatedInstitution);
-
-    // Güncellenmiş entity'yi DTO'ya çeviriyoruz
-    InstitutionDTO updatedDTO = institutionMapper.toInstitutionDTO(updatedInstitution);
+    // 5. Güncellenmiş entity'yi DTO'ya çevir ve geri döndür
+    InstitutionDTO updatedDTO = institutionMapper.toInstitutionDTO(existingInstitution);
 
     return new SuccessDataResult<>(ResultConstant.INSTITUTION_UPDATED.getMessage(), updatedDTO, 200);
 }
