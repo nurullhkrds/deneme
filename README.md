@@ -1,13 +1,14 @@
-@Mapper(componentModel = "spring")
-public interface AdapterInstitutionMapper {
+    // Ürün nesnesini String'e dönüştüren bir map metodu ekleyin
+    default String map(Product product) {
+        return product != null ? product.getName() : null; // Ürün adını döndüren basit bir dönüşüm
+    }
 
-    AdapterInstitutionDTO toInstitutionDTO(Institution entity);
-
-    Institution toInstitution (AdapterInstitutionDTO dto);
-
-    List<AdapterInstitutionDTO> toInstitutionDTOList (List<Institution> entityList);
-
-}
-
-
-java: Can't map property "Product product" to "String product". Consider to declare/implement a mapping method: "String map(Product value)".
+    // Eğer ters dönüşüm de gerekliyse:
+    default Product map(String productName) {
+        if (productName == null || productName.isEmpty()) {
+            return null;
+        }
+        Product product = new Product();
+        product.setName(productName);
+        return product;
+    }
