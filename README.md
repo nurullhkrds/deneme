@@ -15,3 +15,5 @@ public interface InstitutionRepository extends JpaRepository<Institution, Long> 
         error.setApplicationName(SERVICE_NAME);
         throw new DataConflictException(error);
     }
+
+	Optional<Institution> findByProductCodeAndInstitutionCode(String productCode, String institutionCode);
