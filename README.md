@@ -1,39 +1,40 @@
-@Getter
-public enum ResultConstant {
+  @Override
+    public DataResult<AdapterInstitutionDTO> createInstitution(CreateInstitutionRequest request) throws MicroException {
+        Optional<Institution> existingInstitution = institutionRepository.findByProductCodeAndInstitutionCode(request.getProductCode(), request.getInstitutionCode());
+        if (existingInstitution.isPresent()) {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(409L);
+            error.setErrorMessage(ResultConstant.DUPLICATE_INSTITUTION_PRODUCT.getMessage(request.getInstitutionCode(), request.getProductCode()));
+            error.setApplicationName(SERVICE_NAME);
+            throw new DataConflictException(error);
+        }
 
-    RECORD_ALREADY_EXISTS("Böyle bir kayıt zaten var"),
-    RECORD_ALREADY_EXISTS_SECOND("Bu Returnmap için aynı kurum hata kodu zaten tanımlı"),
-    RECORD_NOT_FOUND("Kayıt bulunumadı"),
-    CONVERSION_FAILED("Dönüştürme işlemi başarısız"),
-    SUCCESSFULLY_ADDED("Başarıyla eklendi"),
-    SUCCESSFULLY_UPDATED("Başarıyla güncellendi"),
-    SUCCESSFULLY_DELETED("Başarıyla silindi"),
-    ERROR("Hata"),
-    DATA_RETRIEVED("Veri getirildi"),
-    LISTED_EMPTY("Liste boş"),
-    DATA_LISTED("Veriler listelendi"),
-    INSTITUTION_CREATED("Kurum başarıyla oluşturuldu"),
-    INSTITUTION_UPDATED("Kurum başarıyla güncellendi"),
-    INSTITUTION_DELETED("Kurum başarıyla silindi"),
-    INSTITUTION_NOT_FOUND("Kurum bulunamadı"),
-    
-    PRODUCT_NOT_FOUND("Ürün bulunamadı"),
-    OWNER_DEPARTMENT_NOT_FOUND("Sahip departman bulunamadı"),
+        Product product = productRepository.findByCode(request.getProductCode())
+                .orElseThrow(() -> {
+                    ExceptionData error = new ExceptionData();
+                    error.setErrorCode(400L);
+                    error.setErrorMessage(ResultConstant.PRODUCT_NOT_FOUND.getMessage());
+                    error.setApplicationName(SERVICE_NAME);
+                    return new DataNotFoundException(error);
+                });
 
-    // Yeni eklenen spesifik mesaj
-    DUPLICATE_INSTITUTION_PRODUCT("Bu kurum koduna (%s) ve bu ürün koduna (%s) ait bir kayıt zaten mevcut.");
 
-    private final String message;
+        OwnerDepartment ownerDepartment = ownerDepartmentRepository.findByCode(request.getOwnerDepartmentCode())
+                .orElseThrow(() -> {
+                    ExceptionData error = new ExceptionData();
+                    error.setErrorCode(400L);
+                    error.setErrorMessage(ResultConstant.OWNER_DEPARTMENT_NOT_FOUND.getMessage());
+                    error.setApplicationName(SERVICE_NAME);
+                    return new DataNotFoundException(error);
+                });
 
-    ResultConstant(String message) {
-        this.message = message;
+        Institution institution = adapterInstitutionMapper.toInstitution(request);
+
+        institution.setProduct(product);
+        institution.setOwnerDepartment(ownerDepartment);
+        institution.setCreateDate(LocalDateTime.now());
+        institutionRepository.save(institution);
+        AdapterInstitutionDTO dto = adapterInstitutionMapper.toInstitutionDTO(institution);
+
+        return new SuccessDataResult<>(ResultConstant.INSTITUTION_CREATED.getMessage(), dto, 200);
     }
-
-    public String getMessage(Object... args) {
-        return String.format(message, args);
-    }
-}
-
-
-    error.setErrorMessage(ResultConstant.DUPLICATE_INSTITUTION_PRODUCT.getMessage(request.getInstitutionCode(), request.getProductCode()));
-
