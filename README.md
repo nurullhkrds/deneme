@@ -1,50 +1,40 @@
-@Getter
-@Setter
-public class CreateInstitutionDebtTypeRequest extends BaseCreateWebRequest {
+	@Override
+	public DataResult<InstitutionDebtTypeWebDTO> createInstitutionDebtType(CreateInstitutionDebtTypeRequest request) throws MicroException {
+		Optional<InstitutionDebtType> existingInstitutionDebtType = InstitutionDebtTypeRepository
+				.findByInstitutionIdAndDebtTypeCode(request.getInstitutionId(), request.getDebtType());
+		if (existingInstitutionDebtType.isPresent()) {
+			ExceptionData error = new ExceptionData();
+			error.setErrorCode(409L);
+			error.setErrorMessage(ResultConstant.INSTITUTION_DEBT_TYPE_ALREADY_EXISTS.getMessage());
+			error.setApplicationName(SERVICE_NAME);
+			throw new DataConflictException(error);
+		}
 
-    @NotNull
-    @Schema(description = "ID of the institution", example = "1", required = true)
-    private Long institutionId;  // Institution ID'si
+		InstitutionDTO institutionDTO = institutionService.getInstitutionById(request.getInstitutionId());
 
-    @NotNull
-    @Size(max = 30)
-    @Schema(description = "Debt type of the institution", example = "LOAN", required = true)
-    private String debtType;  // Debt type
+		if(institutionDTO == null) {
+			ExceptionData error = new ExceptionData();
+			error.setErrorCode(404L);
+			error.setErrorMessage(ResultConstant.INSTITUTION_NOT_FOUND.getMessage());
+			error.setApplicationName(SERVICE_NAME);
+			throw new DataNotFoundException(error);
+		}
 
-    @NotNull
-    @Size(max = 500)
-    @Schema(description = "Explanation for the debt type", example = "This is a loan debt", required = true)
-    private String explanation;  // Debt explanation
+		InstitutionDebtTypeDTO dto = InstitutionDebtTypeMapper.toDTO(request);
+		dto.setInstitution(institutionDTO);
+		dto.setCreateDate(LocalDateTime.now());
 
-    @NotNull
-    @Schema(description = "Is the debt type active", example = "true", required = true)
-    private Boolean isActive;  // Aktif olup olmadığını belirten alan
-}
+		InstitutionDebtType entity = InstitutionDebtTypeMapper.toEntity(dto);
+		entity = InstitutionDebtTypeRepository.save(entity);
 
+		InstitutionDebtTypeWebDTO webDTO = InstitutionDebtTypeMapper.toWebDTO(entity);
+		return new SuccessDataResult<>(ResultConstant.INSTITUTION_DEBT_TYPE_CREATED.getMessage(), webDTO,200);
+		
+	}
 
-@Getter
-@Setter
-public class UpdateInstitutionDebtTypeRequest extends BaseUpdateWebRequest {
-
-    @NotNull
-    @Schema(description = "ID of the institution debt type", example = "1", required = true)
-    private Long id;  // Güncellenecek debt type kaydının ID'si
-
-    @NotNull
-    @Schema(description = "ID of the institution", example = "1", required = true)
-    private Long institutionId;  // Institution ID'si
-
-    @NotNull
-    @Size(max = 30)
-    @Schema(description = "Debt type of the institution", example = "LOAN", required = true)
-    private String debtType;  // Debt type
-
-    @NotNull
-    @Size(max = 500)
-    @Schema(description = "Explanation for the debt type", example = "This is a loan debt", required = true)
-    private String explanation;  // Debt explanation
-
-    @NotNull
-    @Schema(description = "Is the debt type active", example = "true", required = true)
-    private Boolean isActive;  // Aktif olup olmadığını belirten alan
-}
+	@Override
+	public DataResult<InstitutionDebtTypeWebDTO> updateInstitutionDebtType(UpdateInstitutionDebtTypeRequest request) throws MicroException {
+		
+		
+		return null;
+	}
