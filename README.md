@@ -1,1 +1,1 @@
-	DAILY_LIMITATIONS_CHECK_FOR_INSTITUTION("DAILY_LIMITATIONS_CHECK_FOR_INSTITUTION"),
+    "errorMessage": "could not execute statement; SQL [n/a]; constraint [null]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement",
