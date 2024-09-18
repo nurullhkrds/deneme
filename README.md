@@ -1,29 +1,50 @@
-@Entity
 @Getter
 @Setter
-@Audited
+public class CreateInstitutionDebtTypeRequest extends BaseCreateWebRequest {
 
-public class InstitutionDebtType extends UpdatableBaseEntity {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "INSTITUTION_DEBT_TYPE_GENERATOR")
-	@SequenceGenerator(name = "INSTITUTION_DEBT_TYPE_GENERATOR", sequenceName = "SEQ_INSTITUTION_DEBT_TYPE", allocationSize = 1)
-	@Column(nullable = false, precision = 16, scale = 0)
-	private Long id;
-	
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
-	@JoinColumn(name = "INSTITUTION_ID", referencedColumnName = "ID")
-	private Institution institution;
-		
-	@Column(nullable = false, length = 30)
-	private String debtType;
-	
-	@Column(nullable = false, length = 500)
-	private String explanation;
-	
-	@Column(nullable = false)
-	private Boolean isActive;
-	
+    @NotNull
+    @Schema(description = "ID of the institution", example = "1", required = true)
+    private Long institutionId;  // Institution ID'si
+
+    @NotNull
+    @Size(max = 30)
+    @Schema(description = "Debt type of the institution", example = "LOAN", required = true)
+    private String debtType;  // Debt type
+
+    @NotNull
+    @Size(max = 500)
+    @Schema(description = "Explanation for the debt type", example = "This is a loan debt", required = true)
+    private String explanation;  // Debt explanation
+
+    @NotNull
+    @Schema(description = "Is the debt type active", example = "true", required = true)
+    private Boolean isActive;  // Aktif olup olmadığını belirten alan
+}
 
 
+@Getter
+@Setter
+public class UpdateInstitutionDebtTypeRequest extends BaseUpdateWebRequest {
+
+    @NotNull
+    @Schema(description = "ID of the institution debt type", example = "1", required = true)
+    private Long id;  // Güncellenecek debt type kaydının ID'si
+
+    @NotNull
+    @Schema(description = "ID of the institution", example = "1", required = true)
+    private Long institutionId;  // Institution ID'si
+
+    @NotNull
+    @Size(max = 30)
+    @Schema(description = "Debt type of the institution", example = "LOAN", required = true)
+    private String debtType;  // Debt type
+
+    @NotNull
+    @Size(max = 500)
+    @Schema(description = "Explanation for the debt type", example = "This is a loan debt", required = true)
+    private String explanation;  // Debt explanation
+
+    @NotNull
+    @Schema(description = "Is the debt type active", example = "true", required = true)
+    private Boolean isActive;  // Aktif olup olmadığını belirten alan
 }
