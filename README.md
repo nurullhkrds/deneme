@@ -26,3 +26,5 @@ public class InstitutionFeature extends UpdatableBaseEntity {
 	private Boolean isActive;
 
 }
+public class CreateInstitutionFeatureRequest extends BaseCreateWebRequest {
+}
