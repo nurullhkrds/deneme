@@ -1,66 +1,42 @@
-	@Override
-	public DataResult<InstitutionFeatureDTO> createInstitutionFeature(CreateInstitutionFeatureRequest request) throws MicroException {
-
-		Optional<InstitutionFeature> existingInstitutionFeature = institutionFeatureRepository
-				.findByInstitutionIdAndFeatureCode(request.getInstitutionId(), request.getFeatureCode().getValue());
-		if (existingInstitutionFeature.isPresent()) {
-			ExceptionData error = new ExceptionData();
-			error.setErrorCode(409L);
-			error.setErrorMessage(ResultConstant.INSTITUTION_FEATURE_ALREADY_EXISTS.getMessage(request.getInstitutionId()));
-			error.setApplicationName(SERVICE_NAME);
-			throw new DataNotFoundException(error);
-		}
-
-		InstitutionDTO institutionDTO = institutionService.getInstitutionById(request.getInstitutionId());
-
-		if (institutionDTO == null) {
-			ExceptionData error = new ExceptionData();
-			error.setErrorCode(404L);
-			error.setErrorMessage(ResultConstant.INSTITUTION_NOT_FOUND.getMessage());
-			error.setApplicationName(SERVICE_NAME);
-			throw new DataNotFoundException(error);
-		}
-
-		FeatureDTO featureDTO = featureService.getFeatureByCode(request.getFeatureCode());
-		InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureMapper.toInstitutionFeature(request);
-		institutionFeatureDTO.setInstitution(institutionDTO);
-		institutionFeatureDTO.setFeature(featureDTO);
-
-		InstitutionFeature institutionFeature = institutionFeatureMapper.toInstitutionFeature(institutionFeatureDTO);
-		institutionFeature = institutionFeatureRepository.save(institutionFeature);
-		institutionFeatureDTO = institutionFeatureMapper.toInstitutionFeatureDTO(institutionFeature);
-		return new SuccessDataResult<>(ResultConstant.INSTITUTION_FEATURE_CREATED.getMessage(), institutionFeatureDTO,200);
-	}
-
-
-
 @Override
-	public DataResult<InstitutionFeatureDTO> updateInstitutionFeature(UpdateInstitutionFeatureRequest request) {
+public DataResult<InstitutionFeatureDTO> updateInstitutionFeature(UpdateInstitutionFeatureRequest request) throws MicroException {
+    // 1. Güncellenmek istenen InstitutionFeature'in mevcut olup olmadığını kontrol et
+    InstitutionFeature existingInstitutionFeature = institutionFeatureRepository.findById(request.getId())
+        .orElseThrow(() -> {
+            ExceptionData error = new ExceptionData();
+            error.setErrorCode(404L);
+            error.setErrorMessage(ResultConstant.INSTITUTION_FEATURE_NOT_FOUND.getMessage(request.getId()));
+            error.setApplicationName(SERVICE_NAME);
+            return new DataNotFoundException(error);
+        });
 
+    // 2. Unique Constraint'i kontrol et (başka bir InstitutionFeature aynı Institution ve Feature kombinasyonu ile varsa hata ver)
+    Optional<InstitutionFeature> duplicateFeature = institutionFeatureRepository
+            .findByInstitutionIdAndFeatureCode(request.getInstitutionId(), request.getFeatureCode().getValue());
+    if (duplicateFeature.isPresent() && !duplicateFeature.get().getId().equals(request.getId())) {
+        ExceptionData error = new ExceptionData();
+        error.setErrorCode(409L);
+        error.setErrorMessage(ResultConstant.INSTITUTION_FEATURE_ALREADY_EXISTS.getMessage(request.getInstitutionId()));
+        error.setApplicationName(SERVICE_NAME);
+        throw new DataConflictException(error);
+    }
 
-		return null;
-	}
-@Getter
-@Setter
-public class UpdateInstitutionFeatureRequest extends BaseUpdateWebRequest {
+    // 3. Institution ve Feature bilgilerini DTO olarak alıyoruz
+    InstitutionDTO institutionDTO = institutionService.getInstitutionById(request.getInstitutionId());
+    FeatureDTO featureDTO = featureService.getFeatureByCode(request.getFeatureCode());
 
-    @NotNull
-    @Schema(description = "ID of the institution feature", example = "1", required = true)
-    private Long id;
+    // 4. Mevcut InstitutionFeature entity'sini UpdateInstitutionFeatureRequest'ten gelen yeni verilerle güncelle
+    InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureMapper.toInstitutionFeatureDTO(existingInstitutionFeature);
+    institutionFeatureDTO.setInstitution(institutionDTO);  // DTO olarak güncelle
+    institutionFeatureDTO.setFeature(featureDTO);  // DTO olarak güncelle
+    institutionFeatureDTO.setFeatureValue(request.getFeatureValue());
+    institutionFeatureDTO.setIsActive(request.getIsActive());
 
-    @NotNull
-    @Schema(description = "ID of the institution", example = "1", required = true)
-    private Long institutionId;
+    // 5. DTO'dan entity'ye dönüşüm ve güncelleme
+    InstitutionFeature updatedInstitutionFeature = institutionFeatureMapper.toInstitutionFeature(institutionFeatureDTO);
+    updatedInstitutionFeature = institutionFeatureRepository.save(updatedInstitutionFeature);
 
-    @NotNull
-    @Schema(description = "Enum Code of the feature", example = "DAILY_LIMITATIONS_CHECK_FOR_INSTITUTION", required = true)
-    private EnumFeatureCode featureCode;
-
-    @Size(max = 250)
-    @Schema(description = "Value of the feature", example = "Some feature value")
-    private String featureValue;
-
-    @NotNull
-    @Schema(description = "Is the feature active", example = "true", required = true)
-    private Boolean isActive;
+    // 6. Güncellenen veriyi DTO'ya dönüştürüp geri döndürme
+    InstitutionFeatureDTO updatedDTO = institutionFeatureMapper.toInstitutionFeatureDTO(updatedInstitutionFeature);
+    return new SuccessDataResult<>(ResultConstant.INSTITUTION_FEATURE_UPDATED.getMessage(), updatedDTO, 200);
 }
