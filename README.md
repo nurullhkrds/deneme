@@ -1,11 +1,24 @@
-public OwnerDepartmentDTO findByCode(String code) {
-        return ownerDepartmentRepository.findByCode(code)
-            .map(ownerDepartmentMapper::toOwnerDepartmentDTO)
-            .orElseThrow(() -> {
-                ExceptionData error = new ExceptionData();
-                error.setErrorCode(400L);
-                error.setErrorMessage(ResultConstant.OWNER_DEPARTMENT_NOT_FOUND.getMessage());
-                error.setApplicationName(SERVICE_NAME);
-                throw new DataNotFoundException(error);
-            });
-    }
+@Getter
+@Setter
+public class UpdateInstitutionFeatureRequest extends BaseCreateWebRequest {
+    
+    @NotNull
+    @Schema(description = "ID of the institution feature", example = "1", required = true)
+    private Long id;  // Güncellenmek istenen institution feature kaydının ID'si
+
+    @NotNull
+    @Schema(description = "ID of the institution", example = "1", required = true)
+    private Long institutionId;  // Institution ID'si
+
+    @NotNull
+    @Schema(description = "Code of the feature", example = "FEATURE_001", required = true)
+    private String featureCode;  // Feature kodu
+
+    @Size(max = 250)
+    @Schema(description = "Value of the feature", example = "Some feature value")
+    private String featureValue;  // Feature'ın değeri
+
+    @NotNull
+    @Schema(description = "Is the feature active", example = "true", required = true)
+    private Boolean isActive;  // Aktif olup olmadığını belirten alan
+}
