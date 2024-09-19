@@ -1,315 +1,151 @@
-public class QueryBillsProcess extends AbstractProcess {
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-    private AdapterService  adapterService;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+class QueryBillsProcessTest {
+
+    @Mock
+    private AdapterService adapterService;
+
+    @Mock
     private ProvisionService provisionService;
+
+    @Mock
     private InstitutionUserIntService institutionUserIntService;
+
+    @Mock
     private BillPaymentRestFacade billPaymentRestFacade;
+
+    @Mock
     private PaymentRepository paymentRepository;
+
+    @Mock
     private PaymentMapper paymentMapper;
+
+    @Mock
     private LimitationService limitationService;
 
-    private Long customerNo;
-    private Long identityNo;
-    private String taxOfficeNo;
-    private String subscriberNo;
-    private List<SubscriberNoPartRequestDTO> subscriberNoPartList;
-    private String currency;
-    private List<QueriedBillDTO> queriedBillDTOList;
+    @Mock
+    private PaymentUtilImpl paymentUtilImpl;
 
-    private List<ProvisionDTO>  provisionList;
-    private List<InstitutionUserIntfDTO> institutionUserIntListDTO;    
+    @Mock
     private PaymentEventPublisher paymentEventPublisher;
-    
-    private PaymentUtilImpl paymentUtilImpl;    
-    private boolean	isFomOperationEnabled;
 
+    @InjectMocks
+    private QueryBillsProcess queryBillsProcess;
 
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
 
-    @Override
-    public void executeProcess() throws BillException {
-        addProcessStep(new GatherData());
-        addProcessStep(new FormatSubscriberNoPartList());
-        addProcessStep(new ValidateSubscriberNo());
-        addProcessStep(new CheckCustomerQueryLimit());
-        if(isOnlineProcess()){
-            addProcessStep(new QueryFromService());
-            addProcessStep(new EliminateBills());
-        }else{
-            addProcessStep(new QueryFromDatabase());
-        }
-        addProcessStep(new InvalidateNotPaidProvisions());
-        addProcessStep(new CreateProvisions());
-        addProcessStep(new UpdateCustomerQueryLimit());
-        executeSteps();
+        // Veri paketini dolduralım
+        queryBillsProcess.dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
+        queryBillsProcess.dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
+        queryBillsProcess.dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "SUB123");
+        queryBillsProcess.dataPack.put(ProcessDataPackKey.CURRENCY.getKey(), "USD");
     }
 
-    private class GatherData implements ProcessStep {
+    @Test
+    void testExecuteProcess_OnlineProcess_Success() throws BillException {
+        // Mocking for online process
+        when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(true);
+        when(adapterService.queryBills(any(), any(), any())).thenReturn(prepareMockQueryBillsResponse());
 
-        @Override
-        public void executeStep() {
-            customerNo = (Long) dataPack.get(ProcessDataPackKey.CUSTOMER_NO.getKey());
-            identityNo = (Long) dataPack.get(ProcessDataPackKey.IDENTITY_NO.getKey());
-            taxOfficeNo = (String) dataPack.get(ProcessDataPackKey.TAX_ID.getKey());
-            subscriberNo = (String) dataPack.get(ProcessDataPackKey.SUBSCRIBER_NO.getKey());
-            subscriberNoPartList = (List<SubscriberNoPartRequestDTO>) dataPack.get((ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey()));
-            currency = (String) dataPack.get(ProcessDataPackKey.CURRENCY.getKey());
-            adapterService = SpringUtil.getBean(AdapterService.class);
-            institutionUserIntService = SpringUtil.getBean(InstitutionUserIntService.class);
-            institutionUserIntListDTO = institutionUserIntService.getUserInterface(institutionDebtTypeId);
-            billPaymentRestFacade = SpringUtil.getBean(BillPaymentRestFacade.class);
-            paymentRepository = SpringUtil.getBean(PaymentRepository.class);
-            paymentMapper = SpringUtil.getBean(PaymentMapper.class);
-            limitationService=SpringUtil.getBean(LimitationService.class);
-            
-            paymentUtilImpl = SpringUtil.getBean(PaymentUtilImpl.class);
-			isFomOperationEnabled = paymentUtilImpl.isFomOperationEnabled(institution);
-          
-        }
+        // Process execution
+        queryBillsProcess.executeProcess();
 
+        // Verifying the steps and results
+        assertNotNull(queryBillsProcess.getQueriedBillDTOList());
+        verify(adapterService, times(1)).queryBills(any(), any(), any());
     }
 
-	private class FormatSubscriberNoPartList implements ProcessStep {
+    @Test
+    void testExecuteProcess_OfflineProcess_Success() throws BillException {
+        // Mocking for offline process
+        when(paymentUtilImpl.isFomOperationEnabled(any())).thenReturn(false);
 
-		@Override
-		public void executeStep() {			
-			subscriberNo = SubscriberNumberUtils.formatSubscriberNumberParts(institutionUserIntListDTO, subscriberNoPartList);
-		}
+        // Process execution
+        queryBillsProcess.executeProcess();
 
-	}
-
-    private class ValidateSubscriberNo implements ProcessStep {
-
-        @Override
-        public void executeStep() {
-        	boolean valid = SubscriberNumberUtils.checkSubscriberNumberParts(institutionUserIntListDTO, subscriberNoPartList);
-        	
-        	if(!valid) {
-        		error = EnumBillResult.SUBSCRIBER_NUMBER_INVALID;
-        	}
-        }
-
+        // Verifying the steps
+        verify(adapterService, never()).queryBills(any(), any(), any()); // Should not call online process
+        verify(provisionService, times(1)).invalidateNotPaidProvisions(any(), any());
     }
 
-    private class CheckCustomerQueryLimit implements ProcessStep {
+    @Test
+    void testGatherDataStep() {
+        // Creating and executing the GatherData step
+        QueryBillsProcess.GatherData gatherData = queryBillsProcess.new GatherData();
+        gatherData.executeStep();
 
-        @Override
-        public void executeStep() {
-        	if (!isFomOperationEnabled) { // FOM operations are disabled for this product
-				return;
-			}
-        	
-            Integer customerInt=null;
-            if(customerNo!=null){
-                customerInt=customerNo.intValue();
-            }
-
-            /** TODO identityNo tipi long olarak verilmis , degistiginde alttaki kod blogu silinmeli
-             */
-            String identityNoStr=null;
-            if(identityNo!=null){
-                identityNoStr=identityNo.toString();
-            }
-
-            /** TODO product code constant olacak
-                hata kodunun adk da maplendigi teyit edilcek
-             */
-            PaymentAllowedResponse paymentAllowedResponse = limitationService.isPaymentAllowedWithoutDebtOwner(identityNoStr,
-                    customerInt, null, "B0002");
-            if (!paymentAllowedResponse.isPaymentAllowed()) {
-                error = EnumBillResult.BILL_QUERY_LIMIT_REACHED;
-            }
-
-        }
-
+        // Verify that the services were fetched and set
+        assertNotNull(queryBillsProcess.adapterService);
+        assertNotNull(queryBillsProcess.institutionUserIntService);
+        assertNotNull(queryBillsProcess.billPaymentRestFacade);
+        assertEquals(123L, queryBillsProcess.customerNo);
+        assertEquals(456L, queryBillsProcess.identityNo);
+        assertEquals("SUB123", queryBillsProcess.subscriberNo);
+        assertEquals("USD", queryBillsProcess.currency);
     }
 
-    private class QueryFromService implements ProcessStep {
-        @Override
-        public void executeStep() throws BillException {    
-            QueryBillsAdapterRequest queryBillsAdapterRequest = prepareQueryBills();
-            
-            QueryBillsAdapterResponse queryBillsAdapterResponse = adapterService.queryBills(queryBillsAdapterRequest, channelTransactionId, channelSessionId);
+    @Test
+    void testFormatSubscriberNoPartList() {
+        // Mocking the required dependencies
+        queryBillsProcess.institutionUserIntListDTO = Collections.emptyList();
+        queryBillsProcess.subscriberNoPartList = Collections.singletonList(new SubscriberNoPartRequestDTO());
 
-            if(EnumBillResult.SUCCESS.equals(EnumBillResult.parseValueByHmnCode(queryBillsAdapterResponse.getInternalResultCode()))) {
-                queriedBillDTOList = queryBillsAdapterResponse.getBills();
-            }else{
-                error = EnumBillResult.parseValueByHmnCode(queryBillsAdapterResponse.getInternalResultCode());
-            }
-           
-        }
+        // Execute FormatSubscriberNoPartList step
+        QueryBillsProcess.FormatSubscriberNoPartList formatStep = queryBillsProcess.new FormatSubscriberNoPartList();
+        formatStep.executeStep();
 
-        private  QueryBillsAdapterRequest prepareQueryBills(){
-            QueryBillsAdapterRequest queryBillsAdapterRequest = new QueryBillsAdapterRequest();
-            queryBillsAdapterRequest.setCustomerNo(customerNo);
-            queryBillsAdapterRequest.setIdentityNo(identityNo);
-            queryBillsAdapterRequest.setSubscriberNoPartList(subscriberNoPartList);
-            queryBillsAdapterRequest.setRequestDate(LocalDateTime.now());
-            queryBillsAdapterRequest.setChannelCode(channelCode);
-            queryBillsAdapterRequest.setInstitutionDebtTypeId(institutionDebtTypeId);
-            queryBillsAdapterRequest.setInstitutionId(institution.getId());
-            queryBillsAdapterRequest.setOperatingBranchCode(branchCode);
-            queryBillsAdapterRequest.setInstitution(institutionCode);
-            queryBillsAdapterRequest.setProduct(productCode);
-            queryBillsAdapterRequest.setUserCode(agentCode);
-            queryBillsAdapterRequest.setSubscriberNo(subscriberNo);
-            queryBillsAdapterRequest.setTransactionDate(LocalDateTime.now());
-            return  queryBillsAdapterRequest;
-        }
-
-        
-
+        // Verifying the formatting
+        assertNotNull(queryBillsProcess.subscriberNo);
     }
 
-	private class EliminateBills implements ProcessStep {
+    @Test
+    void testCheckCustomerQueryLimit() {
+        // Mock the behavior for limitation service
+        when(limitationService.isPaymentAllowedWithoutDebtOwner(any(), any(), any(), any())).thenReturn(new PaymentAllowedResponse(true));
 
-		@Override
-		public void executeStep() {
+        // Execute CheckCustomerQueryLimit step
+        QueryBillsProcess.CheckCustomerQueryLimit checkLimit = queryBillsProcess.new CheckCustomerQueryLimit();
+        checkLimit.executeStep();
 
-			if (CollectionUtils.isEmpty(queriedBillDTOList)) {
-				error = EnumBillResult.BILL_NOT_FOUND;
-				return;
-			}
-			ResponseGetCustomerPaidBillList harmoniPaidBills = billPaymentRestFacade
-					.getCustomerPaidBillList(productCode, institutionCode, subscriberNo);
-
-			List<HmnPaidBillDTO> harmoniPaidBillList = Optional.ofNullable(harmoniPaidBills.getBillDTOList())
-					.orElse(Collections.emptyList());
-
-			List<PaymentDTO> mikroPaidBillList = paymentRepository.findPaidBillList(subscriberNo, institutionDebtTypeId,EnumBillStatu.PAID.getValue())
-					.stream().map(paymentMapper::toDTO).toList();
-
-			queriedBillDTOList = queriedBillDTOList.stream()
-					.filter(queriedBillDTO -> harmoniPaidBillList.stream()
-							.noneMatch(harmoniPaidBillDTO -> queriedBillDTO.getBillDueDate()
-									.isEqual(harmoniPaidBillDTO.getBillDueDate().toInstant()
-											.atZone(ZoneId.systemDefault()).toLocalDate())
-									&& queriedBillDTO.getBillNo().equals(harmoniPaidBillDTO.getBillNo())))
-					.filter(queriedBillDTO -> mikroPaidBillList.stream().noneMatch(
-							microPaidDTO -> queriedBillDTO.getBillDueDate().isEqual(microPaidDTO.getBillDueDate())
-									&& queriedBillDTO.getBillNo().equals(microPaidDTO.getBillNo())))
-					.toList();
-
-			if (CollectionUtils.isEmpty(queriedBillDTOList)) {
-				error = EnumBillResult.BILL_NOT_FOUND;
-			}
-       	 
-		}
-		
-		
-
-	}
-
-    private class QueryFromDatabase implements ProcessStep {
-
-        @Override
-        public void executeStep() {
-            /**TODO: Offline borc sorgulama*/
-        }
-
+        // Verify no errors were set
+        assertNull(queryBillsProcess.getError());
     }
 
-    private class InvalidateNotPaidProvisions implements ProcessStep {
+    @Test
+    void testEliminateBills_NoBillsFound() {
+        // Mock an empty response from both services
+        when(billPaymentRestFacade.getCustomerPaidBillList(any(), any(), any())).thenReturn(new ResponseGetCustomerPaidBillList(Collections.emptyList()));
+        when(paymentRepository.findPaidBillList(any(), any(), any())).thenReturn(Collections.emptyList());
 
-        @Override
-        public void executeStep() {
-            provisionService = SpringUtil.getBean(ProvisionService.class);
-            provisionService.invalidateNotPaidProvisions(institutionDebtTypeId,subscriberNo);
-        }
+        // Execute EliminateBills step
+        queryBillsProcess.queriedBillDTOList = Arrays.asList(new QueriedBillDTO()); // Add one bill
+        QueryBillsProcess.EliminateBills eliminateBills = queryBillsProcess.new EliminateBills();
+        eliminateBills.executeStep();
 
+        // Since no bills matched, error should be set
+        assertEquals(EnumBillResult.BILL_NOT_FOUND, queryBillsProcess.getError());
     }
 
-    private class CreateProvisions implements ProcessStep {
-
-		@Override
-        public void executeStep() {
-            provisionService = SpringUtil.getBean(ProvisionService.class);
-            prepareProvision(queriedBillDTOList);
-            provisionList = provisionService.createProvisions(provisionList);
-        }
-        
-        private void prepareProvision(List<QueriedBillDTO> bills){
-            provisionList =  bills.stream().map(queriedBillDTO -> {
-                ProvisionDTO provisionDTO = new ProvisionDTO();
-                provisionDTO.setTaxId(taxOfficeNo);
-                provisionDTO.setCustomerNo(customerNo);
-                provisionDTO.setIdentityNo(identityNo);
-                provisionDTO.setInstitutionDebtTypeId(institutionDebtTypeId);
-                provisionDTO.setChannelTransactionId(channelTransactionId);
-                provisionDTO.setInstitutionId(institution.getId());
-                provisionDTO.setChannelCode(channelCode);
-                provisionDTO.setBranchCode(branchCode);
-                provisionDTO.setStatus(EnumProvisionStatus.NOT_PAID);
-                provisionDTO.setProvisionDate(LocalDate.now());
-                provisionDTO.setCurrency(EnumCurrencyCode.parse(queriedBillDTO.getCurrency()));
-                provisionDTO.setQueryStan(queriedBillDTO.getQueryStan());
-                provisionDTO.setBillNo(queriedBillDTO.getBillNo());
-                provisionDTO.setExplanation(queriedBillDTO.getExplanation());
-                provisionDTO.setBillTerm(queriedBillDTO.getBillTerm());
-                provisionDTO.setInstitutionQueryStan(queriedBillDTO.getInstitutionQueryStan());
-                provisionDTO.setBillDueDate(queriedBillDTO.getBillDueDate());
-                provisionDTO.setIsPayable(queriedBillDTO.isPayable());
-                provisionDTO.setBillIssueDate(queriedBillDTO.getBillIssueDate());
-                provisionDTO.setAmount(queriedBillDTO.getBillAmount());
-                provisionDTO.setSubscriberName(queriedBillDTO.getSubscriberName());
-                provisionDTO.setSubscriberNo(queriedBillDTO.getSubscriberNo());
-                provisionDTO.setAdditionalInfo1(queriedBillDTO.getAdditionalInfo1());
-                provisionDTO.setAdditionalInfo2(queriedBillDTO.getAdditionalInfo2());
-                provisionDTO.setAdditionalInfo3(queriedBillDTO.getAdditionalInfo3());
-                provisionDTO.setAdditionalInfo4(queriedBillDTO.getAdditionalInfo4());
-                provisionDTO.setAdditionalInfo5(queriedBillDTO.getAdditionalInfo5());
-                provisionDTO.setAdditionalInfo6(queriedBillDTO.getAdditionalInfo6());
-                provisionDTO.setAdditionalInfo7(queriedBillDTO.getAdditionalInfo7());
-                provisionDTO.setAdditionalInfo8(queriedBillDTO.getAdditionalInfo8());
-                provisionDTO.setAdditionalInfo9(queriedBillDTO.getAdditionalInfo9());
-                return provisionDTO;
-            }).toList();
-        }
-    }
-
-    private class UpdateCustomerQueryLimit implements ProcessStep {
-
-        @Override
-        public void executeStep() {
-        	
-        	if (!isFomOperationEnabled) { // FOM operations are disabled for this product
-				return;
-			}
-        	
-        	paymentEventPublisher = SpringUtil.getBean(PaymentEventPublisher.class);
-        	NotifyInquiryLimitationRequest request = new NotifyInquiryLimitationRequest();
-			
-        	Integer customerInt = null;
-			if (customerNo != null) {
-				customerInt = customerNo.intValue();
-			}
-        	
-        	String identityNoStr = null;
-			if (identityNo != null) {
-				identityNoStr = identityNo.toString();
-			}
-        	
-        	request.setIdentityNo(identityNoStr);
-			request.setChannelCode(channelCode);
-			request.setClientNo(customerInt);
-			request.setCreatedBy(agentCode);
-			request.setProductCode("B0002");
-			request.setTransactionDate(LocalDateTime.now());
-			paymentEventPublisher.publishInquiryLimiationNotification(request);        	
-        	
-        }
-
-    }
-    
-    @Override
-    protected void prepareExecutionOutput() {
-        executionOutput = new QueryBillsProcessOutput();
-        executionOutput.setResult(error);
-        
-        ((QueryBillsProcessOutput) executionOutput).setProductCode(productCode);
-        ((QueryBillsProcessOutput) executionOutput).setInstitutionCode(institutionCode);
-        ((QueryBillsProcessOutput) executionOutput).setDebtTypeId(institutionDebtTypeId);
-        ((QueryBillsProcessOutput) executionOutput).setSubscriberNo(subscriberNo);
-        ((QueryBillsProcessOutput) executionOutput).setSubscriberNoPartList(subscriberNoPartList);
-        ((QueryBillsProcessOutput) executionOutput).setProvisionDTOList(provisionList);
+    // Helper method to prepare mock response
+    private QueryBillsAdapterResponse prepareMockQueryBillsResponse() {
+        QueryBillsAdapterResponse response = new QueryBillsAdapterResponse();
+        response.setInternalResultCode("000");
+        QueriedBillDTO billDTO = new QueriedBillDTO();
+        billDTO.setBillNo("BILL123");
+        billDTO.setBillAmount(new BigDecimal("100.00"));
+        response.setBills(Collections.singletonList(billDTO));
+        return response;
     }
 }
