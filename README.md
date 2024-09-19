@@ -1,22 +1,41 @@
-blic class BillTransactionException extends RuntimeException{
+class BillTransactionExceptionTest {
 
-    public BillTransactionException() {
-        super();
+    @Test
+    void testDefaultConstructor() {
+        BillTransactionException exception = new BillTransactionException();
+        assertNull(exception.getMessage());
+        assertNull(exception.getCause());
     }
 
-    public BillTransactionException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    @Test
+    void testConstructorWithMessage() {
+        BillTransactionException exception = new BillTransactionException("Custom message");
+        assertEquals("Custom message", exception.getMessage());
+        assertNull(exception.getCause());
     }
 
-    public BillTransactionException(String message, Throwable cause) {
-        super(message, cause);
+    @Test
+    void testConstructorWithCause() {
+        Throwable cause = new Throwable("Cause of the error");
+        BillTransactionException exception = new BillTransactionException(cause);
+        assertEquals(cause, exception.getCause());
+        assertEquals("Cause of the error", exception.getCause().getMessage());
     }
 
-    public BillTransactionException(String message) {
-        super(message);
+    @Test
+    void testConstructorWithMessageAndCause() {
+        Throwable cause = new Throwable("Cause of the error");
+        BillTransactionException exception = new BillTransactionException("Custom message", cause);
+        assertEquals("Custom message", exception.getMessage());
+        assertEquals(cause, exception.getCause());
     }
 
-    public BillTransactionException(Throwable cause) {
-        super(cause);
+    @Test
+    void testConstructorWithAllArgs() {
+        Throwable cause = new Throwable("Cause of the error");
+        BillTransactionException exception = new BillTransactionException("Custom message", cause, true, false);
+        assertEquals("Custom message", exception.getMessage());
+        assertEquals(cause, exception.getCause());
+        assertFalse(exception.getStackTrace().length == 0);
     }
 }
