@@ -1,46 +1,57 @@
-@Override
-public DataResult<InstitutionDebtTypeWebDTO> updateInstitutionDebtType(UpdateInstitutionDebtTypeRequest request) throws MicroException {
-    // 1. Güncellenmek istenen InstitutionDebtType kaydının olup olmadığını kontrol et
-    InstitutionDebtType existingDebtType = institutionDebtTypeRepository.findById(request.getId())
-        .orElseThrow(() -> {
-            ExceptionData error = new ExceptionData();
-            error.setErrorCode(404L);
-            error.setErrorMessage(ResultConstant.INSTITUTION_DEBT_TYPE_NOT_FOUND.getMessage());
-            error.setApplicationName(SERVICE_NAME);
-            return new DataNotFoundException(error);
-        });
+    @Override
+    public DataResult<ReturnMapDefinitionDTO> getReturnMapDefinitionById(Long id) throws MicroException {
+        Optional<ReturnMapDefinition> returnMapDefinitionOptional=returnMapDefinitionRepository.findById(id);
 
-    // 2. Aynı institution ve debt type koduna sahip başka bir kayıt var mı kontrol et
-    Optional<InstitutionDebtType> duplicateDebtType = institutionDebtTypeRepository
-            .findByInstitutionIdAndDebtTypeCode(request.getInstitutionId(), request.getDebtType());
-    if (duplicateDebtType.isPresent() && !duplicateDebtType.get().getId().equals(request.getId())) {
-        ExceptionData error = new ExceptionData();
-        error.setErrorCode(409L);
-        error.setErrorMessage(ResultConstant.INSTITUTION_DEBT_TYPE_ALREADY_EXISTS.getMessage());
-        error.setApplicationName(SERVICE_NAME);
-        throw new DataConflictException(error);
+        if (returnMapDefinitionOptional.isPresent()){
+            ReturnMapDefinitionDTO dto= returnMapDefinitionMapper.toReturnMapDefinitionDTO(returnMapDefinitionOptional.get());
+            return new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), dto,200);
+        }
+        throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
     }
 
-    // 3. Institution verisini al
-    InstitutionDTO institutionDTO = institutionService.getInstitutionById(request.getInstitutionId());
-    if (institutionDTO == null) {
-        ExceptionData error = new ExceptionData();
-        error.setErrorCode(404L);
-        error.setErrorMessage(ResultConstant.INSTITUTION_NOT_FOUND.getMessage());
-        error.setApplicationName(SERVICE_NAME);
-        throw new DataNotFoundException(error);
+ @Override
+    public DataResult<ReturnMapDefinitionDTO> getReturnMapDefinitionByReturnMapCode(String returnMapCode) throws MicroException {
+        Optional<ReturnMapDefinition> optionalReturnMapDefinition = returnMapDefinitionRepository.findByReturnMapCode(returnMapCode);
+
+        if (optionalReturnMapDefinition.isPresent()) {
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(optionalReturnMapDefinition.get());
+
+            List<String> institutions = returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode);
+
+            if (dto != null) {
+                dto.setInstitutions(institutions);
+                return new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), dto, 200);
+            } else {
+                throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.CONVERSION_FAILED);
+            }
+        } else {
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
+        }
+    }   
+
+@Test
+    void testGetReturnMapDefinitionById_RecordNotExists() throws MicroException {
+        Long id = 1L;
+
+        when(returnMapDefinitionRepository.findById(id)).thenReturn(Optional.empty());
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionById(id);
+
+        assertFalse(result.isSuccess());
+        assertEquals(400, result.getStatusCode());
+        assertNull(result.getData());
     }
 
-    // 4. Mevcut entity'yi güncellemek için request'ten gelen verileri DTO'ya setle
-    InstitutionDebtTypeDTO dto = institutionDebtTypeMapper.toDTO(request);
-    dto.setInstitution(institutionDTO);
-    dto.setUpdateDate(LocalDateTime.now());
+  @Test
+    void testGetReturnMapDefinitionByReturnMapCode_RecordNotExists() throws MicroException {
+        String returnMapCode = "testCode";
 
-    // 5. DTO'dan entity'ye dönüşüm yaparak kaydı güncelle
-    InstitutionDebtType updatedDebtType = institutionDebtTypeMapper.toEntity(dto);
-    updatedDebtType = institutionDebtTypeRepository.save(updatedDebtType);
+        when(returnMapDefinitionRepository.findByReturnMapCode(returnMapCode)).thenReturn(Optional.empty());
 
-    // 6. Güncellenen entity'yi webDTO'ya çevirip geri döndür
-    InstitutionDebtTypeWebDTO webDTO = institutionDebtTypeMapper.toWebDTO(updatedDebtType);
-    return new SuccessDataResult<>(ResultConstant.INSTITUTION_DEBT_TYPE_UPDATED.getMessage(), webDTO, 200);
-}
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
+
+        assertFalse(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertNull(result.getData());
+    }
+com.ykb.architecture.micro.error.exception.DataNotFoundException: Veri Bulunamadı !
