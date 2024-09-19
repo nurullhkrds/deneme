@@ -1,22 +1,32 @@
-public class AccountingConstant {
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-    public static final String C_TYPE ="BILL";
-    public static final String D_TYPE ="PAY";
-    public static final String DKNTSABIT = "DKNTSABIT";
+class AccountingConstantTest {
 
-
-    public static class CreditCardProvision {
-        /**TODO:Revize edilecek*/
-        private CreditCardProvision() { throw new IllegalStateException("CreditCardProvision: Constant class"); }
-
-        public static final String CARD_PROVISION_TERM_ID = "OD19";
-        public static final String CREDIT_CARD_TRANSACTION_TYPE = "PYMF";
-
-        public static final String DO_PROVISION_SUCCESS_RESULT_CODE = "000000";
-
-        public static final String ACKNOWLEDGE_SUCCESS_IRC = "0000000";
-        public static final String ACKNOWLEDGE_TRXN_HAS_ALREADY_BEEN_SETTLED_IRC = "B968705";
-
+    @Test
+    void testAccountingConstantValues() {
+        // Test ana sabitler
+        assertEquals("BILL", AccountingConstant.C_TYPE);
+        assertEquals("PAY", AccountingConstant.D_TYPE);
+        assertEquals("DKNTSABIT", AccountingConstant.DKNTSABIT);
     }
 
+    @Test
+    void testCreditCardProvisionConstants() {
+        // Test CreditCardProvision sınıfı sabitleri
+        assertEquals("OD19", AccountingConstant.CreditCardProvision.CARD_PROVISION_TERM_ID);
+        assertEquals("PYMF", AccountingConstant.CreditCardProvision.CREDIT_CARD_TRANSACTION_TYPE);
+        assertEquals("000000", AccountingConstant.CreditCardProvision.DO_PROVISION_SUCCESS_RESULT_CODE);
+        assertEquals("0000000", AccountingConstant.CreditCardProvision.ACKNOWLEDGE_SUCCESS_IRC);
+        assertEquals("B968705", AccountingConstant.CreditCardProvision.ACKNOWLEDGE_TRXN_HAS_ALREADY_BEEN_SETTLED_IRC);
+    }
+
+    @Test
+    void testCreditCardProvisionConstructor() {
+        // CreditCardProvision sınıfının kurucusunun çağrılamadığını test edin
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            new AccountingConstant.CreditCardProvision();
+        });
+        assertEquals("CreditCardProvision: Constant class", exception.getMessage());
+    }
 }
