@@ -1,52 +1,43 @@
-public class CreateManagementInstServiceParameterRequest extends BaseCreateWebRequest {
+	@Override
+	public DataResult<InstitutionWebDTO> updateInstitution(UpdateInstitutionRequestDTO requestDTO) throws MicroException {
 
-    @NotNull
-    @Schema(description = "Parameter Institution Id", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long institutionId;
+		InstitutionDTO existingInstitutionDTO = getInstitutionById(requestDTO.getId());
+		if (existingInstitutionDTO == null) {
+			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
+		}
 
-    @NotNull
-    @Size(min = 1, max = 50)
-    @Schema(description = "Parameter Group Code", example = "VALIDATION", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String groupCode;
+		Optional<Institution> duplicateInstitution = institutionRepository.findByProductCodeAndInstitutionCode(requestDTO.getProductCode(), requestDTO.getInstitutionCode());
+		if (duplicateInstitution.isPresent() && !duplicateInstitution.get().getId().equals(requestDTO.getId())) {
+			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PRODUCT);
 
-    @NotNull
-    @Size(min = 1, max = 100)
-    @Schema(description = "Parameter Key", example = "WORKING_HOURS", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String key;
+		}
 
-    @NotNull
-    @Size(min = 1, max = 300)
-    @Schema(description = "Parameter Value", example = "23:50:00-00:05:00", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String value;
+		ProductDTO productDTO = productService.getProductByCode(requestDTO.getProductCode());
+		OwnerDepartmentDTO ownerDepartmentDTO = ownerDepartmentService.getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode());
+		
+		existingInstitutionDTO.setInstitutionCode(requestDTO.getInstitutionCode());
+		existingInstitutionDTO.setProduct(productDTO);
+		existingInstitutionDTO.setCustomerNo(requestDTO.getCustomerNo());
+		existingInstitutionDTO.setName(requestDTO.getName());
+		existingInstitutionDTO.setExplanation(requestDTO.getExplanation());
+		existingInstitutionDTO.setOwnerDepartment(ownerDepartmentDTO);
+		existingInstitutionDTO.setProtocolStartDate(requestDTO.getProtocolStartDate());
+		existingInstitutionDTO.setProtocolEndDate(requestDTO.getProtocolEndDate());
+		existingInstitutionDTO.setIsReverseAllowed(requestDTO.getIsReverseAllowed());
+		existingInstitutionDTO.setIsOrderAllowed(requestDTO.getIsOrderAllowed());
+		existingInstitutionDTO.setHasDebtType(requestDTO.getHasDebtType());
+		existingInstitutionDTO.setIconText(requestDTO.getIconText());
+		existingInstitutionDTO.setIsActive(requestDTO.getIsActive());
+		
+		existingInstitutionDTO.setUpdateDate(LocalDateTime.now());
+		existingInstitutionDTO.setUpdatedBy(requestDTO.getUpdateUser());
+		
+		
 
-    @Size(min = 1, max = 300)
-    @Schema(description = "Parameter Description", example = "Gün dönümünde bu parametredeki saatlere göre işlemler engellenecek", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String description;
+		Institution updatedInstitution = institutionMapper.toInstitution(existingInstitutionDTO);
+		institutionRepository.save(updatedInstitution);
 
-    @NotNull
-    @Schema(description = "The flag specifying if the parameter will be active or passive", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean isActive;
+		InstitutionWebDTO response = institutionMapper.toInstitutionWebDTO(updatedInstitution);
 
-}
-
-
-public class CreateManagementInstServiceParameterRequestDTO extends BaseCreateRequestDTO {
-
-    private Long id;
-
-    private Long institutionId;
-
-    private String groupCode;
-
-    private String key;
-
-    private String value;
-
-    private String description;
-
-    private Boolean isActive;
-}
-
-
-     CreateManagementInstServiceParameterRequestDTO createInstServiceParameterRequestDTO = instServiceParameterWebMapper
-                .toCreateInstServiceParameterRequestDTO(createInstServiceParameterRequest);
+		return new SuccessDataResult<>(ResultConstant.INSTITUTION_UPDATED.getMessage(), response, 200);
+	}
