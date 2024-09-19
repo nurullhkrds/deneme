@@ -1,8 +1,1 @@
-  @Override
-    public DataResult<ProductDTO> getProductByCode(String code) throws MicroException{
-
-
-        return productRepository.findByCode(code)
-                .map(new SuccessDataResult<>("",productMapper::toProductDTO,200))
-                .orElseThrow(() -> new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PRODUCT_NOT_FOUND));
-    }
+![image](https://github.com/user-attachments/assets/6560a257-c4fe-4e06-a489-91bd996370d0)
