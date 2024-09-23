@@ -1,1 +1,2 @@
-delete from bill.return_map where BANK_RETURN_CODE IN ()
+DELETE FROM bill.return_map
+WHERE BANK_RETURN_CODE IN ('00000', '00001', '01000', '70300', '90000');
