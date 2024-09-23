@@ -1,65 +1,26 @@
-    
-org.springframework.beans.factory.BeanCreationNotAllowedException: Error creating bean with name 'rabbitConnectionFactory': Singleton bean creation not allowed while singletons of this factory are in destruction (Do not request a bean from a BeanFactory in a destroy method implementation!)
+   <Form.Item label={ReturnMapFormLocale.bankReturnCode.label}>
+            <input
+              validation={[{ required: true }]}
+              name="bankReturnCode"
+              value={bankReturnCode}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*$/.test(value)) {
+                  handleBankReturnCode(e); // Sadece rakamlar olduğunda state'i güncelle
+                } else {
+                  Notification.warning(ReturnMapFormLocale.messages.bankReturnCodeValidated);
+                }
+              }}
+              style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+            />
+          </Form.Item>
 
-
-
-<Form.Item
-        label="Bank Return Code"
-        rules={[{ required: true, message: 'Please select a bank return code!' }]}
-      >
-        <Select
-          value={bankReturnCode}
-          onChange={handleBankReturnCodeChange}
-          showSearch
-          placeholder="Select a bank return code"
-          optionFilterProp="children"
-        >
-          {bankReturnData.map((item) => (
-            <Option key={item.code} value={item.code}>
-              {item.code}
-            </Option>
-          ))}
-        </Select>
-      </Form.Item>
-
-      {/* Bank Return Text Select */}
-      <Form.Item
-        label="Bank Return Text"
-        rules={[{ required: true, message: 'Please select a bank return text!' }]}
-      >
-        <Select
-          value={bankReturnText}
-          onChange={handleBankReturnTextChange}
-          showSearch
-          placeholder="Select a bank return text"
-          optionFilterProp="children"
-        >
-          {bankReturnData.map((item) => (
-            <Option key={item.text} value={item.text}>
-              {item.text}
-            </Option>
-          ))}
-        </Select>
-      </Form.Item>
-
-
-
-
-  const handleBankReturnCodeChange = (value) => {
-    setBankReturnCode(value);
-    // Automatically set the corresponding text when a code is selected
-    const foundText = bankReturnData.find((item) => item.code === value)?.text || '';
-    setBankReturnText(foundText);
-  };
-
-  const handleBankReturnTextChange = (value) => {
-    setBankReturnText(value);
-    // Automatically set the corresponding code when text is selected
-    const foundCode = bankReturnData.find((item) => item.text === value)?.code || '';
-    setBankReturnCode(foundCode);
-  };
-
-
-
-
-import { bankReturnData } from './BankReturnData'; // Assuming this contains the bank return code and text data
+          <Form.Item label={ReturnMapFormLocale.bankRetubankReturnTextrnCode.label}>
+            <input
+              validation={[{ required: true }]}
+              name="bankReturnText"
+              value={bankReturnText}
+              onChange={handleBankReturnText}
+              style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
+            />
+          </Form.Item>
