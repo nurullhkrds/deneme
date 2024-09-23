@@ -1,4 +1,9 @@
-    <Form.Item
+    
+org.springframework.beans.factory.BeanCreationNotAllowedException: Error creating bean with name 'rabbitConnectionFactory': Singleton bean creation not allowed while singletons of this factory are in destruction (Do not request a bean from a BeanFactory in a destroy method implementation!)
+
+
+
+<Form.Item
         label="Bank Return Code"
         rules={[{ required: true, message: 'Please select a bank return code!' }]}
       >
