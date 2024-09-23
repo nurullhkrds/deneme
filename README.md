@@ -1,26 +1,52 @@
-   <Form.Item label={ReturnMapFormLocale.bankReturnCode.label}>
-            <input
-              validation={[{ required: true }]}
-              name="bankReturnCode"
-              value={bankReturnCode}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d*$/.test(value)) {
-                  handleBankReturnCode(e); // Sadece rakamlar olduğunda state'i güncelle
-                } else {
-                  Notification.warning(ReturnMapFormLocale.messages.bankReturnCodeValidated);
-                }
-              }}
-              style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
-            />
-          </Form.Item>
+ <Form.Item
+        label={ReturnMapFormLocale.bankReturnCode.label}
+        rules={[{ required: true, message: ReturnMapFormLocale.messages.bankReturnCodeValidated }]}
+      >
+        <Select
+          value={bankReturnCode}
+          onChange={handleBankReturnCodeChange}
+          showSearch
+          placeholder="Select a bank return code"
+          optionFilterProp="children"
+        >
+          {bankReturnData.map((item) => (
+            <Option key={item.code} value={item.code}>
+              {item.code}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
 
-          <Form.Item label={ReturnMapFormLocale.bankRetubankReturnTextrnCode.label}>
-            <input
-              validation={[{ required: true }]}
-              name="bankReturnText"
-              value={bankReturnText}
-              onChange={handleBankReturnText}
-              style={{ border: '1px solid #dcdcdc', borderRadius: '4px', padding: '8px', fontSize: '14px', width: '100%' }}
-            />
-          </Form.Item>
+      {/* Bank Return Text Select */}
+      <Form.Item
+        label={ReturnMapFormLocale.bankReturnText.label}
+        rules={[{ required: true, message: ReturnMapFormLocale.messages.bankReturnTextValidated }]}
+      >
+        <Select
+          value={bankReturnText}
+          onChange={handleBankReturnTextChange}
+          showSearch
+          placeholder="Select a bank return text"
+          optionFilterProp="children"
+        >
+          {bankReturnData.map((item) => (
+            <Option key={item.text} value={item.text}>
+              {item.text}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+
+
+const handleBankReturnCodeChange = (value) => {
+    setBankReturnCode(value);
+    const foundText = bankReturnData.find((item) => item.code === value)?.text || '';
+    setBankReturnText(foundText);
+  };
+
+  // Handle changes for bankReturnText and automatically update the corresponding code
+  const handleBankReturnTextChange = (value) => {
+    setBankReturnText(value);
+    const foundCode = bankReturnData.find((item) => item.text === value)?.code || '';
+    setBankReturnCode(foundCode);
+  };
