@@ -1,49 +1,170 @@
-@Mapper(componentModel = "spring")
-public interface InstitutionCityMapper {
-    InstitutionCityMapper INSTANCE = Mappers.getMapper(InstitutionCityMapper.class);
-    
-    InstitutionCityDTO toInstitutionCityDTO(InstitutionCity institutionCity);
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-    InstitutionCity toInstitutionCity(InstitutionCityDTO IinstitutionCityDTO);
+public class InstitutionCityMapperTest {
+
+    private final InstitutionCityMapper institutionCityMapper = InstitutionCityMapper.INSTANCE;
+
+    @Test
+    void shouldMapInstitutionCityToDTO() {
+        InstitutionCity institutionCity = new InstitutionCity();
+        institutionCity.setId(1L);
+        institutionCity.setCityName("Test City");
+
+        InstitutionCityDTO institutionCityDTO = institutionCityMapper.toInstitutionCityDTO(institutionCity);
+
+        assertNotNull(institutionCityDTO);
+        assertEquals(institutionCity.getId(), institutionCityDTO.getId());
+        assertEquals(institutionCity.getCityName(), institutionCityDTO.getCityName());
+    }
+
+    @Test
+    void shouldMapDTOToInstitutionCity() {
+        InstitutionCityDTO institutionCityDTO = new InstitutionCityDTO();
+        institutionCityDTO.setId(1L);
+        institutionCityDTO.setCityName("Test City DTO");
+
+        InstitutionCity institutionCity = institutionCityMapper.toInstitutionCity(institutionCityDTO);
+
+        assertNotNull(institutionCity);
+        assertEquals(institutionCityDTO.getId(), institutionCity.getId());
+        assertEquals(institutionCityDTO.getCityName(), institutionCity.getCityName());
+    }
 }
+------------------
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
+public class InstitutionChnnlPymMthdPscMapperTest {
 
-----------------
+    private final InstitutionChnnlPymMthdPscMapper institutionChnnlPymMthdPscMapper = InstitutionChnnlPymMthdPscMapper.INSTANCE;
 
-@Mapper(componentModel = "spring")
-public interface InstitutionChnnlPymMthdPscMapper {
-    InstitutionChnnlPymMthdPscMapper INSTANCE = Mappers.getMapper(InstitutionChnnlPymMthdPscMapper.class);
+    @Test
+    void shouldMapInstitutionChnnlPymMthdPscToDTO() {
+        InstitutionChnnlPymMthdPsc institutionChnnlPymMthdPsc = new InstitutionChnnlPymMthdPsc();
+        institutionChnnlPymMthdPsc.setId(1L);
+        institutionChnnlPymMthdPsc.setPscName("Test PSC");
 
-    InstitutionChnnlPymMthdPscDTO toInstitutionChnnlPymMthdPscDTO(InstitutionChnnlPymMthdPsc institutionChnnlPymMthdPsc);
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = institutionChnnlPymMthdPscMapper.toInstitutionChnnlPymMthdPscDTO(institutionChnnlPymMthdPsc);
 
-    InstitutionChnnlPymMthdPsc toInstitutionChnnlPymMthdPsc(InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO);
+        assertNotNull(institutionChnnlPymMthdPscDTO);
+        assertEquals(institutionChnnlPymMthdPsc.getId(), institutionChnnlPymMthdPscDTO.getId());
+        assertEquals(institutionChnnlPymMthdPsc.getPscName(), institutionChnnlPymMthdPscDTO.getPscName());
+    }
+
+    @Test
+    void shouldMapDTOToInstitutionChnnlPymMthdPsc() {
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+        institutionChnnlPymMthdPscDTO.setId(1L);
+        institutionChnnlPymMthdPscDTO.setPscName("Test PSC DTO");
+
+        InstitutionChnnlPymMthdPsc institutionChnnlPymMthdPsc = institutionChnnlPymMthdPscMapper.toInstitutionChnnlPymMthdPsc(institutionChnnlPymMthdPscDTO);
+
+        assertNotNull(institutionChnnlPymMthdPsc);
+        assertEquals(institutionChnnlPymMthdPscDTO.getId(), institutionChnnlPymMthdPsc.getId());
+        assertEquals(institutionChnnlPymMthdPscDTO.getPscName(), institutionChnnlPymMthdPsc.getPscName());
+    }
 }
-----
+---------------
 
-@Mapper(componentModel = "spring")
-public interface InstitutionChnnlPymMthdAccMapper {
-    InstitutionChnnlPymMthdAccMapper INSTANCE = Mappers.getMapper(InstitutionChnnlPymMthdAccMapper.class);
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-    InstitutionChnnlPymMthdAccDTO toDTO(InstitutionChnnlPymMthdAcc institutionChnnlPymMthdAcc);
+public class InstitutionChnnlPymMthdAccMapperTest {
 
-    InstitutionChnnlPymMthdAcc toInstitutionChnnlPymMthdAcc(InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO);
+    private final InstitutionChnnlPymMthdAccMapper institutionChnnlPymMthdAccMapper = InstitutionChnnlPymMthdAccMapper.INSTANCE;
+
+    @Test
+    void shouldMapInstitutionChnnlPymMthdAccToDTO() {
+        InstitutionChnnlPymMthdAcc institutionChnnlPymMthdAcc = new InstitutionChnnlPymMthdAcc();
+        institutionChnnlPymMthdAcc.setId(1L);
+        institutionChnnlPymMthdAcc.setAccountName("Test Account");
+
+        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = institutionChnnlPymMthdAccMapper.toDTO(institutionChnnlPymMthdAcc);
+
+        assertNotNull(institutionChnnlPymMthdAccDTO);
+        assertEquals(institutionChnnlPymMthdAcc.getId(), institutionChnnlPymMthdAccDTO.getId());
+        assertEquals(institutionChnnlPymMthdAcc.getAccountName(), institutionChnnlPymMthdAccDTO.getAccountName());
+    }
+
+    @Test
+    void shouldMapDTOToInstitutionChnnlPymMthdAcc() {
+        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
+        institutionChnnlPymMthdAccDTO.setId(1L);
+        institutionChnnlPymMthdAccDTO.setAccountName("Test Account DTO");
+
+        InstitutionChnnlPymMthdAcc institutionChnnlPymMthdAcc = institutionChnnlPymMthdAccMapper.toInstitutionChnnlPymMthdAcc(institutionChnnlPymMthdAccDTO);
+
+        assertNotNull(institutionChnnlPymMthdAcc);
+        assertEquals(institutionChnnlPymMthdAccDTO.getId(), institutionChnnlPymMthdAcc.getId());
+        assertEquals(institutionChnnlPymMthdAccDTO.getAccountName(), institutionChnnlPymMthdAcc.getAccountName());
+    }
 }
------
-@Mapper(componentModel = "spring")
-public interface InstitutionChannelPymMethodMapper {
-    InstitutionChannelPymMethodMapper INSTANCE = Mappers.getMapper(InstitutionChannelPymMethodMapper.class);
+------------
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-    InstitutionChannelPymMethodDTO toDTO(InstitutionChannelPymMethod institutionChannelPymMethod);
-     
-    InstitutionChannelPymMethod toEntity(InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO);
+public class InstitutionChannelPymMethodMapperTest {
+
+    private final InstitutionChannelPymMethodMapper institutionChannelPymMethodMapper = InstitutionChannelPymMethodMapper.INSTANCE;
+
+    @Test
+    void shouldMapInstitutionChannelPymMethodToDTO() {
+        InstitutionChannelPymMethod institutionChannelPymMethod = new InstitutionChannelPymMethod();
+        institutionChannelPymMethod.setId(1L);
+        institutionChannelPymMethod.setMethodName("Test Method");
+
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = institutionChannelPymMethodMapper.toDTO(institutionChannelPymMethod);
+
+        assertNotNull(institutionChannelPymMethodDTO);
+        assertEquals(institutionChannelPymMethod.getId(), institutionChannelPymMethodDTO.getId());
+        assertEquals(institutionChannelPymMethod.getMethodName(), institutionChannelPymMethodDTO.getMethodName());
+    }
+
+    @Test
+    void shouldMapDTOToInstitutionChannelPymMethod() {
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = new InstitutionChannelPymMethodDTO();
+        institutionChannelPymMethodDTO.setId(1L);
+        institutionChannelPymMethodDTO.setMethodName("Test Method DTO");
+
+        InstitutionChannelPymMethod institutionChannelPymMethod = institutionChannelPymMethodMapper.toEntity(institutionChannelPymMethodDTO);
+
+        assertNotNull(institutionChannelPymMethod);
+        assertEquals(institutionChannelPymMethodDTO.getId(), institutionChannelPymMethod.getId());
+        assertEquals(institutionChannelPymMethodDTO.getMethodName(), institutionChannelPymMethod.getMethodName());
+    }
 }
-----------
+-----------------
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-@Mapper(componentModel = "spring")
-public interface InstitutionChannelProcessMapper {
-    InstitutionChannelProcessMapper INSTANCE = Mappers.getMapper(InstitutionChannelProcessMapper.class);
+public class InstitutionChannelProcessMapperTest {
 
-    InstitutionChannelProcessDTO toInstitutionChannelProcessDTO(InstitutionChannelProcess institutionChannelProcess);
-      
-    InstitutionChannelProcess toInstitutionChannelProcess(InstitutionChannelProcessDTO institutionChannelProcessDTO);
+    private final InstitutionChannelProcessMapper institutionChannelProcessMapper = InstitutionChannelProcessMapper.INSTANCE;
+
+    @Test
+    void shouldMapInstitutionChannelProcessToDTO() {
+        InstitutionChannelProcess institutionChannelProcess = new InstitutionChannelProcess();
+        institutionChannelProcess.setId(1L);
+        institutionChannelProcess.setProcessName("Test Process");
+
+        InstitutionChannelProcessDTO institutionChannelProcessDTO = institutionChannelProcessMapper.toInstitutionChannelProcessDTO(institutionChannelProcess);
+
+        assertNotNull(institutionChannelProcessDTO);
+        assertEquals(institutionChannelProcess.getId(), institutionChannelProcessDTO.getId());
+        assertEquals(institutionChannelProcess.getProcessName(), institutionChannelProcessDTO.getProcessName());
+    }
+
+    @Test
+    void shouldMapDTOToInstitutionChannelProcess() {
+        InstitutionChannelProcessDTO institutionChannelProcessDTO = new InstitutionChannelProcessDTO();
+        institutionChannelProcessDTO.setId(1L);
+        institutionChannelProcessDTO.setProcessName("Test Process DTO");
+
+        InstitutionChannelProcess institutionChannelProcess = institutionChannelProcessMapper.toInstitutionChannelProcess(institutionChannelProcessDTO);
+
+        assertNotNull(institutionChannelProcess);
+        assertEquals(institutionChannelProcessDTO.getId(), institutionChannelProcess.getId());
+        assertEquals(institutionChannelProcessDTO.getProcessName(), institutionChannelProcess.getProcessName());
+    }
 }
