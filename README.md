@@ -1,31 +1,40 @@
- private final OrderPaymentGroupMapper orderPaymentGroupMapper = OrderPaymentGroupMapper.INSTANCE;
+@Mapper(componentModel = "spring")
+public interface MerchantInformationMapper {
+    MerchantInformationMapper INSTANCE = Mappers.getMapper(MerchantInformationMapper.class);
 
-    @Test
-    void shouldMapOrderPaymentGroupToDTO() {
-        OrderPaymentGroup orderPaymentGroup = new OrderPaymentGroup();
-        orderPaymentGroup.setId(1L);
-        orderPaymentGroup.setGroupName("Test Group");
-        orderPaymentGroup.setActive(true);
+    MerchantInformationDTO toMerchantInformationDTO(MerchantInformation merchantInformation);
 
-        OrderPaymentGroupDTO orderPaymentGroupDTO = orderPaymentGroupMapper.toOrderPaymentGroupDTO(orderPaymentGroup);
+    MerchantInformation toMerchantInformation(MerchantInformationDTO merchantInformationDTO);
+}
 
-        assertNotNull(orderPaymentGroupDTO);
-        assertEquals(orderPaymentGroup.getId(), orderPaymentGroupDTO.getId());
-        assertEquals(orderPaymentGroup.getGroupName(), orderPaymentGroupDTO.getGroupName());
-        assertEquals(orderPaymentGroup.isActive(), orderPaymentGroupDTO.isActive());
-    }
 
-    @Test
-    void shouldMapDTOToOrderPaymentGroup() {
-        OrderPaymentGroupDTO orderPaymentGroupDTO = new OrderPaymentGroupDTO();
-        orderPaymentGroupDTO.setId(1L);
-        orderPaymentGroupDTO.setGroupName("Test Group DTO");
-        orderPaymentGroupDTO.setActive(false);
+@Mapper(componentModel = "spring")
+public interface InstUserIntfSubtypeMapper {
+    InstUserIntfSubtypeMapper INSTANCE = Mappers.getMapper(InstUserIntfSubtypeMapper.class);
 
-        OrderPaymentGroup orderPaymentGroup = orderPaymentGroupMapper.toOrderPaymentGroup(orderPaymentGroupDTO);
+    InstUserIntfSubtypeDTO toInstUserIntfSubtypeDTO(InstUserIntfSubtype IinstUserIntfSubtype);
 
-        assertNotNull(orderPaymentGroup);
-        assertEquals(orderPaymentGroupDTO.getId(), orderPaymentGroup.getId());
-        assertEquals(orderPaymentGroupDTO.getGroupName(), orderPaymentGroup.getGroupName());
-        assertEquals(orderPaymentGroupDTO.isActive(), orderPaymentGroup.isActive());
-    }
+    InstUserIntfSubtype toInstUserIntfSubtype(InstUserIntfSubtypeDTO instUserIntfSubtypeDTO);
+}
+
+@Mapper(componentModel = "spring")
+public interface InstitutionUserIntfMapper {
+    InstitutionUserIntfMapper INSTANCE = Mappers.getMapper(InstitutionUserIntfMapper.class);
+
+    InstitutionUserIntfDTO toInstitutionUserIntfDTO(InstitutionUserIntf institutionUserIntf);
+
+    InstitutionUserIntf toInstitutionUserIntf(InstitutionUserIntfDTO institutionUserIntfDTO);
+
+    List<InstitutionUserIntf> toEntityList(List<InstitutionUserIntfDTO> dtoList);
+
+    List<InstitutionUserIntfDTO> toDTOList(List<InstitutionUserIntf> entityList);
+}
+
+@Mapper(componentModel = "spring")
+public interface InstitutionPymMethodMapper {
+    InstitutionPymMethodMapper INSTANCE = Mappers.getMapper(InstitutionPymMethodMapper.class);
+
+    InstitutionPymMethodDTO toInstitutionPymMethodDTO(InstitutionPymMethod institutionPymMethod);
+
+    InstitutionPymMethod toInstitutionPymMethod(InstitutionPymMethodDTO institutionPymMethodDTO);
+}
