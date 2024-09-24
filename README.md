@@ -1,151 +1,88 @@
-class QueryBillsProcessTest {
+@Test
+void testEliminateBills_NoBillsFound() throws BillException {
+    // Empty queriedBillDTOList
+    queriedBillDTOList = new ArrayList<>();
+    queryBillsProcess.setQueriedBillDTOList(queriedBillDTOList);
 
-    @Mock
-    private AdapterService adapterService;
+    // Execute the process
+    queryBillsProcess.executeProcess();
 
-    @Mock
-    private ProvisionService provisionService;
+    // Validate that error is set to BILL_NOT_FOUND
+    assertEquals(EnumBillResult.BILL_NOT_FOUND, queryBillsProcess.getExecutionOutput().getResult());
+}
 
-    @Mock
-    private InstitutionUserIntService institutionUserIntService;
+@Test
+void testEliminateBills_MatchInHarmoniPaidBills() throws BillException {
+    // Set up queried bills
+    QueriedBillDTO queriedBill = new QueriedBillDTO();
+    queriedBill.setBillNo("12345");
+    queriedBill.setBillDueDate(LocalDate.now());
+    queriedBillDTOList = List.of(queriedBill);
 
-    @Mock
-    private InstitutionUserIntfMapper institutionUserIntMapper;
+    // Set up harmoniPaidBills with a matching bill
+    HmnPaidBillDTO harmoniPaidBill = new HmnPaidBillDTO();
+    harmoniPaidBill.setBillNo("12345");
+    harmoniPaidBill.setBillDueDate(new Date()); // Matching the same bill date
+    ResponseGetCustomerPaidBillList harmoniPaidBills = new ResponseGetCustomerPaidBillList();
+    harmoniPaidBills.setBillDTOList(List.of(harmoniPaidBill));
 
-    @Mock
-    private BillPaymentRestFacade billPaymentRestFacade;
+    when(billPaymentRestFacade.getCustomerPaidBillList(anyString(), anyString(), anyString()))
+            .thenReturn(harmoniPaidBills);
 
-    @Mock
-    private PaymentRepository paymentRepository;
+    // No bills in mikroPaidBillList
+    when(paymentRepository.findPaidBillList(anyString(), anyLong(), anyString())).thenReturn(new ArrayList<>());
 
-    @Mock
-    private PaymentMapper paymentMapper;
+    queryBillsProcess.executeProcess();
 
-    @Mock
-    private LimitationService limitationService;
+    // Validate that queriedBillDTOList is filtered and empty
+    assertTrue(queryBillsProcess.getQueriedBillDTOList().isEmpty());
+    assertEquals(EnumBillResult.BILL_NOT_FOUND, queryBillsProcess.getExecutionOutput().getResult());
+}
 
-    @Mock
-    private ApplicationContext applicationContext;
+@Test
+void testEliminateBills_MatchInMikroPaidBills() throws BillException {
+    // Set up queried bills
+    QueriedBillDTO queriedBill = new QueriedBillDTO();
+    queriedBill.setBillNo("67890");
+    queriedBill.setBillDueDate(LocalDate.now());
+    queriedBillDTOList = List.of(queriedBill);
 
-    @Mock
-    private PaymentEventPublisher paymentEventPublisher;
+    // No bills in harmoniPaidBills
+    when(billPaymentRestFacade.getCustomerPaidBillList(anyString(), anyString(), anyString()))
+            .thenReturn(new ResponseGetCustomerPaidBillList());
 
-    @Mock
-    private PaymentUtilImpl paymentUtilImpl;
+    // Set up mikroPaidBillList with a matching bill
+    PaymentDTO mikroPaidBill = new PaymentDTO();
+    mikroPaidBill.setBillNo("67890");
+    mikroPaidBill.setBillDueDate(LocalDate.now());
+    when(paymentRepository.findPaidBillList(anyString(), anyLong(), anyString()))
+            .thenReturn(List.of(mikroPaidBill));
 
-    @InjectMocks
-    private QueryBillsProcess queryBillsProcess;
+    queryBillsProcess.executeProcess();
 
-    private InstitutionDTO institution;
-    private InstitutionDebtTypeDTO institutionDebtType;
-    private List<QueriedBillDTO> queriedBillDTOList;
-    private List<SubscriberNoPartRequestDTO> subscriberNoPartList;
-    private List<InstitutionUserIntfDTO> institutionUserIntListDTO;
-    private InstitutionProcessDTO institutionProcessDTO;
+    // Validate that queriedBillDTOList is filtered and empty
+    assertTrue(queryBillsProcess.getQueriedBillDTOList().isEmpty());
+    assertEquals(EnumBillResult.BILL_NOT_FOUND, queryBillsProcess.getExecutionOutput().getResult());
+}
 
+@Test
+void testEliminateBills_NoMatchesFound() throws BillException {
+    // Set up queried bills
+    QueriedBillDTO queriedBill = new QueriedBillDTO();
+    queriedBill.setBillNo("12345");
+    queriedBill.setBillDueDate(LocalDate.now());
+    queriedBillDTOList = List.of(queriedBill);
 
-    @BeforeEach
-    void setUp() throws NoSuchFieldException, IllegalAccessException {
-        MockitoAnnotations.openMocks(this);
+    // No matching bills in harmoniPaidBills or mikroPaidBills
+    when(billPaymentRestFacade.getCustomerPaidBillList(anyString(), anyString(), anyString()))
+            .thenReturn(new ResponseGetCustomerPaidBillList());
 
-        SpringUtil springUtil = new SpringUtil();
-        springUtil.setApplicationContext(applicationContext);
+    when(paymentRepository.findPaidBillList(anyString(), anyLong(), anyString()))
+            .thenReturn(new ArrayList<>());
 
-        lenient().when(getBean(PaymentUtilImpl.class)).thenReturn(paymentUtilImpl);
-        lenient().when(getBean(InstitutionUserIntService.class)).thenReturn(institutionUserIntService);
-        lenient().when(getBean(PaymentEventPublisher.class)).thenReturn(paymentEventPublisher);
-        lenient().when(getBean(InstitutionUserIntfMapper.class)).thenReturn(institutionUserIntMapper);
-        lenient().when(getBean(BillPaymentRestFacade.class)).thenReturn(billPaymentRestFacade);
-        lenient().when(getBean(PaymentRepository.class)).thenReturn(paymentRepository);
-        lenient().when(getBean(PaymentMapper.class)).thenReturn(paymentMapper);
-        lenient().when(getBean(LimitationService.class)).thenReturn(limitationService);
-        QueryBillsAdapterResponse adapterResponse=new QueryBillsAdapterResponse();
-        adapterResponse.setBills(queriedBillDTOList);
-        adapterResponse.setStatus("SUCCESS");
-        lenient().when(adapterService.queryBills(any(QueryBillsAdapterRequest.class), anyString(), anyString())).thenReturn(adapterResponse);
-        lenient().when(provisionService.createProvisions(any())).thenReturn(new ArrayList<>());
-        lenient().when(institutionUserIntService.getUserInterface(anyLong())).thenReturn(new ArrayList<>());
-        lenient().when(billPaymentRestFacade.getCustomerPaidBillList(anyString(), anyString(), anyString()))
-                .thenReturn(new ResponseGetCustomerPaidBillList());
-        lenient().when(paymentRepository.findPaidBillList(anyString(), anyLong(), anyString()))
-                .thenReturn(new ArrayList<>());
+    queryBillsProcess.executeProcess();
 
-        institution = new InstitutionDTO();
-        institution.setId(1L);
-        institution.setInstitutionCode("123");
-
-        institutionDebtType = new InstitutionDebtTypeDTO();
-        institutionDebtType.setId(1L);
-
-        queriedBillDTOList = new ArrayList<>();
-        subscriberNoPartList = new ArrayList<>();
-        institutionUserIntListDTO = new ArrayList<>();
-        institutionProcessDTO = new InstitutionProcessDTO();
-        institutionProcessDTO.setIsOnline(true);
-
-        queryBillsProcess.setInstitution(institution);
-        queryBillsProcess.setInstitutionDebtType(institutionDebtType);
-        queryBillsProcess.setInstitutionProcess(institutionProcessDTO);
-
-        Field stepHandlerField = AbstractProcess.class.getDeclaredField("stepHandler");
-        stepHandlerField.setAccessible(true);
-        stepHandlerField.set(queryBillsProcess, queryBillsProcess.new ProcessStepHandler());
-    }
-
-    @Test
-    void testExecuteProcess_Success() throws BillException {
-        Map<String, Object> dataPack = new HashMap<>();
-        dataPack.put(ProcessDataPackKey.CUSTOMER_NO.getKey(), 123L);
-        dataPack.put(ProcessDataPackKey.IDENTITY_NO.getKey(), 456L);
-        dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO.getKey(), "subscriber123");
-        dataPack.put(ProcessDataPackKey.SUBSCRIBER_NO_PART_LIST.getKey(), subscriberNoPartList);
-
-        queryBillsProcess.setDataPack(dataPack);
-
-
-        when(paymentUtilImpl.isFomOperationEnabled(any(InstitutionDTO.class))).thenReturn(true);
-
-        queryBillsProcess.executeProcess();
-        queryBillsProcess.prepareExecutionOutput();
-        assertEquals(queryBillsProcess.getExecutionOutput().toString(), queryBillsProcess.getExecutionOutput().toString());
-    }
-}	
-
-private class EliminateBills implements ProcessStep {
-
-		@Override
-		public void executeStep() {
-
-			if (CollectionUtils.isEmpty(queriedBillDTOList)) {
-				error = EnumBillResult.BILL_NOT_FOUND;
-				return;
-			}
-			ResponseGetCustomerPaidBillList harmoniPaidBills = billPaymentRestFacade
-					.getCustomerPaidBillList(productCode, institutionCode, subscriberNo);
-
-			List<HmnPaidBillDTO> harmoniPaidBillList = Optional.ofNullable(harmoniPaidBills.getBillDTOList())
-					.orElse(Collections.emptyList());
-
-			List<PaymentDTO> mikroPaidBillList = paymentRepository.findPaidBillList(subscriberNo, institutionDebtTypeId,EnumBillStatu.PAID.getValue())
-					.stream().map(paymentMapper::toDTO).toList();
-
-			queriedBillDTOList = queriedBillDTOList.stream()
-					.filter(queriedBillDTO -> harmoniPaidBillList.stream()
-							.noneMatch(harmoniPaidBillDTO -> queriedBillDTO.getBillDueDate()
-									.isEqual(harmoniPaidBillDTO.getBillDueDate().toInstant()
-											.atZone(ZoneId.systemDefault()).toLocalDate())
-									&& queriedBillDTO.getBillNo().equals(harmoniPaidBillDTO.getBillNo())))
-					.filter(queriedBillDTO -> mikroPaidBillList.stream().noneMatch(
-							microPaidDTO -> queriedBillDTO.getBillDueDate().isEqual(microPaidDTO.getBillDueDate())
-									&& queriedBillDTO.getBillNo().equals(microPaidDTO.getBillNo())))
-					.toList();
-
-			if (CollectionUtils.isEmpty(queriedBillDTOList)) {
-				error = EnumBillResult.BILL_NOT_FOUND;
-			}
-       	 
-		}
-		
-		
-
-	}
+    // Validate that queriedBillDTOList is not empty
+    assertFalse(queryBillsProcess.getQueriedBillDTOList().isEmpty());
+    assertNull(queryBillsProcess.getExecutionOutput().getResult()); // No error
+}
