@@ -4,11 +4,11 @@ void testUpdateReturnMap_DefinitionNotFound() {
     request.setId(1L);
     request.setReturnMapDefinitionId(1L);
 
-    DataResult<ReturnMapDefinition> definitionDataResult = new ErrorDataResult<>("error", null, 400);
-
+    // Mocking the service to return null when the method is called
     Mockito.when(returnMapDefinitionService.getReturnMapDefinitionByIdForServices(1L))
-            .thenReturn(definitionDataResult);
+            .thenReturn(null);
 
+    // Expecting a DataNotFoundException to be thrown
     Assertions.assertThrows(DataNotFoundException.class, () -> {
         returnMapService.updateReturnMap(request);
     });
