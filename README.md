@@ -1,15 +1,8 @@
-@Test
-void testUpdateReturnMap_DefinitionNotFound() {
-    UpdateReturnMapRequest request = new UpdateReturnMapRequest();
-    request.setId(1L);
-    request.setReturnMapDefinitionId(1L);
+@Mapper(componentModel = "spring")
+public interface ProductMapper {
+    ProductMapper INSTANCE = Mappers.getMapper(ProductMapper.class);
 
-    // Mocking the service to return null when the method is called
-    Mockito.when(returnMapDefinitionService.getReturnMapDefinitionByIdForServices(1L))
-            .thenReturn(null);
+    ProductDTO toProductDTO(Product product);
 
-    // Expecting a DataNotFoundException to be thrown
-    Assertions.assertThrows(DataNotFoundException.class, () -> {
-        returnMapService.updateReturnMap(request);
-    });
+    Product toProduct(ProductDTO productDTO);
 }
