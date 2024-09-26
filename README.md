@@ -5,17 +5,7 @@
   "isNewBillNeeded": true,
   "isPartialPaymentAllowed": true,
   "isOverPaymentAllowed": false,
-  "workingStartTime": {
-    "hour": 0,
-    "minute": 0,
-    "second": 0,
-    "nano": 0
-  },
-  "workingFinishTime": {
-    "hour": 0,
-    "minute": 0,
-    "second": 0,
-    "nano": 0
-  },
+  "workingStartTime": "00:00:00",
+  "workingFinishTime": "00:00:00",
   "isActive": true
 }
