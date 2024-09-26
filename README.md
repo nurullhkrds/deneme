@@ -1,79 +1,44 @@
-@Getter
+java: Unknown property "institutionChannelId" in result type InstitutionChannelWebDTO. Did you mean "institutionId"?
+
+
+
+    @Mapping(target = "institutionChannelId", source = "channel.code")
+    @Mapping(target = "institutionId", source = "institutionDebtType.institution.id")
+    @Mapping(target = "institutionName", source = "institutionDebtType.institution.name")
+    InstitutionChannelWebDTO toWebDTO (InstitutionChannelDTO dto);
+
+
 @Setter
-public class CreateInstitutionChannelRequest extends BaseCreateWebRequest {
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+public class InstitutionChannelWebDTO {
 
-    @NotNull
-    @Schema(description = "ID of the institution debt type", example = "1", required = true)
-    private Long institutionDebtTypeId;  // InstitutionDebtType ID'si
+    private Long id;
 
-    @NotNull
-    @Schema(description = "Code of the channel", example = "CHANNEL_001", required = true)
-    private String channelCode;  // Kanalın kodu
+    private Long institutionId;
 
-    @NotNull
-    @Schema(description = "Is a new bill needed", example = "true", required = true)
-    private Boolean isNewBillNeeded;  // Yeni bir fatura gerekli mi?
+    private String institutionName;
 
-    @NotNull
-    @Schema(description = "Is partial payment allowed", example = "true", required = true)
-    private Boolean isPartialPaymentAllowed;  // Kısmi ödeme izinli mi?
+    private String channelCode;
 
-    @NotNull
-    @Schema(description = "Is overpayment allowed", example = "false", required = true)
-    private Boolean isOverPaymentAllowed;  // Fazla ödeme izinli mi?
-
-    @NotNull
-    @Schema(description = "Working start time", example = "08:00", required = true)
-    private LocalTime workingStartTime;  // Çalışma başlangıç saati
-
-    @NotNull
-    @Schema(description = "Working finish time", example = "18:00", required = true)
-    private LocalTime workingFinishTime;  // Çalışma bitiş saati
-
-    @NotNull
-    @Schema(description = "Is the institution channel active", example = "true", required = true)
-    private Boolean isActive;  // Kaydın aktif olup olmadığını belirleyen alan
 }
 
-
-
-@Getter
 @Setter
-public class UpdateInstitutionChannelRequest extends BaseUpdateWebRequest {
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class InstitutionChannelDTO extends UpdatableBaseDTO {
 
-    @NotNull
-    @Schema(description = "ID of the institution channel", example = "1", required = true)
-    private Long id;  // Güncellenecek InstitutionChannel kaydının ID'si
+	private Long id;	
+	private InstitutionDebtTypeDTO institutionDebtType;
+	private ChannelDTO channel;
+	private Boolean isNewBillNeeded;
+	private Boolean isPartialPaymentAllowed;
+	private Boolean isOverPaymentAllowed;
+	private LocalTime workingStartTime;
+	private LocalTime workingFinishTime;
+	private Boolean isActive;
 
-    @NotNull
-    @Schema(description = "ID of the institution debt type", example = "1", required = true)
-    private Long institutionDebtTypeId;  // InstitutionDebtType ID'si
-
-    @NotNull
-    @Schema(description = "Code of the channel", example = "CHANNEL_001", required = true)
-    private String channelCode;  // Kanalın kodu
-
-    @NotNull
-    @Schema(description = "Is a new bill needed", example = "true", required = true)
-    private Boolean isNewBillNeeded;  // Yeni bir fatura gerekli mi?
-
-    @NotNull
-    @Schema(description = "Is partial payment allowed", example = "true", required = true)
-    private Boolean isPartialPaymentAllowed;  // Kısmi ödeme izinli mi?
-
-    @NotNull
-    @Schema(description = "Is overpayment allowed", example = "false", required = true)
-    private Boolean isOverPaymentAllowed;  // Fazla ödeme izinli mi?
-
-    @NotNull
-    @Schema(description = "Working start time", example = "08:00", required = true)
-    private LocalTime workingStartTime;  // Çalışma başlangıç saati
-
-    @NotNull
-    @Schema(description = "Working finish time", example = "18:00", required = true)
-    private LocalTime workingFinishTime;  // Çalışma bitiş saati
-
-    @NotNull
-    @Schema(description = "Is the institution channel active", example = "true", required = true)
-    private Boolean isActive;  // Kaydın aktif olup olmadığını belirleyen alan
 }
