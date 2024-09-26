@@ -1,125 +1,79 @@
-@Entity
 @Getter
 @Setter
-@Audited
-
-public class InstitutionChannel extends UpdatableBaseEntity {
-
-	@Id
-	@Column(nullable = false, precision = 16, scale = 0)
-	@SequenceGenerator(name = "INSTITUTION_CHANNEL_GENERATOR", sequenceName = "SEQ_INSTITUTION_CHANNEL", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "INSTITUTION_CHANNEL_GENERATOR")
-	private Long id;
-
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "INSTITUTION_DEBT_TYPE_ID", referencedColumnName = "ID")
-	private InstitutionDebtType institutionDebtType;
-
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "CHANNEL_CODE", referencedColumnName = "CODE")
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	private Channel channel;
-
-	@Column(nullable = false)
-	private Boolean isNewBillNeeded;
-
-	@Column(nullable = false)
-	private Boolean isPartialPaymentAllowed;
-
-	@Column(nullable = false)
-	private Boolean isOverPaymentAllowed;
-
-	@Convert(converter = LocalTimeAttributeConverter.class)
-	@Column(nullable = false)
-	private LocalTime workingStartTime;
-	
-	@Convert(converter = LocalTimeAttributeConverter.class)
-	@Column(nullable = false)
-	private LocalTime workingFinishTime;
-
-	@Column(nullable = false)
-	private Boolean isActive;
-
-}
-
-
-
-@Entity
-@Getter
-@Setter
-public class Channel {
-	
-	@Id
-	@Column(nullable = false, length = 50)
-	private String code;
-	
-	@Column(nullable = false, length = 100)
-	private String name;
-	
-	@Column(nullable = false, length = 500)
-	private String explanation;
-	
-	@Column(nullable = false)
-	private Boolean isAdc;
-	
-	@Column(length = 30)
-	private String accountingGroup;
-	
-/**	@OneToMany(mappedBy = "channel", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<InstitutionChannel> institutionChannel;
-
-	@OneToMany(mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<ProcessChannel> processChannel;*/
-
-
-}
-@Entity
-@Getter
-@Setter
-@Audited
-
-public class InstitutionDebtType extends UpdatableBaseEntity {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "INSTITUTION_DEBT_TYPE_GENERATOR")
-	@SequenceGenerator(name = "INSTITUTION_DEBT_TYPE_GENERATOR", sequenceName = "SEQ_INSTITUTION_DEBT_TYPE", allocationSize = 1)
-	@Column(nullable = false, precision = 16, scale = 0)
-	private Long id;
-	
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
-	@JoinColumn(name = "INSTITUTION_ID", referencedColumnName = "ID")
-	private Institution institution;
-		
-	@Column(nullable = false, length = 30)
-	private String debtType;
-	
-	@Column(nullable = false, length = 500)
-	private String explanation;
-	
-	@Column(nullable = false)
-	private Boolean isActive;
-	
-/**	@OneToMany(mappedBy = "institutionDebtType", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<InstitutionChannel> institutionChannelList;
-	
-	@OneToMany(mappedBy = "institutionDebtType", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	private InstitutionUserIntf institutionUserIntf;*/
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-@Getter
-@Setter
-
 public class CreateInstitutionChannelRequest extends BaseCreateWebRequest {
+
+    @NotNull
+    @Schema(description = "ID of the institution debt type", example = "1", required = true)
+    private Long institutionDebtTypeId;  // InstitutionDebtType ID'si
+
+    @NotNull
+    @Schema(description = "Code of the channel", example = "CHANNEL_001", required = true)
+    private String channelCode;  // Kanalın kodu
+
+    @NotNull
+    @Schema(description = "Is a new bill needed", example = "true", required = true)
+    private Boolean isNewBillNeeded;  // Yeni bir fatura gerekli mi?
+
+    @NotNull
+    @Schema(description = "Is partial payment allowed", example = "true", required = true)
+    private Boolean isPartialPaymentAllowed;  // Kısmi ödeme izinli mi?
+
+    @NotNull
+    @Schema(description = "Is overpayment allowed", example = "false", required = true)
+    private Boolean isOverPaymentAllowed;  // Fazla ödeme izinli mi?
+
+    @NotNull
+    @Schema(description = "Working start time", example = "08:00", required = true)
+    private LocalTime workingStartTime;  // Çalışma başlangıç saati
+
+    @NotNull
+    @Schema(description = "Working finish time", example = "18:00", required = true)
+    private LocalTime workingFinishTime;  // Çalışma bitiş saati
+
+    @NotNull
+    @Schema(description = "Is the institution channel active", example = "true", required = true)
+    private Boolean isActive;  // Kaydın aktif olup olmadığını belirleyen alan
+}
+
+
+
+@Getter
+@Setter
+public class UpdateInstitutionChannelRequest extends BaseUpdateWebRequest {
+
+    @NotNull
+    @Schema(description = "ID of the institution channel", example = "1", required = true)
+    private Long id;  // Güncellenecek InstitutionChannel kaydının ID'si
+
+    @NotNull
+    @Schema(description = "ID of the institution debt type", example = "1", required = true)
+    private Long institutionDebtTypeId;  // InstitutionDebtType ID'si
+
+    @NotNull
+    @Schema(description = "Code of the channel", example = "CHANNEL_001", required = true)
+    private String channelCode;  // Kanalın kodu
+
+    @NotNull
+    @Schema(description = "Is a new bill needed", example = "true", required = true)
+    private Boolean isNewBillNeeded;  // Yeni bir fatura gerekli mi?
+
+    @NotNull
+    @Schema(description = "Is partial payment allowed", example = "true", required = true)
+    private Boolean isPartialPaymentAllowed;  // Kısmi ödeme izinli mi?
+
+    @NotNull
+    @Schema(description = "Is overpayment allowed", example = "false", required = true)
+    private Boolean isOverPaymentAllowed;  // Fazla ödeme izinli mi?
+
+    @NotNull
+    @Schema(description = "Working start time", example = "08:00", required = true)
+    private LocalTime workingStartTime;  // Çalışma başlangıç saati
+
+    @NotNull
+    @Schema(description = "Working finish time", example = "18:00", required = true)
+    private LocalTime workingFinishTime;  // Çalışma bitiş saati
+
+    @NotNull
+    @Schema(description = "Is the institution channel active", example = "true", required = true)
+    private Boolean isActive;  // Kaydın aktif olup olmadığını belirleyen alan
 }
