@@ -1,11 +1,2 @@
-{
-  "createUser": "U099999",
-  "institutionDebtTypeId": 1,
-  "channelCode": "CHANNEL_001",
-  "isNewBillNeeded": true,
-  "isPartialPaymentAllowed": true,
-  "isOverPaymentAllowed": false,
-  "workingStartTime": "00:00:00",
-  "workingFinishTime": "00:00:00",
-  "isActive": true
-}
+2024-09-27 18:42:45,180 ERROR [main][SpringApplication] Application run failed
+org.springframework.beans.factory.BeanDefinitionStoreException: Failed to parse configuration class [com.ykb.payments.bill.transaction.BillTransactionApplication]; nested exception is org.springframework.context.annotation.ConflictingBeanDefinitionException: Annotation-specified bean name 'channelServiceImpl' for bean class [com.ykb.payments.bill.transaction.institution.service.impl.ChannelServiceImpl] conflicts with existing, non-compatible bean definition of same name and class [com.ykb.payments.bill.transaction.institution.admin.service.impl.ChannelServiceImpl]
