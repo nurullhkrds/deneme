@@ -1,43 +1,24 @@
-Description:
+public class InstitutionPymMethod extends UpdatableBaseEntity {
 
-Parameter 1 of constructor in com.ykb.payments.bill.transaction.adapter.services.concretes.ReturnMapDefinitionService required a bean of type 'com.ykb.payments.bill.transaction.adapter.mapper.ReturnMapDefinitionMapper' that could not be found.
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "INSTITUTION_PYM_METHOD_GENERATOR")
+	@SequenceGenerator(name = "INSTITUTION_PYM_METHOD_GENERATOR", sequenceName = "SEQ_INSTITUTION_PYM_METHOD", allocationSize = 1)
+	@Column(nullable = false, precision = 16, scale = 0)
+	private Long id;
 
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@JoinColumn(name = "INSTITUTION_ID", referencedColumnName = "ID")
+	private Institution institution;
 
-Action:
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@JoinColumn(name = "PAYMENT_METHOD", referencedColumnName = "CODE")
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	private PaymentMethod paymentMethod;
 
-Consider defining a bean of type 'com.ykb.payments.bill.transaction.adapter.mapper.ReturnMapDefinitionMapper' in your configuration.
+	@Column(length = 30)
+	private String expenseCode;
 
-
-Process finished with exit code 1
-
-
-
-
-@Mapper(componentModel = "spring")
-public interface ReturnMapDefinitionMapper {
-
-
-    ReturnMapDefinitionDTO toReturnMapDefinitionDTO(ReturnMapDefinition entity);
-
-    ReturnMapDefinition toReturnMapDefinition(ReturnMapDefinitionDTO dto);
-
-    List<ReturnMapDefinitionDTO> toReturnMapDefinitionDTOList(List<ReturnMapDefinition> entityList);
-
+	@Column(nullable = false)
+	private Boolean isActive;
 
 }
-
-
-
-
-
-@Service
-public class ReturnMapDefinitionService implements IReturnMapDefinitionService {
-
-    private final ReturnMapDefinitionRepository returnMapDefinitionRepository;
-
-    private final ReturnMapDefinitionMapper returnMapDefinitionMapper;
-
-    public ReturnMapDefinitionService(ReturnMapDefinitionRepository returnMapDefinitionRepository, ReturnMapDefinitionMapper returnMapDefinitionMapper) {
-        this.returnMapDefinitionRepository = returnMapDefinitionRepository;
-        this.returnMapDefinitionMapper = returnMapDefinitionMapper;
-    }
