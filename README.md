@@ -1,31 +1,30 @@
-@JsonFormat(shape = JsonFormat.Shape.STRING) // Enum değerlerini string olarak işlemesi için
+@JsonFormat(shape = JsonFormat.Shape.STRING)  // Enum'u JSON'da string olarak işlemesini sağlar
 public enum EnumBlockDayType {
 
     CALENDAR_DAY("C"),
     WORKING_DAY("W");
 
     @Getter
-    private String value;
-
-    private static final Map<String, EnumBlockDayType> paramaters;
-
-    static {
-        paramaters = new LinkedHashMap<>();
-        for (EnumBlockDayType each : EnumBlockDayType.values()) {
-            paramaters.put(each.value, each);
-        }
-    }
+    private final String value;
 
     EnumBlockDayType(String value) {
         this.value = value;
     }
 
-    @JsonCreator // String JSON'u enum'a dönüştürmek için
-    public static EnumBlockDayType parse(String value) {
+    private static final Map<String, EnumBlockDayType> paramaters = new HashMap<>();
+
+    static {
+        for (EnumBlockDayType type : EnumBlockDayType.values()) {
+            paramaters.put(type.getValue(), type);
+        }
+    }
+
+    @JsonCreator // Gelen JSON string'ini enum ile eşleştirmek için
+    public static EnumBlockDayType fromValue(String value) {
         return paramaters.get(value);
     }
 
-    @JsonValue // Enum'u JSON string'e dönüştürmek için
+    @JsonValue // JSON'a string olarak yazdırmak için
     public String getValue() {
         return value;
     }
