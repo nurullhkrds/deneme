@@ -1,29 +1,33 @@
 @AllArgsConstructor
-@JsonFormat(shape = JsonFormat.Shape.STRING)  // Enum'u JSON'da string olarak işle
+@JsonFormat(shape = JsonFormat.Shape.STRING)  // Enum string olarak serialize/deserializable olsun
 public enum EnumBlockDayType {
 
     CALENDAR_DAY("C"),
     WORKING_DAY("W");
 
     @Getter
-    @JsonValue
-    private String value;
+    private final String value;
 
-    private static final Map<String, EnumBlockDayType> parameters;
+    private static final Map<String, EnumBlockDayType> PARAMETERS;
 
     static {
-        parameters = new LinkedHashMap<>();
-        for (EnumBlockDayType each : EnumBlockDayType.values()) {
-            parameters.put(each.value, each);
+        PARAMETERS = new LinkedHashMap<>();
+        for (EnumBlockDayType type : EnumBlockDayType.values()) {
+            PARAMETERS.put(type.value, type);
         }
     }
 
     @JsonCreator
-    public static EnumBlockDayType parse(String value) {
-        EnumBlockDayType type = parameters.get(value);
+    public static EnumBlockDayType fromValue(String value) {
+        EnumBlockDayType type = PARAMETERS.get(value);
         if (type == null) {
             throw new IllegalArgumentException("Invalid value for EnumBlockDayType: " + value);
         }
         return type;
+    }
+
+    @Override
+    public String toString() {
+        return this.value;
     }
 }
