@@ -1,1 +1,29 @@
-"Invalid request: JSON parse error: Input mismatch reading Enum `com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType`: properties-based `@JsonCreator` ([method com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType#parse(java.lang.String)]) expects JSON Object (JsonToken.START_OBJECT), got JsonToken.VALUE_STRING; nested exception is com.fasterxml.jackson.databind.exc.MismatchedInputException: Input mismatch reading Enum `com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType`: properties-based `@JsonCreator` ([method com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType#parse(java.lang.String)]) expects JSON Object (JsonToken.START_OBJECT), got JsonToken.VALUE_STRING\n at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 7, column: 19] (through reference chain: com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionChnlPymMethodRequest[\"blockDayType\"])",
+@AllArgsConstructor
+@JsonFormat(shape = JsonFormat.Shape.STRING)  // Enum'u JSON'da string olarak işle
+public enum EnumBlockDayType {
+
+    CALENDAR_DAY("C"),
+    WORKING_DAY("W");
+
+    @Getter
+    @JsonValue
+    private String value;
+
+    private static final Map<String, EnumBlockDayType> parameters;
+
+    static {
+        parameters = new LinkedHashMap<>();
+        for (EnumBlockDayType each : EnumBlockDayType.values()) {
+            parameters.put(each.value, each);
+        }
+    }
+
+    @JsonCreator
+    public static EnumBlockDayType parse(String value) {
+        EnumBlockDayType type = parameters.get(value);
+        if (type == null) {
+            throw new IllegalArgumentException("Invalid value for EnumBlockDayType: " + value);
+        }
+        return type;
+    }
+}
