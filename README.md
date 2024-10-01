@@ -1,118 +1,90 @@
-public class InstitutionChannelPymMethod extends UpdatableBaseEntity {
-	
+public class ReturnMapDefinition extends UpdatableBaseEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "INSTITUTION_CHANNEL_PYM_METHOD_GENERATOR")
-    @SequenceGenerator(name = "INSTITUTION_CHANNEL_PYM_METHOD_GENERATOR", sequenceName = "SEQ_INST_CHANNEL_PYM_METHOD", allocationSize = 1)
-	@Column(nullable = false, precision = 16, scale = 0)
-	private Long id;
-    
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "INSTITUTION_CHANNEL_ID", referencedColumnName = "ID")
-	private InstitutionChannel institutionChannel;
-	
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "PAYMENT_METHOD", referencedColumnName = "CODE")
-	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	private PaymentMethod paymentMethod;
-	
-	@Column(nullable = false, length = 50)
-	private String accountingTemplateCode;
-	
-	@Column(precision = 3, scale = 0)
-	private Integer blockDayCount;
-	
-	@Column(name = "BLOCK_DAY_TYPE")
-	@Convert(converter = EnumBlockDayTypeConverter.class)
-	private EnumBlockDayType blockDayType;
-	
-	/**@Convert(converter = EnumBlockDayStrategyCodeConverter.class)*/
-	@Enumerated(EnumType.STRING)
-	private EnumBlockDayStrategyCode blockDayStrategyCode;
-	
-	@Column(precision = 18, scale = 9)
-	private BigDecimal profitShareRate;
-	
-	@Column(nullable = false)
-	private Boolean isActive;	
-	}
-@AllArgsConstructor
-@JsonAdapter(EnumBlockDayTypeConverter.class)
-@ToString
-public enum EnumBlockDayType {
-	
-	CALENDAR_DAY("C"),
-	WORKING_DAY("W");
+    @Column(nullable = false, length = 16)
+    @SequenceGenerator(name = "RETURN_MAP_DEFINITION_ID_GENERATOR", sequenceName = "SEQ_RETURN_MAP_DEFINITION", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "RETURN_MAP_DEFINITION_ID_GENERATOR")
+    private Long id;
 
-	
-	@Getter
-	@JsonValue
-	private String value;
-	
-	
-	private static final Map<String, EnumBlockDayType> paramaters;
+    @Column(length = 50, nullable = false)
+    private String returnMapCode;
 
-	static {
-		paramaters = new LinkedHashMap<>();
+    @Column(nullable = false)
+    private Boolean isActive;
 
-		for (EnumBlockDayType each : EnumBlockDayType.values()) {
-			paramaters.put(each.value, each);
-		}
 
-	}	
+}  
 
-	@JsonCreator
-	public static EnumBlockDayType parse(String value) {
-		return paramaters.get(value);
-	}
-}
-@Converter(autoApply = true)
-public class EnumBlockDayTypeConverter implements AttributeConverter <EnumBlockDayType,String> {
 
-	@Override
-	public String convertToDatabaseColumn(EnumBlockDayType attribute) {
-		return (attribute==null) ? null : attribute.getValue();
-	}
 
-	@Override
-	public EnumBlockDayType convertToEntityAttribute(String dbData) {
-		return (dbData == null) ? null : EnumBlockDayType.parse(dbData);
-	}
+@Override
+    public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) throws MicroException {
 
-}
+        DataResult<ReturnMapDefinition> returnMapDefinitionDataResult = getReturnMapDefinitionByIdForServices(request.getId());
+
+        if (returnMapDefinitionDataResult.isSuccess()) {
+            ReturnMapDefinition changedData = returnMapDefinitionDataResult.getData();
+            Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
+
+            if (existingReturnMap.isPresent() && !existingReturnMap.get().getId().equals(request.getId())) {
+                throw new DataConflictException(BillExceptionsUI.ValidationExceptions.RETURN_MAP_EXIST);
+            }
+
+            changedData.setIsActive(request.getIsActive());
+            changedData.setReturnMapCode(request.getReturnMapCode());
+            changedData.setUpdatedBy(request.getUpdateUser());
+
+            ReturnMapDefinition updatedData = returnMapDefinitionRepository.save(changedData);
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
+
+            return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), dto, 200);
+        }
+
+        throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
+    }
+
+
+
+@Entity
 @Getter
 @Setter
-public class CreateInstitutionChnlPymMethodRequest extends BaseCreateWebRequest {
+@Audited
+@DynamicUpdate
+public class ReturnMap extends UpdatableBaseEntity {
 
-    @NotNull
-    @Schema(description = "ID of the institution channel", example = "52145", required = true)
-    private Long institutionChannelId;
+	@Id
+	@Column(nullable = false, length = 16)
+	@SequenceGenerator(name = "RETURN_MAP_ID_GENERATOR", sequenceName = "SEQ_RETURN_MAP", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "RETURN_MAP_ID_GENERATOR")
+	private Long id;
 
-    @NotNull
-    @Schema(description = "Payment method code", example = "PREPAIDCARD", required = true)
-    private EnumPaymentMethod paymentMethod;
+	@Column(length = 50, nullable = false)
+	private String returnMapCode;
 
-    @NotNull
-    @Size(max = 50)
-    @Schema(description = "Accounting template code", example = "ACC_TEMPLATE_001", required = true)
-    private String accountingTemplateCode;
+	@Column(length = 255)
+	private String institutionReturnCode;
 
-    @NotNull
-    @Schema(description = "Number of block days", example = "10", required = true)
-    private Integer blockDayCount;
+	@Column(length = 500)
+	private String institutionReturnText;
 
-    @NotNull
-    @Schema(description = "Block day type", example = "W", required = true)
-    private EnumBlockDayType blockDayType;
+	@Column(length = 10)
+	private String bankReturnCode;
 
-    @NotNull
-    @Schema(description = "Block day strategy code", example = "CHANNEL", required = true)
-    private EnumBlockDayStrategyCode blockDayStrategyCode;
+	@Column(length = 250)
+	private String bankReturnText;
 
-    @Schema(description = "Profit share rate", example = "0.05", required = true)
-    private BigDecimal profitShareRate;
+	@Column(name = "RETURN_TYPE")
+	@Convert(converter = EnumReturnTypeConverter.class)
+	private EnumReturnType returnType;
 
-    @NotNull
-    @Schema(description = "Is the feature active", example = "true", required = true)
-    private Boolean isActive;
+	@Column(nullable = false)
+	private Boolean isReversible;
+
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "return_map_definition_id",referencedColumnName = "ID", nullable = false)
+	private ReturnMapDefinition returnMapDefinition;
+
+
+
 }
-"Invalid request: JSON parse error: Input mismatch reading Enum `com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType`: properties-based `@JsonCreator` ([method com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType#parse(java.lang.String)]) expects JSON Object (JsonToken.START_OBJECT), got JsonToken.VALUE_STRING; nested exception is com.fasterxml.jackson.databind.exc.MismatchedInputException: Input mismatch reading Enum `com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType`: properties-based `@JsonCreator` ([method com.ykb.payments.bill.transaction.institution.enums.EnumBlockDayType#parse(java.lang.String)]) expects JSON Object (JsonToken.START_OBJECT), got JsonToken.VALUE_STRING\n at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 7, column: 19] (through reference chain: com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionChnlPymMethodRequest[\"blockDayType\"])"
