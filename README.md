@@ -4,7 +4,8 @@ public static EnumExpenseType parse(String value) {
         throw new IllegalArgumentException("EnumExpenseType value cannot be null or empty");
     }
 
-    EnumExpenseType expenseType = paramaters.get(value);
+    // Küçük harfe çevirip kontrol et
+    EnumExpenseType expenseType = paramaters.get(value.trim().toUpperCase());
     if (expenseType == null) {
         throw new IllegalArgumentException("No enum constant for value: " + value);
     }
