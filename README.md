@@ -1,14 +1,38 @@
-BEGIN
-  DELETE FROM BILL.RETURN_MAP
-  WHERE ID IN (
-      200019, 850160, 850220, 850098, 850199, 500062, 400062, 850082, 17, 12, 
-      850046, 850047, 850040, 850058, 850060, 850071, 850073, 850097, 850032, 850034, 
-      850053, 850055, 400035, 400041, 500035, 500041, 400070, 500044, 850209, 850224, 
-      400050, 500050, 400030, 400036, 400042, 500030, 500036, 500042, 500073, 400073, 
-      800004, 800010, 800012, 800013, 800014, 800015, 800007, 800009, 350007, 1150008, 
-      800005
-  );
+INST_CHANNEL_PYM_METHOD_ID, CURRENCY
 
-  COMMIT;
-END;
-/
+
+INST_CHANNEL_PYM_METHOD_ID, COLLECTION_ACCOUNT_NO
+
+@Getter
+@Setter
+public class CreateInstitutionChnlPymMthdAccRequestDTO extends BaseCreateRequestDTO {
+
+    private Long id;
+
+    private Long institutionChannelPymMethodId;
+
+
+    private String collectionAccountNo;
+
+
+    private String institutionAccountNo;
+
+
+    private String currency;
+
+
+    private EnumExpenseType expenseType;
+
+
+    private String expenseAccountNo;
+
+    private Boolean isActive;
+}
+
+
+  @Override
+    public InstitutionChnnlPymMthdAccDTO createInstitutionChannelPymMethodAcc(CreateInstitutionChnlPymMthdAccRequestDTO requestDTO) throws MicroException {
+
+
+        return null;
+    }
