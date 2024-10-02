@@ -1,2 +1,1 @@
-    @Query()
-    InstitutionChnnlPymMthdAcc findAll();
+    List<InstitutionChnnlPymMthdAccDTO> toDTOList(List<InstitutionChnnlPymMthdAcc> institutionChnnlPymMthdAccs);
