@@ -1,11 +1,1 @@
-@Query(value = "SELECT id, " + 
-               "inst_channel_pym_method_id, " + 
-               "collection_account_no, " + 
-               "institution_account_no, " + 
-               "currency, " + 
-               "expense_type, " + 
-               "expense_account_no, " + 
-               "is_active " + 
-               "FROM institution_chnnl_pym_mthd_acc", 
-       nativeQuery = true)
-List<InstitutionChnlPymMthdAccWebDTO> findAllInstitutionChnlPymMthdAccs();
+2024-10-02 19:47:57,195 ERROR [http-nio-8080-exec-5][PymExceptionHandler] An Exception occured org.springframework.core.convert.ConverterNotFoundException: No converter found capable of converting from type [org.springframework.data.jpa.repository.query.AbstractJpaQuery$TupleConverter$TupleBackedMap] to type [com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChnlPymMthdAccWebDTO]
