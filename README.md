@@ -9,3 +9,10 @@ public interface InstitutionChnnlPymMthdAccMapper {
                "JOIN institution_channel_pym_method icpm ON icpa.inst_channel_pym_method_id = icpm.id", 
        nativeQuery = true)
 List<Object[]> findAllInstitutionChnnlPymMthdAccWithRelations();
+
+
+ List<InstitutionChnnlPymMthdAccDTO> dtos = new ArrayList<>();
+    for (Object[] row : rows) {
+        dtos.add(toDTO(row)); // Her bir satırı DTO'ya dönüştürüp listeye ekliyoruz
+    }
+    return dtos;
