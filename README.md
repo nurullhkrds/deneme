@@ -1,1 +1,1 @@
-dto.setIsActive(((BigDecimal) row[7]).intValue() == 1);
+select s.*,s.rowid from bill.institution_chnnl_pym_mthd_acc s where INST_CHANNEL_PYM_METHOD_ID IN (select ID from bill.institution_channel_pym_method s where s.institution_channel_id IN (select ID from bill.institution_channel where INSTITUTION_DEBT_TYPE_ID IN (select ID  from bill.institution_debt_type s where INSTITUTION_ID IN (select ID  from bill.institution s where INSTITUTION_CODE IN  ('MUĞLA')))));
