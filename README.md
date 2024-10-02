@@ -1,31 +1,83 @@
-@JsonFormat(shape = JsonFormat.Shape.STRING)  // Enum'u JSON'da string olarak işlemesini sağlar
-public enum EnumBlockDayType {
+DECLARE
+  CURSOR cur_duplicates IS
+    SELECT RETURN_MAP_DEFINITION_ID, INSTITUTION_RETURN_CODE, COUNT(*) AS cnt
+    FROM BILL.RETURN_MAP
+    GROUP BY RETURN_MAP_DEFINITION_ID, INSTITUTION_RETURN_CODE
+    HAVING COUNT(*) > 1; 
 
-    CALENDAR_DAY("C"),
-    WORKING_DAY("W");
+BEGIN
+  FOR rec IN cur_duplicates LOOP
+   
+    DELETE FROM BILL.RETURN_MAP 
+    WHERE ROWID NOT IN (
+      SELECT MIN(ROWID)
+      FROM BILL.RETURN_MAP
+      WHERE RETURN_MAP_DEFINITION_ID = rec.RETURN_MAP_DEFINITION_ID
+      AND INSTITUTION_RETURN_CODE = rec.INSTITUTION_RETURN_CODE
+    )
+    AND RETURN_MAP_DEFINITION_ID = rec.RETURN_MAP_DEFINITION_ID
+    AND INSTITUTION_RETURN_CODE = rec.INSTITUTION_RETURN_CODE;
+    
+  END LOOP;
+  
+  COMMIT;
+END;
+/
 
-    @Getter
-    private final String value;
+-----------------
 
-    EnumBlockDayType(String value) {
-        this.value = value;
-    }
 
-    private static final Map<String, EnumBlockDayType> paramaters = new HashMap<>();
+Silinecek	200019,00
+Silinecek	850160,00
+Silinecek	850220,00
+Silinecek	850098,00
+Silinecek	850199,00
+Silinecek	500062,00
+Silinecek	400062,00
+Silinecek	850082,00
+Silinecek	17,00
+Silinecek	12,00
+Silinecek	850046,00
+Silinecek	850047,00
+Silinecek	850040,00
+Silinecek	850058,00
+Silinecek	850060,00
+Silinecek	850071,00
+Silinecek	850073,00
+Silinecek	850097,00
+Silinecek	850032,00
+Silinecek	850034,00
+Silinecek	850053,00
+Silinecek	850055,00
+Silinecek	400035,00
+Silinecek	400041,00
+Silinecek	500035,00
+Silinecek	500041,00
+Silinecek	400070,00
+Silinecek	500044,00
+Silinecek	850209,00
+Silinecek	850224,00
+Silinecek	400050,00
+Silinecek	500050,00
+Silinecek	400030,00
+Silinecek	400036,00
+Silinecek	400042,00
+Silinecek	500030,00
+Silinecek	500036,00
+Silinecek	500042,00
+Silinecek	500073,00
+Silinecek	400073,00
+Silinecek	800004,00
+Silinecek	800010,00
+Silinecek	800012,00
+Silinecek	800013,00
+Silinecek	800014,00
+Silinecek	800015,00
+Silinecek	800007,00
+Silinecek	800009,00
+Silinecek	350007,00
+Silinecek	1150008,00
+Silinecek	800005,00
 
-    static {
-        for (EnumBlockDayType type : EnumBlockDayType.values()) {
-            paramaters.put(type.getValue(), type);
-        }
-    }
 
-    @JsonCreator // Gelen JSON string'ini enum ile eşleştirmek için
-    public static EnumBlockDayType fromValue(String value) {
-        return paramaters.get(value);
-    }
 
-    @JsonValue // JSON'a string olarak yazdırmak için
-    public String getValue() {
-        return value;
-    }
-}
