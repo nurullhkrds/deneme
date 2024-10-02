@@ -1,16 +1,1 @@
- default InstitutionChnlPymMthdAccWebDTO fromObjectArray(Object[] row) {
-        InstitutionChnlPymMthdAccWebDTO dto = new InstitutionChnlPymMthdAccWebDTO();
-        
-        // BigDecimal'dan Long'a dönüştürme
-        dto.setId(((BigDecimal) row[0]).longValue()); // ID
-        dto.setInstitutionChannelPymMethodId(((BigDecimal) row[1]).longValue()); // INST_CHANNEL_PYM_METHOD_ID
-        
-        dto.setCollectionAccountNo((String) row[2]);
-        dto.setInstitutionAccountNo((String) row[3]);
-        dto.setCurrency((String) row[4]);
-        dto.setExpenseType(EnumExpenseType.valueOf((String) row[5])); // Enum dönüşümü
-        dto.setExpenseAccountNo((String) row[6]);
-        dto.setIsActive(row[7] != null && (Integer) row[7] == 1); // Boolean dönüşümü
-        
-        return dto;
-    }
+2024-10-02 20:47:32,905 ERROR [http-nio-8080-exec-3][PymExceptionHandler] An Exception occured java.lang.IllegalArgumentException: No enum constant com.ykb.payments.bill.transaction.institution.enums.EnumExpenseType.CUST
