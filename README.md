@@ -1,28 +1,12 @@
-@AllArgsConstructor
-@JsonAdapter(EnumExpenseTypeConverter.class)
-@ToString
-public enum EnumExpenseType {
+@JsonCreator
+public static EnumExpenseType parse(String value) {
+    if (value == null || value.trim().isEmpty()) {
+        throw new IllegalArgumentException("EnumExpenseType value cannot be null or empty");
+    }
 
-	FROM_CUSTOMER("CUST"),
-	FROM_INSTITUTION("INST");
-	
-	@Getter
-	@JsonValue
-	private String value;
-	
-	private static final Map<String, EnumExpenseType> paramaters;
-
-	static {
-		paramaters = new LinkedHashMap<>();
-
-		for (EnumExpenseType each : EnumExpenseType.values()) {
-			paramaters.put(each.value, each);
-		}
-
-	}	
-
-	@JsonCreator
-	public static EnumExpenseType parse(String value) {
-		return paramaters.get(value);
-	}
+    EnumExpenseType expenseType = paramaters.get(value);
+    if (expenseType == null) {
+        throw new IllegalArgumentException("No enum constant for value: " + value);
+    }
+    return expenseType;
 }
