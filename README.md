@@ -1,13 +1,2 @@
-@JsonCreator
-public static EnumExpenseType parse(String value) {
-    if (value == null || value.trim().isEmpty()) {
-        throw new IllegalArgumentException("EnumExpenseType value cannot be null or empty");
-    }
-
-    // Küçük harfe çevirip kontrol et
-    EnumExpenseType expenseType = paramaters.get(value.trim().toUpperCase());
-    if (expenseType == null) {
-        throw new IllegalArgumentException("No enum constant for value: " + value);
-    }
-    return expenseType;
-}
+e: SELECT id, inst_channel_pym_method_id, collection_account_no, institution_account_no, currency, expense_type, expense_account_no, is_active FROM institution_chnnl_pym_mthd_acc
+2024-10-02 23:08:45,706 ERROR [http-nio-8080-exec-2][PymExceptionHandler] An Exception occured java.lang.ClassCastException: class java.math.BigDecimal cannot be cast to class java.lang.Integer (java.math.BigDecimal and java.lang.Integer are in module java.base of loader 'bootstrap')
