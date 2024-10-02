@@ -1,1 +1,9 @@
-2024-10-02 19:47:57,195 ERROR [http-nio-8080-exec-5][PymExceptionHandler] An Exception occured org.springframework.core.convert.ConverterNotFoundException: No converter found capable of converting from type [org.springframework.data.jpa.repository.query.AbstractJpaQuery$TupleConverter$TupleBackedMap] to type [com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChnlPymMthdAccWebDTO]
+@Mapping(source = "id", target = "id")
+    @Mapping(source = "instChannelPymMethod.id", target = "institutionChannelPymMethodId")
+    @Mapping(source = "collectionAccountNo", target = "collectionAccountNo")
+    @Mapping(source = "institutionAccountNo", target = "institutionAccountNo")
+    @Mapping(source = "currency", target = "currency")
+    @Mapping(source = "expenseType", target = "expenseType")
+    @Mapping(source = "expenseAccountNo", target = "expenseAccountNo")
+    @Mapping(source = "isActive", target = "isActive")
+    InstitutionChnlPymMthdAccWebDTO toWebDTO(InstitutionChnnlPymMthdAcc acc);
