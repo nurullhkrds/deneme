@@ -1,48 +1,26 @@
-@Getter
-@Setter
-public class CreateInstitutionChnlPymMthdPscRequest extends BaseCreateWebRequest {
-
-
-    @NotNull
-    @Schema(description = "ID of the institution channel pym method", example = "52145", required = true)
+ @NotNull
+    @Schema(description = "ID of the institution channel payment method", example = "52145", required = true)
     private Long institutionChannelPymMethodId;
-
-
 
     @NotNull
     @Schema(description = "Monday block day count", example = "1", required = true)
     private Integer mondayBlockDayCount;
 
     @NotNull
+    @Schema(description = "Tuesday block day count", example = "2", required = true)
     private Integer tuesdayBlockDayCount;
 
+    @Schema(description = "Wednesday block day count", example = "0")
     private Integer wednesdayBlockDayCount;
 
+    @Schema(description = "Thursday block day count", example = "0")
     private Integer thursdayBlockDayCount;
 
+    @Schema(description = "Friday block day count", example = "0")
     private Integer fridayBlockDayCount;
 
+    @Schema(description = "Saturday block day count", example = "0")
     private Integer saturdayBlockDayCount;
 
+    @Schema(description = "Sunday block day count", example = "0")
     private Integer sundayBlockDayCount;
-}
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer mondayBlockDayCount;
-	
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer tuesdayBlockDayCount;
-	
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer wednesdayBlockDayCount;
-	
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer thursdayBlockDayCount;
-	
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer fridayBlockDayCount;
-	
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer saturdayBlockDayCount;
-	
-	@Column(nullable= false, precision = 2, scale = 0)
-	private Integer sundayBlockDayCount;
