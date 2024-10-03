@@ -6,14 +6,14 @@ public InstitutionChnnlPymMthdAccDTO updateInstitutionChannelPymMethodAcc(Update
         throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_CHNNL_PYM_MTHD_ACC_NOT_FOUND);
     }
 
-    // Güncellenen kaydın kendisini hariç tutarak kontrol
-    boolean existsByCurrency = institutionChnnlPymMthdAccRepository.existsByInstitutionChannelPymMethodIdAndCurrencyAndIdNot(
-            requestDTO.getInstitutionChannelPymMethodId(), requestDTO.getCurrency(), requestDTO.getId());
-    boolean existsByCollectionAccountNo = institutionChnnlPymMthdAccRepository.existsByInstitutionChannelPymMethodIdAndCollectionAccountNoAndIdNot(
-            requestDTO.getInstitutionChannelPymMethodId(), requestDTO.getCollectionAccountNo(), requestDTO.getId());
+    // Kendi ID'si ile aynı olmayan başka bir kayıt olup olmadığını kontrol et
+    InstitutionChnnlPymMthdAccDTO conflictByCurrency = institutionChnnlPymMthdAccRepository.findByInstitutionChannelPymMethodIdAndCurrency(
+            requestDTO.getInstitutionChannelPymMethodId(), requestDTO.getCurrency());
+    InstitutionChnnlPymMthdAccDTO conflictByCollectionAccountNo = institutionChnnlPymMthdAccRepository.findByInstitutionChannelPymMethodIdAndCollectionAccountNo(
+            requestDTO.getInstitutionChannelPymMethodId(), requestDTO.getCollectionAccountNo());
 
-    // Mevcut kaydın kendisini güncellemek için yukarıdaki kontroller eklendi
-    if (existsByCurrency || existsByCollectionAccountNo){
+    if ((conflictByCurrency != null && !conflictByCurrency.getId().equals(requestDTO.getId())) ||
+        (conflictByCollectionAccountNo != null && !conflictByCollectionAccountNo.getId().equals(requestDTO.getId()))) {
         throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_CHNNL_PYM_MTHD_ACC);
     }
 
