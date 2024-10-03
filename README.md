@@ -1,31 +1,31 @@
-default InstitutionChnlPymMthdAccWebDTO objectArrayToWebDTO(Object[] row) {
-    InstitutionChnlPymMthdPscWebDTO dto = new InstitutionChnlPymMthdPscWebDTO();
+    @Query(value = "SELECT icpp.id, " +
+            "icpp.inst_channel_pym_method_id, " +
+            "icpp.MONDAY_BLOCK_DAY_COUNT, " +
+            "icpp.TUESDAY_BLOCK_DAY_COUNT, " +
+            "icpp.WEDNESDAY_BLOCK_DAY_COUNT, " +
+            "icpp.THURSDAY_BLOCK_DAY_COUNT, " +
+            "icpp.FRIDAY_BLOCK_DAY_COUNT, " +
+            "icpp.SATURDAY_BLOCK_DAY_COUNT, " +
+            "icpp.SUNDAY_BLOCK_DAY_COUNT, " +
+            "icpp.created_by"+
+            "icpp.create_date"+
+            "icpp.updated_by"+
+            "icpp.update_date"+
+            "i.id AS institution_id, " +
+            "i.name AS institution_name " +
+            "FROM institution_chnnl_pym_mthd_psc icpp " +
+            "JOIN institution_channel_pym_method icpm ON icpp.inst_channel_pym_method_id = icpm.id " +
+            "JOIN institution_channel ic ON icpm.institution_channel_id = ic.id " +
+            "JOIN institution_debt_type idt ON ic.institution_debt_type_id = idt.id " +
+            "JOIN institution i ON idt.institution_id = i.id",
+            nativeQuery = true)
+    List<Object[]> findInstitutionChnlPymMthdAccWithInstitution();
 
-    dto.setId(((BigDecimal) row[0]).longValue());
-    dto.setInstitutionChannelPymMethodId(((BigDecimal) row[1]).longValue());
-    dto.setMondayBlockDayCount(((BigDecimal) row[2]).intValue());
-    dto.setTuesdayBlockDayCount(((BigDecimal) row[3]).intValue());
-    dto.setWednesdayBlockDayCount(((BigDecimal) row[4]).intValue());
-    dto.setThursdayBlockDayCount(((BigDecimal) row[5]).intValue());
-    dto.setFridayBlockDayCount(((BigDecimal) row[6]).intValue());
-    dto.setSaturdayBlockDayCount(((BigDecimal) row[7]).intValue());
-    dto.setSundayBlockDayCount(((BigDecimal) row[8]).intValue());
-    dto.setCreatedBy((String) row[9]);
 
-    // DATE'den LocalDateTime'a dönüştürme
-    dto.setCreateDate(((Date) row[10]).toInstant()
-                     .atZone(ZoneId.systemDefault())
-                     .toLocalDateTime());
 
-    dto.setUpdatedBy((String) row[11]);
 
-    // DATE'den LocalDateTime'a dönüştürme
-    dto.setUpdateDate(((Date) row[12]).toInstant()
-                     .atZone(ZoneId.systemDefault())
-                     .toLocalDateTime());
+Hibernate: SELECT icpp.id, icpp.inst_channel_pym_method_id, icpp.MONDAY_BLOCK_DAY_COUNT, icpp.TUESDAY_BLOCK_DAY_COUNT, icpp.WEDNESDAY_BLOCK_DAY_COUNT, icpp.THURSDAY_BLOCK_DAY_COUNT, icpp.FRIDAY_BLOCK_DAY_COUNT, icpp.SATURDAY_BLOCK_DAY_COUNT, icpp.SUNDAY_BLOCK_DAY_COUNT, icpp.created_byicpp.create_dateicpp.updated_byicpp.update_datei.id AS institution_id, i.name AS institution_name FROM institution_chnnl_pym_mthd_psc icpp JOIN institution_channel_pym_method icpm ON icpp.inst_channel_pym_method_id = icpm.id JOIN institution_channel ic ON icpm.institution_channel_id = ic.id JOIN institution_debt_type idt ON ic.institution_debt_type_id = idt.id JOIN institution i ON idt.institution_id = i.id
+2024-10-03 17:39:04,448 WARN [http-nio-8080-exec-2][SqlExceptionHelper] SQL Error: 904, SQLState: 42000
+2024-10-03 17:39:04,449 ERROR [http-nio-8080-exec-2][SqlExceptionHelper] ORA-00904: "ICPP"."CREATED_BYICPP"."CREATE_DATEICPP"."UPDATED_BYICPP"."UPDATE_DATEI"."ID": geçersiz belirleyici
 
-    dto.setInstitutionId(((BigDecimal) row[13]).longValue());
-    dto.setInstitutionName((String) row[14]);
-
-    return dto;
-}
+2024-10-03 17:39:04,479 ERROR [http-nio-8080-exec-2][PymExceptionHandler] An Exception occured org.springframework.dao.InvalidDataAccessResourceUsageException: could not extract ResultSet; SQL [n/a]; nested exception is org.hibernate.exception.SQLGrammarException: could not extract ResultSet
