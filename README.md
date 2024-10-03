@@ -1,42 +1,48 @@
-public InstitutionChnnlPymMthdAccDTO updateInstitutionChannelPymMethodAcc(UpdateInstitutionChnlPymMthdAccRequestDTO requestDTO) throws MicroException {
+@Getter
+@Setter
+public class CreateInstitutionChnlPymMthdPscRequest extends BaseCreateWebRequest {
 
-    InstitutionChnnlPymMthdAccDTO existingInstitutionChnnlPymMthdAccDTO = getInstitutionChannelPymMethodAccById(requestDTO.getId());
 
-    if (existingInstitutionChnnlPymMthdAccDTO == null) {
-        throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_CHNNL_PYM_MTHD_ACC_NOT_FOUND);
-    }
+    @NotNull
+    @Schema(description = "ID of the institution channel pym method", example = "52145", required = true)
+    private Long institutionChannelPymMethodId;
 
-    // Mevcut kaydın kendisini hariç tutarak benzersizlik kontrolü
-    boolean existsByCurrency = institutionChnnlPymMthdAccRepository.existsByInstitutionChannelPymMethodIdAndCurrency(
-            requestDTO.getInstitutionChannelPymMethodId(), requestDTO.getCurrency());
-    boolean existsByCollectionAccountNo = institutionChnnlPymMthdAccRepository.existsByInstitutionChannelPymMethodIdAndCollectionAccountNo(
-            requestDTO.getInstitutionChannelPymMethodId(), requestDTO.getCollectionAccountNo());
 
-    // Güncellenen kaydın kendisiyle çakışmayı manuel kontrol et
-    if ((existsByCurrency && !existingInstitutionChnnlPymMthdAccDTO.getCurrency().equals(requestDTO.getCurrency())) 
-            || (existsByCollectionAccountNo && !existingInstitutionChnnlPymMthdAccDTO.getCollectionAccountNo().equals(requestDTO.getCollectionAccountNo()))) {
-        throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_CHNNL_PYM_MTHD_ACC);
-    }
 
-    InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = institutionChnlPymMethodService
-            .getInstitutionChannelPymMethodById(requestDTO.getInstitutionChannelPymMethodId());
+    @NotNull
+    @Schema(description = "Monday block day count", example = "1", required = true)
+    private Integer mondayBlockDayCount;
 
-    if (institutionChannelPymMethodDTO == null) {
-        throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_CHANNEL_PYM_METHOD_NOT_FOUND);
-    }
+    @NotNull
+    private Integer tuesdayBlockDayCount;
 
-    // Güncelleme işlemi
-    existingInstitutionChnnlPymMthdAccDTO.setInstitutionChannelPymMethod(institutionChannelPymMethodDTO);
-    existingInstitutionChnnlPymMthdAccDTO.setInstitutionAccountNo(requestDTO.getInstitutionAccountNo());
-    existingInstitutionChnnlPymMthdAccDTO.setCollectionAccountNo(requestDTO.getCollectionAccountNo());
-    existingInstitutionChnnlPymMthdAccDTO.setCurrency(requestDTO.getCurrency());
-    existingInstitutionChnnlPymMthdAccDTO.setExpenseType(requestDTO.getExpenseType());
-    existingInstitutionChnnlPymMthdAccDTO.setIsActive(requestDTO.getIsActive());
-    existingInstitutionChnnlPymMthdAccDTO.setExpenseAccountNo(requestDTO.getExpenseAccountNo());
-    existingInstitutionChnnlPymMthdAccDTO.setUpdateDate(LocalDateTime.now());
-    existingInstitutionChnnlPymMthdAccDTO.setUpdatedBy(requestDTO.getUpdateUser());
+    private Integer wednesdayBlockDayCount;
 
-    InstitutionChnnlPymMthdAcc institutionChnnlPymMthdAcc = institutionChnnlPymMthdAccMapper.toInstitutionChnnlPymMthdAcc(existingInstitutionChnnlPymMthdAccDTO);
-    institutionChnnlPymMthdAcc = institutionChnnlPymMthdAccRepository.save(institutionChnnlPymMthdAcc);
-    return institutionChnnlPymMthdAccMapper.toDTO(institutionChnnlPymMthdAcc);
+    private Integer thursdayBlockDayCount;
+
+    private Integer fridayBlockDayCount;
+
+    private Integer saturdayBlockDayCount;
+
+    private Integer sundayBlockDayCount;
 }
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer mondayBlockDayCount;
+	
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer tuesdayBlockDayCount;
+	
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer wednesdayBlockDayCount;
+	
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer thursdayBlockDayCount;
+	
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer fridayBlockDayCount;
+	
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer saturdayBlockDayCount;
+	
+	@Column(nullable= false, precision = 2, scale = 0)
+	private Integer sundayBlockDayCount;
