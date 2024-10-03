@@ -2,6 +2,7 @@ SELECT
     RETURN_MAP_CODE, 
     INSTITUTION_RETURN_CODE, 
     COUNT(*) AS cnt, 
+    LISTAGG(ID, ', ') WITHIN GROUP (ORDER BY ID) AS ids, 
     SUM(COUNT(*)) OVER () AS total_count
 FROM 
     BILL.RETURN_MAP 
