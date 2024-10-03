@@ -1,26 +1,69 @@
- @NotNull
-    @Schema(description = "ID of the institution channel payment method", example = "52145", required = true)
-    private Long institutionChannelPymMethodId;
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class InstitutionWebDTO extends BaseWebDTO {
 
-    @NotNull
-    @Schema(description = "Monday block day count", example = "1", required = true)
-    private Integer mondayBlockDayCount;
+    private String institutionCode;
+    private String institutionName;
+    private Long   institutionId;
+}
 
-    @NotNull
-    @Schema(description = "Tuesday block day count", example = "2", required = true)
-    private Integer tuesdayBlockDayCount;
+@Getter
+@Setter
+@EqualsAndHashCode
+public class BaseWebDTO implements Serializable {
 
-    @Schema(description = "Wednesday block day count", example = "0")
-    private Integer wednesdayBlockDayCount;
+    private LocalDateTime createDate;
 
-    @Schema(description = "Thursday block day count", example = "0")
-    private Integer thursdayBlockDayCount;
+    private String createdBy;
 
-    @Schema(description = "Friday block day count", example = "0")
-    private Integer fridayBlockDayCount;
+    private LocalDateTime updateDate;
 
-    @Schema(description = "Saturday block day count", example = "0")
-    private Integer saturdayBlockDayCount;
+    private String updatedBy;
+}
 
-    @Schema(description = "Sunday block day count", example = "0")
-    private Integer sundayBlockDayCount;
+    @Mapping(source = "id", target = "institutionId")
+    @Mapping(source = "name", target = "institutionName")
+    @Mapping(source = "institutionCode", target = "institutionCode")
+    InstitutionWebDTO toInstitutionWebDTO(InstitutionDTO dto);
+
+
+
+
+
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class InstitutionDTO extends UpdatableBaseDTO implements Serializable {
+
+	private Long id;
+	private ProductDTO product;
+	private String institutionCode;
+	private Long customerNo;
+	private String name;
+	private String explanation;
+	private OwnerDepartmentDTO ownerDepartment;
+	private LocalDate protocolStartDate;
+	private LocalDate protocolEndDate;
+	private Boolean isReverseAllowed;
+	private Boolean isOrderAllowed;
+	private Boolean hasDebtType;
+	private String iconText;
+	private Boolean isActive;
+
+}
+
+
+
+public abstract class UpdatableBaseDTO extends CreatableBaseDTO {
+    private Long version;
+    private LocalDateTime updateDate;
+    private String updatedBy;
+
+
+
+public abstract class CreatableBaseDTO extends BaseDTO {
+    private LocalDateTime createDate;
+    private String createdBy;
