@@ -1,3 +1,27 @@
+
+Müşterinin talimat durumuna ve talimatının ürün grubuna göre aşağıdaki maddeler şeklinde ilerlenecektir.
+
+Müşterinin aktif talimatı hiç yok ise: Müşteriye aktif talimatının bulunmadığı bilgisi verilmelidir. 
+Müşterinin aktif talimatı var ve yukarıdaki tabloda işaretlenen ürünlerden biri ise: Müşteriye aktif talimatları belirlenen şekilde dönülmelidir.
+Müşterinin talimatı belirlenen ürün grupları dışında ise ( örn spt):  Müşteriye aktif talimatının iptalinin IVR kanalı üzerinden yapılamayacağı bilgisi verilmelidir. 
+Kapsam:
+
+Talimat sorgulama servisi için; ürün grubu bilgisini ilk olarak müşteri mi belirleyecek? Örneğin, müşterinin CEPTEL, DOĞALGAZ, SU ve ELEKTRİK ürünlerinden talimatı olsun. Hangi ürün grubu üzerinde işlem yapacağını müşteri belirledikten sonra ürün grubuna göre mi ilk 8 talimatı size dönülmeli? AY: Evet, müşteriye biz hangi ürün tipinde faturası var ise o seçenekleri sunuyoruz, daha sonra müşterinin seçtiği ürün tipine göre bu tipe uygun ilk 8 fatura halihazırda sizden dönmüş oluyor bu bilgileri sunuyoruz. Örneğin, müşterinin 5 su + 4 elektrik + 3 doğalgaz faturası varsa, doğalgaz için 1’i, elektrik için 2’yi, su faturanızla işlem yapmak için 3’ü tuşlayınız. Örneğin 2 tuşladı ben müşteriye 4 adet talimat sırayla sunulur. (Aslında akışın başında ben sizin servisinizi cif ile tetiklediğimde müşterinin tüm talimatları gelecek ben buradan kaç farklı ürün tipi varsa onları müşteriye listeleyeceğim, müşterinin seçtiği ürün tipine göre de sizin gönderdiğiniz faturaları listeleyeceğim.
+
+
+Talimat sorgulama servisi için; müşterinin birden fazla ürün grubunda talimatı varsa DİĞER adı altında ürün grubu sizin tarafta oluşturulacak mıdır? Oluşturulacaksa da bu ürün grubu altında bizden hangi ürün grubu sırasıyla talimatların dönülmesi beklenmektedir? AY: Diğer grubunun altında tekrar bir kategorizasyon olmayacak. Direk olarak sizin ürün tipi olarak diğer için gönderdiğiniz maks 8 adet fatura bilgisini müşterimize vereceğiz.
+
+
+Talimat adedi ile ilgili bir sınır olacak mı? Özellikler kurumsal müşterilerin çok fazla sayıda talimatı olabiliyor. Max döneceğimiz bir talimat adedi var mı? Varsa bunu neye göre belirleyeceğiz? Örn. 10 adet talimatı dön diyorsa bu 10 adet nereye göre belirlenecek?
+Talimatlar ürünlere göre gruplandırılacaktır.(CEPTEL, DOĞALGAZ, ELEKTRİK vb.) Her ürün grubu için 9 adet abonelik bilgisi talimat sorgulama servisinden dönülecek. AY: Talimatların ürünlere göre gruplanmasını bekliyoruz. Her ürün grubunda bize maksimum 8 adet talimatın gönderilmesini bekliyoruz. Burada ürün grubuna göre otomatik ödeme talimatı verilme tarihi geçmişten günümüze doğru sıralanarak ilk 8 fatura için servisten dönüş olması makul. 
+
+
+Talimat giriş tarihi en esi olandan itibaren mi yoksa en yeni olandan itibaren mi AY: En eski olandan en yeniye doğru sıralanmalı
+
+
+Hesap numarası okunacak mı? AY: IVR’da hesap numarası okunmayacak Okunacak ise müşteri genel hesap üzerinden ya da birden fazla hesap üzerinden talimat vermiş olabilir. Hepsini servisten dönmemizi mi bekliyorsunuz?
+
+
 @Override
 	public ResponseGetSubscriberRecordsWithAccounts getSubscriberRecordsWithAccounts( RequestGetSubscriberRecordsWithAccounts i_request ) throws HmnServiceException {
 
