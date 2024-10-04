@@ -1,4 +1,4 @@
-
+CEPTEL,ELEKTRİK,TELEKOM,SU,DOĞALGAZ,TAHSİLAT,KREDİLER
 Müşterinin talimat durumuna ve talimatının ürün grubuna göre aşağıdaki maddeler şeklinde ilerlenecektir.
 
 Müşterinin aktif talimatı hiç yok ise: Müşteriye aktif talimatının bulunmadığı bilgisi verilmelidir. 
