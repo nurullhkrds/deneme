@@ -1,18 +1,42 @@
-@Service
-@RequiredArgsConstructor
-public class ReturnMapService implements IReturnMapService {
+   @Override
+    public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) throws MicroException {
 
-    private final ReturnMapRepository returnMapRepository;
-    private final ReturnMapMapper returnMapMapper;
-    private final IReturnMapDefinitionService returnMapDefinitionService;
+        DataResult<ReturnMapDefinition> returnMapDefinitionDataResult = getReturnMapDefinitionByIdForServices(request.getId());
+
+        if (returnMapDefinitionDataResult.isSuccess()) {
+            ReturnMapDefinition changedData = returnMapDefinitionDataResult.getData();
+            Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
+
+            if (existingReturnMap.isPresent() && !existingReturnMap.get().getId().equals(request.getId())) {
+                throw new DataConflictException(BillExceptionsUI.ValidationExceptions.RETURN_MAP_EXIST);
+            }
+
+            changedData.setIsActive(request.getIsActive());
+            changedData.setReturnMapCode(request.getReturnMapCode());
+            changedData.setUpdatedBy(request.getUpdateUser());
+
+            updateReturnMapCodes(request.getId(), request.getReturnMapCode(), request.getUpdateUser());
+
+            ReturnMapDefinition updatedData = returnMapDefinitionRepository.save(changedData);
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
+
+            return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), dto, 200);
+        }
+
+        throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
+    }
 
 
+   public void updateReturnMapCodes(Long returnMapDefinitionId, String newReturnMapCode,String updateUser) {
+        List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinitionId(returnMapDefinitionId);
 
-@Service
-public class ReturnMapDefinitionService implements IReturnMapDefinitionService {
+        if (returnMaps.isEmpty()) {
+            return;
+        }
 
-    private final ReturnMapDefinitionRepository returnMapDefinitionRepository;
-
-    private final ReturnMapDefinitionMapper returnMapDefinitionMapper;
-
-    private final IReturnMapService returnMapService;
+        for (ReturnMap returnMap : returnMaps) {
+            returnMap.setReturnMapCode(newReturnMapCode);
+            returnMap.setUpdatedBy(updateUser);
+            returnMapRepository.save(returnMap);
+        }
+    }
