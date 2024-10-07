@@ -1,4 +1,5 @@
- CoreServiceResultDTO<List<PaymentSubscriberAccountsDTO>> resultDTO = new CoreServiceResultDTO<>();
+
+    CoreServiceResultDTO<List<PaymentSubscriberAccountsDTO>> resultDTO = new CoreServiceResultDTO<>();
     List<PaymentSubscriberAccountsDTO> resultList = new ArrayList<>();
 
     // Parametrelerin hazırlanması
