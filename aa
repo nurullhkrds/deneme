@@ -1,44 +1,18 @@
-public void updateReturnMapCodes(Long returnMapDefinitionId, String newReturnMapCode) {
-    // ReturnMap kayıtlarını ID ile bul
-    List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinitionId(returnMapDefinitionId);
+@Service
+@RequiredArgsConstructor
+public class ReturnMapService implements IReturnMapService {
 
-    // Kayıt yoksa güncelleme işlemini atlayın
-    if (returnMaps.isEmpty()) {
-        return; // Hiçbir şey yapmadan çık
-    }
-
-    for (ReturnMap returnMap : returnMaps) {
-        returnMap.setReturnMapCode(newReturnMapCode);
-        returnMapRepository.save(returnMap);
-    }
-}
+    private final ReturnMapRepository returnMapRepository;
+    private final ReturnMapMapper returnMapMapper;
+    private final IReturnMapDefinitionService returnMapDefinitionService;
 
 
 
-@Override
-public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) throws MicroException {
-    DataResult<ReturnMapDefinition> returnMapDefinitionDataResult = getReturnMapDefinitionByIdForServices(request.getId());
+@Service
+public class ReturnMapDefinitionService implements IReturnMapDefinitionService {
 
-    if (returnMapDefinitionDataResult.isSuccess()) {
-        ReturnMapDefinition changedData = returnMapDefinitionDataResult.getData();
-        Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
+    private final ReturnMapDefinitionRepository returnMapDefinitionRepository;
 
-        if (existingReturnMap.isPresent() && !existingReturnMap.get().getId().equals(request.getId())) {
-            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.RETURN_MAP_EXIST);
-        }
+    private final ReturnMapDefinitionMapper returnMapDefinitionMapper;
 
-        changedData.setIsActive(request.getIsActive());
-        changedData.setReturnMapCode(request.getReturnMapCode());
-        changedData.setUpdatedBy(request.getUpdateUser());
-
-        // ReturnMap tablosundaki returnMapCode'yu güncelle
-        returnMapService.updateReturnMapCodes(request.getId(), request.getReturnMapCode());
-
-        ReturnMapDefinition updatedData = returnMapDefinitionRepository.save(changedData);
-        ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
-
-        return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), dto, 200);
-    }
-
-    throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
-}
+    private final IReturnMapService returnMapService;
