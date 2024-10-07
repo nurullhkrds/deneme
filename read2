@@ -1,55 +1,40 @@
-INSERT INTO syspar.hmn_inf_named_sql_queries 
-    (query_definition) 
-VALUES 
-    (
-    'SELECT * FROM (
-          SELECT a.*, ROWNUM SELECTED_ROW_NUMBER,
-                 (SELECT COUNT(*) FROM T_OTO_ABONE S, SABLON T
-                  WHERE S.STATU <> ''D''
-                  AND S.MUSTERINO = T.CIFNO(+)
-                  @dynamic[ P_CUSTOMER_NO, AND S.MUSTERINO = :P_CUSTOMER_NO ]
-                  @dynamic[ P_PRODUCT, AND S.URUN IN (:P_PRODUCT_LIST) ]
-                  @dynamic[ P_INSTITUTION, AND S.KURUM = :P_INSTITUTION ]
-                  @dynamic[ P_SUBSCRIBER_NO, AND S.ABONENO = :P_SUBSCRIBER_NO ]
-                  @dynamic[ P_ACCOUNT_NO, AND T.HESAPNO = :P_ACCOUNT_NO ]
-                  @dynamic[ P_CREDITCARD_NO, AND S.KARTNO = :P_CREDITCARD_NO ]
-                  @dynamic[ P_EXCLUDE_PRODUCT_LIST, AND S.URUN NOT IN ( :P_EXCLUDE_PRODUCT_LIST ) ]
-                  @dynamic[ P_GENERAL_ACCOUNT_ACTIVE, AND S.SABLONTIPI = ''G'' AND T.ABONENO = ''GENELHESAP'' AND T.KURUM = ''GENELHESAP'' AND T.URUN = ''GENELHESAP'' ]
-                  @dynamic[ P_GENERAL_ACCOUNT_DEACTIVE, AND S.SABLONTIPI <> ''G'' AND S.ABONENO = T.ABONENO(+) AND S.KURUM = T.KURUM(+) AND S.URUN = T.URUN(+) ]) TOTAL_PACKAGE_COUNT
-         FROM (
-              SELECT DISTINCT S.URUN O_PRODUCT, S.KURUM O_INSTITUTION, S.ABONENO O_SUBSCRIBER_NO,
-              S.HESAPNO O_ACCOUNT_NUMBER, S.DOVIZ O_CURRENCY, S.MUSTERINO O_CUSTOMER_NO,
-              S.SRVTIPI O_INSTITUTION_SERVICE_TYPE, S.HATAKODU O_ERROR_CODE, S.GIRISSUBE O_PAYMENT_ORDER_BRANCH_CODE,
-              S.GIRENUSER O_PAYMENT_ORDER_USER, S.GIRISTARIH O_PAYMENT_ORDER_DATE, S.SILENUSER O_PAYMENT_ORDER_DELETED_BY,
-              S.SILMETARIH O_PAYMENT_ORDER_DELETE_DATE, S.MUSTERITIPI O_CUSTOMER_TYPE, S.STATU O_STATUS,
-              S.ODEMESECIMI O_PAYMENT_SELECTION, S.KARTNO O_CREDIT_CARD_NUMBER, S.SONKULLANMA O_CREDIT_CARD_EXPIRE_DATE,
-              S.IKINCILHESAPNO O_SECONDARY_ACCOUNT_NUMBER, S.IKINCILDOVIZ O_SECONDARY_ACCOUNT_CURRENCY, S.UCUNCUHESAPNO O_THIRD_ACCOUNT_NUMBER,
-              S.UCUNCUDOVIZ O_THIRD_ACCOUNT_CURRENCY, S.NAKITAVANS O_CASH_ADVANCE, S.LIMITTUTARI O_LIMIT_AMOUNT,
-              S.SUBE O_ACCOUNT_BRANCH_CODE, S.BIN O_BIN, S.ABBILGI1 O_SUBSCRIBER_INFO1,
-              S.ABBILGI2 O_SUBSCRIBER_INFO2, S.ABBILGI3 O_SUBSCRIBER_INFO3, S.EMAILBILDIRIM O_EMAIL_NOTIFICATION,
-              S.ODHARIC O_EXCLUDE_OVERDRAFT, S.CHGUSER O_UPDATED_BY, S.CHGTARIH O_UPDATE_DATE,
-              S.ACIKLAMA O_DESCRIPTION, S.ACIKLAMA2 O_DESCRIPTION2, S.ACIKLAMA3 O_DESCRIPTION3,
-              S.ACIKLAMA4 O_DESCRIPTION4, S.ACIKLAMA5 O_DESCRIPTION5, S.TALIMATTIPI O_PAYMENT_ORDER_TYPE,
-              S.ODMFREKANS O_PAYMENT_FREQUENCY, S.BTHHESAPNO O_BTHCREDIT_ACCOUNT_NUMBER, S.SABLONTIPI O_TEMPLATE_TYPE,
-              S.KARTTURU O_CARD_TYPE, S.ISLBIL O_TRANSACTION_INFO, S.YKBDATA O_YKBDATA,
-              S.KOMORANLIMIT O_COMMISSION_RATE_LIMIT, S.KOMORANADAT O_COMMISSION_RATE_ADAT, S.KOMORANCIRO O_COMMISSION_RATE_ENDORSEMENT,
-              S.DSTKODU O_SUPPORT_CODE, S.BORCTARIH O_DEBIT_DATE, S.RISKTUTARI O_RISK_AMOUNT,
-              S.KOMISYONTUTAR O_COMMISSION_AMOUNT, S.KOMISYONORAN O_COMMISSION_RATE,S.ORDERNAME O_ORDER_NAME,
-              T.HESAPNO O_ACCOUNT_NO, T.SIRANO O_SEQUENCE_NO 
-              FROM T_OTO_ABONE S, SABLON T
-              WHERE S.STATU <> ''D''
-              AND S.MUSTERINO = T.CIFNO(+)
-              @dynamic[ P_CUSTOMER_NO, AND S.MUSTERINO = :P_CUSTOMER_NO ]
-              @dynamic[ P_PRODUCT, AND S.URUN IN (:P_PRODUCT_LIST) ]
-              @dynamic[ P_INSTITUTION, AND S.KURUM = :P_INSTITUTION ]
-              @dynamic[ P_SUBSCRIBER_NO, AND S.ABONENO = :P_SUBSCRIBER_NO ]
-              @dynamic[ P_ACCOUNT_NO, AND T.HESAPNO = :P_ACCOUNT_NO ]
-              @dynamic[ P_CREDITCARD_NO, AND S.KARTNO = :P_CREDITCARD_NO ]
-              @dynamic[ P_EXCLUDE_PRODUCT_LIST, AND S.URUN NOT IN ( :P_EXCLUDE_PRODUCT_LIST ) ]
-              @dynamic[ P_GENERAL_ACCOUNT_ACTIVE, AND S.SABLONTIPI = ''G'' AND T.ABONENO = ''GENELHESAP'' AND T.KURUM = ''GENELHESAP'' AND T.URUN = ''GENELHESAP'' ]
-              @dynamic[ P_GENERAL_ACCOUNT_DEACTIVE, AND S.SABLONTIPI <> ''G'' AND S.ABONENO = T.ABONENO(+) AND S.KURUM = T.KURUM(+) AND S.URUN = T.URUN(+) ]
-    ) a
-        WHERE ROWNUM < ((:P_PAGE_NUMBER * :P_PAGE_SIZE) + 1)
-    )
-    WHERE SELECTED_ROW_NUMBER >= (((:P_PAGE_NUMBER - 1) * :P_PAGE_SIZE) + 1)'
-);
+ResponseGetSubscriberRecordsWithAccounts response = new ResponseGetSubscriberRecordsWithAccounts();
+    response.setReference(i_request != null ? i_request.getReference() : null);
+    response.setClientUniqueReference(i_request != null ? i_request.getClientUniqueReference() : null);
+
+    // İstek doğrulama
+    ResponseStatusMsgDTO requestStatusMsg = PYMResponseUtils.validateRequest(i_request);
+
+    if (requestStatusMsg == null) {
+        CoreServiceResultDTO<List<PaymentSubscriberAccountsDTO>> resultDTO = null;
+        try {
+            // Servis katmanını çağırıyoruz
+            resultDTO = ServiceLocator.getPaymentSubscriberService().getSubscriberRecordsWithAccounts(
+                    i_request,
+                    new CoreServiceBaseDataDTO(i_request.getChannelCode(), i_request.getAgentCode(), 
+                        i_request.getReference(), null, i_request.getOperatingBranchCode(), i_request.getClientUniqueReference())
+            );
+        } catch (Exception e) {
+            String exceptionKey = UUID.randomUUID().toString();
+            PYMLogUtil.logException(e, i_request, null, null, exceptionKey);
+            PYMErrorUtils.throwGenericErrorServiceResult("getSubscriberRecordsWithAccounts", e.getClass().getSimpleName(), exceptionKey, i_request.getReference());
+        }
+
+        if (resultDTO != null) {
+            if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(resultDTO.getStatus())) {
+                if (resultDTO.getResult() != null) {
+                    response.setSubscriberAccountsDTOList(resultDTO.getResult());
+                }
+            }
+            response.setStatus(resultDTO.getStatus());
+            response.setStatusMessage(resultDTO.getResponseMessage());
+        } else {
+            response.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
+            response.setStatusMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.GENERIC__REQUEST_PARAMS_INVALID.getValue(), null));
+        }
+    } else {
+        response.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
+        response.setStatusMessage(requestStatusMsg);
+    }
+
+    return response;
