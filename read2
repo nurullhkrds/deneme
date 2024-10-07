@@ -1,1 +1,1 @@
-
+select * from syspar.hmn_inf_named_sql_queries where query_name = 'PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS'
