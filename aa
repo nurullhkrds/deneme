@@ -1,19 +1,193 @@
- @Test
-    void testUpdateReturnMapCodes_NoReturnMaps() {
-        when(returnMapRepository.findByReturnMapDefinitionId(1L)).thenReturn(Collections.emptyList());
+class ReturnMapDefinitionServiceTest {
 
-        returnMapDefinitionService.updateReturnMapCodes(1L, "NEW_CODE", "User1");
+    @Mock
+    private ReturnMapDefinitionRepository returnMapDefinitionRepository;
 
-        verify(returnMapRepository, never()).save(any());
+    @Mock
+    private ReturnMapDefinitionMapper returnMapDefinitionMapper;
+
+    @InjectMocks
+    private ReturnMapDefinitionService returnMapDefinitionService;
+    
+    @Mock
+    private ReturnMapRepository returnMapRepository;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testUpdateReturnMapCodes_WithReturnMaps() {
-        when(returnMapRepository.findByReturnMapDefinitionId(1L)).thenReturn(List.of(returnMap));
+    void testGetAllReturnMapDefinitionReturnMap() {
+        List<ReturnMapDefinition> mockDefinitionList = Arrays.asList(new ReturnMapDefinition());
+        List<ReturnMapDefinitionDTO> mockDtoList = Arrays.asList(new ReturnMapDefinitionDTO());
 
-        returnMapDefinitionService.updateReturnMapCodes(1L, "NEW_CODE", "User1");
+        when(returnMapDefinitionRepository.findAll()).thenReturn(mockDefinitionList);
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTOList(mockDefinitionList)).thenReturn(mockDtoList);
 
-        assertEquals("NEW_CODE", returnMap.getReturnMapCode());
-        assertEquals("User1", returnMap.getUpdatedBy());
-        verify(returnMapRepository, times(1)).save(returnMap);
+        DataResult<List<ReturnMapDefinitionDTO>> result = returnMapDefinitionService.getAllReturnMapDefinitionReturnMap();
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDtoList, result.getData());
     }
+
+
+    @Test
+     void testGetAllReturnMapDefinitionReturnMapWithIsActiveTrue_ReturnsActiveDefinitions() {
+        List<ReturnMapDefinition> definitionList = Arrays.asList(new ReturnMapDefinition());
+        List<ReturnMapDefinitionDTO> dtoList = Arrays.asList(new ReturnMapDefinitionDTO());
+
+        when(returnMapDefinitionRepository.findAllByIsActive(true)).thenReturn(definitionList);
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTOList(definitionList)).thenReturn(dtoList);
+
+        DataResult<List<ReturnMapDefinitionDTO>> result = returnMapDefinitionService.getAllReturnMapDefinitionReturnMapWithIsActiveTrue();
+
+        assertNotNull(result);
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), result.getMessage());
+        assertEquals(dtoList, result.getData());
+
+        verify(returnMapDefinitionRepository, times(1)).findAllByIsActive(true);
+        verify(returnMapDefinitionMapper, times(1)).toReturnMapDefinitionDTOList(definitionList);
+    }
+
+    @Test
+     void testGetAllReturnMapDefinitionReturnMapWithIsActiveTrue_ReturnsEmptyListWhenNoData() {
+        List<ReturnMapDefinition> definitionList = Collections.emptyList();
+        List<ReturnMapDefinitionDTO> dtoList = Collections.emptyList();
+
+        when(returnMapDefinitionRepository.findAllByIsActive(true)).thenReturn(definitionList);
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTOList(definitionList)).thenReturn(dtoList);
+
+        DataResult<List<ReturnMapDefinitionDTO>> result = returnMapDefinitionService.getAllReturnMapDefinitionReturnMapWithIsActiveTrue();
+
+        assertNotNull(result);
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), result.getMessage());
+        assertTrue(result.getData().isEmpty());
+
+        verify(returnMapDefinitionRepository, times(1)).findAllByIsActive(true);
+        verify(returnMapDefinitionMapper, times(1)).toReturnMapDefinitionDTOList(definitionList);
+    }
+
+    @Test
+    void testGetReturnMapDefinitionByReturnMapCode_RecordExists() throws MicroException {
+        String returnMapCode = "testCode";
+        ReturnMapDefinition mockDefinition = new ReturnMapDefinition();
+        ReturnMapDefinitionDTO mockDto = new ReturnMapDefinitionDTO();
+        List<String> institutions = Arrays.asList("Institution1", "Institution2");
+
+        when(returnMapDefinitionRepository.findByReturnMapCode(returnMapCode)).thenReturn(Optional.of(mockDefinition));
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(mockDefinition)).thenReturn(mockDto);
+        when(returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode)).thenReturn(institutions);
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDto, result.getData());
+        assertEquals(institutions, result.getData().getInstitutions());
+    }
+
+
+
+
+    @Test
+    void testGetReturnMapDefinitionById_RecordExists() throws MicroException {
+        Long id = 1L;
+        ReturnMapDefinition mockEntity = new ReturnMapDefinition();
+        ReturnMapDefinitionDTO mockDto = new ReturnMapDefinitionDTO();
+
+        when(returnMapDefinitionRepository.findById(id)).thenReturn(Optional.of(mockEntity));
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(mockEntity)).thenReturn(mockDto);
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionById(id);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDto, result.getData());
+    }
+
+    @Test
+    void testGetReturnMapDefinitionById_RecordNotExists() throws MicroException {
+        Long id = 1L;
+
+        when(returnMapDefinitionRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(DataNotFoundException.class, () -> {
+            returnMapDefinitionService.getReturnMapDefinitionById(id);
+        });
+    }
+    @Test
+    void testGetReturnMapDefinitionByReturnMapCode_RecordNotExists() throws MicroException {
+        String returnMapCode = "testCode";
+
+        when(returnMapDefinitionRepository.findByReturnMapCode(returnMapCode)).thenReturn(Optional.empty());
+
+        assertThrows(DataNotFoundException.class, () -> {
+            returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
+        });
+    }
+
+
+
+    @Test
+    void testCreateReturnMapDefinition_SuccessfulCreation() throws MicroException {
+        CreateReturnMapDefinitionRequest request = new CreateReturnMapDefinitionRequest();
+        request.setReturnMapCode("newCode");
+        request.setIsActive(true);
+
+        ReturnMapDefinition savedEntity = new ReturnMapDefinition();
+        ReturnMapDefinitionDTO mockDto = new ReturnMapDefinitionDTO();
+
+        when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.empty());
+        when(returnMapDefinitionRepository.save(any(ReturnMapDefinition.class))).thenReturn(savedEntity);
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(savedEntity)).thenReturn(mockDto);
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.createReturnMapDefinition(request);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDto, result.getData());
+    }
+
+    @Test
+    void testUpdateReturnMapDefinition_SuccessfulUpdate() throws MicroException {
+        UpdateReturnMapDefinitionRequest request = new UpdateReturnMapDefinitionRequest();
+        request.setId(1L);
+        request.setReturnMapCode("updatedCode");
+        request.setIsActive(true);
+
+        ReturnMapDefinition existingReturnMap = new ReturnMapDefinition();
+        ReturnMapDefinition updatedEntity = new ReturnMapDefinition();
+        ReturnMapDefinitionDTO mockDto = new ReturnMapDefinitionDTO();
+
+        when(returnMapDefinitionRepository.findById(request.getId())).thenReturn(Optional.of(existingReturnMap));
+        when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.empty());
+        when(returnMapDefinitionRepository.save(existingReturnMap)).thenReturn(updatedEntity);
+        when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedEntity)).thenReturn(mockDto);
+
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.updateReturnMapDefinition(request);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDto, result.getData());
+    }
+
+    @Test
+    void testDeleteReturnMapDefinitions_SuccessfulDeletion() {
+        DeleteIdsRequest request = new DeleteIdsRequest();
+        request.setIds(Arrays.asList(1L, 2L));
+
+        List<ReturnMapDefinition> mockReturnMaps = Arrays.asList(new ReturnMapDefinition(), new ReturnMapDefinition());
+
+        when(returnMapDefinitionRepository.findAllById(request.getIds())).thenReturn(mockReturnMaps);
+
+        Result result = returnMapDefinitionService.deleteReturnMapDefinitions(request);
+
+        verify(returnMapDefinitionRepository, times(1)).deleteAll(mockReturnMaps);
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+    }
+    
+
+}
