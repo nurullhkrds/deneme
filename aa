@@ -1,42 +1,19 @@
-   @Override
-    public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) throws MicroException {
+ @Test
+    void testUpdateReturnMapCodes_NoReturnMaps() {
+        when(returnMapRepository.findByReturnMapDefinitionId(1L)).thenReturn(Collections.emptyList());
 
-        DataResult<ReturnMapDefinition> returnMapDefinitionDataResult = getReturnMapDefinitionByIdForServices(request.getId());
+        returnMapDefinitionService.updateReturnMapCodes(1L, "NEW_CODE", "User1");
 
-        if (returnMapDefinitionDataResult.isSuccess()) {
-            ReturnMapDefinition changedData = returnMapDefinitionDataResult.getData();
-            Optional<ReturnMapDefinition> existingReturnMap = returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode());
-
-            if (existingReturnMap.isPresent() && !existingReturnMap.get().getId().equals(request.getId())) {
-                throw new DataConflictException(BillExceptionsUI.ValidationExceptions.RETURN_MAP_EXIST);
-            }
-
-            changedData.setIsActive(request.getIsActive());
-            changedData.setReturnMapCode(request.getReturnMapCode());
-            changedData.setUpdatedBy(request.getUpdateUser());
-
-            updateReturnMapCodes(request.getId(), request.getReturnMapCode(), request.getUpdateUser());
-
-            ReturnMapDefinition updatedData = returnMapDefinitionRepository.save(changedData);
-            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
-
-            return new SuccessDataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), dto, 200);
-        }
-
-        throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
+        verify(returnMapRepository, never()).save(any());
     }
 
+    @Test
+    void testUpdateReturnMapCodes_WithReturnMaps() {
+        when(returnMapRepository.findByReturnMapDefinitionId(1L)).thenReturn(List.of(returnMap));
 
-   public void updateReturnMapCodes(Long returnMapDefinitionId, String newReturnMapCode,String updateUser) {
-        List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinitionId(returnMapDefinitionId);
+        returnMapDefinitionService.updateReturnMapCodes(1L, "NEW_CODE", "User1");
 
-        if (returnMaps.isEmpty()) {
-            return;
-        }
-
-        for (ReturnMap returnMap : returnMaps) {
-            returnMap.setReturnMapCode(newReturnMapCode);
-            returnMap.setUpdatedBy(updateUser);
-            returnMapRepository.save(returnMap);
-        }
+        assertEquals("NEW_CODE", returnMap.getReturnMapCode());
+        assertEquals("User1", returnMap.getUpdatedBy());
+        verify(returnMapRepository, times(1)).save(returnMap);
     }
