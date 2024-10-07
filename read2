@@ -1,40 +1,77 @@
-ResponseGetSubscriberRecordsWithAccounts response = new ResponseGetSubscriberRecordsWithAccounts();
-    response.setReference(i_request != null ? i_request.getReference() : null);
-    response.setClientUniqueReference(i_request != null ? i_request.getClientUniqueReference() : null);
+ CoreServiceResultDTO<List<PaymentSubscriberAccountsDTO>> resultDTO = new CoreServiceResultDTO<>();
+    List<PaymentSubscriberAccountsDTO> resultList = new ArrayList<>();
 
-    // İstek doğrulama
-    ResponseStatusMsgDTO requestStatusMsg = PYMResponseUtils.validateRequest(i_request);
+    // Parametrelerin hazırlanması
+    String[] excludeProductList = null;
+    Boolean isGetAll = Boolean.FALSE;
 
-    if (requestStatusMsg == null) {
-        CoreServiceResultDTO<List<PaymentSubscriberAccountsDTO>> resultDTO = null;
-        try {
-            // Servis katmanını çağırıyoruz
-            resultDTO = ServiceLocator.getPaymentSubscriberService().getSubscriberRecordsWithAccounts(
-                    i_request,
-                    new CoreServiceBaseDataDTO(i_request.getChannelCode(), i_request.getAgentCode(), 
-                        i_request.getReference(), null, i_request.getOperatingBranchCode(), i_request.getClientUniqueReference())
-            );
-        } catch (Exception e) {
-            String exceptionKey = UUID.randomUUID().toString();
-            PYMLogUtil.logException(e, i_request, null, null, exceptionKey);
-            PYMErrorUtils.throwGenericErrorServiceResult("getSubscriberRecordsWithAccounts", e.getClass().getSimpleName(), exceptionKey, i_request.getReference());
-        }
+    // Kanal kodu doğrulaması
+    if (PYMChannelUtils.isValidChannelCode(i_requestSource.getChannelCode())) {
 
-        if (resultDTO != null) {
-            if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(resultDTO.getStatus())) {
-                if (resultDTO.getResult() != null) {
-                    response.setSubscriberAccountsDTOList(resultDTO.getResult());
+        // Parametre listesinin alınması
+        String[] parameterCodeList = CommonConsts.ParameterCodes.PARAMLIST__DATA_SERVICES__GET_SUBSCRIBER_AND_ACCOUNT_LIST;
+        String[] parameterChannelCodeList = new String[]{i_requestSource.getChannelCode()};
+
+        Map<String, List<ChannelParametersDTO>> paramMap = PYMDtoUtils.getCoreChannelParametersInMapForm(
+                ServiceLocator.getCoreBillPaymentsService().getChannelParametersByCriteria(parameterCodeList, parameterChannelCodeList));
+
+        // Ürün listesi dışlama
+        if (paramMap != null && paramMap.size() > 0) {
+            List<ChannelParametersDTO> tempVal = paramMap.get(CommonConsts.ParameterCodes.QUERY_EXCLUDE_PRODUCTS_FOR_GETSUBSACCLIST);
+            if (tempVal != null && tempVal.get(0) != null && tempVal.get(0).getParameterValue() != null) {
+                excludeProductList = tempVal.get(0).getParameterValue().split(",");
+                for (int i = 0; i < excludeProductList.length; i++) {
+                    excludeProductList[i] = excludeProductList[i].trim();
                 }
             }
-            response.setStatus(resultDTO.getStatus());
-            response.setStatusMessage(resultDTO.getResponseMessage());
-        } else {
-            response.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
-            response.setStatusMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.GENERIC__REQUEST_PARAMS_INVALID.getValue(), null));
         }
-    } else {
-        response.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
-        response.setStatusMessage(requestStatusMsg);
     }
 
-    return response;
+    // Sayfalama kontrolü
+    if (i_request.getPageNumber() == null || i_request.getPageSize() == null) {
+        i_request.setPageNumber(1);
+        i_request.setPageSize(2000); // Varsayılan sayfa boyutu
+    }
+    if (i_request.isGeneralAccount() == null || i_request.isGeneralAccount()) {
+        i_request.setGeneralAccount(Boolean.TRUE);
+        isGetAll = Boolean.TRUE;
+    }
+
+    // Verilerin sorgulanması
+    GetSubscriberRecordsWithAccountsTransformer transformerWithGenericAccounts = new GetSubscriberRecordsWithAccountsTransformer(i_request, excludeProductList);
+    QuerySupport.dynamicQuery(NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.QUERY_NAME, transformerWithGenericAccounts);
+    resultList.addAll(transformerWithGenericAccounts.getSubscriberList());
+
+    if (isGetAll) {
+        i_request.setGeneralAccount(Boolean.FALSE);
+        GetSubscriberRecordsWithAccountsTransformer transformerWithoutGenericAccounts = new GetSubscriberRecordsWithAccountsTransformer(i_request, excludeProductList);
+        QuerySupport.dynamicQuery(NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.QUERY_NAME, transformerWithoutGenericAccounts);
+        resultList.addAll(transformerWithoutGenericAccounts.getSubscriberList());
+    }
+
+    // Sonuçların işlenmesi
+    if (!resultList.isEmpty()) {
+        // Talimatları tarihe göre sıralama
+        Collections.sort(resultList, new Comparator<PaymentSubscriberAccountsDTO>() {
+            @Override
+            public int compare(PaymentSubscriberAccountsDTO o1, PaymentSubscriberAccountsDTO o2) {
+                return o1.getCreationDate().compareTo(o2.getCreationDate());
+            }
+        });
+
+        // İlk 8 talimatı alıyoruz
+        List<PaymentSubscriberAccountsDTO> limitedResultList = new ArrayList<>();
+        for (int i = 0; i < resultList.size() && i < 8; i++) {
+            limitedResultList.add(resultList.get(i));
+        }
+
+        resultDTO.setStatus(BillPaymentsConsts.RESPONSE_STATUS.SUCCESS);
+        resultDTO.setResponseMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.SUCCESS.getValue(), null));
+        resultDTO.setResult(limitedResultList);
+    } else {
+        resultDTO.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
+        resultDTO.setResponseMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.AUTO_NO_AUTO_PAYMENT_ORDER_FOUND_FOR_CUSTOMER.getValue(), null));
+        resultDTO.setResult(null);
+    }
+
+    return resultDTO;
