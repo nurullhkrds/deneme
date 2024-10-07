@@ -1,78 +1,226 @@
+GetSubscriberRecordsWithAccountsTransformer
 
-    CoreServiceResultDTO<List<PaymentSubscriberAccountsDTO>> resultDTO = new CoreServiceResultDTO<>();
-    List<PaymentSubscriberAccountsDTO> resultList = new ArrayList<>();
 
-    // Parametrelerin hazırlanması
-    String[] excludeProductList = null;
-    Boolean isGetAll = Boolean.FALSE;
 
-    // Kanal kodu doğrulaması
-    if (PYMChannelUtils.isValidChannelCode(i_requestSource.getChannelCode())) {
 
-        // Parametre listesinin alınması
-        String[] parameterCodeList = CommonConsts.ParameterCodes.PARAMLIST__DATA_SERVICES__GET_SUBSCRIBER_AND_ACCOUNT_LIST;
-        String[] parameterChannelCodeList = new String[]{i_requestSource.getChannelCode()};
 
-        Map<String, List<ChannelParametersDTO>> paramMap = PYMDtoUtils.getCoreChannelParametersInMapForm(
-                ServiceLocator.getCoreBillPaymentsService().getChannelParametersByCriteria(parameterCodeList, parameterChannelCodeList));
+public class GetSubscriberRecordsWithAccountsTransformer implements DynamicQueryTransformer<PaymentSubscriberAccountsDTO> {
 
-        // Ürün listesi dışlama
-        if (paramMap != null && paramMap.size() > 0) {
-            List<ChannelParametersDTO> tempVal = paramMap.get(CommonConsts.ParameterCodes.QUERY_EXCLUDE_PRODUCTS_FOR_GETSUBSACCLIST);
-            if (tempVal != null && tempVal.get(0) != null && tempVal.get(0).getParameterValue() != null) {
-                excludeProductList = tempVal.get(0).getParameterValue().split(",");
-                for (int i = 0; i < excludeProductList.length; i++) {
-                    excludeProductList[i] = excludeProductList[i].trim();
-                }
-            }
-        }
-    }
+	private Integer customerNo;
+	
+	private String	product;
+	
+	private String  institution;
 
-    // Sayfalama kontrolü
-    if (i_request.getPageNumber() == null || i_request.getPageSize() == null) {
-        i_request.setPageNumber(1);
-        i_request.setPageSize(2000); // Varsayılan sayfa boyutu
-    }
-    if (i_request.isGeneralAccount() == null || i_request.isGeneralAccount()) {
-        i_request.setGeneralAccount(Boolean.TRUE);
-        isGetAll = Boolean.TRUE;
-    }
+	private String	subscriberNo;
+	
+	private String creditCartNumber;
+	
+	private String accountNo;
+	
+	private String[] excludeProductList;
+	
+	private Boolean generalAccount;
+	
+	private Integer pageSize;
+	
+	private Integer pageNumber;
+	
+	private Map<String, PaymentSubscriberAccountsDTO> subscriberListMap = new HashMap<String, PaymentSubscriberAccountsDTO>();
+	
+/*	public GetSubscriberRecordsWithAccountsTransformer(Integer customerNo, String product, String institution,
+			String subscriberNo, String creditCartNumber, String accountNo, Boolean generalAccount, PagingDTO paging,
+			String[] i_excludeProductList) {
+		this.customerNo = customerNo;
+		this.product = product;
+		this.subscriberNo = subscriberNo;
+		this.institution = institution;
+		this.excludeProductList = i_excludeProductList;
+		this.generalAccount = generalAccount;
+		this.accountNo = accountNo;
+		this.creditCartNumber = creditCartNumber;
+	}*/
+	public GetSubscriberRecordsWithAccountsTransformer(RequestGetSubscriberRecordsWithAccounts i_request,
+			String[] i_excludeProductList) {
+		this.customerNo = i_request.getCustomerNo();
+		this.product = i_request.getProduct();
+		this.subscriberNo = i_request.getSubscriberNo();
+		this.institution = i_request.getInstitution();
+		this.excludeProductList = i_excludeProductList;
+		this.generalAccount = i_request.isGeneralAccount();
+		this.accountNo = i_request.getAccountNo();
+		this.creditCartNumber = i_request.getCreditCartNumber();
+		this.pageNumber=i_request.getPageNumber();
+		this.pageSize=i_request.getPageSize();
+	}
 
-    // Verilerin sorgulanması
-    GetSubscriberRecordsWithAccountsTransformer transformerWithGenericAccounts = new GetSubscriberRecordsWithAccountsTransformer(i_request, excludeProductList);
-    QuerySupport.dynamicQuery(NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.QUERY_NAME, transformerWithGenericAccounts);
-    resultList.addAll(transformerWithGenericAccounts.getSubscriberList());
+	@Override
+	public PaymentSubscriberAccountsDTO convert( Map<String, Object> map ) throws HmnServiceException {
+		
+		PaymentSubscriberAccountsDTO dto = new PaymentSubscriberAccountsDTO();
+		List<PaymentTemplateDTO> paymentTemplateDTOList = new ArrayList<PaymentTemplateDTO>();
+		
+		// SUBSCRIBER INFO
+		dto.setProduct( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PRODUCT ), String.class ) );
+		dto.setInstitution( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__INSTITUTION ), String.class ) );
+		dto.setSubscriberNo( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SUBSCRIBER_NO ), String.class ) );
+		// subscriber key data
+		String subscriberKey = dto.getProduct() + dto.getInstitution() + dto.getSubscriberNo();
+		
+		// TEMPLATE DATA
+		PaymentTemplateDTO templateDTO = new PaymentTemplateDTO();
+		templateDTO.setProduct( product != null ? product : dto.getProduct() );
+		templateDTO.setInstitution( institution != null ? institution : dto.getInstitution() );
+		templateDTO.setSubscriberNo( subscriberNo != null ? subscriberNo :dto.getSubscriberNo() );
+		templateDTO.setCustomerNo( customerNo );
+		templateDTO.setYkbdata( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__YKBDATA ), String.class ) );
+		templateDTO.setCurrency( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CURRENCY ), String.class ) );
+		templateDTO.setAccountNo( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__ACCOUNT_NO ), String.class ) );
+		templateDTO.setSequenceNo( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SEQUENCE_NO ), Integer.class ) );
+		
+		if( !subscriberListMap.containsKey( subscriberKey ) ) {
+			dto.setAccountNumber( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__ACCOUNT_NUMBER ), String.class ) );
+			dto.setCurrency( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CURRENCY ), String.class ) );
+			dto.setCustomerNo( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CUSTOMER_NO ), Integer.class ) );
+			dto.setInstitutionServiceType( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__INSTITUTION_SERVICE_TYPE ), String.class ) );
+			dto.setErrorCode( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__ERROR_CODE ), String.class ) );
+			dto.setPaymentOrderBranchCode( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_ORDER_BRANCH_CODE ), String.class ) );
+			dto.setPaymentOrderUser( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_ORDER_USER ), String.class ) );
+			dto.setPaymentOrderDate( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_ORDER_DATE ), Date.class ) );
+			dto.setPaymentOrderDeletedBy( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_ORDER_DELETED_BY ), String.class ) );
+			dto.setPaymentOrderDeleteDate( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_ORDER_DELETE_DATE ), Date.class ) );
+			dto.setCustomerType( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CUSTOMER_TYPE ), String.class ) );
+			dto.setStatus( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__STATUS ), String.class ) );
+			dto.setPaymentSelection( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_SELECTION ), String.class ) );
+			dto.setCreditCardNumber( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CREDIT_CARD_NUMBER ), String.class ) );
+			dto.setCreditCardExpireDate( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CREDIT_CARD_EXPIRE_DATE ), String.class ) );
+			dto.setSecondaryAccountNumber( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SECONDARY_ACCOUNT_NUMBER ), String.class ) );
+			dto.setSecondaryAccountCurrency( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SECONDARY_ACCOUNT_CURRENCY ), String.class ) );
+			dto.setThirdAccountNumber( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__THIRD_ACCOUNT_NUMBER ), String.class ) );
+			dto.setThirdAccountCurrency( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__THIRD_ACCOUNT_CURRENCY ), String.class ) );
+			dto.setCashAdvance( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CASH_ADVANCE ), String.class ) );
+			dto.setLimitAmount( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__LIMIT_AMOUNT ), BigDecimal.class ) );
+			dto.setAccountBranchCode( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__ACCOUNT_BRANCH_CODE ), String.class ) );
+			dto.setBin( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__BIN ), String.class ) );
+			dto.setSubscriberInfo1( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SUBSCRIBER_INFO1 ), String.class ) );
+			dto.setSubscriberInfo2( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SUBSCRIBER_INFO2 ), String.class ) );
+			dto.setSubscriberInfo3( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SUBSCRIBER_INFO3 ), String.class ) );
+			dto.setEmailNotification( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__EMAIL_NOTIFICATION ), String.class ) );
+			dto.setExcludeOverdraft( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__EXCLUDE_OVERDRAFT ), String.class ) );
+			dto.setUpdatedBy( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__UPDATED_BY ), String.class ) );
+			dto.setUpdateDate( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__UPDATE_DATE ), Date.class ) );
+			dto.setDescription( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__DESCRIPTION ), String.class ) );
+			dto.setDescription2( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__DESCRIPTION2 ), String.class ) );
+			dto.setDescription3( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__DESCRIPTION3 ), String.class ) );
+			dto.setDescription4( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__DESCRIPTION4 ), String.class ) );
+			dto.setDescription5( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__DESCRIPTION5 ), String.class ) );
+			dto.setPaymentOrderType( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_ORDER_TYPE ), String.class ) );
+			dto.setPaymentFrequency( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__PAYMENT_FREQUENCY ), String.class ) );
+			dto.setBthCreditAccountNumber( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__BTHCREDIT_ACCOUNT_NUMBER ), String.class ) );
+			dto.setTemplateType( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__TEMPLATE_TYPE ), String.class ) );
+			dto.setCardType( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__CARD_TYPE ), String.class ) );
+			dto.setTransactionInfo( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__TRANSACTION_INFO ), String.class ) );
+			dto.setYkbdata( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__YKBDATA ), String.class ) );
+			dto.setCommissionRateLimit( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__COMMISSION_RATE_LIMIT ), BigDecimal.class ) );
+			dto.setCommissionRateAdat( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__COMMISSION_RATE_ADAT ), BigDecimal.class ) );
+			dto.setCommissionRateEndorsement( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__COMMISSION_RATE_ENDORSEMENT ), BigDecimal.class ) );
+			dto.setSupportCode( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__SUPPORT_CODE ), Integer.class ) );
+			dto.setDebitDate( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__DEBIT_DATE ), Date.class ) );
+			dto.setRiskAmount( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__RISK_AMOUNT ), BigDecimal.class ) );
+			dto.setCommissionAmount( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__COMMISSION_AMOUNT ), BigDecimal.class ) );
+			dto.setCommissionRate( ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__COMMISSION_RATE ), BigDecimal.class ) );
+			dto.setOrderName(ObjectUtils.objToTargetType( map.get( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.OUT__ORDER_NAME ), String.class ));
+		}
+		else {
+			// account list setting for map
+			dto = subscriberListMap.get( subscriberKey );
+			if( dto != null ) {
+				paymentTemplateDTOList = dto.getPaymentTemplateDTOList();
+			}
+		}
+		
+		paymentTemplateDTOList.add( templateDTO );
+		dto.setPaymentTemplateDTOList( paymentTemplateDTOList );
+		subscriberListMap.put( subscriberKey, dto );
+		return dto;
+	}
 
-    if (isGetAll) {
-        i_request.setGeneralAccount(Boolean.FALSE);
-        GetSubscriberRecordsWithAccountsTransformer transformerWithoutGenericAccounts = new GetSubscriberRecordsWithAccountsTransformer(i_request, excludeProductList);
-        QuerySupport.dynamicQuery(NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.QUERY_NAME, transformerWithoutGenericAccounts);
-        resultList.addAll(transformerWithoutGenericAccounts.getSubscriberList());
-    }
+	@Override
+	public DynamicQueryTransformerDTO prepare() {
+		Map<String, Object> params = new HashMap<String, Object>();
+		List<String> flagList = new ArrayList<String>();
+		
+		if( customerNo != null ) {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__CUSTOMER_NO );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__CUSTOMER_NO, customerNo );		
+		}
+		if( product != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__PRODUCT );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__PRODUCT, product );
+		}
+		if( institution != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__INSTITUTION );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__INSTITUTION, institution );
+		}
+		if( subscriberNo != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__SUBSCRIBERNO );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__SUBSCRIBERNO, subscriberNo );
+		}
+		if( accountNo != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__ACCOUNTNO );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__ACCOUNTNO, accountNo );
+		}
+		if( creditCartNumber != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__CREDITCARDNO );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__CREDITCARDNO, creditCartNumber );
+		}
+		if( pageNumber != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__PAGE_NUMBER );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__PAGE_NUMBER, pageNumber );
+		}
+		if( pageSize != null )  {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__PAGE_SIZE );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__PAGE_SIZE, pageSize );
+		}
+		if( PYMArrayUtils.isNotEmpty( excludeProductList ) ) {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__EXCLUDE_PRODUCT_LIST );
+			params.put( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__EXCLUDE_PRODUCT_LIST, excludeProductList );
+		}
+		if( generalAccount != null && generalAccount ) {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__GENERAL_ACCOUNT_ACTIVE );
+		}
+		else {
+			flagList.add( NQConsts.PYM_BILLPAYMENTS_GET_SUBSCRIBER_RECORDS_AND_ACCOUNTS.IN__GENERAL_ACCOUNT_DEACTIVE );
+		}
 
-    // Sonuçların işlenmesi
-    if (!resultList.isEmpty()) {
-        // Talimatları tarihe göre sıralama
-        Collections.sort(resultList, new Comparator<PaymentSubscriberAccountsDTO>() {
-            @Override
-            public int compare(PaymentSubscriberAccountsDTO o1, PaymentSubscriberAccountsDTO o2) {
-                return o1.getCreationDate().compareTo(o2.getCreationDate());
-            }
-        });
+		// Create the DynamicQueryTransformerDTO for dynamic query execution.
+		DynamicQueryTransformerDTO dto = new DynamicQueryTransformerDTO();
+		dto.setMap( params );
+		dto.setFlagList( flagList );
+		return dto;
+	}
 
-        // İlk 8 talimatı alıyoruz
-        List<PaymentSubscriberAccountsDTO> limitedResultList = new ArrayList<>();
-        for (int i = 0; i < resultList.size() && i < 8; i++) {
-            limitedResultList.add(resultList.get(i));
-        }
+	/**
+	 * Returns subscriber list with its' own account list as 'PaymentSubscriberAccountsDTO' list object after DB mapping.
+	 * @author U0T4526	( Erçin Akçay )
+	 * @return
+	 */
+	public List<PaymentSubscriberAccountsDTO> getSubscriberList() {
+		List<PaymentSubscriberAccountsDTO> resultList = new ArrayList<PaymentSubscriberAccountsDTO>();
+		Set<String> keySet = subscriberListMap.keySet();
+		for( String key : keySet ) {
+			resultList.add( subscriberListMap.get( key ) );
+		}
+		return resultList;
+	}
 
-        resultDTO.setStatus(BillPaymentsConsts.RESPONSE_STATUS.SUCCESS);
-        resultDTO.setResponseMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.SUCCESS.getValue(), null));
-        resultDTO.setResult(limitedResultList);
-    } else {
-        resultDTO.setStatus(BillPaymentsConsts.RESPONSE_STATUS.ERROR);
-        resultDTO.setResponseMessage(PYMResponseUtils.createResponseStatusDTO(EnumResponseCodes.AUTO_NO_AUTO_PAYMENT_ORDER_FOUND_FOR_CUSTOMER.getValue(), null));
-        resultDTO.setResult(null);
-    }
+	/**
+	 * Setter of {@code subscriberListMap}
+	 */
+	public void setSubscriberListMap( Map<String, PaymentSubscriberAccountsDTO> subscriberListMap ) {
+		this.subscriberListMap = subscriberListMap;
+	}
 
-    return resultDTO;
+}
+
+	                return o1.getCreationDate().compareTo(o2.getCreationDate());
