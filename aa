@@ -1,21 +1,18 @@
 public void updateReturnMapCodes(Long returnMapDefinitionId, String newReturnMapCode) {
-    // ReturnMapDefinition nesnesini ID ile bul
-    Optional<ReturnMapDefinition> definitionOpt = returnMapDefinitionRepository.findById(returnMapDefinitionId);
-    
-    if (definitionOpt.isPresent()) {
-        List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinition(definitionOpt.get());
+    // ReturnMap kayıtlarını ID ile bul
+    List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinitionId(returnMapDefinitionId);
 
-        // Kayıt yoksa güncelleme işlemini atlayın
-        if (returnMaps.isEmpty()) {
-            return; // Hiçbir şey yapmadan çık
-        }
+    // Kayıt yoksa güncelleme işlemini atlayın
+    if (returnMaps.isEmpty()) {
+        return; // Hiçbir şey yapmadan çık
+    }
 
-        for (ReturnMap returnMap : returnMaps) {
-            returnMap.setReturnMapCode(newReturnMapCode);
-            returnMapRepository.save(returnMap);
-        }
+    for (ReturnMap returnMap : returnMaps) {
+        returnMap.setReturnMapCode(newReturnMapCode);
+        returnMapRepository.save(returnMap);
     }
 }
+
 
 
 @Override
