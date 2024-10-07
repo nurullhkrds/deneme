@@ -1,3 +1,16 @@
+public void updateReturnMapCodes(ReturnMapDefinition definition) {
+    List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinition(definition);
+    
+    // Kayıt yoksa güncelleme işlemini atlayın
+    if (returnMaps.isEmpty()) {
+        return; // Hiçbir şey yapmadan çık
+    }
+
+    for (ReturnMap returnMap : returnMaps) {
+        returnMap.setReturnMapCode(definition.getReturnMapCode());
+        returnMapRepository.save(returnMap);
+    }
+}
 @Override
 public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturnMapDefinitionRequest request) throws MicroException {
     DataResult<ReturnMapDefinition> returnMapDefinitionDataResult = getReturnMapDefinitionByIdForServices(request.getId());
@@ -15,11 +28,7 @@ public DataResult<ReturnMapDefinitionDTO> updateReturnMapDefinition(UpdateReturn
         changedData.setUpdatedBy(request.getUpdateUser());
 
         // ReturnMap tablosundaki returnMapCode'yu güncelle
-        List<ReturnMap> returnMaps = returnMapRepository.findByReturnMapDefinition(changedData);
-        for (ReturnMap returnMap : returnMaps) {
-            returnMap.setReturnMapCode(request.getReturnMapCode());
-            returnMapRepository.save(returnMap);
-        }
+        returnMapService.updateReturnMapCodes(changedData);
 
         ReturnMapDefinition updatedData = returnMapDefinitionRepository.save(changedData);
         ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(updatedData);
