@@ -2,8 +2,8 @@ SELECT
     CASE 
         -- Eğer URUN CEPTEL, ELEKTRİK, SU, DOĞALGAZ ise bu ürün adı PRODUCT olarak döner
         WHEN URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') THEN URUN
-        -- Eğer URUN 'OTHERS' ise PRODUCT = 'OTHERS' olarak döner
-        WHEN :PRODUCT = 'OTHERS' THEN 'OTHERS'
+        -- Eğer PRODUCT OTHERS ise PRODUCT = 'OTHERS - <URUN>' olarak döner
+        WHEN :PRODUCT = 'OTHERS' THEN 'OTHERS - ' || URUN
     END AS PRODUCT,
     KURUM AS INSTITUTION,
     ABONENO AS SUBSCRIBER_NO,
@@ -28,4 +28,4 @@ WHERE
         -- Eğer PRODUCT OTHERS ise URUN OTHERS kategorisindeki bir ürün olacak
         OR (:PRODUCT = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER', 'SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK'))
     )
-    AND STATU = 'A';     -- Sadece aktif kayıtlar getirilecek
+    AND STATU = 'A';  -- Sadece aktif kayıtlar getirilecek
