@@ -13,8 +13,7 @@ FROM (
             WHEN :PRODUCT = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER') THEN 'TRUE'
             WHEN :PRODUCT = 'OTHERS' AND URUN IN ('SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK') THEN 'FALSE'
             ELSE 'FALSE'
-        END AS REVERSIBLE,
-        ROWNUM AS RowNum
+        END AS REVERSIBLE
     FROM 
         OTOLIVE.T_OTO_ABONE
     WHERE 
@@ -25,4 +24,5 @@ FROM (
         )
         AND STATU = 'A' 
     ORDER BY GIRISTARIH ASC
-) WHERE RowNum <= 8;
+) 
+WHERE ROWNUM <= 8;
