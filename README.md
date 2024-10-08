@@ -28,4 +28,6 @@ WHERE
         -- Eğer PRODUCT OTHERS ise URUN OTHERS kategorisindeki bir ürün olacak
         OR (:PRODUCT = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER', 'SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK'))
     )
-    AND STATU = 'A';  -- Sadece aktif kayıtlar getirilecek
+    AND STATU = 'A'  -- Sadece aktif kayıtlar getirilecek
+ORDER BY GIRISTARIH ASC  -- En eskiden yeniye sıralama
+FETCH FIRST 8 ROWS ONLY;  -- Maksimum 8 kayıt getirir
