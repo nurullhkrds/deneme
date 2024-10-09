@@ -1,1 +1,1 @@
-        dto.setIsNumeric(((BigDecimal) row[4]).b);
+dto.setIsNumeric(((BigDecimal) row[4]).intValue() == 1);
