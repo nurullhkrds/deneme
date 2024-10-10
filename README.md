@@ -1,8 +1,10 @@
- DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
+ List<String> institutions = null;
+
+    // ReturnMapDefinitionService'in sonucunu kontrol ediyoruz
+    DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
     if (result != null && result.getData() != null) {
         institutions = result.getData().getInstitutions();
     }
-
 
 
 
