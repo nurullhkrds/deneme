@@ -1,9 +1,11 @@
- <Select
-              showSearch
-              allowClear
-              value={isReversible} // Seçili değer state ile kontrol ediliyor
+     <Form.Item label={ReturnMapFormLocale.reversible.label}>
+            <Select
+              value={isReversible}
+              defaultValue={undefined}
               onChange={handleSelectReversible}
+              validation={[{ required: true }]}
             >
-              <Option value={true}>Evet</Option> {/* true değeri gönderir */}
-              <Option value={false}>Hayır</Option> {/* false değeri gönderir */}
+              <Select.Option value="true">Evet</Select.Option>
+              <Select.Option value="false">Hayır</Select.Option>
             </Select>
+          </Form.Item>
