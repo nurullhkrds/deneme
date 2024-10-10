@@ -1,1 +1,7 @@
-dto.setIsNumeric(((BigDecimal) row[4]).intValue() == 1);
+  <Form.Item label={ReturnMapFormLocale.returnType.label}>
+                <Select onChange={handleSelectReturnType} validation={[{ required: true }]}
+                >
+                  <Option value="SUCCESS">{ReturnMapFormLocale.returnType.options.success}</Option>
+                  <Option value="ERROR">{ReturnMapFormLocale.returnType.options.error}</Option>
+                </Select>
+              </Form.Item>
