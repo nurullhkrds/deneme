@@ -1,35 +1,82 @@
-@Override
-public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
-    Specification<ReturnMap> spec = Specification.where(null);
+        List<String> institutions = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode).getData().getInstitutions();
 
-    if (returnMapCode != null && !returnMapCode.isEmpty()) {
-        spec = spec.and(ReturnMapCriteria.hasReturnMapDefinitionCode(returnMapCode));
+        List<ReturnMapDTO> returnMapDTOList = returnMapList.stream()
+                .map(entity -> {
+                    ReturnMapDTO dto = returnMapMapper.toReturnMapDTO(entity);
+                    if (dto != null && dto.getReturnMapDefinition() != null) {
+                        dto.getReturnMapDefinition().setInstitutions(institutions);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+                
+
+bu satır eklendi 
+
+
+
+  @Test
+    void testSearchReturnMaps_WithAllCriteria() throws MicroException {
+        String returnMapCode = "MAP123";
+        String bankReturnCode = "BANK123";
+        String institutionReturnCode = "INST123";
+
+        List<ReturnMap> mockReturnMapList = Arrays.asList(new ReturnMap());
+        List<ReturnMapDTO> mockDtoList = Arrays.asList(new ReturnMapDTO());
+
+        when(returnMapRepository.findAll(any(Specification.class))).thenReturn(mockReturnMapList);
+        when(returnMapMapper.toReturnMapDTOList(mockReturnMapList)).thenReturn(mockDtoList);
+
+        DataResult<List<ReturnMapDTO>> result = returnMapService.searchReturnMaps(returnMapCode, bankReturnCode, institutionReturnCode);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDtoList, result.getData());
+
+        verify(returnMapRepository, times(1)).findAll(any(Specification.class));
+        verify(returnMapMapper, times(1)).toReturnMapDTOList(mockReturnMapList);
     }
-    if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
-        spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
-    }
-    if (institutionReturnCode != null && !institutionReturnCode.isEmpty()) {
-        spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode));
-    }
 
-    List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+    @Test
+    void testSearchReturnMaps_NoResults() throws MicroException {
+        String returnMapCode = "MAP123";
+        String bankReturnCode = "BANK123";
+        String institutionReturnCode = "INST123";
 
-    // Tek seferde institutions listesi alınıyor
-    List<String> institutions = returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode);
+        List<ReturnMap> mockReturnMapList = Collections.emptyList();
+        List<ReturnMapDTO> mockDtoList = Collections.emptyList();
 
-    List<ReturnMapDTO> returnMapDTOList = returnMapList.stream()
-            .map(entity -> {
-                ReturnMapDTO dto = returnMapMapper.toReturnMapDTO(entity);
-                if (dto != null && dto.getReturnMapDefinition() != null) {
-                    dto.getReturnMapDefinition().setInstitutions(institutions); // Tüm DTO'lara aynı institutions listesi set ediliyor
-                }
-                return dto;
-            })
-            .collect(Collectors.toList());
+        when(returnMapRepository.findAll(any(Specification.class))).thenReturn(mockReturnMapList);
+        when(returnMapMapper.toReturnMapDTOList(mockReturnMapList)).thenReturn(mockDtoList);
 
-    if (returnMapDTOList.isEmpty()) {
-        return new ErrorDataResult<>("Listed is empty", returnMapDTOList, 200);
+        DataResult<List<ReturnMapDTO>> result = returnMapService.searchReturnMaps(returnMapCode, bankReturnCode, institutionReturnCode);
+
+        assertFalse(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertTrue(result.getData().isEmpty());
+
+        verify(returnMapRepository, times(1)).findAll(any(Specification.class));
+        verify(returnMapMapper, times(1)).toReturnMapDTOList(mockReturnMapList);
     }
 
-    return new SuccessDataResult<>("Result listed", returnMapDTOList, 200);
-}
+    @Test
+    void testSearchReturnMaps_WithNullCriteria() throws MicroException {
+        String returnMapCode = null;
+        String bankReturnCode = null;
+        String institutionReturnCode = null;
+
+        List<ReturnMap> mockReturnMapList = Arrays.asList(new ReturnMap());
+        List<ReturnMapDTO> mockDtoList = Arrays.asList(new ReturnMapDTO());
+
+        when(returnMapRepository.findAll(any(Specification.class))).thenReturn(mockReturnMapList);
+        when(returnMapMapper.toReturnMapDTOList(mockReturnMapList)).thenReturn(mockDtoList);
+
+        DataResult<List<ReturnMapDTO>> result = returnMapService.searchReturnMaps(returnMapCode, bankReturnCode, institutionReturnCode);
+
+        assertTrue(result.isSuccess());
+        assertEquals(200, result.getStatusCode());
+        assertEquals(mockDtoList, result.getData());
+
+        verify(returnMapRepository, times(1)).findAll(any(Specification.class));
+        verify(returnMapMapper, times(1)).toReturnMapDTOList(mockReturnMapList);
+    }
