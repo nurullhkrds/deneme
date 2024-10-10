@@ -1,25 +1,3 @@
-@Mapper(componentModel = "spring", uses = {ReturnMapDefinitionMapper.class})
-public interface ReturnMapMapper {
-
-    ReturnMapDTO toReturnMapDTO(ReturnMap entity);
-    
-    ReturnMap toReturnMap(ReturnMapDTO dto);
-    
-    List<ReturnMapDTO> toReturnMapDTOList(List<ReturnMap> entityList);
-
-    // Institutions verisini set eden default method
-    default ReturnMapDTO toReturnMapDTOWithInstitutions(ReturnMap entity, ReturnMapDefinitionRepository returnMapDefinitionRepository) {
-        ReturnMapDTO dto = toReturnMapDTO(entity);
-
-        if (dto != null && dto.getReturnMapDefinition() != null) {
-            String returnMapCode = dto.getReturnMapDefinition().getReturnMapCode();
-            List<String> institutions = returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode);
-            dto.getReturnMapDefinition().setInstitutions(institutions);
-        }
-
-        return dto;
-    }
-}
 @Override
 public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
     Specification<ReturnMap> spec = Specification.where(null);
@@ -35,10 +13,18 @@ public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, Str
     }
 
     List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
-    
-    // Institutions'ları dolduran methodu kullanıyoruz
+
+    // Tek seferde institutions listesi alınıyor
+    List<String> institutions = returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode);
+
     List<ReturnMapDTO> returnMapDTOList = returnMapList.stream()
-            .map(entity -> returnMapMapper.toReturnMapDTOWithInstitutions(entity, returnMapDefinitionRepository))
+            .map(entity -> {
+                ReturnMapDTO dto = returnMapMapper.toReturnMapDTO(entity);
+                if (dto != null && dto.getReturnMapDefinition() != null) {
+                    dto.getReturnMapDefinition().setInstitutions(institutions); // Tüm DTO'lara aynı institutions listesi set ediliyor
+                }
+                return dto;
+            })
             .collect(Collectors.toList());
 
     if (returnMapDTOList.isEmpty()) {
