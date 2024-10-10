@@ -1,11 +1,21 @@
- List<String> institutions = null;
+  List<String> institutions;
 
-    // ReturnMapDefinitionService'in sonucunu kontrol ediyoruz
-    DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
-    if (result != null && result.getData() != null) {
-        institutions = result.getData().getInstitutions();
-    }
+        DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.getReturnMapDefinitionByReturnMapCode(returnMapCode);
+        if (result != null && result.getData() != null) {
+            institutions = result.getData().getInstitutions();
+        } else {
+            institutions = null;
+        }
 
+        List<ReturnMapDTO> returnMapDTOList = returnMapList.stream()
+                .map(entity -> {
+                    ReturnMapDTO dto = returnMapMapper.toReturnMapDTO(entity);
+                    if (dto != null && dto.getReturnMapDefinition() != null) {
+                        dto.getReturnMapDefinition().setInstitutions(institutions);
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
 
 
 @Test
