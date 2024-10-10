@@ -1,48 +1,80 @@
-   Message.prompt({
-        title: ReturnMapFormLocale.messages.deleteTitle,
-        content: contentMessage,
-        icon: <Icon name="warning-circle" colorType="warning" />,
-        onClose: () => {
-          console.log('onClose');
-        },
-        onOk: () => {
-          const deleteReturnMapDefinitionRequest = {
-            ids: [record.id],
-          };
-          sendDeleteReturnMapDefinitionRequest(callApi, deleteReturnMapDefinitionRequest)
-            .then(() => {
+  @Override
+    public DataResult<ReturnMapDefinitionDTO> getReturnMapDefinitionByReturnMapCode(String returnMapCode) throws MicroException {
+        Optional<ReturnMapDefinition> optionalReturnMapDefinition = returnMapDefinitionRepository.findByReturnMapCode(returnMapCode);
 
-              if (returnMapCodeControl) {
-                dispatch(toggleSearchTrigger(false))
-                dispatch(setReturnMapDefinitionData(null))
+        if (optionalReturnMapDefinition.isPresent()) {
+            ReturnMapDefinitionDTO dto = returnMapDefinitionMapper.toReturnMapDefinitionDTO(optionalReturnMapDefinition.get());
 
-                dispatch(setReturnMapCodeReducer(null))
-                setDataList([])
-                dispatch(fetchAllReturnMapDefinition(dispatch, callApi))
-                dispatch(fetchReturnMapsData(dispatch, callApi, { returnMapCode: record.returnMapCode }));
-                dispatch(fetchAllReturnMapDefinitionWithIsActiveTrue(dispatch, callApi))
+            List<String> institutions = returnMapDefinitionRepository.findInstitutionNamesByReturnMapCode(returnMapCode);
 
-              }
-              else {
-                dispatch(fetchAllReturnMapDefinition(dispatch, callApi))
-                dispatch(fetchAllReturnMapDefinitionWithIsActiveTrue(dispatch, callApi))
-
-              }
-
-              Notification.success(ReturnMapFormLocale.messages.deleteSuccess, 5);
-            })
-            .catch((error) => {
-              console.error('Error creating return map:', error);
-              Notification.error(ReturnMapFormLocale.messages.deleteError, 5);
-            });
-        },
-        onCancel: () => {
-          console.log('onCancel');
-        },
-        okText: ReturnMapFormLocale.deleteButton,
-        cancelText: ReturnMapFormLocale.cancelButton,
-      });
-    } catch (error) {
-      console.error('Error fetching return map by id:', error);
+            if (dto != null) {
+                dto.setInstitutions(institutions);
+                return new SuccessDataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), dto, 200);
+            } else {
+                throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.CONVERSION_FAILED);
+            }
+        } else {
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.DATA_NOT_FOUND);
+        }
     }
-  };
+
+bu definition parametresi burada bağlı kurumlarıda çekiyorum..
+
+
+
+
+
+ @Override
+    public DataResult<List<ReturnMapDTO>> searchReturnMaps(String returnMapCode, String bankReturnCode, String institutionReturnCode) {
+        Specification<ReturnMap> spec = Specification.where(null);
+
+        if (returnMapCode != null && !returnMapCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasReturnMapDefinitionCode(returnMapCode));
+        }
+        if (bankReturnCode != null && !bankReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasBankErrorCode(bankReturnCode));
+        }
+        if (institutionReturnCode != null && !institutionReturnCode.isEmpty()) {
+            spec = spec.and(ReturnMapCriteria.hasInstitutionErrorCode(institutionReturnCode));
+        }
+
+        List<ReturnMap> returnMapList = returnMapRepository.findAll(spec);
+        List<ReturnMapDTO> returnMapDTOList = returnMapMapper.toReturnMapDTOList(returnMapList);
+
+        if (returnMapDTOList.isEmpty()) {
+            return new ErrorDataResult<>("Listed is empty", returnMapDTOList, 200);
+        }
+
+        return new SuccessDataResult<>("Result listed", returnMapDTOList, 200);
+    }
+
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReturnMapDTO  {
+
+	private Long id;
+	private ReturnMapDefinitionDTO returnMapDefinition;
+	private String returnMapCode;
+	private String institutionReturnCode;
+	private String institutionReturnText;
+	private String bankReturnCode;
+	private String bankReturnText;
+	private String returnType;
+	private Boolean isReversible;
+
+}
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReturnMapDefinitionDTO {
+    private Long id;
+    private String returnMapCode;
+
+    private Boolean isActive;
+    private List<String> institutions;
+
+}
