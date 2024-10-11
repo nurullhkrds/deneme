@@ -14,3 +14,13 @@ GROUP BY
         WHEN URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') THEN URUN
         ELSE 'OTHERS'
     END
+
+
+
+
+
+('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') bu ürünler ise direk bu ürün isimleriyle ,
+
+TELEKOM,TAHSİLAT,KREDİLER ürünleri ise other adı altında 
+
+ve bu diğer tüm ürünler dışındakileri ise none 'NONE' diye adlandır 
