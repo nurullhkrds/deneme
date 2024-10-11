@@ -1,9 +1,22 @@
-<Select
-  value={isReversible !== undefined ? isReversible.toString() : undefined}
-  defaultValue={undefined}
-  onChange={handleSelectReversible}
-  validation={[{ required: true }]}
->
-  <Select.Option value="true">Evet</Select.Option>
-  <Select.Option value="false">Hayır</Select.Option>
-</Select>
+ const handleClickOneDelete = async (record) => {
+    try {
+
+      const institutions = record?.returnMapDefinition?.institutions || [];
+      let contentMessage;
+      if (institutions.length === 1) {
+        contentMessage = `${institutions[0]} kurumu bu returnMap'i kullanmakta.Önce bağımlılığınızı temizleyiniz.`;
+      } else if (institutions.length > 1) {
+        contentMessage = `${institutions.join(', ')} kurumları bu returnMap'i kullanmakta.Önce bağımlılıklarınızı temizleyiniz.. `;
+      } else {
+        contentMessage = ReturnMapFormLocale.messages.deleteContent;
+      }
+
+
+      Message.warning({
+        title: ReturnMapFormLocale.messages.deleteTitle,
+        content: contentMessage,
+      });
+    } catch (error) {
+      console.error('Error fetching return map by id:', error);
+    }
+  };
