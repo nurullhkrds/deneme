@@ -1,22 +1,16 @@
- const handleClickOneDelete = async (record) => {
-    try {
-
-      const institutions = record?.returnMapDefinition?.institutions || [];
-      let contentMessage;
-      if (institutions.length === 1) {
-        contentMessage = `${institutions[0]} kurumu bu returnMap'i kullanmakta.Önce bağımlılığınızı temizleyiniz.`;
-      } else if (institutions.length > 1) {
-        contentMessage = `${institutions.join(', ')} kurumları bu returnMap'i kullanmakta.Önce bağımlılıklarınızı temizleyiniz.. `;
-      } else {
-        contentMessage = ReturnMapFormLocale.messages.deleteContent;
-      }
-
-
-      Message.warning({
-        title: ReturnMapFormLocale.messages.deleteTitle,
-        content: contentMessage,
-      });
-    } catch (error) {
-      console.error('Error fetching return map by id:', error);
-    }
-  };
+SELECT
+    CASE
+        WHEN URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') THEN URUN
+        ELSE 'OTHERS'
+    END AS PRODUCT,
+    COUNT(*) AS ORDER_COUNT
+FROM
+    OTOLIVE.T_OTO_ABONE
+WHERE
+    MUSTERINO = :CIF_NO
+    AND STATU = 'A'
+GROUP BY
+    CASE
+        WHEN URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') THEN URUN
+        ELSE 'OTHERS'
+    END
