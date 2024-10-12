@@ -1,58 +1,30 @@
-@Test
-void testUpdateReturnMapDefinition_WithReturnMaps() throws MicroException {
-    UpdateReturnMapDefinitionRequest request = new UpdateReturnMapDefinitionRequest();
-    request.setId(1L);
-    request.setReturnMapCode("updatedCode");
-    request.setIsActive(true);
-    request.setUpdateUser("User1");
-
-    ReturnMapDefinition existingReturnMap = new ReturnMapDefinition();
-    existingReturnMap.setId(1L);
-    existingReturnMap.setReturnMapCode("oldCode");
-
-    ReturnMap returnMap1 = new ReturnMap();
-    returnMap1.setReturnMapCode("oldCode");
-
-    ReturnMap returnMap2 = new ReturnMap();
-    returnMap2.setReturnMapCode("oldCode");
-
-    when(returnMapDefinitionRepository.findById(request.getId())).thenReturn(Optional.of(existingReturnMap));
-    when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.empty());
-    when(returnMapRepository.findByReturnMapDefinitionId(request.getId())).thenReturn(Arrays.asList(returnMap1, returnMap2));
-    when(returnMapDefinitionRepository.save(existingReturnMap)).thenReturn(existingReturnMap);
-    when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(existingReturnMap)).thenReturn(new ReturnMapDefinitionDTO());
-
-    DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.updateReturnMapDefinition(request);
-
-    assertTrue(result.isSuccess());
-    assertEquals(200, result.getStatusCode());
-    assertEquals("updatedCode", returnMap1.getReturnMapCode());
-    assertEquals("updatedCode", returnMap2.getReturnMapCode());
-    verify(returnMapRepository, times(1)).save(returnMap1);
-    verify(returnMapRepository, times(1)).save(returnMap2);
-}
-
-@Test
-void testUpdateReturnMapDefinition_NoReturnMaps() throws MicroException {
-    UpdateReturnMapDefinitionRequest request = new UpdateReturnMapDefinitionRequest();
-    request.setId(1L);
-    request.setReturnMapCode("updatedCode");
-    request.setIsActive(true);
-    request.setUpdateUser("User1");
-
-    ReturnMapDefinition existingReturnMap = new ReturnMapDefinition();
-    existingReturnMap.setId(1L);
-    existingReturnMap.setReturnMapCode("oldCode");
-
-    when(returnMapDefinitionRepository.findById(request.getId())).thenReturn(Optional.of(existingReturnMap));
-    when(returnMapDefinitionRepository.findByReturnMapCode(request.getReturnMapCode())).thenReturn(Optional.empty());
-    when(returnMapRepository.findByReturnMapDefinitionId(request.getId())).thenReturn(Collections.emptyList());
-    when(returnMapDefinitionRepository.save(existingReturnMap)).thenReturn(existingReturnMap);
-    when(returnMapDefinitionMapper.toReturnMapDefinitionDTO(existingReturnMap)).thenReturn(new ReturnMapDefinitionDTO());
-
-    DataResult<ReturnMapDefinitionDTO> result = returnMapDefinitionService.updateReturnMapDefinition(request);
-
-    assertTrue(result.isSuccess());
-    assertEquals(200, result.getStatusCode());
-    verify(returnMapRepository, never()).save(any(ReturnMap.class)); // Hiçbir kaydı kaydetmemelidir
-}
+SELECT *
+FROM (
+    SELECT
+        CASE
+            WHEN URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') THEN URUN
+            WHEN 'OTHERS' = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER') THEN URUN
+            WHEN 'OTHERS' = 'NONE' AND URUN IN ('SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK') THEN URUN
+        END AS PRODUCT,
+        KURUM AS INSTITUTION,
+        ABONENO AS SUBSCRIBER_NO,
+        GIRISTARIH AS ENTRY_DATE,
+        CASE
+            WHEN URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') THEN 'TRUE'
+            WHEN 'OTHERS' = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER') THEN 'TRUE'
+            WHEN 'OTHERS' = 'NONE' AND URUN IN ('SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK') THEN 'FALSE'
+            ELSE 'FALSE'
+        END AS REVERSIBLE
+    FROM
+        OTOLIVE.T_OTO_ABONE
+    WHERE
+        MUSTERINO = '112'
+        AND (
+            ('OTHERS' IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') AND URUN = 'OTHERS')
+            OR ('OTHERS' = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER')
+            OR ('OTHERS' = 'NONE' AND URUN IN ('SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK'))
+        )
+        AND STATU = 'A'
+    ORDER BY GIRISTARIH ASC
+)
+WHERE ROWNUM <= 8;
