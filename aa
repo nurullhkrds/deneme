@@ -20,8 +20,8 @@ FROM (
     WHERE
         MUSTERINO = '112'
         AND (
-            ('OTHERS' IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ') AND URUN = 'OTHERS')
-            OR ('OTHERS' = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER')
+            URUN IN ('CEPTEL', 'ELEKTRİK', 'SU', 'DOĞALGAZ')
+            OR ('OTHERS' = 'OTHERS' AND URUN IN ('TELEKOM', 'TAHSİLAT', 'KREDİLER'))
             OR ('OTHERS' = 'NONE' AND URUN IN ('SİGORTA', 'DBS', 'SGK', 'SPT', 'HAVALE', 'KKNTS', 'TEDANAFRM', 'KOÇFİNANS', 'SSK'))
         )
         AND STATU = 'A'
