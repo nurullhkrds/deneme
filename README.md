@@ -1,139 +1,67 @@
-@Configuration
-@EnableCaching
-@ConditionalOnProperty(value = "runtime.platform", havingValue = "pcf")
-public class RedisConfig {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-	private static final Logger logger = LoggerFactory.getLogger(RedisConfig.class);
-	
-    @Value("${cache.redis.institutionFeatureValue.ttl}")
-    private int institutionFeatureValueTtl;
-    
-    @Value("${cache.redis.institutionFeatureList.ttl}")
-    private int institutionFeatureListTtl;
-    
-    @Value("${cache.redis.serviceName}")
-    private String serviceName;
-    
-    @Value("${cache.redis.getProcessChannelForProcess.ttl}")
-    private int getProcessChannelForProcessTtl;
-    
-    @Value("${cache.redis.getInstitutionForProcess.ttl}")
-    private int getInstitutionForProcessTtl;
-    
-    @Value("${cache.redis.getInstitutionChannelForProcess.ttl}")
-    private int getInstitutionChannelForProcessTtl;
-    
-    @Value("${cache.redis.getInstitutionProcess.ttl}")
-    private int getInstitutionProcessTtl;
-    
-    @Value("${cache.redis.getInstitutionChannelProcess.ttl}")
-    private int getInstitutionChannelProcessTtl;
-    
-    @Value("${cache.redis.getInstitutionDebtTypeForProcess.ttl}")
-    private int getInstitutionDebtTypeForProcessTtl;
-    
-    @Value("${cache.redis.getInstitutionById.ttl}")
-    private int getInstitutionByIdTtl;
-    
-    @Value("${cache.redis.institutionUserInterfaceList.ttl}")
-    private int institutionUserInterfaceListTtl;
-    
-    @Value("${cache.redis.findChannelByChannelCode.ttl}")
-    private int findChannelByChannelCodeTtl;
-    
-	@Bean
-	public RedisConnectionFactory redisConnectionFactory() {
-		logger.info("RedisConnectionFactory is initialized with Pcf configuration");
-		
-        Assert.notNull(serviceName, "Application is running with pcf mode, [micro.redis.servicePerfLog] property must be defined at config files.");
-        
-        CfService redisService = new CfEnv().findServiceByName(serviceName);
-        CfCredentials redisCredentials = redisService.getCredentials();
- 
-        final String name = redisCredentials.getName();
-        final String plan = redisService.getPlan();
-        final String hostname = redisCredentials.getHost();
-        final String port = redisCredentials.getPort();
-        final String password = redisCredentials.getPassword();
- 
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(hostname, Integer.valueOf(port));
-        redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
- 
-        logger.info("RedisConnectionFactory is initialized with Pcf configuration ServiceName: [{}] Name: [{}] HostName: [{}] Port: [{}] Plan: [{}] ", serviceName, name, hostname, port, plan);
-        return new JedisConnectionFactory(redisStandaloneConfiguration);
-	}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
-	
-	@Bean
-	public RedisCacheManager cacheManager() {
-		return RedisCacheManager.builder(redisConnectionFactory())
-				.withCacheConfiguration("institutionFeatureValue",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(institutionFeatureValueTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("institutionFeatureList",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(institutionFeatureListTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getProcessChannelForProcess",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getProcessChannelForProcessTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getInstitutionForProcess",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getInstitutionForProcessTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getInstitutionChannelForProcess",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getInstitutionChannelForProcessTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getInstitutionProcess",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getInstitutionProcessTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getInstitutionChannelProcess",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getInstitutionChannelProcessTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getInstitutionDebtTypeForProcess",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getInstitutionDebtTypeForProcessTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("getInstitutionById",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(getInstitutionByIdTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("institutionUserInterfaceList",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(institutionUserInterfaceListTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.withCacheConfiguration("findChannelByChannelCode",
-						RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofHours(findChannelByChannelCodeTtl))
-								//.disableCachingNullValues()
-								.serializeValuesWith(SerializationPair.fromSerializer(redisSerializer())))
-				.transactionAware().build();
-	}
-	
-	
-	@Bean
-	public RedisSerializer<Object> redisSerializer() {
+@SpringBootTest
+class RedisConfigTest {
 
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-		objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
-		// dateTime , JSR310 LocalDateTimeSerializer
-		objectMapper.configure(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS, false);
-		// , LocalDateTIme LocalDate , Jackson-data-JSR310
-		objectMapper.registerModule(new JavaTimeModule());
-		// ,
-		objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL,
-				JsonTypeInfo.As.PROPERTY);
+    @MockBean
+    private RedisConnectionFactory redisConnectionFactory;
 
-		GenericJackson2JsonRedisSerializer.registerNullValueSerializer(objectMapper, null);
+    @InjectMocks
+    private RedisConfig redisConfig;
 
-		return new GenericJackson2JsonRedisSerializer(objectMapper);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-	}
+    @Test
+    void testRedisConnectionFactory() {
+        RedisConnectionFactory connectionFactory = redisConfig.redisConnectionFactory();
+        assertNotNull(connectionFactory);
+        verify(redisConnectionFactory, times(1));
+    }
+
+    @Test
+    void testCacheManager() {
+        RedisCacheManager cacheManager = redisConfig.cacheManager();
+        assertNotNull(cacheManager);
+        assertEquals(12, cacheManager.getCacheNames().size(), "Cache count should match TTL configurations");
+    }
+
+    @Test
+    void testRedisSerializer() {
+        GenericJackson2JsonRedisSerializer serializer = (GenericJackson2JsonRedisSerializer) redisConfig.redisSerializer();
+        assertNotNull(serializer);
+        assertDoesNotThrow(() -> serializer.serialize("test"));
+    }
+
+    @Test
+    void testCacheConfigurationTtl() {
+        RedisCacheManager cacheManager = redisConfig.cacheManager();
+        assertTrue(cacheManager.getCacheNames().contains("institutionFeatureValue"));
+        assertTrue(cacheManager.getCacheNames().contains("institutionFeatureList"));
+        // Diğer TTL'leri de kontrol edebilirsin
+    }
+
+    @Test
+    void testRedisStandaloneConfiguration() {
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration("localhost", 6379);
+        assertNotNull(configuration);
+        assertEquals("localhost", configuration.getHostName());
+        assertEquals(6379, configuration.getPort());
+    }
 }
