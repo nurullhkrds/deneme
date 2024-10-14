@@ -1,1 +1,1 @@
-        borcTahsilat.setBorc(BigDecimal.);
+git push origin --delete branch_adi
