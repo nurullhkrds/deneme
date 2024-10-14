@@ -1,1 +1,1 @@
-
+        borcTahsilat.setBorc(BigDecimal.);
