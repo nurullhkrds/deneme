@@ -1,4 +1,4 @@
-<Form>
+ <Form>
               <Form.Item label={ReturnMapFormLocale.returnMap.label} rules={[{ required: true, message: 'Lütfen bir dönüş kodu seçin!' }]}>
                 <Select
                   value={definitionId}
@@ -85,20 +85,6 @@
                   ))}
                 </Select>
               </Form.Item>
-
-
-
-     <Form.Item
-          label={InstServiceParameterDetailModalFormLocale.parameterKey.label}
-          colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
-        >
-          <TextInput
-            name="parameterKey"
-            validation={[{ required: true }]}
-            disabled={ModalMode.VIEW.toString() === mode}
-            allowClear
-          />
-        </Form.Item>
 
               <Form.Item label={ReturnMapFormLocale.returnType.label}>
                 <Select
