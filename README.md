@@ -1,6 +1,1 @@
-Parameter 0 of constructor in bill.common.logging.service.BusinessLoggingServiceImpl required a bean of type 'bill.common.logging.repository.BusinessLogRepository' that could not be found.
-
-
-Action:
-
-Consider defining a bean of type 'bill.common.logging.repository.BusinessLogRepository' in your configuration.
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'businessLogRepository' defined in com.ykb.payments.bill.common.logging.repository.BusinessLogRepository defined in @EnableJpaRepositories declared on BillAdapterApplication: Invocation of init method failed; nested exception is java.lang.IllegalArgumentException: Not a managed type: class com.ykb.payments.bill.common.logging.domain.BusinessLog
