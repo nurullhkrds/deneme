@@ -1,5 +1,8 @@
  <Form>
-              <Form.Item label={ReturnMapFormLocale.returnMap.label} rules={[{ required: true, message: 'Lütfen bir dönüş kodu seçin!' }]}>
+              <Form.Item label={ReturnMapFormLocale.returnMap.label}
+                rules={[{ required: true, message: 'Lütfen bir dönüş kodu seçin!' }]}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+              >
                 <Select
                   value={definitionId}
                   defaultValue={definitionId}
@@ -14,7 +17,9 @@
                 </Select>
               </Form.Item>
 
-              <Form.Item label={ReturnMapFormLocale.institutionReturnCode.label}>
+              <Form.Item label={ReturnMapFormLocale.institutionReturnCode.label}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+              >
                 <input
                   validation={[{ required: true }]}
                   name="institutionReturnCode"
@@ -33,7 +38,9 @@
                 />
               </Form.Item>
 
-              <Form.Item label={ReturnMapFormLocale.institutionReturnText.label}>
+              <Form.Item label={ReturnMapFormLocale.institutionReturnText.label}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+              >
                 <input
                   validation={[{ required: true }]}
                   name="institutionReturnText"
@@ -51,6 +58,7 @@
               <Form.Item
                 label={ReturnMapFormLocale.bankReturnCode.label}
                 rules={[{ required: true, message: 'Lütfen bir banka hata kodu seçiniz !' }]}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
               >
                 <Select
                   value={bankReturnCode}
@@ -70,6 +78,7 @@
               <Form.Item
                 label={ReturnMapFormLocale.bankRetubankReturnTextrnCode.label}
                 rules={[{ required: true, message: 'Lütfen bir banka hata açıklaması seçiniz!' }]}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
               >
                 <Select
                   value={bankReturnText}
@@ -86,7 +95,9 @@
                 </Select>
               </Form.Item>
 
-              <Form.Item label={ReturnMapFormLocale.returnType.label}>
+              <Form.Item label={ReturnMapFormLocale.returnType.label}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+              >
                 <Select
                   showSearch
                   allowClear
@@ -99,7 +110,9 @@
                 </Select>
               </Form.Item>
 
-              <Form.Item label={ReturnMapFormLocale.reversible.label}>
+              <Form.Item label={ReturnMapFormLocale.reversible.label}
+                colSpan={{ xs: 24, sm: 24, md: 12, lg: 12 }}
+              >
                 <Select
                   value={isReversible}
                   defaultValue={undefined}
