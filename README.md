@@ -1,62 +1,44 @@
-@Setter
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode
-public class PaidBillResponseWebDTO  implements Serializable {
+  @Test
+    public void testNoArgsConstructor() {
+        PaidBillResponseWebDTO dto = new PaidBillResponseWebDTO();
+        assertNotNull(dto);  // DTO'nun başarılı bir şekilde oluşturulduğunu doğrula
+    }
+ @Test
+    public void testAllArgsConstructor() {
+        PaidBillResponseWebDTO dto = new PaidBillResponseWebDTO(
+                "1", "PCODE", "ICODE", "DTYPE", "SUBSCR123", "John Doe", 
+                "2024-10-10", "BILL123", "TERM123", 
+                new BigDecimal("100.50"), new BigDecimal("90.50"), 
+                "USD", "ACC123", "CARD123", 123456L, 
+                "Explanation", "Info1", "Info2", "Info3", "Info4", 
+                "Info5", "Info6", "Info7", "Info8", "Info9"
+        );
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 6121315269201935678L;
+        assertNotNull(dto);
+        assertEquals("1", dto.getId());
+        assertEquals("PCODE", dto.getProductCode());
+        // Diğer alanları da kontrol edebilirsin
+    }
+ @Test
+    public void testEqualsAndHashCode() {
+        PaidBillResponseWebDTO dto1 = new PaidBillResponseWebDTO(
+                "1", "PCODE", "ICODE", "DTYPE", "SUBSCR123", "John Doe", 
+                "2024-10-10", "BILL123", "TERM123", 
+                new BigDecimal("100.50"), new BigDecimal("90.50"), 
+                "USD", "ACC123", "CARD123", 123456L, 
+                "Explanation", "Info1", "Info2", "Info3", "Info4", 
+                "Info5", "Info6", "Info7", "Info8", "Info9"
+        );
 
-	private String id;
+        PaidBillResponseWebDTO dto2 = new PaidBillResponseWebDTO(
+                "1", "PCODE", "ICODE", "DTYPE", "SUBSCR123", "John Doe", 
+                "2024-10-10", "BILL123", "TERM123", 
+                new BigDecimal("100.50"), new BigDecimal("90.50"), 
+                "USD", "ACC123", "CARD123", 123456L, 
+                "Explanation", "Info1", "Info2", "Info3", "Info4", 
+                "Info5", "Info6", "Info7", "Info8", "Info9"
+        );
 
-    private String productCode;
-
-    private String institutionCode;
-
-    private String debtTypeId;
-
-    private String subscriberNo;
-
-    private String subscriberName;
-
-    private String billDueDate;
-
-    private String billNo;
-
-    private String billTerm;
-
-    private BigDecimal billAmount;
-
-    private BigDecimal billRecalculatedAmount;
-
-    private String currency;
-
-    private String accountNumber;
-
-    private String cardNumber;
-
-    private Long contractNumber;
-    
-    private String explanation;
-
-    private String additionalInfo1;
-
-    private String additionalInfo2;
-
-    private String additionalInfo3;
-
-    private String additionalInfo4;
-
-    private String additionalInfo5;
-
-    private String additionalInfo6;
-
-    private String additionalInfo7;
-
-    private String additionalInfo8;
-
-    private String additionalInfo9;
-}
+        assertEquals(dto1, dto2);  // Equals doğru çalışıyor mu kontrol et
+        assertEquals(dto1.hashCode(), dto2.hashCode());  // HashCode'ların eşit olduğundan emin ol
+    }
