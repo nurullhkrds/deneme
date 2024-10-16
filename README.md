@@ -3,13 +3,13 @@
   "institutionChannelId": 750006,
   "institutionProcessId": 500006,
   "workingStartTime": {
-    "hour": 0,
+    "hour": 9,
     "minute": 0,
     "second": 0,
     "nano": 0
   },
   "workingFinishTime": {
-    "hour": 0,
+    "hour": 18,
     "minute": 0,
     "second": 0,
     "nano": 0
