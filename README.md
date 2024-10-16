@@ -1,18 +1,1 @@
-{
-  "createUser": "U099999",
-  "institutionChannelId": 750006,
-  "institutionProcessId": 500006,
-  "workingStartTime": {
-    "hour": 9,
-    "minute": 0,
-    "second": 0,
-    "nano": 0
-  },
-  "workingFinishTime": {
-    "hour": 18,
-    "minute": 0,
-    "second": 0,
-    "nano": 0
-  },
-  "isActive": true
-}
+"Invalid request: JSON parse error: Cannot deserialize value of type `java.time.LocalTime` from Object value (token `JsonToken.START_OBJECT`); nested exception is com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.time.LocalTime` from Object value (token `JsonToken.START_OBJECT`)\n at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 5, column: 23] (through reference chain: com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionChannelProcessRequest[\"workingStartTime\"])
