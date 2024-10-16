@@ -1,18 +1,18 @@
+  const [value1, setValue1] = useState('');
+  const [value2, setValue2] = useState('');
+  const [value3, setValue3] = useState('');
+  const [result, setResult] = useState('');
 
-  const [value1, setValue1] = useState(0);
-  const [value2, setValue2] = useState(0);
-  const [value3, setValue3] = useState(0);
-  const [result1, setResult1] = useState(0);
-  const [result2, setResult2] = useState(0);
-  const [result3, setResult3] = useState(0);
-  const [result4, setResult4] = useState(0);
-  const [result5, setResult5] = useState(0);
-
-  const calculateResults = useCallback(() => {
-    // Girdi değerlerine bağlı olarak hesaplama işlemi
-    setResult1(value1 + value2);
-    setResult2(value2 * value3);
-    setResult3(value1 - value3);
-    setResult4(value1 + value2 + value3);
-    setResult5(value1 * value2 * value3);
+  // Hesaplama fonksiyonunu useCallback ile optimize ediyoruz
+  const calculateResult = useCallback(() => {
+    const sum = Number(value1) + Number(value2);
+    return sum * Number(value3);
   }, [value1, value2, value3]);
+
+  // Inputlara değer girildiğinde ve 3 input dolduğunda otomatik hesaplama yap
+  useEffect(() => {
+    if (value1 !== '' && value2 !== '' && value3 !== '') {
+      const finalResult = calculateResult(); // useCallback ile hesaplama fonksiyonunu çağırıyoruz
+      setResult(finalResult); // Hesaplanan sonucu dördüncü inputa yaz
+    }
+  }, [value1, value2, value3, calculateResult]);
