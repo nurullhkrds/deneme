@@ -1,1 +1,6 @@
+alter table BILL.RETURN_MAP
+add constraint UK_RETURN_MAP_01 unique (RETURN_MAP_DEFINITION_ID, INSTITUTION_RETURN_CODE);
+/
 
+ORA-02299: cannot validate (BILL.UK_RETURN_MAP_01) - duplicate keys found
+'GUARDAPPEVENT:RELEASED' 
