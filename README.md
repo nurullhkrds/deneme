@@ -1,57 +1,75 @@
 const ValidateFieldsForm = () => {
   const formRef = React.useRef(null);
-  const [validate, setValidate] = React.useState(false);
+  useEffect(() => {
+    if (formRef.current)
+      formRef.current.validateFields(null, (error, values) => {
+        if (!error) {
+          console.log('ok', values);
+        } else {
+          console.log('error', error, values);
+        }
+      });
+  }, []);
 
   const handleSubmit = (e, error, values) => {
     e.preventDefault();
     if (!error) {
-      // Do sth. with values
+      // Do sth. with values
       alert(JSON.stringify(values));
-    } else {
-      console.log(error);
     }
   };
 
-  const onValuesChange = changedValues => {
-    if ('country' in changedValues) {
-      setValidate(changedValues.country === 'usa');
-    }
+  const userExists = () => {
+    console.log("User doesn't exist: ");
   };
 
   return (
-    <Form ref={formRef} onSubmit={handleSubmit} onValuesChange={onValuesChange}>
-      <FormItem label="Name">
+    <Form ref={formRef} onSubmit={handleSubmit}>
+      <FormItem label="Username">
         <TextInput
-          name="name"
+          name="username"
           validation={[{ required: true }, { min: 2, max: 5 }]}
         />
       </FormItem>
-      <FormItem label="Surname">
-        <TextInput name="nurname" validation={[{ required: true }]} />
+      <FormItem label="Password">
+        <TextInput
+          type="password"
+          name="password"
+          validation={[{ required: true }]}
+        />
       </FormItem>
-      <FormItem label="country">
+      <FormItem label="Gender">
         <Select
-          allowClear={true}
-          name="country"
+          name="gender"
           validation={[{ required: true }]}
           data={[
             {
-              value: 'tr',
-              label: 'Turkey',
+              value: 'male',
+              label: 'Male',
             },
             {
-              value: 'usa',
-              label: 'USA',
+              value: 'female',
+              label: 'Female',
             },
           ]}
         />
       </FormItem>
-      <FormItem label="Post Code">
-        <TextInput name="postCode" validation={[{ required: validate }]} />
+      <FormItem label="Email">
+        {/* Email input has `email` validation by default when used in Form component (but not required by default) */}
+        <EmailInput type="email" name="email" />
+      </FormItem>
+      <FormItem label="Age">
+        <NumberInput
+          name="age"
+          validation={[
+            { required: true },
+            { type: 'number', min: 18, max: 30 },
+          ]}
+        />
       </FormItem>
       <FormItem label="">
         <Button type="primary" htmlType="submit">
-          Submit
+          Log in
         </Button>
       </FormItem>
     </Form>
