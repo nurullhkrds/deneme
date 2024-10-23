@@ -1,3 +1,1 @@
-BigDecimal toplamOdeme = 
-    (remoteRequest.getTotalPaymentAmount() != null ? remoteRequest.getTotalPaymentAmount() : BigDecimal.ZERO)
-    .add(remoteRequest.getTotalPaymentCancelAmount() != null ? remoteRequest.getTotalPaymentCancelAmount() : BigDecimal.ZERO);
+        Integer toplamOdemeSayisi= remoteRequest.getTotalOrderCancelCount()+remoteRequest.getTotalPaymentCount();
