@@ -1,4 +1,14 @@
-Ekte yer alan plsqldevac.bat dosyasını çalıştırıp ardından PL/SQL'i tekrar açmak başarılı bir şekilde bağlanmanıza yardımcı olacaktır.
+   JAXBElement<javax.xml.datatype.XMLGregorianCalendar> tahsilatTarihi = new JAXBElement<>(
+                new QName("tahsilatTarihi"),
+                javax.xml.datatype.XMLGregorianCalendar.class,
+                billDTO.getPaymentInformation().getPaymentDate()
+        );
 
-Not: .bat dosyası içerisindeki "C:\Program Files\PLSQL Developer 14" yolu farklı olabilir. Buraya "plsqldev.exe" konumunu yazmalısınız. 
-
+Required type
+Provided
+declaredType:
+Class<T>
+Class<XMLGregorianCalendar>
+value:
+T
+LocalDate
