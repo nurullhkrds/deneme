@@ -1,1 +1,3 @@
-        Integer toplamOdemeSayisi= remoteRequest.getTotalOrderCancelCount()+remoteRequest.getTotalPaymentCount();
+Integer toplamOdemeSayisi = 
+    (remoteRequest.getTotalOrderCancelCount() != null ? remoteRequest.getTotalOrderCancelCount() : 0) +
+    (remoteRequest.getTotalPaymentCount() != null ? remoteRequest.getTotalPaymentCount() : 0);
