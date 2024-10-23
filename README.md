@@ -1,14 +1,9 @@
-   JAXBElement<javax.xml.datatype.XMLGregorianCalendar> tahsilatTarihi = new JAXBElement<>(
-                new QName("tahsilatTarihi"),
-                javax.xml.datatype.XMLGregorianCalendar.class,
-                billDTO.getPaymentInformation().getPaymentDate()
-        );
+LocalDate localDate = billDTO.getPaymentInformation().getPaymentDate();
+GregorianCalendar gregorianCalendar = GregorianCalendar.from(localDate.atStartOfDay(ZoneId.systemDefault()));
+XMLGregorianCalendar xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
 
-Required type
-Provided
-declaredType:
-Class<T>
-Class<XMLGregorianCalendar>
-value:
-T
-LocalDate
+JAXBElement<XMLGregorianCalendar> tahsilatTarihi = new JAXBElement<>(
+        new QName("tahsilatTarihi"),
+        XMLGregorianCalendar.class,
+        xmlGregorianCalendar
+);
