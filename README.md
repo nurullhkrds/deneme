@@ -1,8 +1,8 @@
-Required type:
-JAXBElement
-<java.math.BigDecimal>
-Provided:
-BigDecimal
+BigDecimal billNo = new BigDecimal(remoteRequest.getBillNo());
+JAXBElement<BigDecimal> kentliIdElement = new JAXBElement<>(
+    new QName("kentliId"),
+    BigDecimal.class,
+    billNo
+);
 
-
-        wsRequest.setKentliId(new BigDecimal(remoteRequest.getBillNo()));
+wsRequest.setKentliId(kentliIdElement);
