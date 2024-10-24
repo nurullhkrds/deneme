@@ -1,37 +1,15 @@
-if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(response.getStatus())) {
-            ArrayList<ReconciliationRecordDTO> paymentList = new ArrayList<>();
+SistemId, HesapId, BeyanAnaId, 
+BeyanSiraNo, Yil, Taksit, 
+VadeTarihi alanları birlikte tekil 
+bir değer oluşturmaktadır
 
-            List<TahsilatBilgisi> tahsilatBilgisi = mutabakatDetayResult.value.getTahsilatBilgisi();
-            
-            for (TahsilatBilgisi info : tahsilatBilgisi) {
-                info.getBorcDetaylari().getValue().getBorcDetayi().stream().map(borcDetayi -> {
-                    ReconciliationRecordDTO paymentRecord = new ReconciliationRecordDTO();
-                    paymentRecord.setProduct(remoteRequest.getProduct());
-                    paymentRecord.setInstitution(remoteRequest.getInstitution());
-                    paymentRecord.setSubscriberName(String.valueOf(info.getAdSoyad().getValue()));
-                    paymentRecord.setBillNo(String.valueOf(info.getSiparisNo().getValue()));
-                    paymentRecord.setPaymentAmount(info.getToplamTutar().getValue());
-                    paymentRecord.setInfo3(String.valueOf(info.getKentliId().getValue()));
 
-                    paymentRecord.setInfo1(String.valueOf(info.getBelgeNo().getValue()));
-                    paymentRecord.setInfo9(String.valueOf(info.getSiparisNo().getValue()));
-                    paymentRecord.setInfo8(String.valueOf(info.getKimlikNo().getValue()));
-                    paymentRecord.setReconciliationDate(remoteRequest.getReconciliationDate());
-                    paymentRecord.setOperationDate(remoteRequest.getRequestDate().toLocalDate());
-                    return paymentRecord;
-                }).forEach(paymentList::add);
-                ReconciliationRecordDTO paymentRecord = new ReconciliationRecordDTO();
-                paymentRecord.setProduct(remoteRequest.getProduct());
-                paymentRecord.setInstitution(remoteRequest.getInstitution());
-                paymentRecord.setSubscriberName(String.valueOf(info.getAdSoyad().getValue()));
-                paymentRecord.setBillNo(String.valueOf(info.getSiparisNo().getValue()));
-                paymentRecord.setPaymentAmount(info.getToplamTutar().getValue());
-                paymentRecord.setInfo3(String.valueOf(info.getKentliId().getValue()));
 
-                paymentRecord.setInfo1(String.valueOf(info.getBelgeNo().getValue()));
-                paymentRecord.setInfo9(String.valueOf(info.getSiparisNo().getValue()));
-                paymentRecord.setInfo8(String.valueOf(info.getKimlikNo().getValue()));
-                paymentRecord.setReconciliationDate(remoteRequest.getReconciliationDate());
-                paymentRecord.setOperationDate(remoteRequest.getRequestDate().toLocalDate());
-                paymentList.add(paymentRecord);
-            }
+<b:VadeTarihi>2024-01-14T00:00:00</b:VadeTarihi>
+     <b:HesapId>123</b:HesapId>
+<b:BeyanSiraNo>2</b:BeyanSiraNo>
+ <b:BeyanAnaId>2344066</b:BeyanAnaId>
+ <b:SistemId>33</b:SistemId>
+<b:Yil>2024</b:Yil>
+<b:Taksit>4</b:Taksit>
+
