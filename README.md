@@ -1,49 +1,79 @@
-if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(queryBillResponse.getStatus())) {
-    List<BaseBillDTO> billDTOList = (kentliBorcBilgileriniGetirResult.value).getBorcBilgisi().stream()
-        .flatMap(billInfo -> {
-            // Null kontrolü ekleniyor
-            if (billInfo.getBorcDetaylari() == null || billInfo.getBorcDetaylari().getValue() == null) {
-                return Stream.empty(); // Eğer null ise boş bir stream döndürülüyor
-            }
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-            return billInfo.getBorcDetaylari().getValue().getBorcDetayi().stream().map(borcDetayi -> {
-                String billNo = generateBillNo(
-                    borcDetayi.getSistemId(), 
-                    borcDetayi.getHesapId(), 
-                    borcDetayi.getBeyanAnaId(), 
-                    borcDetayi.getBeyanSiraNo(), 
-                    borcDetayi.getYil(), 
-                    borcDetayi.getTaksit(), 
-                    borcDetayi.getVadeTarihi()
-                );
-                
-                LocalDate vadeTarihi = convertXMLGregorianCalendartoLocalDate(borcDetayi.getVadeTarihi());
-                BaseBillDTO billDTO = new BaseBillDTO();
-                billDTO.setProduct(remoteRequest.getProduct());
-                billDTO.setInstitution(remoteRequest.getInstitution());
-                billDTO.setSubscriberNo(remoteRequest.getSubscriberNumber1());
-                billDTO.setBillIssueDate(LocalDate.now());
-                billDTO.setCurrency(EnumCurrencyCode.TURKISH_LIRA.getValue());
-                billDTO.setBillDueDate(vadeTarihi);
-                billDTO.setBillLoadDate(LocalDate.now());
-                billDTO.setSubscriberName(String.valueOf(billInfo.getAdSoyad().getValue()));
-                billDTO.setInstitutionServiceType(remoteRequest.getInstitutionServiceType());
-                billDTO.setBillAmount(billInfo.getToplamTutar().getValue());
-                billDTO.setBillRecalculatedAmount(borcDetayi.getBorcTutari());
-                billDTO.setBillNo(billNo);
-                billDTO.setInfo1(String.valueOf(borcDetayi.getSistemId()));
-                billDTO.setInfo2(String.valueOf(borcDetayi.getHesapId()));
-                billDTO.setInfo3(String.valueOf(borcDetayi.getBeyanAnaId()));
-                billDTO.setInfo4(String.valueOf(borcDetayi.getBeyanSiraNo()));
-                billDTO.setInfo5(String.valueOf(borcDetayi.getYil()));
-                billDTO.setInfo6(String.valueOf(borcDetayi.getTaksit()));
-                billDTO.setInfo7(String.valueOf(billInfo.getKentliId().getValue()));
-                billDTO.setCommissionAmount(borcDetayi.getGecikmeTutari());
-                billDTO.setBillIssueDate(vadeTarihi);
-                billDTO.setInfo8(remoteRequest.getIdentityNo());
-                
-                return billDTO;
-            });
-        }).toList();
+@XmlRootElement
+class Araba {
+    private String hız;
+    private String renk;
 
-    queryBillResponse.set
+    @XmlElement
+    public String getHız() {
+        return hız;
+    }
+
+    public void setHız(String hız) {
+        this.hız = hız;
+    }
+
+    @XmlElement
+    public String getRenk() {
+        return renk;
+    }
+
+    public void setRenk(String renk) {
+        this.renk = renk;
+    }
+}
+
+@XmlRootElement
+class BMW extends Araba {
+    private String marka;
+    private String tip;
+
+    @XmlElement
+    public String getMarka() {
+        return marka;
+    }
+
+    public void setMarka(String marka) {
+        this.marka = marka;
+    }
+
+    @XmlElement
+    public String getTip() {
+        return tip;
+    }
+
+    public void setTip(String tip) {
+        this.tip = tip;
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            // BMW nesnesi oluşturma
+            BMW bmw = new BMW();
+            bmw.setMarka("BMW");
+            bmw.setTip("Sedan");
+            bmw.setHız("200");
+            bmw.setRenk("Siyah");
+
+            // JAXBContext ve Marshaller ile XML'e dönüştürme
+            JAXBContext jaxbContext = JAXBContext.newInstance(BMW.class);
+            Marshaller marshaller = jaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+            // String'e dönüştürme
+            StringWriter stringWriter = new StringWriter();
+            marshaller.marshal(bmw, stringWriter);
+
+            // Sonucu string olarak al
+            String xmlString = stringWriter.toString();
+            System.out.println(xmlString);
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+    }
+}
