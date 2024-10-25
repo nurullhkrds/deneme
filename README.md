@@ -49,6 +49,25 @@ class BMW extends Araba {
     }
 }
 
+ <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>4.0.0</version>
+    </dependency>
+    
+    <!-- JAXB Implementasyonu -->
+    <dependency>
+        <groupId>org.glassfish.jaxb</groupId>
+        <artifactId>jaxb-runtime</artifactId>
+        <version>4.0.0</version>
+    </dependency>
+    
+    <!-- JAXB için ek gereksinim (Java 9+ için gerekli) -->
+    <dependency>
+        <groupId>javax.activation</groupId>
+        <artifactId>activation</artifactId>
+        <version>1.1.1</version>
+    </dependency>
 
 public class Main {
     public static void main(String[] args) {
