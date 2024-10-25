@@ -1,7 +1,7 @@
 if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(queryBillResponse.getStatus())) {
     List<BaseBillDTO> billDTOList = kentliBorcBilgileriniGetirResult.value.getBorcBilgisi().stream()
-        .flatMap(billInfo -> billInfo.getBorcDetaylari().getValue().getBorcDetayi().stream()
-            .map(borcDetayi -> {
+        .flatMap(billInfo -> {
+            return (billInfo.getBorcDetaylari().getValue()).getBorcDetayi().stream().map(borcDetayi -> {
                 String billNo = generateBillNo(
                     borcDetayi.getSistemId(),
                     borcDetayi.getHesapId(),
@@ -38,8 +38,8 @@ if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(queryBillResponse.getStatu
                 billDTO.setInfo8(remoteRequest.getIdentityNo());
 
                 return billDTO;
-            })
-        ).toList();
+            });
+        }).toList();
 
     queryBillResponse.setBills(billDTOList);
 }
