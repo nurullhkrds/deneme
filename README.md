@@ -1,67 +1,38 @@
-public NotifyBillPaymentResponse notifyBillPayment(NotifyBillPaymentRequest remoteRequest) {
-
-    NotifyBillPaymentResponse response = new NotifyBillPaymentResponse();
-    setBaseFields(remoteRequest, response);
-
-    PaidBillDTO billDTO = remoteRequest.getBillDTO();
-    LocalDate localDate = billDTO.getPaymentInformation().getPaymentDate();
-    XMLGregorianCalendar xmlGregorianCalendar = getXmlGregorianCalendar(localDate);
-
-    String nameSurname = billDTO.getSubscriberName();
-    JAXBElement<String> adSoyad = toJAXBElement(new QName("http://tempuri.org/", "AdSoyad"), String.class, nameSurname);
-
-    JAXBElement<BigDecimal> toplamTutarElement = toJAXBElement(new QName("http://tempuri.org/", "ToplamTutar"), BigDecimal.class, billDTO.getBillAmount());
-
-    JAXBElement<XMLGregorianCalendar> tahsilatTarihiElement = toJAXBElement(new QName("http://tempuri.org/", "TahsilatTarihi"), XMLGregorianCalendar.class, xmlGregorianCalendar);
-
-    JAXBElement<String> referansNoElement = toJAXBElement(new QName("http://tempuri.org/", "ReferansNo"), String.class, billDTO.getBankReferenceNo());
-
-    JAXBElement<BigDecimal> identityNoElement = toJAXBElement(new QName("http://tempuri.org/", "KimlikNo"), BigDecimal.class, new BigDecimal(billDTO.getInfo8()));
-
-    BorcTahsilati requestTahsilat = new BorcTahsilati();
-    ArrayOfBorcDetayi arrayOfBorcDetayi = new ArrayOfBorcDetayi();
-    BorcDetayi borcDetayi = new BorcDetayi();
-
-    borcDetayi.setBeyanAnaId(new BigDecimal(billDTO.getInfo3()));
-    borcDetayi.setBeyanSiraNo(new BigDecimal(billDTO.getInfo4()));
-    borcDetayi.setBorcTutari(billDTO.getBillRecalculatedAmount());
-    borcDetayi.setGecikmeTutari(billDTO.getCommissionAmount());
-    borcDetayi.setHesapId(new BigDecimal(billDTO.getInfo2()));
-    borcDetayi.setSistemId(new BigDecimal(billDTO.getInfo1()));
-    borcDetayi.setTaksit(Integer.valueOf(billDTO.getInfo6()));
-    borcDetayi.setToplamTutar(toplamTutarElement);
-    borcDetayi.setVadeTarihi(getXmlGregorianCalendar(billDTO.getBillIssueDate()));
-    borcDetayi.setYil(Integer.valueOf(billDTO.getInfo5()));
-
-    arrayOfBorcDetayi.getBorcDetayi().add(borcDetayi);
-
-    JAXBElement<ArrayOfBorcDetayi> borcDetayiJAXBElement = new JAXBElement<>(new QName("http://tempuri.org/", "BorcDetaylari"), ArrayOfBorcDetayi.class, arrayOfBorcDetayi);
-
-    requestTahsilat.setAdSoyad(adSoyad);
-    requestTahsilat.setBorcDetaylari(borcDetayiJAXBElement);
-    requestTahsilat.setKentliId(new BigDecimal(billDTO.getInfo7()));
-    requestTahsilat.setReferansNo(referansNoElement);
-    requestTahsilat.setKimlikNo(identityNoElement);
-    requestTahsilat.setTahsilatTarihi(tahsilatTarihiElement);
-    requestTahsilat.setTarih(xmlGregorianCalendar);
-    requestTahsilat.setToplamTutar(billDTO.getBillAmount());
-
-    Holder<BigDecimal> kentliBorclariniOdeResult = new Holder<>();
-    Holder<Sonuc> sonuc = new Holder<>();
-
-    getSeferihisarService().kentliBorclariniOde(requestTahsilat, kentliBorclariniOdeResult, sonuc);
-    String institutionCodeControl = sonuc.value.getKod().value();
-    String responseInternalResultCode = String.valueOf(sonuc.value.getHataKodu());
-
-    resolveResponseMessage(responseInternalResultCode, response);
-
-    if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(response.getStatus()) && "Basarili".equals(institutionCodeControl)) {
-        billDTO.setInfo9(kentliBorclariniOdeResult.value.toString());
-        response.setBillDTO(billDTO);
-    }
-
-    response.setInstitutionResultDetail(sonuc.value.getMesaj().getValue());
-    setRemoteResponseData(response, remoteRequest, PYMLogUtil.convertObjectToJsonString(requestTahsilat), PYMLogUtil.convertObjectToJsonString(kentliBorclariniOdeResult));
-
-    return response;
-}
+<soap:Envelope
+xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+>
+<soap:Body>
+<KentliBorclariniOde
+xmlns="http://tempuri.org/"
+xmlns:ns2="http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts"
+xmlns:ns3="http://schemas.datacontract.org/2004/07/Probel.Entity.EBL"
+xmlns:ns4="http://schemas.microsoft.com/2003/10/Serialization/Arrays"
+xmlns:ns5="http://schemas.microsoft.com/2003/10/Serialization/"
+xmlns:ns6="http://schemas.datacontract.org/2004/07/Probel.Core"
+>
+<borcTahsilati>
+<AdSoyad>string</AdSoyad>
+<BorcDetaylari>
+<ns2:BorcDetayi>
+<ns2:BeyanAnaId>6799410</ns2:BeyanAnaId>
+<ns2:BeyanSiraNo>3</ns2:BeyanSiraNo>
+<ns2:BorcTutari>312.99</ns2:BorcTutari>
+<ns2:GecikmeTutari>0</ns2:GecikmeTutari>
+<ns2:HesapId>741</ns2:HesapId>
+<ns2:SistemId>16</ns2:SistemId>
+<ns2:Taksit>2</ns2:Taksit>
+<ToplamTutar>312.99</ToplamTutar>
+<ns2:VadeTarihi>2024-11-30T00:00:00.000+03:00</ns2:VadeTarihi>
+<ns2:Yil>2024</ns2:Yil>
+</ns2:BorcDetayi>
+</BorcDetaylari>
+<ns2:KentliId>173917</ns2:KentliId>
+<KimlikNo>30055934852</KimlikNo>
+<ReferansNo>string</ReferansNo>
+<TahsilatTarihi>2024-10-26T00:00:00.000+03:00</TahsilatTarihi>
+<ns2:Tarih>2024-10-26T00:00:00.000+03:00</ns2:Tarih>
+<ns2:ToplamTutar>312.99</ns2:ToplamTutar>
+</borcTahsilati>
+</KentliBorclariniOde>
+</soap:Body>
+</soap:Envelope>
