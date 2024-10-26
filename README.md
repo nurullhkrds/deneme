@@ -1,122 +1,67 @@
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:prob="http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts">
-   <soapenv:Header/>
-   <soapenv:Body>
-      	<tem:KentliBorclariniOde>
-<!-- Optional: -->
-		<tem:borcTahsilati>
-		<!-- Optional: -->
-		<prob:Aciklama>?</prob:Aciklama>
-		<!-- Optional: -->
-		<prob:AdSoyad>?</prob:AdSoyad>
-		<!-- Optional: -->
-		<prob:BorcDetaylari>
-				<prob:BorcDetayi>
-				<!-- Optional: -->
-						<prob:AboneKodu>?</prob:AboneKodu>
-						<!-- Optional: -->
-						<prob:BeyanAdres>?</prob:BeyanAdres>
-						<!-- Optional: -->
-						<prob:BeyanAnaId>6799410</prob:BeyanAnaId>
-						<!-- Optional: -->
-						<prob:BeyanSiraNo>3</prob:BeyanSiraNo>
-						<!-- Optional: -->
-						<prob:BorcTutari>312.99</prob:BorcTutari>
-						<!-- Optional: -->
-						<prob:GecikmeTutari>0</prob:GecikmeTutari>
-						<!-- Optional: -->
-						<prob:HesapAdi>?</prob:HesapAdi>
-						<!-- Optional: -->
-						<prob:HesapId>741</prob:HesapId>
-						<!-- Optional: -->
-						<prob:SayacSeriNo>?</prob:SayacSeriNo>
-						<!-- Optional: -->
-						<prob:SistemAdi>?</prob:SistemAdi>
-						<!-- Optional: -->
-						<prob:SistemId>16</prob:SistemId>
-						<!-- Optional: -->
-						<prob:Taksit>2</prob:Taksit>
-						<!-- Optional: -->
-						<prob:ToplamTutar>312.99</prob:ToplamTutar>
-						<!-- Optional: -->
-						<prob:VadeTarihi>2024-11-30T00:00:00</prob:VadeTarihi>
-						<!-- Optional: -->
-						<prob:Yil>2024</prob:Yil>
-				</prob:BorcDetayi>
-		</prob:BorcDetaylari>
-		
-		<prob:KentliId>173917</prob:KentliId>
-		<prob:ReferansNo>1s204</prob:ReferansNo>
-		<prob:KimlikNo>30055934852</prob:KimlikNo>
-		<prob:TahsilatTarihi>2024-10-25T15:12:36.220Z</prob:TahsilatTarihi>
-		<prob:Tarih>2024-10-25T15:12:36.220Z</prob:Tarih>
-		<prob:ToplamTutar>312.99</prob:ToplamTutar>
-		</tem:borcTahsilati>
-	</tem:KentliBorclariniOde>
-   </soapenv:Body>
-</soapenv:Envelope>
+ public NotifyBillPaymentResponse notifyBillPayment(NotifyBillPaymentRequest remoteRequest) {
 
+        NotifyBillPaymentResponse response = new NotifyBillPaymentResponse();
+        setBaseFields(remoteRequest, response);
 
-bu soaptan attığım istek ve başarılı sonuç alabiliyorum. 
+        PaidBillDTO billDTO = remoteRequest.getBillDTO();
 
+        LocalDate localDate = billDTO.getPaymentInformation().getPaymentDate();
 
+        XMLGregorianCalendar xmlGregorianCalendar = getXmlGregorianCalendar(localDate);
 
+        String nameSurname = billDTO.getSubscriberName();
 
+        JAXBElement<String> adSoyad = toJAXBElement("AdSoyad", String.class, nameSurname);
 
+        JAXBElement<BigDecimal> toplamTutarElement = toJAXBElement("ToplamTutar", BigDecimal.class, billDTO.getBillAmount());
 
+        JAXBElement<XMLGregorianCalendar> tahsilatTarihiElement = toJAXBElement("TahsilatTarihi", XMLGregorianCalendar.class, xmlGregorianCalendar);
 
+        JAXBElement<String> referansNoElement = toJAXBElement("ReferansNo", String.class, billDTO.getBankReferenceNo());
 
+        JAXBElement<BigDecimal> identityNoElement = toJAXBElement("KimlikNo", BigDecimal.class, new BigDecimal(billDTO.getInfo8()));
 
+        BorcTahsilati requestTahsilat = new BorcTahsilati();
+        ArrayOfBorcDetayi arrayOfBorcDetayi = new ArrayOfBorcDetayi();
+        BorcDetayi borcDetayi = new BorcDetayi();
 
-<soap:Envelope
-xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
->
-<soap:Body>
-<KentliBorclariniOde
-xmlns="http://tempuri.org/"
-xmlns:ns2="http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts"
-xmlns:ns3="http://schemas.datacontract.org/2004/07/Probel.Entity.EBL"
-xmlns:ns4="http://schemas.microsoft.com/2003/10/Serialization/Arrays"
-xmlns:ns5="http://schemas.microsoft.com/2003/10/Serialization/"
-xmlns:ns6="http://schemas.datacontract.org/2004/07/Probel.Core"
->
-<borcTahsilati>
-<AdSoyad
-xmlns:ns7="http://tempuri.org/"
->string</AdSoyad>
-<BorcDetaylari
-xmlns:ns7="http://tempuri.org/"
->
-<ns2:BorcDetayi>
-<ns2:BeyanAnaId>6799410</ns2:BeyanAnaId>
-<ns2:BeyanSiraNo>3</ns2:BeyanSiraNo>
-<ns2:BorcTutari>312.99</ns2:BorcTutari>
-<ns2:GecikmeTutari>0</ns2:GecikmeTutari>
-<ns2:HesapId>741</ns2:HesapId>
-<ns2:SistemId>16</ns2:SistemId>
-<ns2:Taksit>2</ns2:Taksit>
-<ToplamTutar>312.99</ToplamTutar>
-<ns2:VadeTarihi>2024-11-30T00:00:00.000+03:00</ns2:VadeTarihi>
-<ns2:Yil>2024</ns2:Yil>
-</ns2:BorcDetayi>
-</BorcDetaylari>
-<ns2:KentliId>173917</ns2:KentliId>
-<KimlikNo
-xmlns:ns7="http://tempuri.org/"
->30055934852</KimlikNo>
-<ReferansNo
-xmlns:ns7="http://tempuri.org/"
->string</ReferansNo>
-<TahsilatTarihi
-xmlns:ns7="http://tempuri.org/"
->2024-10-26T00:00:00.000+03:00</TahsilatTarihi>
-<ns2:Tarih>2024-10-26T00:00:00.000+03:00</ns2:Tarih>
-<ns2:ToplamTutar>312.99</ns2:ToplamTutar>
-</borcTahsilati>
-</KentliBorclariniOde>
-</soap:Body>
-</soap:Envelope>
+        borcDetayi.setBeyanAnaId(new BigDecimal(billDTO.getInfo3()));
+        borcDetayi.setBeyanSiraNo(new BigDecimal(billDTO.getInfo4()));
+        borcDetayi.setBorcTutari(billDTO.getBillRecalculatedAmount());
+        borcDetayi.setGecikmeTutari(billDTO.getCommissionAmount());
+        borcDetayi.setHesapId(new BigDecimal(billDTO.getInfo2()));
+        borcDetayi.setSistemId(new BigDecimal(billDTO.getInfo1()));
+        borcDetayi.setTaksit(Integer.valueOf(billDTO.getInfo6()));
+        borcDetayi.setToplamTutar(toplamTutarElement);
+        borcDetayi.setVadeTarihi(getXmlGregorianCalendar(billDTO.getBillIssueDate()));
+        borcDetayi.setYil(Integer.valueOf(billDTO.getInfo5()));
 
-bu ise javadan attığım istek bu şekilde gitmektedir. 
+        arrayOfBorcDetayi.getBorcDetayi().add(borcDetayi);
 
-<b:Kod>Basarisiz</b:Kod>
-<b:Mesaj>Value cannot be null.-Parameter name: source</b:Mesaj>
+        JAXBElement<ArrayOfBorcDetayi> borcDetayiJAXBElement = new JAXBElement<>(new QName("BorcDetaylari"), ArrayOfBorcDetayi.class, arrayOfBorcDetayi);
+
+        requestTahsilat.setAdSoyad(adSoyad);
+        requestTahsilat.setBorcDetaylari(borcDetayiJAXBElement);
+        requestTahsilat.setKentliId(new BigDecimal(billDTO.getInfo7()));
+        requestTahsilat.setReferansNo(referansNoElement);
+        requestTahsilat.setKimlikNo(identityNoElement);
+        requestTahsilat.setTahsilatTarihi(tahsilatTarihiElement);
+        requestTahsilat.setTarih(xmlGregorianCalendar);
+        requestTahsilat.setToplamTutar(billDTO.getBillAmount());
+
+        Holder<BigDecimal> kentliBorclariniOdeResult = new Holder<>();
+        Holder<Sonuc> sonuc = new Holder<>();
+
+        getSeferihisarService().kentliBorclariniOde(requestTahsilat, kentliBorclariniOdeResult, sonuc);
+        String institutionCodeControl=sonuc.value.getKod().value();
+         String responseInternalResultCode = String.valueOf((sonuc.value).getHataKodu());
+        resolveResponseMessage(responseInternalResultCode, response);
+
+        if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(response.getStatus()) && institutionCodeControl.equals("Basarili")) {
+            billDTO.setInfo9((kentliBorclariniOdeResult.value).toString());
+            response.setBillDTO(billDTO);
+        }
+        response.setInstitutionResultDetail(sonuc.value.getMesaj().getValue());
+        setRemoteResponseData(response, remoteRequest, PYMLogUtil.convertObjectToJsonString(requestTahsilat), PYMLogUtil.convertObjectToJsonString(kentliBorclariniOdeResult));
+        return response;
+    }
