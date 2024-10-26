@@ -1,7 +1,10 @@
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
 
 public NotifyBillPaymentResponse notifyBillPayment(NotifyBillPaymentRequest remoteRequest) {
-    
+
     NotifyBillPaymentResponse response = new NotifyBillPaymentResponse();
     setBaseFields(remoteRequest, response);
 
@@ -9,12 +12,12 @@ public NotifyBillPaymentResponse notifyBillPayment(NotifyBillPaymentRequest remo
     LocalDate localDate = billDTO.getPaymentInformation().getPaymentDate();
     XMLGregorianCalendar xmlGregorianCalendar = getXmlGregorianCalendar(localDate);
 
-    // Prefix eklenerek JAXBElement oluşturulması
-    JAXBElement<String> adSoyad = toJAXBElement(new QName("http://tempuri.org/", "AdSoyad", "ns2"), String.class, billDTO.getSubscriberName());
-    JAXBElement<BigDecimal> toplamTutarElement = toJAXBElement(new QName("http://tempuri.org/", "ToplamTutar", "ns2"), BigDecimal.class, billDTO.getBillAmount());
-    JAXBElement<XMLGregorianCalendar> tahsilatTarihiElement = toJAXBElement(new QName("http://tempuri.org/", "TahsilatTarihi", "ns2"), XMLGregorianCalendar.class, xmlGregorianCalendar);
-    JAXBElement<String> referansNoElement = toJAXBElement(new QName("http://tempuri.org/", "ReferansNo", "ns2"), String.class, billDTO.getBankReferenceNo());
-    JAXBElement<BigDecimal> identityNoElement = toJAXBElement(new QName("http://tempuri.org/", "KimlikNo", "ns2"), BigDecimal.class, new BigDecimal(billDTO.getInfo8()));
+    // Prefix'li QName ile oluşturulan JAXBElement'ler
+    JAXBElement<String> adSoyad = toJAXBElement(new QName("http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts", "AdSoyad", "ns2"), String.class, billDTO.getSubscriberName());
+    JAXBElement<BigDecimal> toplamTutarElement = toJAXBElement(new QName("http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts", "ToplamTutar", "ns2"), BigDecimal.class, billDTO.getBillAmount());
+    JAXBElement<XMLGregorianCalendar> tahsilatTarihiElement = toJAXBElement(new QName("http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts", "TahsilatTarihi", "ns2"), XMLGregorianCalendar.class, xmlGregorianCalendar);
+    JAXBElement<String> referansNoElement = toJAXBElement(new QName("http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts", "ReferansNo", "ns2"), String.class, billDTO.getBankReferenceNo());
+    JAXBElement<BigDecimal> identityNoElement = toJAXBElement(new QName("http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts", "KimlikNo", "ns2"), BigDecimal.class, new BigDecimal(billDTO.getInfo8()));
 
     BorcTahsilati requestTahsilat = new BorcTahsilati();
     ArrayOfBorcDetayi arrayOfBorcDetayi = new ArrayOfBorcDetayi();
@@ -33,9 +36,9 @@ public NotifyBillPaymentResponse notifyBillPayment(NotifyBillPaymentRequest remo
 
     arrayOfBorcDetayi.getBorcDetayi().add(borcDetayi);
 
-    // Prefix eklenerek BorcDetaylari oluşturulması
+    // Prefix'li BorcDetaylari JAXBElement'i
     JAXBElement<ArrayOfBorcDetayi> borcDetayiJAXBElement = new JAXBElement<>(
-        new QName("http://tempuri.org/", "BorcDetaylari", "ns2"),
+        new QName("http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts", "BorcDetaylari", "ns2"),
         ArrayOfBorcDetayi.class,
         arrayOfBorcDetayi
     );
@@ -49,9 +52,26 @@ public NotifyBillPaymentResponse notifyBillPayment(NotifyBillPaymentRequest remo
     requestTahsilat.setTarih(xmlGregorianCalendar);
     requestTahsilat.setToplamTutar(billDTO.getBillAmount());
 
+    try {
+        // JAXBContext ve Marshaller oluşturulması
+        JAXBContext jaxbContext = JAXBContext.newInstance(BorcTahsilati.class);
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        
+        // Marshaller özellikleri
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, "http://schemas.datacontract.org/2004/07/Probel.WS.EBL.DataContracts");
+
+        // Marshaller ile request'i yazdırma
+        marshaller.marshal(requestTahsilat, System.out);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    // Servis çağrısı
     Holder<BigDecimal> kentliBorclariniOdeResult = new Holder<>();
     Holder<Sonuc> sonuc = new Holder<>();
-
+    
     getSeferihisarService().kentliBorclariniOde(requestTahsilat, kentliBorclariniOdeResult, sonuc);
     String institutionCodeControl = sonuc.value.getKod().value();
     String responseInternalResultCode = String.valueOf(sonuc.value.getHataKodu());
