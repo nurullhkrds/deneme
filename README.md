@@ -1,3 +1,10 @@
-java.lang.NullPointerException: Cannot invoke "String.toCharArray()" because "<parameter1>" is null
-	at java.base/java.math.BigDecimal.<init>(Unknown Source)
-	at com.ykb.payments.bill.adapter.adapter.integration.BelediyeSeferiHisarIntegration.queryBills(BelediyeSeferiHisarIntegration.java:79)
+
+        JAXBElement<BigDecimal> tcKimlikNoElement =
+                toJAXBElement("TCKimlikNo", BigDecimal.class, new BigDecimal(remoteRequest.getIdentityNo()));
+        wsRequest.setKimlikNo(tcKimlikNoElement);
+
+        Holder<ArrayOfBorcBilgisi> kentliBorcBilgileriniGetirResult = new Holder<>();
+
+        Holder<Sonuc> sonuc = new Holder<>();
+
+        getSeferihisarService().kentliBorcBilgileriniGetir(null, tcKimlikNoElement.getValue(), null, null, kentliBorcBilgileriniGetirResult, sonuc);
