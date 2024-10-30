@@ -1,11 +1,10 @@
 if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(queryBillResponse.getStatus())) {
-    List<BaseBillDTO> billDTOList = kentliBorcBilgileriniGetirResult.value.getBorcBilgisi().stream()
-        .flatMap(billInfo -> {
-            if (billInfo.getBorcDetaylari() == null || billInfo.getBorcDetaylari().getValue() == null) {
-                return Stream.empty(); // Boş olanları atla
-            }
-            return billInfo.getBorcDetaylari().getValue().getBorcDetayi().stream().map(borcDetayi -> {
-                // Burada her bir borcDetayi için billDTO oluştur
+    List<BaseBillDTO> billDTOList = new ArrayList<>();
+
+    kentliBorcBilgileriniGetirResult.value.getBorcBilgisi().forEach(billInfo -> {
+        if (billInfo.getBorcDetaylari() != null && billInfo.getBorcDetaylari().getValue() != null) {
+            billInfo.getBorcDetaylari().getValue().getBorcDetayi().forEach(borcDetayi -> {
+                // Her bir borcDetayi için billDTO oluştur
                 String billNo = generateBillNo(
                     borcDetayi.getSistemId(),
                     borcDetayi.getHesapId(),
@@ -41,10 +40,11 @@ if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(queryBillResponse.getStatu
                 billDTO.setBillIssueDate(vadeTarihi);
                 billDTO.setInfo8(remoteRequest.getIdentityNo());
 
-                return billDTO;
+                // Oluşturulan billDTO'yu listeye ekle
+                billDTOList.add(billDTO);
             });
-        })
-        .toList(); // Tüm listeleri birleştir
+        }
+    });
 
     queryBillResponse.setBills(billDTOList);
 }
