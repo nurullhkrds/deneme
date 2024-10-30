@@ -1,10 +1,1 @@
-
-        JAXBElement<BigDecimal> tcKimlikNoElement =
-                toJAXBElement("TCKimlikNo", BigDecimal.class, new BigDecimal(remoteRequest.getIdentityNo()));
-        wsRequest.setKimlikNo(tcKimlikNoElement);
-
-        Holder<ArrayOfBorcBilgisi> kentliBorcBilgileriniGetirResult = new Holder<>();
-
-        Holder<Sonuc> sonuc = new Holder<>();
-
-        getSeferihisarService().kentliBorcBilgileriniGetir(null, tcKimlikNoElement.getValue(), null, null, kentliBorcBilgileriniGetirResult, sonuc);
+javax.xml.ws.soap.SOAPFaultException: A SOAP 1.2 message is not valid when sent to a SOAP 1.1 only endpoint.
