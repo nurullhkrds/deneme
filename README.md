@@ -1,1 +1,1 @@
-javax.xml.ws.soap.SOAPFaultException: A SOAP 1.2 message is not valid when sent to a SOAP 1.1 only endpoint.
+        remoteRequest.setReconciliationDate(getLocalDate("2024-10-29", "yyyy-MM-dd"));
