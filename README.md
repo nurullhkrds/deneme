@@ -1,48 +1,51 @@
-if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(queryBillResponse.getStatus())) {
-    List<BaseBillDTO> billDTOList = kentliBorcBilgileriniGetirResult.value.getBorcBilgisi().stream()
-        .flatMap(billInfo -> billInfo.getBorcDetaylari() != null && billInfo.getBorcDetaylari().getValue() != null
-            ? billInfo.getBorcDetaylari().getValue().getBorcDetayi().stream().map(borcDetayi -> {
-                String billNo = generateBillNo(
-                    borcDetayi.getSistemId(),
-                    borcDetayi.getHesapId(),
-                    borcDetayi.getBeyanAnaId(),
-                    borcDetayi.getBeyanSiraNo(),
-                    borcDetayi.getYil(),
-                    borcDetayi.getTaksit(),
-                    borcDetayi.getVadeTarihi()
-                );
+@Override
+    public DoPaymentDetailReconciliationResponse doPaymentDetailReconciliation(DoPaymentDetailReconciliationRequest remoteRequest) {
+        DoPaymentDetailReconciliationResponse response = new DoPaymentDetailReconciliationResponse();
+        setBaseFields(remoteRequest, response);
+        XMLGregorianCalendar xmlGregorianCalendar = getXmlGregorianCalendar(remoteRequest.getReconciliationDate());
+        MutabakatDetay mutabakatDetay = new MutabakatDetay();
+        mutabakatDetay.setTarih(xmlGregorianCalendar);
 
-                LocalDate vadeTarihi = convertXMLGregorianCalendartoLocalDate(borcDetayi.getVadeTarihi());
-                BaseBillDTO billDTO = new BaseBillDTO();
-                billDTO.setProduct(remoteRequest.getProduct());
-                billDTO.setInstitution(remoteRequest.getInstitution());
-                billDTO.setSubscriberNo(remoteRequest.getSubscriberNumber1());
-                billDTO.setBillIssueDate(LocalDate.now());
-                billDTO.setCurrency(EnumCurrencyCode.TURKISH_LIRA.getValue());
-                billDTO.setBillDueDate(vadeTarihi);
-                billDTO.setBillLoadDate(LocalDate.now());
-                billDTO.setSubscriberName(String.valueOf(billInfo.getAdSoyad().getValue()));
-                billDTO.setInstitutionServiceType(remoteRequest.getInstitutionServiceType());
-                billDTO.setBillAmount(billInfo.getToplamTutar().getValue());
-                billDTO.setBillRecalculatedAmount(borcDetayi.getBorcTutari());
-                billDTO.setBillNo(billNo);
-                billDTO.setInfo1(String.valueOf(borcDetayi.getSistemId()));
-                billDTO.setInfo2(String.valueOf(borcDetayi.getHesapId()));
-                billDTO.setInfo3(String.valueOf(borcDetayi.getBeyanAnaId()));
-                billDTO.setInfo4(String.valueOf(borcDetayi.getBeyanSiraNo()));
-                billDTO.setInfo5(String.valueOf(borcDetayi.getYil()));
-                billDTO.setInfo6(String.valueOf(borcDetayi.getTaksit()));
-                billDTO.setInfo7(String.valueOf(billInfo.getKentliId().getValue()));
-                billDTO.setCommissionAmount(borcDetayi.getGecikmeTutari());
-                billDTO.setBillIssueDate(vadeTarihi);
-                billDTO.setInfo8(remoteRequest.getIdentityNo());
+        Holder<ArrayOfTahsilatBilgisi> mutabakatDetayResult = new Holder<>();
+        Holder<Sonuc> sonuc = new Holder<>();
 
-                return billDTO;
-            })
-            : Stream.empty()
-        ).toList();
+        getSeferihisarService().mutabakatDetay(mutabakatDetay, mutabakatDetayResult, sonuc);
 
-    queryBillResponse.setBills(billDTOList);
-}
-setRemoteResponseData(queryBillResponse, remoteRequest, PYMLogUtil.convertObjectToJsonString(wsRequest), PYMLogUtil.convertObjectToJsonString(kentliBorcBilgileriniGetirResult));
-return queryBillResponse;
+        String responseInternalResultCode = String.valueOf((sonuc.value).getHataKodu());
+        resolveResponseMessage(responseInternalResultCode, response);
+
+        if (BillPaymentsConsts.RESPONSE_STATUS.SUCCESS.equals(response.getStatus())) {
+            List<TahsilatBilgisi> tahsilatBilgisi = (mutabakatDetayResult.value).getTahsilatBilgisi();
+            List<ReconciliationRecordDTO> paymentList = tahsilatBilgisi.stream().flatMap(tahsilat -> {
+                return (tahsilat.getBorcDetaylari().getValue()).getBorcDetayi().stream().map(tahsilatDetail -> {
+                    String billNo = generateBillNo(tahsilatDetail.getSistemId(), tahsilatDetail.getHesapId(), tahsilatDetail.getBeyanAnaId(), tahsilatDetail.getBeyanSiraNo(), tahsilatDetail.getYil(), tahsilatDetail.getTaksit(), tahsilatDetail.getVadeTarihi());
+                    ReconciliationRecordDTO recordDTO = new ReconciliationRecordDTO();
+                    recordDTO.setInfo1(String.valueOf(tahsilatDetail.getSistemId()));
+                    recordDTO.setInfo2(String.valueOf(tahsilatDetail.getHesapId()));
+                    recordDTO.setInfo3(String.valueOf(tahsilatDetail.getBeyanAnaId()));
+                    recordDTO.setInfo4(String.valueOf(tahsilatDetail.getBeyanSiraNo()));
+                    recordDTO.setInfo5(String.valueOf(tahsilatDetail.getYil()));
+                    recordDTO.setInfo6(String.valueOf(tahsilatDetail.getTaksit()));
+                    recordDTO.setInfo7(String.valueOf(tahsilat.getKentliId().getValue()));
+                    recordDTO.setBillNo(billNo);
+                    recordDTO.setInfo9(String.valueOf(tahsilat.getSiparisNo().getValue()));
+                    recordDTO.setBillNo(String.valueOf(tahsilatDetail.getBeyanAnaId()));
+                    recordDTO.setSubscriberName(tahsilat.getAdSoyad().getValue());
+                    recordDTO.setInfo8(String.valueOf(tahsilat.getKimlikNo().getValue()));
+                    recordDTO.setProduct(remoteRequest.getProduct());
+                    recordDTO.setInstitution(remoteRequest.getInstitution());
+                    recordDTO.setOperationDate(remoteRequest.getRequestDate().toLocalDate());
+                    recordDTO.setReconciliationDate(remoteRequest.getReconciliationDate());
+                    recordDTO.setPaymentAmount(tahsilatDetail.getToplamTutar().getValue());
+                    return recordDTO;
+                });
+            }).toList();
+            ReconciliationRecordsDTO institutionRecords = new ReconciliationRecordsDTO();
+            institutionRecords.setSimple(paymentList);
+            response.setInstitutionRecords(institutionRecords);
+            response.setReconciliationDate(remoteRequest.getReconciliationDate());
+        }
+        response.setInstitutionResultDetail((sonuc.value).getMesaj().getValue());
+        setRemoteResponseData(response, remoteRequest, PYMLogUtil.convertObjectToJsonString(mutabakatDetay), PYMLogUtil.convertObjectToJsonString(mutabakatDetayResult));
+        return response;
+    }
