@@ -1,1 +1,1 @@
-java.lang.NullPointerException: Cannot invoke "java.time.LocalDate.atStartOfDay(java.time.ZoneId)" because "date" is null
+CREATE OR REPLACE SYNONYM CBSLIVE.PYM_BATCH_BALCOVA_BLD_BILLS  FOR OTOLIVE.PYM_BATCH_BALCOVA_BLD_BILLS;
