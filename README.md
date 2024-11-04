@@ -1,11 +1,13 @@
-DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-String vadeTarihi = "2024-11-30";
-LocalDate vadeTarihiDate = LocalDate.parse(vadeTarihi, formatter); // Sadece tarih kısmı
-
-illDTO.setBillDueDate(vadeTarihiDate);
-
-LocalDate tarih = LocalDate.of(2024, 10, 26);
-remoteRequest.setTransactionDate(tarih); // LocalDate kullanarak yalnızca yıl-ay-gün gönderiliyor
-LocalDate date = LocalDate.of(2024, 10, 26);
-paymentInformation.setPaymentDate(date); 
+PS C:\Applications\micro_project\workspace\bill\adapter\bill-adapter> git commit
+U       pom.xml
+error: Committing is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+PS C:\Applications\micro_project\workspace\bill\adapter\bill-adapter>
+PS C:\Applications\micro_project\workspace\bill\adapter\bill-adapter> git commit
+U       pom.xml
+error: Committing is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
