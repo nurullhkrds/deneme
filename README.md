@@ -1,6 +1,5 @@
-public static String validateAndTruncateInfo(String info) {
-        if (info == null) {
-            return null;
-        }
-        return info.length() <= 50 ? info : info.substring(0, 50);
-    }
+Your local changes to the following files would be overwritten by merge:
+        src/main/java/com/ykb/payments/bill/adapter/config/BillConfiguration.java
+Please commit your changes or stash them before you merge.
+Aborting
+Merge with strategy ort failed.
