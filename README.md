@@ -1,5 +1,4 @@
-Your local changes to the following files would be overwritten by merge:
-        src/main/java/com/ykb/payments/bill/adapter/config/BillConfiguration.java
-Please commit your changes or stash them before you merge.
-Aborting
-Merge with strategy ort failed.
+ branch              dev        -> FETCH_HEAD
+Auto-merging pom.xml
+CONFLICT (content): Merge conflict in pom.xml
+Automatic merge failed; fix conflicts and then commit the result.
