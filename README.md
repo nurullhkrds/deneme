@@ -1,23 +1,39 @@
-java.lang.NoClassDefFoundError: com/ykb/hmn/pym/common/util/PYMStringUtils
-	at com.ykb.hmn.migration.CorporateDetail.controllers.PG1112_CorporateDetail.validateAccountNumberListCell(PG1112_CorporateDetail.java:2784)
-	at com.ykb.hmn.migration.CorporateDetail.controllers.PG1112_CorporateDetail.onChangeListViewCellValue(PG1112_CorporateDetail.java:2545)
-	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.lang.reflect.Method.invoke(Method.java:498)
-	at com.ykb.hmn.fw.core.dispatcher.processor.HmnRequestProcessor.executeEvent(HmnRequestProcessor.java:311)
-	at com.ykb.hmn.fw.core.dispatcher.processor.HmnRequestProcessor.executeEvent(HmnRequestProcessor.java:266)
-	at com.ykb.hmn.fw.core.dispatcher.processor.EventRequestProcessor.process(EventRequestProcessor.java:198)
-	at com.ykb.hmn.fw.core....a:116)
-	at org.eclipse.jetty.server.Server.handle(Server.java:370)
-	at org.eclipse.jetty.server.AbstractHttpConnection.handleRequest(AbstractHttpConnection.java:494)
-	at org.eclipse.jetty.server.AbstractHttpConnection.content(AbstractHttpConnection.java:982)
-	at org.eclipse.jetty.server.AbstractHttpConnection$RequestHandler.content(AbstractHttpConnection.java:1043)
-	at org.eclipse.jetty.http.HttpParser.parseNext(HttpParser.java:865)
-	at org.eclipse.jetty.http.HttpParser.parseAvailable(HttpParser.java:235)
-	at org.eclipse.jetty.server.AsyncHttpConnection.handle(AsyncHttpConnection.java:82)
-	at org.eclipse.jetty.io.nio.SelectChannelEndPoint.handle(SelectChannelEndPoint.java:667)
-	at org.eclipse.jetty.io.nio.SelectChannelEndPoint$1.run(SelectChannelEndPoint.java:52)
-	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:608)
-	at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:543)
-	at java.lang.Thread.run(Thread.java:750)
+   if (StringUtils.hasText(accountNo)) {
+                accountNo = PYMStringUtils.getAccount(accountNo);
+                RequestCorporateDetailCheckAccountNumber request = new RequestCorporateDetailCheckAccountNumber();
+                request.setAccountNo(accountNo);
+                request.setMessagePre(mapPreMessage.get(cellColumn));
+                request.setProduct(Session.PRODUCT.getSessionValue(cc, String.class)); 
+
+  public static String getAccountStr(Integer accountNo) {
+        if (accountNo == null)
+            return null;
+        return StringUtils.lpad(accountNo.toString(), 8, '0');
+    }
+        String accountNoStr = accountNo.toString();
+        if(accountNoStr.length() == 8 || accountNoStr.length() == 9 ){
+        	return accountNoStr;
+        }
+        return StringUtils.lpad(accountNoStr, 8, '0');
+    } 
+    YUKARDAKİ FRONTENDE ÇAĞIRDIĞIM YER AMA BANA  
+    public static String getAccount(String account){
+		if(isEmptyString(account)){
+			return account;
+		}
+		
+		account = getPotentialArea(account);
+		
+		if(account.length()<8){
+			account = lPad(account, 8, ZERO);
+		}
+		
+		return account;
+	}
+	
+	private static String  getPotentialArea(String account){
+		if(account.length()>9){
+			account = account.substring(0,9);
+		}
+		return account.trim(); 
+	}
