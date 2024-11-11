@@ -1,5 +1,1 @@
-	<dependency>
-			<groupId>HMN.PYM</groupId>
-			<artifactId>HMN_PYM_Common_Internal</artifactId>
-		</dependency>
-		
+jar tf HMN_PYM_Common_Internal.jar | grep PYMStringUtils
