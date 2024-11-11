@@ -1,1 +1,3 @@
-![image](https://github.com/user-attachments/assets/39e50c87-ada3-47dc-977f-44e661149a26)
+netstat -ano | findstr :8080
+TCP    127.0.0.1:8080    0.0.0.0:0    LISTENING    1234
+taskkill /PID 1234 /F
