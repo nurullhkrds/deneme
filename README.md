@@ -6,7 +6,6 @@ import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
 import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionUserIntfMapper;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionDebtTypeService;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionUserIntfService;
 import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionUserIntfRequestDTO;
 import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionUserIntfRequestDTO;
 import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionUserIntfWebDTO;
@@ -14,115 +13,162 @@ import com.ykb.payments.bill.transaction.institution.domain.InstitutionUserIntf;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionUserIntfDTO;
 import com.ykb.payments.bill.transaction.institution.repository.InstitutionUserIntfRepository;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-@Service
-public class AdminInstitutionUserIntfServiceImpl implements AdminInstitutionUserIntfService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final InstitutionUserIntfRepository institutionUserIntfRepository;
-    private final AdminInstitutionUserIntfMapper institutionUserIntfMapper;
-    private final AdminInstitutionDebtTypeService institutionDebtTypeService;
+public class AdminInstitutionUserIntfServiceImplTest {
 
-    public AdminInstitutionUserIntfServiceImpl(InstitutionUserIntfRepository institutionUserIntfRepository, AdminInstitutionUserIntfMapper institutionUserIntfMapper, AdminInstitutionDebtTypeService institutionDebtTypeService) {
-        this.institutionUserIntfRepository = institutionUserIntfRepository;
-        this.institutionUserIntfMapper = institutionUserIntfMapper;
-        this.institutionDebtTypeService = institutionDebtTypeService;
+    @InjectMocks
+    private AdminInstitutionUserIntfServiceImpl adminInstitutionUserIntfService;
+
+    @Mock
+    private InstitutionUserIntfRepository institutionUserIntfRepository;
+
+    @Mock
+    private AdminInstitutionUserIntfMapper institutionUserIntfMapper;
+
+    @Mock
+    private AdminInstitutionDebtTypeService institutionDebtTypeService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    @Override
-    public List<InstitutionUserIntfWebDTO> getAllInstitutionUserIntfs() {
-        List<Object []> insUserIntfListOjectArray= institutionUserIntfRepository.findInstitutionUserIntfWithInstitution();
+    @Test
+    void getAllInstitutionUserIntfs_ShouldReturnAllUserInterfaces() {
+        List<Object[]> userIntfList = List.of(new Object[0]);
+        when(institutionUserIntfRepository.findInstitutionUserIntfWithInstitution()).thenReturn(userIntfList);
+        when(institutionUserIntfMapper.objectArrayToWebDTO(any())).thenReturn(new InstitutionUserIntfWebDTO());
 
-        return insUserIntfListOjectArray.stream()
-                .map(institutionUserIntfMapper::objectArrayToWebDTO)
-                .collect(Collectors.toList());
+        List<InstitutionUserIntfWebDTO> result = adminInstitutionUserIntfService.getAllInstitutionUserIntfs();
 
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(institutionUserIntfRepository, times(1)).findInstitutionUserIntfWithInstitution();
+        verify(institutionUserIntfMapper, times(1)).objectArrayToWebDTO(any());
     }
 
-    @Override
-    public InstitutionUserIntfDTO getInstitutionUserIntfById(Long id) {
+    @Test
+    void getInstitutionUserIntfById_WhenFound_ShouldReturnDTO() {
+        InstitutionUserIntf institutionUserIntf = new InstitutionUserIntf();
+        when(institutionUserIntfRepository.findById(1L)).thenReturn(Optional.of(institutionUserIntf));
+        when(institutionUserIntfMapper.toDTO(institutionUserIntf)).thenReturn(new InstitutionUserIntfDTO());
 
-        InstitutionUserIntf institutionUserIntf = institutionUserIntfRepository.findById(id).orElse(null);
-        if (institutionUserIntf != null) {
-            return institutionUserIntfMapper.toDTO(institutionUserIntf);
-        }
-        return null;
+        InstitutionUserIntfDTO result = adminInstitutionUserIntfService.getInstitutionUserIntfById(1L);
+
+        assertNotNull(result);
+        verify(institutionUserIntfRepository, times(1)).findById(1L);
+        verify(institutionUserIntfMapper, times(1)).toDTO(institutionUserIntf);
     }
 
-    @Override
-    public InstitutionUserIntfDTO createInstitutionUserIntf(CreateInstitutionUserIntfRequestDTO requestDTO) throws MicroException {
+    @Test
+    void getInstitutionUserIntfById_WhenNotFound_ShouldReturnNull() {
+        when(institutionUserIntfRepository.findById(1L)).thenReturn(Optional.empty());
 
+        InstitutionUserIntfDTO result = adminInstitutionUserIntfService.getInstitutionUserIntfById(1L);
 
-        boolean existsByInstitutionDebtTypeIdAndScreenOrderNo = institutionUserIntfRepository
-                .existsByInstitutionDebtTypeIdAndScreenOrderNo(requestDTO.getInstitutionDebtTypeId()
-                        , requestDTO.getScreenOrderNo());
-
-        if (existsByInstitutionDebtTypeIdAndScreenOrderNo) {
-            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_USER_INTF);
-        }
-
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = institutionDebtTypeService
-                .getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId());
-
-
-        if (institutionDebtTypeDTO == null) {
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_DEBT_TYPE_NOT_FOUND);
-        }
-
-        InstitutionUserIntfDTO dto = institutionUserIntfMapper.toDTO(requestDTO);
-        dto.setCreateDate(LocalDateTime.now());
-        dto.setInstitutionDebtType(institutionDebtTypeDTO);
-
-        InstitutionUserIntf institutionUserIntf = institutionUserIntfMapper.toEntity(dto);
-        institutionUserIntf = institutionUserIntfRepository.save(institutionUserIntf);
-        return institutionUserIntfMapper.toDTO(institutionUserIntf);
+        assertNull(result);
+        verify(institutionUserIntfRepository, times(1)).findById(1L);
     }
 
-    @Override
-    public InstitutionUserIntfDTO updateInstitutionUserIntf(UpdateInstitutionUserIntfRequestDTO requestDTO) throws MicroException {
+    @Test
+    void createInstitutionUserIntf_WhenDuplicate_ShouldThrowException() {
+        CreateInstitutionUserIntfRequestDTO requestDTO = new CreateInstitutionUserIntfRequestDTO();
+        requestDTO.setInstitutionDebtTypeId(1L);
+        requestDTO.setScreenOrderNo(1);
 
-        InstitutionUserIntfDTO existingInstitutionUserIntfDTO = getInstitutionUserIntfById(requestDTO.getId());
+        when(institutionUserIntfRepository.existsByInstitutionDebtTypeIdAndScreenOrderNo(anyLong(), anyInt())).thenReturn(true);
 
-        if (existingInstitutionUserIntfDTO == null) {
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_USER_INTF_NOT_FOUND);
-        }
+        assertThrows(DataConflictException.class, () -> adminInstitutionUserIntfService.createInstitutionUserIntf(requestDTO));
+        verify(institutionUserIntfRepository, times(1)).existsByInstitutionDebtTypeIdAndScreenOrderNo(anyLong(), anyInt());
+    }
 
-        boolean existsByInstitutionDebtTypeIdAndScreenOrderNo = institutionUserIntfRepository
-                .existsByInstitutionDebtTypeIdAndScreenOrderNo(requestDTO.getInstitutionDebtTypeId()
-                        , requestDTO.getScreenOrderNo());
+    @Test
+    void createInstitutionUserIntf_WhenValid_ShouldReturnDTO() throws MicroException {
+        CreateInstitutionUserIntfRequestDTO requestDTO = new CreateInstitutionUserIntfRequestDTO();
+        requestDTO.setInstitutionDebtTypeId(1L);
+        requestDTO.setScreenOrderNo(1);
+        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+        InstitutionUserIntfDTO institutionUserIntfDTO = new InstitutionUserIntfDTO();
+        InstitutionUserIntf institutionUserIntf = new InstitutionUserIntf();
 
-        if ((existsByInstitutionDebtTypeIdAndScreenOrderNo && !existingInstitutionUserIntfDTO.getId().equals(requestDTO.getId()))) {
-            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_USER_INTF);
-        }
+        when(institutionUserIntfRepository.existsByInstitutionDebtTypeIdAndScreenOrderNo(anyLong(), anyInt())).thenReturn(false);
+        when(institutionDebtTypeService.getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId())).thenReturn(institutionDebtTypeDTO);
+        when(institutionUserIntfMapper.toDTO(requestDTO)).thenReturn(institutionUserIntfDTO);
+        when(institutionUserIntfMapper.toEntity(institutionUserIntfDTO)).thenReturn(institutionUserIntf);
+        when(institutionUserIntfRepository.save(institutionUserIntf)).thenReturn(institutionUserIntf);
+        when(institutionUserIntfMapper.toDTO(institutionUserIntf)).thenReturn(institutionUserIntfDTO);
 
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = institutionDebtTypeService
-                .getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId());
+        InstitutionUserIntfDTO result = adminInstitutionUserIntfService.createInstitutionUserIntf(requestDTO);
 
-        if (institutionDebtTypeDTO == null) {
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_DEBT_TYPE_NOT_FOUND);
-        }
+        assertNotNull(result);
+        verify(institutionUserIntfRepository, times(1)).existsByInstitutionDebtTypeIdAndScreenOrderNo(anyLong(), anyInt());
+        verify(institutionDebtTypeService, times(1)).getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId());
+        verify(institutionUserIntfRepository, times(1)).save(institutionUserIntf);
+    }
 
+    @Test
+    void updateInstitutionUserIntf_WhenNotFound_ShouldThrowException() {
+        UpdateInstitutionUserIntfRequestDTO requestDTO = new UpdateInstitutionUserIntfRequestDTO();
+        requestDTO.setId(1L);
 
-        existingInstitutionUserIntfDTO.setInstitutionDebtType(institutionDebtTypeDTO);
-        existingInstitutionUserIntfDTO.setLabel(requestDTO.getLabel());
-        existingInstitutionUserIntfDTO.setLabelDescription(requestDTO.getLabelDescription());
-        existingInstitutionUserIntfDTO.setIsNumeric(requestDTO.getIsNumeric());
-        existingInstitutionUserIntfDTO.setMaxLength(requestDTO.getMaxLength());
-        existingInstitutionUserIntfDTO.setMinLength(requestDTO.getMinLength());
-        existingInstitutionUserIntfDTO.setCompleteLengthFlag(requestDTO.getCompleteLengthFlag());
-        existingInstitutionUserIntfDTO.setRegex(requestDTO.getRegex());
-        existingInstitutionUserIntfDTO.setScreenOrderNo(requestDTO.getScreenOrderNo());
-        existingInstitutionUserIntfDTO.setInterfaceType(requestDTO.getInterfaceType());
-        existingInstitutionUserIntfDTO.setExplanation(requestDTO.getExplanation());
-        existingInstitutionUserIntfDTO.setUpdatedBy(requestDTO.getUpdateUser());
-        existingInstitutionUserIntfDTO.setUpdateDate(LocalDateTime.now());
+        when(institutionUserIntfRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
 
-        InstitutionUserIntf institutionUserIntf = institutionUserIntfMapper.toEntity(existingInstitutionUserIntfDTO);
-        institutionUserIntf = institutionUserIntfRepository.save(institutionUserIntf);
-        return institutionUserIntfMapper.toDTO(institutionUserIntf);
+        assertThrows(DataNotFoundException.class, () -> adminInstitutionUserIntfService.updateInstitutionUserIntf(requestDTO));
+        verify(institutionUserIntfRepository, times(1)).findById(requestDTO.getId());
+    }
+
+    @Test
+    void updateInstitutionUserIntf_WhenDuplicate_ShouldThrowException() {
+        UpdateInstitutionUserIntfRequestDTO requestDTO = new UpdateInstitutionUserIntfRequestDTO();
+        requestDTO.setId(1L);
+        requestDTO.setInstitutionDebtTypeId(1L);
+        requestDTO.setScreenOrderNo(1);
+
+        when(institutionUserIntfRepository.findById(requestDTO.getId())).thenReturn(Optional.of(new InstitutionUserIntf()));
+        when(institutionUserIntfRepository.existsByInstitutionDebtTypeIdAndScreenOrderNo(requestDTO.getInstitutionDebtTypeId(), requestDTO.getScreenOrderNo())).thenReturn(true);
+
+        assertThrows(DataConflictException.class, () -> adminInstitutionUserIntfService.updateInstitutionUserIntf(requestDTO));
+        verify(institutionUserIntfRepository, times(1)).findById(requestDTO.getId());
+        verify(institutionUserIntfRepository, times(1)).existsByInstitutionDebtTypeIdAndScreenOrderNo(requestDTO.getInstitutionDebtTypeId(), requestDTO.getScreenOrderNo());
+    }
+
+    @Test
+    void updateInstitutionUserIntf_WhenValid_ShouldReturnDTO() throws MicroException {
+        UpdateInstitutionUserIntfRequestDTO requestDTO = new UpdateInstitutionUserIntfRequestDTO();
+        requestDTO.setId(1L);
+        requestDTO.setInstitutionDebtTypeId(1L);
+        requestDTO.setScreenOrderNo(1);
+        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+        InstitutionUserIntfDTO existingInstitutionUserIntfDTO = new InstitutionUserIntfDTO();
+        InstitutionUserIntf institutionUserIntf = new InstitutionUserIntf();
+
+        when(institutionUserIntfRepository.findById(requestDTO.getId())).thenReturn(Optional.of(new InstitutionUserIntf()));
+        when(institutionUserIntfRepository.existsByInstitutionDebtTypeIdAndScreenOrderNo(requestDTO.getInstitutionDebtTypeId(), requestDTO.getScreenOrderNo())).thenReturn(false);
+        when(institutionDebtTypeService.getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId())).thenReturn(institutionDebtTypeDTO);
+        when(institutionUserIntfMapper.toDTO(any())).thenReturn(existingInstitutionUserIntfDTO);
+        when(institutionUserIntfMapper.toEntity(existingInstitutionUserIntfDTO)).thenReturn(institutionUserIntf);
+        when(institutionUserIntfRepository.save(institutionUserIntf)).thenReturn(institutionUserIntf);
+        when(institutionUserIntfMapper.toDTO(institutionUserIntf)).thenReturn(existingInstitutionUserIntfDTO);
+
+        InstitutionUserIntfDTO result = adminInstitutionUserIntfService.updateInstitutionUserIntf(requestDTO);
+
+        assertNotNull(result);
+        verify(institutionUserIntfRepository, times(1)).findById(requestDTO.getId());
+        verify(institutionUserIntfRepository, times(1)).existsByInstitutionDebtTypeIdAndScreenOrderNo(requestDTO.getInstitutionDebtTypeId(), requestDTO.getScreenOrderNo());
+        verify(institutionDebtTypeService, times(1)).getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId());
+        verify(institutionUserIntfRepository, times(1)).save(institutionUserIntf);
     }
 }
