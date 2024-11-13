@@ -5,25 +5,56 @@ import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminProcessMa
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminProcessService;
 import com.ykb.payments.bill.transaction.institution.dto.ProcessDTO;
 import com.ykb.payments.bill.transaction.institution.repository.ProcessRepository;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@Service
-public class AdminProcessServiceImpl implements AdminProcessService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    private final ProcessRepository processRepository;
+public class AdminProcessServiceTest {
 
-    private final AdminProcessMapper processMapper;
+    @InjectMocks
+    private AdminProcessServiceImpl adminProcessService;
 
+    @Mock
+    private ProcessRepository processRepository;
 
-    public AdminProcessServiceImpl(ProcessRepository processRepository, AdminProcessMapper processMapper) {
-        this.processRepository = processRepository;
-        this.processMapper = processMapper;
+    @Mock
+    private AdminProcessMapper processMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getProcessByCode_WhenFound_ShouldReturnDTO() throws MicroException {
+        String code = "PROCESS123";
+        Object processEntity = new Object(); // Replace with the actual Process entity type
+        ProcessDTO processDTO = new ProcessDTO();
 
-    @Override
-    public ProcessDTO getProcessByCode (String code) throws MicroException {
-        return processMapper.toDTO(processRepository.findByCode(code));
+        when(processRepository.findByCode(code)).thenReturn(processEntity);
+        when(processMapper.toDTO(processEntity)).thenReturn(processDTO);
 
+        ProcessDTO result = adminProcessService.getProcessByCode(code);
+
+        assertNotNull(result);
+        verify(processRepository, times(1)).findByCode(code);
+        verify(processMapper, times(1)).toDTO(processEntity);
+    }
+
+    @Test
+    void getProcessByCode_WhenNotFound_ShouldReturnNull() throws MicroException {
+        String code = "PROCESS123";
+
+        when(processRepository.findByCode(code)).thenReturn(null);
+
+        ProcessDTO result = adminProcessService.getProcessByCode(code);
+
+        assertNull(result);
+        verify(processRepository, times(1)).findByCode(code);
     }
 }
