@@ -1,53 +1,39 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import com.ykb.architecture.micro.error.exception.DataNotFoundException;
+import com.ykb.architecture.micro.error.exception.MicroException;
+import com.ykb.payments.bill.common.exception.BillExceptionsUI;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminFeatureMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminFeatureService;
+import com.ykb.payments.bill.transaction.institution.domain.Feature;
+import com.ykb.payments.bill.transaction.institution.dto.FeatureDTO;
+import com.ykb.payments.bill.transaction.institution.enums.EnumFeatureCode;
+import com.ykb.payments.bill.transaction.institution.repository.FeatureRepository;
+import org.springframework.stereotype.Service;
 
-class AdminCityServiceImplTest {
+@Service
+public class AdminFeatureServiceImpl implements AdminFeatureService {
 
-    @Mock
-    private CityRepository cityRepository;
 
-    @Mock
-    private AdminCityMapper cityMapper;
+    private final FeatureRepository featureRepository;
+    private final AdminFeatureMapper featureMapper;
 
-    @InjectMocks
-    private AdminCityServiceImpl adminCityService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminFeatureServiceImpl(FeatureRepository featureRepository, AdminFeatureMapper featureMapper) {
+        this.featureRepository = featureRepository;
+        this.featureMapper = featureMapper;
     }
 
-    @Test
-    void getCityByCode_shouldReturnCityDTO_whenCityExists() throws MicroException {
-        String code = "validCityCode";
-        City city = new City();
-        CityDTO cityDTO = new CityDTO();
 
-        when(cityRepository.findByCode(code)).thenReturn(city);
-        when(cityMapper.toCityDTO(city)).thenReturn(cityDTO);
+    @Override
+    public FeatureDTO getFeatureByCode(EnumFeatureCode code) throws MicroException {
 
-        CityDTO result = adminCityService.getCityByCode(code);
+        Feature entity= featureRepository.findByCode(code);
+        if (entity == null){
+            throw new  DataNotFoundException(BillExceptionsUI.ValidationExceptions.FEATURE_NOT_FOUND);
+        }
+        FeatureDTO dto = featureMapper.toFeatureDTO(entity);
+        return dto;
 
-        assertNotNull(result);
-        assertEquals(cityDTO, result);
-        verify(cityRepository, times(1)).findByCode(code);
-        verify(cityMapper, times(1)).toCityDTO(city);
+
     }
-
-    @Test
-    void getCityByCode_shouldThrowDataNotFoundException_whenCityDoesNotExist() {
-        String code = "invalidCityCode";
-
-        when(cityRepository.findByCode(code)).thenReturn(null);
-
-        assertThrows(DataNotFoundException.class, () -> adminCityService.getCityByCode(code));
-        verify(cityRepository, times(1)).findByCode(code);
-        verify(cityMapper, never()).toCityDTO(any());
-    }
-} 
+}
