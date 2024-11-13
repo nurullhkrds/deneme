@@ -1,59 +1,69 @@
-package com.ykb.payments.bill.transaction.institution.admin.service.impl;
+package com.ykb.payments.bill.transaction.institution.admin.web;
 
-import com.ykb.architecture.micro.error.exception.DataNotFoundException;
+
 import com.ykb.architecture.micro.error.exception.MicroException;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminProductMapper;
-import com.ykb.payments.bill.transaction.institution.domain.Product;
-import com.ykb.payments.bill.transaction.institution.dto.ProductDTO;
-import com.ykb.payments.bill.transaction.institution.repository.ProductRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
+import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionCityMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionCityService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionCityRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionCityRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionCityRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionCityRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionCityWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionCityDTO;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import javax.validation.Valid;
+import java.util.List;
 
-public class AdminProductServiceTest {
+@RestController
+@RequestMapping("/admin/institutionCities")
+public class AdminInsitutionCityController {
 
-    @InjectMocks
-    private AdminProductServiceImpl adminProductService;
+    private final AdminInstitutionCityService institutionCityService;
+    private final AdminInstitutionCityMapper institutionCityMapper;
 
-    @Mock
-    private ProductRepository productRepository;
-
-    @Mock
-    private AdminProductMapper productMapper;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminInsitutionCityController(AdminInstitutionCityService institutionCityService, AdminInstitutionCityMapper institutionCityMapper) {
+        this.institutionCityService = institutionCityService;
+        this.institutionCityMapper = institutionCityMapper;
     }
 
-    @Test
-    void getProductByCode_WhenFound_ShouldReturnDTO() throws MicroException {
-        String code = "PROD123";
-        Product productEntity = new Product();
-        ProductDTO productDTO = new ProductDTO();
-
-        when(productRepository.findByCode(code)).thenReturn(productEntity);
-        when(productMapper.toProductDTO(productEntity)).thenReturn(productDTO);
-
-        ProductDTO result = adminProductService.getProductByCode(code);
-
-        assertNotNull(result);
-        verify(productRepository, times(1)).findByCode(code);
-        verify(productMapper, times(1)).toProductDTO(productEntity);
+    @GetMapping("getAllInstitutionCities")
+    public ResponseEntity<DataResult<List<InstitutionCityWebDTO>>> getAllInstitutionCities() {
+        List<InstitutionCityDTO> institutionCityDTOS = institutionCityService.getAllInstitutionCities();
+        List<InstitutionCityWebDTO> institutionCityWebDTOList = institutionCityMapper.toWebDTOList(institutionCityDTOS);
+        DataResult<List<InstitutionCityWebDTO>> resultDTO = new DataResult<>
+                (ResultConstant.DATA_LISTED.getMessage(), institutionCityWebDTOList);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
-    @Test
-    void getProductByCode_WhenNotFound_ShouldThrowException() {
-        String code = "PROD123";
 
-        when(productRepository.findByCode(code)).thenReturn(null);
+    @GetMapping("getInstitutionCityById")
+    public ResponseEntity<DataResult<InstitutionCityWebDTO>> getInstitutionCityById(@RequestParam Long institutionCityId) {
+        InstitutionCityDTO institutionCityDTO = institutionCityService.getInstitutionCityById(institutionCityId);
+        InstitutionCityWebDTO institutionCityWebDTO = institutionCityMapper.toWebDTO(institutionCityDTO);
+        DataResult<InstitutionCityWebDTO> resultDTO = new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), institutionCityWebDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    }
 
-        assertThrows(DataNotFoundException.class, () -> adminProductService.getProductByCode(code));
-        verify(productRepository, times(1)).findByCode(code);
+    @PostMapping("createInstitutionCity")
+    public ResponseEntity<DataResult<InstitutionCityWebDTO>> createInstitutionCity(@RequestBody @Valid CreateInstitutionCityRequest request) throws MicroException {
+        CreateInstitutionCityRequestDTO requestDTO = institutionCityMapper.toCreateDTO(request);
+        InstitutionCityDTO institutionCityDTO = institutionCityService.createInstitutionCity(requestDTO);
+        InstitutionCityWebDTO webDTO = institutionCityMapper.toWebDTO(institutionCityDTO);
+        DataResult<InstitutionCityWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_CITY_CREATED.getMessage(), webDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
+    }
+
+    @PutMapping("updateInstitutionCity")
+    public ResponseEntity<DataResult<InstitutionCityWebDTO>> updateInstitutionCity(@RequestBody @Valid UpdateInstitutionCityRequest request) throws MicroException {
+        UpdateInstitutionCityRequestDTO requestDTO = institutionCityMapper.toUpdateDTO(request);
+        InstitutionCityDTO institutionCityDTO = institutionCityService.updateInstitutionCity(requestDTO);
+        InstitutionCityWebDTO webDTO = institutionCityMapper.toWebDTO(institutionCityDTO);
+        DataResult<InstitutionCityWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_CITY_UPDATED.getMessage(), webDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 }
