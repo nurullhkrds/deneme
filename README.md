@@ -11,59 +11,114 @@ import com.ykb.payments.bill.transaction.institution.admin.web.request.create.Cr
 import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionChannelRequest;
 import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChannelWebDTO;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelDTO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/admin/institutionChannels")
-public class AdminInstitutionChannelController {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final AdminInstitutionChannelService institutionChannelService;
-    private final AdminInstitutionChannelMapper institutionChannelMapper;
+public class AdminInstitutionChannelControllerTest {
 
-    public AdminInstitutionChannelController(AdminInstitutionChannelService institutionChannelService, AdminInstitutionChannelMapper institutionChannelMapper) {
-        this.institutionChannelService = institutionChannelService;
-        this.institutionChannelMapper = institutionChannelMapper;
+    @InjectMocks
+    private AdminInstitutionChannelController adminInstitutionChannelController;
+
+    @Mock
+    private AdminInstitutionChannelService institutionChannelService;
+
+    @Mock
+    private AdminInstitutionChannelMapper institutionChannelMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getAllInstitutionChannels_ShouldReturnListOfInstitutionChannelWebDTO() {
+        List<InstitutionChannelDTO> institutionChannelDTOList = List.of(new InstitutionChannelDTO());
+        List<InstitutionChannelWebDTO> institutionChannelWebDTOList = List.of(new InstitutionChannelWebDTO());
 
-    @GetMapping("getAllInstitutionChannels")
-    public ResponseEntity<DataResult<List<InstitutionChannelWebDTO>>> getAllInstitutionChannels() {
-        List<InstitutionChannelDTO> institutionChannelDTOS = institutionChannelService.getAllInstitutionChannels();
-        List<InstitutionChannelWebDTO> institutionChannelWebDTOList = institutionChannelMapper.toWebDTOList(institutionChannelDTOS);
-        DataResult<List<InstitutionChannelWebDTO>> resultDTO = new DataResult<>
-                (ResultConstant.DATA_LISTED.getMessage(), institutionChannelWebDTOList);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+        when(institutionChannelService.getAllInstitutionChannels()).thenReturn(institutionChannelDTOList);
+        when(institutionChannelMapper.toWebDTOList(institutionChannelDTOList)).thenReturn(institutionChannelWebDTOList);
 
+        ResponseEntity<DataResult<List<InstitutionChannelWebDTO>>> response = adminInstitutionChannelController.getAllInstitutionChannels();
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChannelWebDTOList, response.getBody().getData());
+        verify(institutionChannelService, times(1)).getAllInstitutionChannels();
+        verify(institutionChannelMapper, times(1)).toWebDTOList(institutionChannelDTOList);
     }
 
+    @Test
+    void getInstitutionChannelById_ShouldReturnInstitutionChannelWebDTO() {
+        Long institutionChannelId = 1L;
+        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
+        InstitutionChannelWebDTO institutionChannelWebDTO = new InstitutionChannelWebDTO();
 
-    @GetMapping("getInstitutionChannelById")
-    public ResponseEntity<DataResult<InstitutionChannelWebDTO>> getInstitutionChannelById(@RequestParam Long id) {
-        InstitutionChannelDTO institutionChannelDTO = institutionChannelService.getInstitutionChannelById( id);
-        InstitutionChannelWebDTO institutionChannelWebDTO = institutionChannelMapper.toWebDTO(institutionChannelDTO);
-        DataResult<InstitutionChannelWebDTO> resultDTO = new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), institutionChannelWebDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+        when(institutionChannelService.getInstitutionChannelById(institutionChannelId)).thenReturn(institutionChannelDTO);
+        when(institutionChannelMapper.toWebDTO(institutionChannelDTO)).thenReturn(institutionChannelWebDTO);
+
+        ResponseEntity<DataResult<InstitutionChannelWebDTO>> response = adminInstitutionChannelController.getInstitutionChannelById(institutionChannelId);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_RETRIEVED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChannelWebDTO, response.getBody().getData());
+        verify(institutionChannelService, times(1)).getInstitutionChannelById(institutionChannelId);
+        verify(institutionChannelMapper, times(1)).toWebDTO(institutionChannelDTO);
     }
 
-    @PostMapping("createInstitutionChannel")
-    public ResponseEntity<DataResult<InstitutionChannelWebDTO>> createInstitutionChannel(@RequestBody CreateInstitutionChannelRequest request) throws MicroException {
-        CreateInstitutionChannelRequestDTO requestDTO = institutionChannelMapper.toRequestDTO(request);
-        InstitutionChannelDTO institutionChannelDTO = institutionChannelService.createInstitutionChannel(requestDTO);
-        InstitutionChannelWebDTO institutionChannelWebDTO = institutionChannelMapper.toWebDTO(institutionChannelDTO);
-        DataResult<InstitutionChannelWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_CHANNEL_CREATED.getMessage(), institutionChannelWebDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
+    @Test
+    void createInstitutionChannel_ShouldReturnCreatedInstitutionChannelWebDTO() throws MicroException {
+        CreateInstitutionChannelRequest request = new CreateInstitutionChannelRequest();
+        CreateInstitutionChannelRequestDTO requestDTO = new CreateInstitutionChannelRequestDTO();
+        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
+        InstitutionChannelWebDTO institutionChannelWebDTO = new InstitutionChannelWebDTO();
+
+        when(institutionChannelMapper.toRequestDTO(request)).thenReturn(requestDTO);
+        when(institutionChannelService.createInstitutionChannel(requestDTO)).thenReturn(institutionChannelDTO);
+        when(institutionChannelMapper.toWebDTO(institutionChannelDTO)).thenReturn(institutionChannelWebDTO);
+
+        ResponseEntity<DataResult<InstitutionChannelWebDTO>> response = adminInstitutionChannelController.createInstitutionChannel(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(ResultConstant.INSTITUTION_CHANNEL_CREATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChannelWebDTO, response.getBody().getData());
+        verify(institutionChannelMapper, times(1)).toRequestDTO(request);
+        verify(institutionChannelService, times(1)).createInstitutionChannel(requestDTO);
+        verify(institutionChannelMapper, times(1)).toWebDTO(institutionChannelDTO);
     }
 
-    @PutMapping("updateInstitutionChannel")
-    public ResponseEntity<DataResult<InstitutionChannelWebDTO>> updateInstitutionChannel(@RequestBody UpdateInstitutionChannelRequest request) throws MicroException {
-        UpdateInstitutionChannelRequestDTO requestDTO = institutionChannelMapper.toRequestDTO(request);
-        InstitutionChannelDTO institutionChannelDTO = institutionChannelService.updateInstitutionChannel(requestDTO);
-        InstitutionChannelWebDTO institutionChannelWebDTO = institutionChannelMapper.toWebDTO(institutionChannelDTO);
-        DataResult<InstitutionChannelWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_CHANNEL_UPDATED.getMessage(), institutionChannelWebDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    @Test
+    void updateInstitutionChannel_ShouldReturnUpdatedInstitutionChannelWebDTO() throws MicroException {
+        UpdateInstitutionChannelRequest request = new UpdateInstitutionChannelRequest();
+        UpdateInstitutionChannelRequestDTO requestDTO = new UpdateInstitutionChannelRequestDTO();
+        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
+        InstitutionChannelWebDTO institutionChannelWebDTO = new InstitutionChannelWebDTO();
+
+        when(institutionChannelMapper.toRequestDTO(request)).thenReturn(requestDTO);
+        when(institutionChannelService.updateInstitutionChannel(requestDTO)).thenReturn(institutionChannelDTO);
+        when(institutionChannelMapper.toWebDTO(institutionChannelDTO)).thenReturn(institutionChannelWebDTO);
+
+        ResponseEntity<DataResult<InstitutionChannelWebDTO>> response = adminInstitutionChannelController.updateInstitutionChannel(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.INSTITUTION_CHANNEL_UPDATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChannelWebDTO, response.getBody().getData());
+        verify(institutionChannelMapper, times(1)).toRequestDTO(request);
+        verify(institutionChannelService, times(1)).updateInstitutionChannel(requestDTO);
+        verify(institutionChannelMapper, times(1)).toWebDTO(institutionChannelDTO);
     }
 }
