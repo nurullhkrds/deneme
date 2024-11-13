@@ -1,206 +1,135 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
 import com.ykb.architecture.micro.error.exception.DataConflictException;
 import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionChannelProcessMapper;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionChnlPymMethodMapper;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionChannelService;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionProcessService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionChannelProcessRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionChannelProcessRequestDTO;
-import com.ykb.payments.bill.transaction.institution.domain.InstitutionChannelProcess;
-import com.ykb.payments.bill.transaction.institution.dto.ChannelDTO;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionChnlPymMethodService;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminPaymentMethodService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionChnlPymMethodRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionChnlPymMethodRequestDTO;
+import com.ykb.payments.bill.transaction.institution.domain.InstitutionChannelPymMethod;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelProcessDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionProcessDTO;
-import com.ykb.payments.bill.transaction.institution.repository.InstitutionChannelProcessRepository;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelPymMethodDTO;
+import com.ykb.payments.bill.transaction.institution.dto.PaymentMethodDTO;
+import com.ykb.payments.bill.transaction.institution.repository.InstitutionChannelPymMethodRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.List;
-import java.util.Arrays;
 
-class AdminInstitutionChnlProccesServiceImplTest {
+@Service
+public class AdminInstitutionChnlPymMethodServiceImpl implements AdminInstitutionChnlPymMethodService {
 
-    @Mock
-    private InstitutionChannelProcessRepository institutionChannelProcessRepository;
+    private final InstitutionChannelPymMethodRepository institutionChannelPymMethodRepository;
+    private final AdminInstitutionChnlPymMethodMapper institutionChnlPymMethodMapper;
 
-    @Mock
-    private AdminInstitutionChannelProcessMapper institutionChannelProcessMapper;
+    private final AdminInstitutionChannelService institutionChannelService;
 
-    @Mock
-    private AdminInstitutionChannelService institutionChannelService;
+    private final AdminPaymentMethodService paymentMethodService;
 
-    @Mock
-    private AdminInstitutionProcessService institutionProcessService;
-
-    @InjectMocks
-    private AdminInstitutionChnlProccesServiceImpl adminInstitutionChnlProccesService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminInstitutionChnlPymMethodServiceImpl(InstitutionChannelPymMethodRepository institutionChannelPymMethodRepository, AdminInstitutionChnlPymMethodMapper institutionChnlPymMethodMapper, AdminInstitutionChannelService institutionChannelService, AdminPaymentMethodService paymentMethodService) {
+        this.institutionChannelPymMethodRepository = institutionChannelPymMethodRepository;
+        this.institutionChnlPymMethodMapper = institutionChnlPymMethodMapper;
+        this.institutionChannelService = institutionChannelService;
+        this.paymentMethodService = paymentMethodService;
     }
 
-    @Test
-    void getAllInstitutionChnlProcceses_shouldReturnListOfInstitutionChnlProcessWebDTO() {
-        List<Object[]> insChnnlProcessListOjectArray = Arrays.asList(new Object[]{}, new Object[]{});
-        List<InstitutionChnlProcessWebDTO> expectedDTOs = Arrays.asList(new InstitutionChnlProcessWebDTO(), new InstitutionChnlProcessWebDTO());
-
-        when(institutionChannelProcessRepository.findInstitutionChnlProcessWithInstitution()).thenReturn(insChnnlProcessListOjectArray);
-        when(institutionChannelProcessMapper.objectArrayToWebDTO(any())).thenReturn(expectedDTOs.get(0), expectedDTOs.get(1));
-
-        List<InstitutionChnlProcessWebDTO> result = adminInstitutionChnlProccesService.getAllInstitutionChnlProcceses();
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(institutionChannelProcessRepository, times(1)).findInstitutionChnlProcessWithInstitution();
-        verify(institutionChannelProcessMapper, times(2)).objectArrayToWebDTO(any());
+    @Override
+    public List<InstitutionChannelPymMethodDTO> getAll() {
+        List<InstitutionChannelPymMethod> institutionChannelPymMethodList=institutionChannelPymMethodRepository.findAll();
+        return institutionChnlPymMethodMapper.toDTOList(institutionChannelPymMethodList);
     }
 
-    @Test
-    void getInstitutionChannelProccesById_shouldReturnInstitutionChannelProcessDTO_whenFound() {
-        Long id = 1L;
-        InstitutionChannelProcess institutionChannelProcess = new InstitutionChannelProcess();
-        InstitutionChannelProcessDTO expectedDTO = new InstitutionChannelProcessDTO();
-
-        when(institutionChannelProcessRepository.findById(id)).thenReturn(Optional.of(institutionChannelProcess));
-        when(institutionChannelProcessMapper.toDTO(institutionChannelProcess)).thenReturn(expectedDTO);
-
-        InstitutionChannelProcessDTO result = adminInstitutionChnlProccesService.getInstitutionChannelProccesById(id);
-
-        assertNotNull(result);
-        assertEquals(expectedDTO, result);
-        verify(institutionChannelProcessRepository, times(1)).findById(id);
-        verify(institutionChannelProcessMapper, times(1)).toDTO(institutionChannelProcess);
+    @Override
+    public InstitutionChannelPymMethodDTO getInstitutionChannelPymMethodById(Long id) {
+        InstitutionChannelPymMethod institutionChannelPymMethod=institutionChannelPymMethodRepository.findById(id).orElse(null);
+        if(institutionChannelPymMethod!=null){
+            return institutionChnlPymMethodMapper.toDTO(institutionChannelPymMethod);
+        }
+        return null;
     }
 
-    @Test
-    void getInstitutionChannelProccesById_shouldReturnNull_whenNotFound() {
-        Long id = 1L;
+    @Override
+    public InstitutionChannelPymMethodDTO createInstitutionChannelPymMethod(CreateInstitutionChnlPymMethodRequestDTO requestDTO) throws MicroException {
+        InstitutionChannelPymMethod existingInstitutionChannelPymMethod = institutionChannelPymMethodRepository
+                .findFirstByChannelIdAndPaymentMethod(requestDTO.getInstitutionChannelId()
+                ,requestDTO.getPaymentMethod());
 
-        when(institutionChannelProcessRepository.findById(id)).thenReturn(Optional.empty());
+        if (existingInstitutionChannelPymMethod != null){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTON_CHANNEL_PYM_METHOD);
+        }
 
-        InstitutionChannelProcessDTO result = adminInstitutionChnlProccesService.getInstitutionChannelProccesById(id);
+        InstitutionChannelDTO institutionChannelDTO= institutionChannelService.getInstitutionChannelById(requestDTO.getInstitutionChannelId());
 
-        assertNull(result);
-        verify(institutionChannelProcessRepository, times(1)).findById(id);
+        if (institutionChannelDTO == null){
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_CHANNEL_NOT_FOUND);
+        }
+
+        PaymentMethodDTO paymentMethodDTO = paymentMethodService.getPaymentMethodByMethod(requestDTO.getPaymentMethod());
+
+        if (paymentMethodDTO == null) {
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PAYMENT_METHOD_NOT_FOUND);
+
+        }
+
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO=institutionChnlPymMethodMapper.toDTO(requestDTO);
+        institutionChannelPymMethodDTO.setInstitutionChannel(institutionChannelDTO);
+        institutionChannelPymMethodDTO.setPaymentMethod(paymentMethodDTO);
+        institutionChannelDTO.setCreateDate(LocalDateTime.now());
+
+        InstitutionChannelPymMethod institutionChannelPymMethod=
+                institutionChnlPymMethodMapper.toInstitutionChannelPymMethod(institutionChannelPymMethodDTO);
+
+        institutionChannelPymMethod= institutionChannelPymMethodRepository.save(institutionChannelPymMethod);
+        return institutionChnlPymMethodMapper.toDTO(institutionChannelPymMethod);
     }
 
-    @Test
-    void createInstitutionChannelProcces_shouldThrowDataConflictException_whenInstitutionChannelProcessAlreadyExists() {
-        CreateInstitutionChannelProcessRequestDTO requestDTO = new CreateInstitutionChannelProcessRequestDTO();
-        requestDTO.setInstitutionChannelId(1L);
-        requestDTO.setInstitutionProcessId(2L);
+    @Override
+    public InstitutionChannelPymMethodDTO updateInstitutionChannelPymMethod(UpdateInstitutionChnlPymMethodRequestDTO requestDTO) throws MicroException {
+        InstitutionChannelPymMethodDTO institutionChannelPymMethodDTO = getInstitutionChannelPymMethodById(requestDTO.getId());
+        if (institutionChannelPymMethodDTO == null){
+             throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_CHANNEL_PYM_METHOD_NOT_FOUND);
+        }
 
-        when(institutionChannelProcessRepository.existsByInstitutionChannelIdAndInstitutionProcessId(requestDTO.getInstitutionChannelId(), requestDTO.getInstitutionProcessId()))
-                .thenReturn(true);
+        InstitutionChannelPymMethod existingInstitutionChannelPymMethod = institutionChannelPymMethodRepository
+                .findFirstByChannelIdAndPaymentMethod(requestDTO.getInstitutionChannelId()
+                        ,requestDTO.getPaymentMethod());
 
-        assertThrows(DataConflictException.class, () -> adminInstitutionChnlProccesService.createInstitutionChannelProcces(requestDTO));
-        verify(institutionChannelProcessRepository, times(1)).existsByInstitutionChannelIdAndInstitutionProcessId(requestDTO.getInstitutionChannelId(), requestDTO.getInstitutionProcessId());
-    }
+        if (existingInstitutionChannelPymMethod != null && !existingInstitutionChannelPymMethod.getId().equals(requestDTO.getId())){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTON_CHANNEL_PYM_METHOD);
 
-    @Test
-    void createInstitutionChannelProcces_shouldThrowDataNotFoundException_whenInstitutionProcessNotFound() throws MicroException {
-        CreateInstitutionChannelProcessRequestDTO requestDTO = new CreateInstitutionChannelProcessRequestDTO();
-        requestDTO.setInstitutionChannelId(1L);
-        requestDTO.setInstitutionProcessId(2L);
+        }
 
-        when(institutionChannelProcessRepository.existsByInstitutionChannelIdAndInstitutionProcessId(requestDTO.getInstitutionChannelId(), requestDTO.getInstitutionProcessId()))
-                .thenReturn(false);
-        when(institutionProcessService.getInstitutionProcessById(requestDTO.getInstitutionProcessId())).thenReturn(null);
+        InstitutionChannelDTO institutionChannelDTO= institutionChannelService.getInstitutionChannelById(requestDTO.getInstitutionChannelId());
 
-        assertThrows(DataNotFoundException.class, () -> adminInstitutionChnlProccesService.createInstitutionChannelProcces(requestDTO));
-        verify(institutionProcessService, times(1)).getInstitutionProcessById(requestDTO.getInstitutionProcessId());
-    }
+        if (institutionChannelDTO == null){
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_CHANNEL_NOT_FOUND);
+        }
 
-    @Test
-    void createInstitutionChannelProcces_shouldReturnInstitutionChannelProcessDTO_whenSuccessful() throws MicroException {
-        CreateInstitutionChannelProcessRequestDTO requestDTO = new CreateInstitutionChannelProcessRequestDTO();
-        requestDTO.setInstitutionChannelId(1L);
-        requestDTO.setInstitutionProcessId(2L);
-        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
-        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
-        InstitutionChannelProcessDTO institutionChannelProcessDTO = new InstitutionChannelProcessDTO();
-        InstitutionChannelProcess institutionChannelProcess = new InstitutionChannelProcess();
+        PaymentMethodDTO paymentMethodDTO = paymentMethodService.getPaymentMethodByMethod(requestDTO.getPaymentMethod());
 
-        when(institutionChannelProcessRepository.existsByInstitutionChannelIdAndInstitutionProcessId(requestDTO.getInstitutionChannelId(), requestDTO.getInstitutionProcessId()))
-                .thenReturn(false);
-        when(institutionProcessService.getInstitutionProcessById(requestDTO.getInstitutionProcessId())).thenReturn(institutionProcessDTO);
-        when(institutionChannelService.getInstitutionChannelById(requestDTO.getInstitutionChannelId())).thenReturn(institutionChannelDTO);
-        when(institutionChannelProcessMapper.toDTO(requestDTO)).thenReturn(institutionChannelProcessDTO);
-        when(institutionChannelProcessMapper.toEntity(institutionChannelProcessDTO)).thenReturn(institutionChannelProcess);
-        when(institutionChannelProcessRepository.save(institutionChannelProcess)).thenReturn(institutionChannelProcess);
-        when(institutionChannelProcessMapper.toDTO(institutionChannelProcess)).thenReturn(institutionChannelProcessDTO);
+        if (paymentMethodDTO == null) {
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PAYMENT_METHOD_NOT_FOUND);
 
-        InstitutionChannelProcessDTO result = adminInstitutionChnlProccesService.createInstitutionChannelProcces(requestDTO);
+        }
+        institutionChannelPymMethodDTO.setPaymentMethod(paymentMethodDTO);
+        institutionChannelPymMethodDTO.setInstitutionChannel(institutionChannelDTO);
+        institutionChannelPymMethodDTO.setUpdateDate(LocalDateTime.now());
+        institutionChannelPymMethodDTO.setUpdatedBy(requestDTO.getUpdateUser());
+        institutionChannelPymMethodDTO.setIsActive(requestDTO.getIsActive());
+        institutionChannelPymMethodDTO.setBlockDayStrategyCode(requestDTO.getBlockDayStrategyCode());
+        institutionChannelPymMethodDTO.setAccountingTemplateCode(requestDTO.getAccountingTemplateCode());
+        institutionChannelPymMethodDTO.setBlockDayCount(requestDTO.getBlockDayCount());
+        institutionChannelPymMethodDTO.setBlockDayType(requestDTO.getBlockDayType());
+        institutionChannelPymMethodDTO.setProfitShareRate(requestDTO.getProfitShareRate());
 
-        assertNotNull(result);
-        assertEquals(institutionChannelProcessDTO, result);
-        verify(institutionChannelProcessRepository, times(1)).existsByInstitutionChannelIdAndInstitutionProcessId(requestDTO.getInstitutionChannelId(), requestDTO.getInstitutionProcessId());
-        verify(institutionProcessService, times(1)).getInstitutionProcessById(requestDTO.getInstitutionProcessId());
-        verify(institutionChannelService, times(1)).getInstitutionChannelById(requestDTO.getInstitutionChannelId());
-        verify(institutionChannelProcessMapper, times(1)).toDTO(requestDTO);
-        verify(institutionChannelProcessMapper, times(1)).toEntity(institutionChannelProcessDTO);
-        verify(institutionChannelProcessRepository, times(1)).save(institutionChannelProcess);
-        verify(institutionChannelProcessMapper, times(1)).toDTO(institutionChannelProcess);
-    }
+        InstitutionChannelPymMethod institutionChannelPymMethod=
+                institutionChnlPymMethodMapper.toInstitutionChannelPymMethod(institutionChannelPymMethodDTO);
 
-    @Test
-    void updateInstitutionChannelProcces_shouldThrowDataNotFoundException_whenInstitutionChannelProcessDoesNotExist() {
-        UpdateInstitutionChannelProcessRequestDTO requestDTO = new UpdateInstitutionChannelProcessRequestDTO();
-        requestDTO.setId(1L);
-
-        when(institutionChannelProcessRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
-
-        assertThrows(DataNotFoundException.class, () -> adminInstitutionChnlProccesService.updateInstitutionChannelProcces(requestDTO));
-        verify(institutionChannelProcessRepository, times(1)).findById(requestDTO.getId());
-    }
-
-    @Test
-    void updateInstitutionChannelProcces_shouldReturnUpdatedInstitutionChannelProcessDTO_whenSuccessful() throws MicroException {
-        UpdateInstitutionChannelProcessRequestDTO requestDTO = new UpdateInstitutionChannelProcessRequestDTO();
-        requestDTO.setId(1L);
-        requestDTO.setInstitutionChannelId(1L);
-        requestDTO.setInstitutionProcessId(2L);
-        requestDTO.setWorkingStartTime("09:00");
-        requestDTO.setWorkingFinishTime("18:00");
-        requestDTO.setIsActive(true);
-        requestDTO.setUpdateUser("user");
-
-        InstitutionChannelProcess existingInstitutionChannelProcess = new InstitutionChannelProcess();
-        InstitutionChannelProcessDTO existingInstitutionChannelProcessDTO = new InstitutionChannelProcessDTO();
-        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
-        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
-        InstitutionChannelProcess updatedInstitutionChannelProcess = new InstitutionChannelProcess();
-        InstitutionChannelProcessDTO updatedInstitutionChannelProcessDTO = new InstitutionChannelProcessDTO();
-
-        when(institutionChannelProcessRepository.findById(requestDTO.getId())).thenReturn(Optional.of(existingInstitutionChannelProcess));
-        when(institutionProcessService.getInstitutionProcessById(requestDTO.getInstitutionProcessId())).thenReturn(institutionProcessDTO);
-        when(institutionChannelService.getInstitutionChannelById(requestDTO.getInstitutionChannelId())).thenReturn(institutionChannelDTO);
-        when(institutionChannelProcessMapper.toDTO(existingInstitutionChannelProcess)).thenReturn(existingInstitutionChannelProcessDTO);
-        when(institutionChannelProcessMapper.toEntity(existingInstitutionChannelProcessDTO)).thenReturn(updatedInstitutionChannelProcess);
-        when(institutionChannelProcessRepository.save(updatedInstitutionChannelProcess)).thenReturn(updatedInstitutionChannelProcess);
-        when(institutionChannelProcessMapper.toDTO(updatedInstitutionChannelProcess)).thenReturn(updatedInstitutionChannelProcessDTO);
-
-        InstitutionChannelProcessDTO result = adminInstitutionChnlProccesService.updateInstitutionChannelProcces(requestDTO);
-
-        assertNotNull(result);
-        assertEquals(updatedInstitutionChannelProcessDTO, result);
-        verify(institutionChannelProcessRepository, times(1)).findById(requestDTO.getId());
-        verify(institutionProcessService, times(1)).getInstitutionProcessById(requestDTO.getInstitutionProcessId());
-        verify(institutionChannelService, times(1)).getInstitutionChannelById(requestDTO.getInstitutionChannelId());
-        verify(institutionChannelProcessMapper, times(1)).toDTO(existingInstitutionChannelProcess);
-        verify(institutionChannelProcessMapper, times(1)).toEntity(existingInstitutionChannelProcessDTO);
-        verify(institutionChannelProcessRepository, times(1)).save(updatedInstitutionChannelProcess);
-        verify(institutionChannelProcessMapper, times(1)).toDTO(updatedInstitutionChannelProcess);
+        institutionChannelPymMethod= institutionChannelPymMethodRepository.save(institutionChannelPymMethod);
+        return institutionChnlPymMethodMapper.toDTO(institutionChannelPymMethod);
     }
 }
