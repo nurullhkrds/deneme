@@ -3,122 +3,69 @@ package com.ykb.payments.bill.transaction.institution.admin.web;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionProcessMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionProcessService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionProcessRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionProcessRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionProcessRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionProcessRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionProcessWebDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionProcessDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionUserIntfMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionUserIntfService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionUserIntfRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionUserIntfRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionUserIntfRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionUserIntfRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionUserIntfWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionUserIntfDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+@RestController
+@RequestMapping("/admin/InstitutionUserIntf")
+public class AdminInstitutionUserIntfController {
 
-public class AdminInstitutionProcessControllerTest {
 
-    @InjectMocks
-    private AdminInstitutionProcessController adminInstitutionProcessController;
+    private final AdminInstitutionUserIntfService institutionUserIntfService;
 
-    @Mock
-    private AdminInstitutionProcessService institutionProcessService;
+    private final AdminInstitutionUserIntfMapper institutionUserIntfMapper;
 
-    @Mock
-    private AdminInstitutionProcessMapper institutionProcessMapper;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminInstitutionUserIntfController(AdminInstitutionUserIntfService institutionUserIntfService, AdminInstitutionUserIntfMapper institutionUserIntfMapper) {
+        this.institutionUserIntfService = institutionUserIntfService;
+        this.institutionUserIntfMapper = institutionUserIntfMapper;
     }
 
-    @Test
-    void getAllInstitutionProcess_ShouldReturnListOfInstitutionProcessWebDTO() {
-        List<InstitutionProcessDTO> institutionProcessDTOList = List.of(new InstitutionProcessDTO());
-        List<InstitutionProcessWebDTO> institutionProcessWebDTOList = List.of(new InstitutionProcessWebDTO());
 
-        when(institutionProcessService.getAllInstitutionProcess()).thenReturn(institutionProcessDTOList);
-        when(institutionProcessMapper.toWebDTOList(institutionProcessDTOList)).thenReturn(institutionProcessWebDTOList);
-
-        ResponseEntity<DataResult<List<InstitutionProcessWebDTO>>> response = adminInstitutionProcessController.getAllInstitutionProcess();
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionProcessWebDTOList, response.getBody().getData());
-        verify(institutionProcessService, times(1)).getAllInstitutionProcess();
-        verify(institutionProcessMapper, times(1)).toWebDTOList(institutionProcessDTOList);
+    @GetMapping("getAllInstitutionUserIntfs")
+    public ResponseEntity<DataResult<List<InstitutionUserIntfWebDTO>>> getAllInstitutionUserIntfs(){
+        List<InstitutionUserIntfWebDTO> webDTO = institutionUserIntfService.getAllInstitutionUserIntfs();
+        DataResult<List<InstitutionUserIntfWebDTO>> resultDTO= new DataResult<>(ResultConstant.DATA_LISTED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
-    @Test
-    void getInstitutionProcessById_ShouldReturnInstitutionProcessWebDTO() {
-        Long id = 1L;
-        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
-        InstitutionProcessWebDTO institutionProcessWebDTO = new InstitutionProcessWebDTO();
 
-        when(institutionProcessService.getInstitutionProcessById(id)).thenReturn(institutionProcessDTO);
-        when(institutionProcessMapper.toWebDTO(institutionProcessDTO)).thenReturn(institutionProcessWebDTO);
-
-        ResponseEntity<DataResult<InstitutionProcessWebDTO>> response = adminInstitutionProcessController.getInstitutionProcessById(id);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionProcessWebDTO, response.getBody().getData());
-        verify(institutionProcessService, times(1)).getInstitutionProcessById(id);
-        verify(institutionProcessMapper, times(1)).toWebDTO(institutionProcessDTO);
+    @GetMapping("getInstitutionUserIntfById")
+    public ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> getInstitutionUserIntfById(@RequestParam Long id){
+        InstitutionUserIntfDTO dto= institutionUserIntfService.getInstitutionUserIntfById(id);
+        InstitutionUserIntfWebDTO webDTO = institutionUserIntfMapper.toWebDTO(dto);
+        DataResult<InstitutionUserIntfWebDTO> resultDTO= new DataResult<>(ResultConstant.DATA_LISTED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
-    @Test
-    void createInstitutionProcess_ShouldReturnCreatedInstitutionProcessWebDTO() throws MicroException {
-        CreateInstitutionProcessRequest request = new CreateInstitutionProcessRequest();
-        CreateInstitutionProcessRequestDTO requestDTO = new CreateInstitutionProcessRequestDTO();
-        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
-        InstitutionProcessWebDTO institutionProcessWebDTO = new InstitutionProcessWebDTO();
-
-        when(institutionProcessMapper.toRequestDTO(request)).thenReturn(requestDTO);
-        when(institutionProcessService.createInstitutionProcess(requestDTO)).thenReturn(institutionProcessDTO);
-        when(institutionProcessMapper.toWebDTO(institutionProcessDTO)).thenReturn(institutionProcessWebDTO);
-
-        ResponseEntity<DataResult<InstitutionProcessWebDTO>> response = adminInstitutionProcessController.createInstitutionProcess(request);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionProcessWebDTO, response.getBody().getData());
-        verify(institutionProcessMapper, times(1)).toRequestDTO(request);
-        verify(institutionProcessService, times(1)).createInstitutionProcess(requestDTO);
-        verify(institutionProcessMapper, times(1)).toWebDTO(institutionProcessDTO);
+    @PostMapping("createInstitutionUserIntf")
+    public ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> createInstitutionUserIntf(@RequestBody CreateInstitutionUserIntfRequest request) throws MicroException {
+        CreateInstitutionUserIntfRequestDTO requestDTO = institutionUserIntfMapper.toCreateDTO(request);
+        InstitutionUserIntfDTO dto= institutionUserIntfService.createInstitutionUserIntf(requestDTO);
+        InstitutionUserIntfWebDTO webDTO = institutionUserIntfMapper.toWebDTO(dto);
+        DataResult<InstitutionUserIntfWebDTO> resultDTO= new DataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
-    @Test
-    void updateInstitutionProcess_ShouldReturnUpdatedInstitutionProcessWebDTO() throws MicroException {
-        UpdateInstitutionProcessRequest request = new UpdateInstitutionProcessRequest();
-        UpdateInstitutionProcessRequestDTO requestDTO = new UpdateInstitutionProcessRequestDTO();
-        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
-        InstitutionProcessWebDTO institutionProcessWebDTO = new InstitutionProcessWebDTO();
 
-        when(institutionProcessMapper.toRequestDTO(request)).thenReturn(requestDTO);
-        when(institutionProcessService.updateInstitutionProcess(requestDTO)).thenReturn(institutionProcessDTO);
-        when(institutionProcessMapper.toWebDTO(institutionProcessDTO)).thenReturn(institutionProcessWebDTO);
-
-        ResponseEntity<DataResult<InstitutionProcessWebDTO>> response = adminInstitutionProcessController.updateInstitutionProcess(request);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionProcessWebDTO, response.getBody().getData());
-        verify(institutionProcessMapper, times(1)).toRequestDTO(request);
-        verify(institutionProcessService, times(1)).updateInstitutionProcess(requestDTO);
-        verify(institutionProcessMapper, times(1)).toWebDTO(institutionProcessDTO);
+    @PutMapping("updateInstitutionUserIntf")
+    public ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> updateInstitutionUserIntf(@RequestBody UpdateInstitutionUserIntfRequest request) throws MicroException{
+        UpdateInstitutionUserIntfRequestDTO requestDTO = institutionUserIntfMapper.toUpdateDTO(request);
+        InstitutionUserIntfDTO dto= institutionUserIntfService.updateInstitutionUserIntf(requestDTO);
+        InstitutionUserIntfWebDTO webDTO = institutionUserIntfMapper.toWebDTO(dto);
+        DataResult<InstitutionUserIntfWebDTO> resultDTO= new DataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
+
+
 }
