@@ -3,14 +3,14 @@ package com.ykb.payments.bill.transaction.institution.admin.web;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionDebtTypeMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionDebtTypeService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionDebtTypeRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionDebtTypeRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionDebtTypeRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionDebtTypeRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionDebtTypeWebDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionFeatureMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionFeatureService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionFeatureRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionFeatureRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionFeatureRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionFeatureRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionFeatureWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionFeatureDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,53 +19,54 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/institutionDebtTypes")
-public class AdminInstitutionDebtTypeController {
+@RequestMapping("/admin/institutionFeatures")
+public class AdminInstitutionFeatureController {
 
-    private final AdminInstitutionDebtTypeService institutionDebtTypeService;
-    private final AdminInstitutionDebtTypeMapper institutionDebtTypeMapper;
+    private final AdminInstitutionFeatureService institutionFeatureService;
+    private final AdminInstitutionFeatureMapper institutionFeatureMapper;
 
-    public AdminInstitutionDebtTypeController(AdminInstitutionDebtTypeService institutionDebtTypeService, AdminInstitutionDebtTypeMapper institutionDebtTypeMapper) {
-        this.institutionDebtTypeService = institutionDebtTypeService;
-        this.institutionDebtTypeMapper = institutionDebtTypeMapper;
+
+    public AdminInstitutionFeatureController(AdminInstitutionFeatureService institutionFeatureService, AdminInstitutionFeatureMapper institutionFeatureMapper) {
+        this.institutionFeatureService = institutionFeatureService;
+        this.institutionFeatureMapper = institutionFeatureMapper;
     }
 
 
-    @GetMapping("getAllInstitutionDebtTypes")
-    public ResponseEntity<DataResult<List<InstitutionDebtTypeWebDTO>>> getAllInstitutionDebtTypes() {
-        List<InstitutionDebtTypeDTO> institutionDebtTypeDTOS = institutionDebtTypeService.getAllInstitutionDebtTypes();
-        List<InstitutionDebtTypeWebDTO> institutionDebtTypeWebDTOS= institutionDebtTypeMapper.toWebDTOList(institutionDebtTypeDTOS);
-        DataResult<List<InstitutionDebtTypeWebDTO>> resultDTO=new DataResult<>
-                (ResultConstant.DATA_LISTED.getMessage(),institutionDebtTypeWebDTOS);
+    @GetMapping("/getAllInstitutionFeatures")
+    public ResponseEntity<DataResult<List<InstitutionFeatureWebDTO>>> getAllInstitutionFeatures() {
+        List<InstitutionFeatureDTO> institutionFeatureDTOS = institutionFeatureService.getAllInstitutionFeatures();
+        List<InstitutionFeatureWebDTO> institutionFeatureWebDTOList = institutionFeatureMapper.toWebDTOList(institutionFeatureDTOS);
+        DataResult<List<InstitutionFeatureWebDTO>> resultDTO = new DataResult<>
+                (ResultConstant.DATA_LISTED.getMessage(), institutionFeatureWebDTOList);
         return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
-    @GetMapping("getInstitutionDebtTypeById")
-    public ResponseEntity<DataResult<InstitutionDebtTypeWebDTO>> getInstitutionDebtTypeById(@RequestParam Long id) throws MicroException{
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = institutionDebtTypeService.getInstitutionDebtTypeById(id);
-        InstitutionDebtTypeWebDTO institutionDebtTypeWebDTO=institutionDebtTypeMapper.toWebDTO(institutionDebtTypeDTO);
-        DataResult<InstitutionDebtTypeWebDTO> resultDTO= new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(),institutionDebtTypeWebDTO );
+    @GetMapping("/getInstitutionFeatureById")
+    public ResponseEntity<DataResult<InstitutionFeatureWebDTO>> getInstitutionFeatureById(@RequestParam Long institutionFeatureId) throws MicroException {
+        InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureService.getInstitutionFeatureById(institutionFeatureId);
+        InstitutionFeatureWebDTO institutionFeatureWebDTO = institutionFeatureMapper.toWebDTO(institutionFeatureDTO);
+        DataResult<InstitutionFeatureWebDTO> resultDTO = new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), institutionFeatureWebDTO);
         return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
+    @PostMapping("/createInstitutionFeature")
+    public ResponseEntity<DataResult<InstitutionFeatureWebDTO>> createInstitutionFeature(@RequestBody @Valid CreateInstitutionFeatureRequest request) throws MicroException {
+        CreateInstitutionFeatureRequestDTO requestDTO= institutionFeatureMapper.toCreateInstitutionFeatureRequestDTO(request);
+        InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureService.createInstitutionFeature(requestDTO);
+        InstitutionFeatureWebDTO institutionFeatureWebDTO = institutionFeatureMapper.toWebDTO(institutionFeatureDTO);
+        DataResult<InstitutionFeatureWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_FEATURE_CREATED.getMessage(),institutionFeatureWebDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
+    }
 
-    @PostMapping("createInstitutionDebtType")
-    public ResponseEntity<DataResult<InstitutionDebtTypeWebDTO>> createInstitutionDebtType(@RequestBody @Valid CreateInstitutionDebtTypeRequest request) throws MicroException {
-        CreateInstitutionDebtTypeRequestDTO requestDTO =institutionDebtTypeMapper.toCreateInstitutionDebtTypeRequestDTO(request);
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = institutionDebtTypeService.createInstitutionDebtType(requestDTO);
-        InstitutionDebtTypeWebDTO institutionDebtTypeWebDTO= institutionDebtTypeMapper.toWebDTO(institutionDebtTypeDTO);
-        DataResult<InstitutionDebtTypeWebDTO> resultDTO= new DataResult<>(ResultConstant.INSTITUTION_DEBT_TYPE_CREATED.getMessage(),institutionDebtTypeWebDTO );
+    @PutMapping("/updateInstitutionFeature")
+    public ResponseEntity<DataResult<InstitutionFeatureWebDTO>> updateInstitutionFeature(@RequestBody @Valid UpdateInstitutionFeatureRequest request) throws MicroException {
+        UpdateInstitutionFeatureRequestDTO requestDTO = institutionFeatureMapper.toUpdateInstitutionFeatureRequestDTO(request);
+        InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureService.updateInstitutionFeature(requestDTO);
+        InstitutionFeatureWebDTO institutionFeatureWebDTO = institutionFeatureMapper.toWebDTO(institutionFeatureDTO);
+        DataResult<InstitutionFeatureWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_FEATURE_UPDATED.getMessage(),institutionFeatureWebDTO);
         return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
-    @PutMapping("updateInstitutionDebtType")
-    public ResponseEntity<DataResult<InstitutionDebtTypeWebDTO>> updateInstitutionDebtType(@RequestBody @Valid UpdateInstitutionDebtTypeRequest request) throws MicroException {
-        UpdateInstitutionDebtTypeRequestDTO requestDTO = institutionDebtTypeMapper.toUpdateInstitutionDebtTypeRequestDTO(request);
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = institutionDebtTypeService.updateInstitutionDebtType(requestDTO);
-        InstitutionDebtTypeWebDTO institutionDebtTypeWebDTO= institutionDebtTypeMapper.toWebDTO(institutionDebtTypeDTO);
-        DataResult<InstitutionDebtTypeWebDTO> resultDTO= new DataResult<>(ResultConstant.INSTITUTION_DEBT_TYPE_UPDATED.getMessage(),institutionDebtTypeWebDTO );
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
-    }
 
 
 }
