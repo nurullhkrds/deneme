@@ -1,70 +1,76 @@
 package com.ykb.payments.bill.transaction.institution.admin.web;
 
+
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionFeatureMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionFeatureService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionFeatureRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionFeatureRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionFeatureRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionFeatureRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionFeatureWebDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionFeatureDTO;
-import org.springframework.http.HttpStatus;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionProcessMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionProcessService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionProcessRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionProcessRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionProcessRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionProcessRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionProcessWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionProcessDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/institutionFeatures")
-public class AdminInstitutionFeatureController {
+@RequestMapping("/admin/InstitutionProcess")
+public class AdminInstitutionProcessController {
 
-    private final AdminInstitutionFeatureService institutionFeatureService;
-    private final AdminInstitutionFeatureMapper institutionFeatureMapper;
+    private final AdminInstitutionProcessService institutionProcessService;
+    private final AdminInstitutionProcessMapper institutionProcessMapper;
 
-
-    public AdminInstitutionFeatureController(AdminInstitutionFeatureService institutionFeatureService, AdminInstitutionFeatureMapper institutionFeatureMapper) {
-        this.institutionFeatureService = institutionFeatureService;
-        this.institutionFeatureMapper = institutionFeatureMapper;
+    public AdminInstitutionProcessController(AdminInstitutionProcessService institutionProcessService, AdminInstitutionProcessMapper institutionProcessMapper) {
+        this.institutionProcessService = institutionProcessService;
+        this.institutionProcessMapper = institutionProcessMapper;
     }
 
 
-    @GetMapping("/getAllInstitutionFeatures")
-    public ResponseEntity<DataResult<List<InstitutionFeatureWebDTO>>> getAllInstitutionFeatures() {
-        List<InstitutionFeatureDTO> institutionFeatureDTOS = institutionFeatureService.getAllInstitutionFeatures();
-        List<InstitutionFeatureWebDTO> institutionFeatureWebDTOList = institutionFeatureMapper.toWebDTOList(institutionFeatureDTOS);
-        DataResult<List<InstitutionFeatureWebDTO>> resultDTO = new DataResult<>
-                (ResultConstant.DATA_LISTED.getMessage(), institutionFeatureWebDTOList);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    @GetMapping("/getAllInstitutionProcess")
+    public ResponseEntity<DataResult<List<InstitutionProcessWebDTO>>> getAllInstitutionProcess(){
+        List<InstitutionProcessDTO> dto= institutionProcessService.getAllInstitutionProcess();
+        List<InstitutionProcessWebDTO> webDTO= institutionProcessMapper.toWebDTOList(dto);
+        DataResult<List<InstitutionProcessWebDTO>> resultDTO =
+                new DataResult<>(ResultConstant.DATA_LISTED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
-    @GetMapping("/getInstitutionFeatureById")
-    public ResponseEntity<DataResult<InstitutionFeatureWebDTO>> getInstitutionFeatureById(@RequestParam Long institutionFeatureId) throws MicroException {
-        InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureService.getInstitutionFeatureById(institutionFeatureId);
-        InstitutionFeatureWebDTO institutionFeatureWebDTO = institutionFeatureMapper.toWebDTO(institutionFeatureDTO);
-        DataResult<InstitutionFeatureWebDTO> resultDTO = new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), institutionFeatureWebDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+
+    @GetMapping("/getInstitutionProcessById")
+    public ResponseEntity<DataResult<InstitutionProcessWebDTO>> getInstitutionProcessById(@RequestParam Long id){
+        InstitutionProcessDTO dto= institutionProcessService.getInstitutionProcessById(id);
+        InstitutionProcessWebDTO webDTO= institutionProcessMapper.toWebDTO(dto);
+        DataResult<InstitutionProcessWebDTO> resultDTO =
+                new DataResult<>(ResultConstant.DATA_LISTED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
-    @PostMapping("/createInstitutionFeature")
-    public ResponseEntity<DataResult<InstitutionFeatureWebDTO>> createInstitutionFeature(@RequestBody @Valid CreateInstitutionFeatureRequest request) throws MicroException {
-        CreateInstitutionFeatureRequestDTO requestDTO= institutionFeatureMapper.toCreateInstitutionFeatureRequestDTO(request);
-        InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureService.createInstitutionFeature(requestDTO);
-        InstitutionFeatureWebDTO institutionFeatureWebDTO = institutionFeatureMapper.toWebDTO(institutionFeatureDTO);
-        DataResult<InstitutionFeatureWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_FEATURE_CREATED.getMessage(),institutionFeatureWebDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
+
+    @PostMapping("/createInstitutionProcess")
+    public ResponseEntity<DataResult<InstitutionProcessWebDTO>> createInstitutionProcess(@RequestBody CreateInstitutionProcessRequest request)
+    throws MicroException {
+        CreateInstitutionProcessRequestDTO requestDTO= institutionProcessMapper.toRequestDTO(request);
+        InstitutionProcessDTO dto= institutionProcessService.createInstitutionProcess(requestDTO);
+        InstitutionProcessWebDTO webDTO= institutionProcessMapper.toWebDTO(dto);
+        DataResult<InstitutionProcessWebDTO> resultDTO =
+                new DataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
-    @PutMapping("/updateInstitutionFeature")
-    public ResponseEntity<DataResult<InstitutionFeatureWebDTO>> updateInstitutionFeature(@RequestBody @Valid UpdateInstitutionFeatureRequest request) throws MicroException {
-        UpdateInstitutionFeatureRequestDTO requestDTO = institutionFeatureMapper.toUpdateInstitutionFeatureRequestDTO(request);
-        InstitutionFeatureDTO institutionFeatureDTO = institutionFeatureService.updateInstitutionFeature(requestDTO);
-        InstitutionFeatureWebDTO institutionFeatureWebDTO = institutionFeatureMapper.toWebDTO(institutionFeatureDTO);
-        DataResult<InstitutionFeatureWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_FEATURE_UPDATED.getMessage(),institutionFeatureWebDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+
+    @PutMapping("/updateInstitutionProcess")
+    public ResponseEntity<DataResult<InstitutionProcessWebDTO>> updateInstitutionProcess(@RequestBody UpdateInstitutionProcessRequest request)
+            throws MicroException{
+        UpdateInstitutionProcessRequestDTO requestDTO= institutionProcessMapper.toRequestDTO(request);
+        InstitutionProcessDTO dto= institutionProcessService.updateInstitutionProcess(requestDTO);
+        InstitutionProcessWebDTO webDTO= institutionProcessMapper.toWebDTO(dto);
+        DataResult<InstitutionProcessWebDTO> resultDTO =
+                new DataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(),webDTO);
+        return ResponseEntity.ok(resultDTO);
     }
 
 
