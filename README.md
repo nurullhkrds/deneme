@@ -3,119 +3,72 @@ package com.ykb.payments.bill.transaction.institution.admin.web;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionChnnlPymMthdAccMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionChnlPymMthdAccService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionChnlPymMthdAccRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionChnlPymMthdAccRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionChnlPymMthdAccRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionChnlPymMthdAccRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChnlPymMthdAccWebDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionChnnlPymMthdAccDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionChnnlPymMthdPscMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionChnlPymMthdAPscService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionChnlPymMthdPscRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionChnlPymMthdPscRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionChnlPymMthdPscRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionChnlPymMthdPscRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChnlPymMthdPscWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionChnnlPymMthdPscDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+@RestController
+@RequestMapping("/admin/institutionChannelPymMethodsPsc")
+public class AdminInstitutionChnlPymMthdPscController {
 
-public class AdminInstitutionChnlPymMthdAccControllerTest {
+    private final AdminInstitutionChnlPymMthdAPscService institutionChnlPymMthdPscService;
+    private final AdminInstitutionChnnlPymMthdPscMapper institutionChnnlPymMthdPscMapper;
 
-    @InjectMocks
-    private AdminInstitutionChnlPymMthdAccController adminInstitutionChnlPymMthdAccController;
-
-    @Mock
-    private AdminInstitutionChnlPymMthdAccService institutionChnlPymMthdAccService;
-
-    @Mock
-    private AdminInstitutionChnnlPymMthdAccMapper institutionChnnlPymMthdAccMapper;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminInstitutionChnlPymMthdPscController(AdminInstitutionChnlPymMthdAPscService institutionChnlPymMthdPscService, AdminInstitutionChnnlPymMthdPscMapper institutionChnnlPymMthdPscMapper) {
+        this.institutionChnlPymMthdPscService = institutionChnlPymMthdPscService;
+        this.institutionChnnlPymMthdPscMapper = institutionChnnlPymMthdPscMapper;
     }
 
-    @Test
-    void getAllInstitutionChannelPymMethodsAcc_ShouldReturnListOfInstitutionChnlPymMthdAccWebDTO() {
-        List<InstitutionChnlPymMthdAccWebDTO> institutionChnlPymMthdAccWebDTOList = List.of(new InstitutionChnlPymMthdAccWebDTO());
 
-        when(institutionChnlPymMthdAccService.getAllInstitutionChannelPymMethodsAcc()).thenReturn(institutionChnlPymMthdAccWebDTOList);
-
-        ResponseEntity<DataResult<List<InstitutionChnlPymMthdAccWebDTO>>> response = adminInstitutionChnlPymMthdAccController.getAllInstitutionChannelPymMethodsAcc();
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionChnlPymMthdAccWebDTOList, response.getBody().getData());
-        verify(institutionChnlPymMthdAccService, times(1)).getAllInstitutionChannelPymMethodsAcc();
+    @GetMapping("getAllInstitutionChannelPymMethodsPsc")
+    public ResponseEntity<DataResult<List<InstitutionChnlPymMthdPscWebDTO>>> getAllInstitutionChannelPymMethodsPsc() {
+        List<InstitutionChnlPymMthdPscWebDTO> webDTOList = institutionChnlPymMthdPscService.getAllInstitutionChnlPymMthdAPsc();
+        DataResult<List<InstitutionChnlPymMthdPscWebDTO>> resultDTO = new DataResult<>
+                (ResultConstant.DATA_LISTED.getMessage(), webDTOList);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
-    @Test
-    void getInstitutionChannelPymMethodAccById_ShouldReturnInstitutionChnlPymMthdAccWebDTO() {
-        Long id = 1L;
-        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
-        InstitutionChnlPymMthdAccWebDTO institutionChnlPymMthdAccWebDTO = new InstitutionChnlPymMthdAccWebDTO();
-
-        when(institutionChnlPymMthdAccService.getInstitutionChannelPymMethodAccById(id)).thenReturn(institutionChnnlPymMthdAccDTO);
-        when(institutionChnnlPymMthdAccMapper.toWebDTO(institutionChnnlPymMthdAccDTO)).thenReturn(institutionChnlPymMthdAccWebDTO);
-
-        ResponseEntity<DataResult<InstitutionChnlPymMthdAccWebDTO>> response = adminInstitutionChnlPymMthdAccController.getInstitutionChannelPymMethodAccById(id);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.DATA_RETRIEVED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionChnlPymMthdAccWebDTO, response.getBody().getData());
-        verify(institutionChnlPymMthdAccService, times(1)).getInstitutionChannelPymMethodAccById(id);
-        verify(institutionChnnlPymMthdAccMapper, times(1)).toWebDTO(institutionChnnlPymMthdAccDTO);
+    @GetMapping("getInstitutionChannelPymMethodPscById")
+    public ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> getInstitutionChannelPymMethodPscById(Long id) {
+        InstitutionChnnlPymMthdPscDTO dto = institutionChnlPymMthdPscService.getInstitutionChnlPymMthdAPscById(id);
+        InstitutionChnlPymMthdPscWebDTO webDTO = institutionChnnlPymMthdPscMapper.toWebDTO(dto);
+        DataResult<InstitutionChnlPymMthdPscWebDTO> resultDTO = new DataResult<>
+                (ResultConstant.DATA_RETRIEVED.getMessage(), webDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
-    @Test
-    void createInstitutionChannelPymMethodAcc_ShouldReturnCreatedInstitutionChnlPymMthdAccWebDTO() throws MicroException {
-        CreateInstitutionChnlPymMthdAccRequest request = new CreateInstitutionChnlPymMthdAccRequest();
-        CreateInstitutionChnlPymMthdAccRequestDTO requestDTO = new CreateInstitutionChnlPymMthdAccRequestDTO();
-        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
-        InstitutionChnlPymMthdAccWebDTO institutionChnlPymMthdAccWebDTO = new InstitutionChnlPymMthdAccWebDTO();
+    @PostMapping("createInstitutionChannelPymMethodPsc")
+    public ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> createInstitutionChannelPymMethodPsc(@RequestBody CreateInstitutionChnlPymMthdPscRequest request) throws MicroException {
 
-        when(institutionChnnlPymMthdAccMapper.toRequestDTO(request)).thenReturn(requestDTO);
-        when(institutionChnlPymMthdAccService.createInstitutionChannelPymMethodAcc(requestDTO)).thenReturn(institutionChnnlPymMthdAccDTO);
-        when(institutionChnnlPymMthdAccMapper.toWebDTO(institutionChnnlPymMthdAccDTO)).thenReturn(institutionChnlPymMthdAccWebDTO);
-
-        ResponseEntity<DataResult<InstitutionChnlPymMthdAccWebDTO>> response = adminInstitutionChnlPymMthdAccController.createInstitutionChannelPymMethodAcc(request);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(ResultConstant.INSTITUTION_CHNNL_PYM_MTHD_ACC_CREATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionChnlPymMthdAccWebDTO, response.getBody().getData());
-        verify(institutionChnnlPymMthdAccMapper, times(1)).toRequestDTO(request);
-        verify(institutionChnlPymMthdAccService, times(1)).createInstitutionChannelPymMethodAcc(requestDTO);
-        verify(institutionChnnlPymMthdAccMapper, times(1)).toWebDTO(institutionChnnlPymMthdAccDTO);
+        CreateInstitutionChnlPymMthdPscRequestDTO requestDTO=institutionChnnlPymMthdPscMapper.toRequestDTO(request);
+        InstitutionChnnlPymMthdPscDTO dto = institutionChnlPymMthdPscService.createInstitutionChnlPymMthdPsc(requestDTO);
+        InstitutionChnlPymMthdPscWebDTO webDTO =institutionChnnlPymMthdPscMapper.toWebDTO(dto);
+        DataResult<InstitutionChnlPymMthdPscWebDTO> resultDTO = new DataResult<>
+                (ResultConstant.SUCCESSFULLY_ADDED.getMessage(), webDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
     }
 
-    @Test
-    void updateInstitutionChannelPymMethodAcc_ShouldReturnUpdatedInstitutionChnlPymMthdAccWebDTO() throws MicroException {
-        UpdateInstitutionChnlPymMthdAccRequest request = new UpdateInstitutionChnlPymMthdAccRequest();
-        UpdateInstitutionChnlPymMthdAccRequestDTO requestDTO = new UpdateInstitutionChnlPymMthdAccRequestDTO();
-        InstitutionChnnlPymMthdAccDTO institutionChnnlPymMthdAccDTO = new InstitutionChnnlPymMthdAccDTO();
-        InstitutionChnlPymMthdAccWebDTO institutionChnlPymMthdAccWebDTO = new InstitutionChnlPymMthdAccWebDTO();
-
-        when(institutionChnnlPymMthdAccMapper.toRequestDTO(request)).thenReturn(requestDTO);
-        when(institutionChnlPymMthdAccService.updateInstitutionChannelPymMethodAcc(requestDTO)).thenReturn(institutionChnnlPymMthdAccDTO);
-        when(institutionChnnlPymMthdAccMapper.toWebDTO(institutionChnnlPymMthdAccDTO)).thenReturn(institutionChnlPymMthdAccWebDTO);
-
-        ResponseEntity<DataResult<InstitutionChnlPymMthdAccWebDTO>> response = adminInstitutionChnlPymMthdAccController.updateInstitutionChannelPymMethodAcc(request);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.INSTITUTION_CHNNL_PYM_MTHD_ACC_UPDATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionChnlPymMthdAccWebDTO, response.getBody().getData());
-        verify(institutionChnnlPymMthdAccMapper, times(1)).toRequestDTO(request);
-        verify(institutionChnlPymMthdAccService, times(1)).updateInstitutionChannelPymMethodAcc(requestDTO);
-        verify(institutionChnnlPymMthdAccMapper, times(1)).toWebDTO(institutionChnnlPymMthdAccDTO);
+    @PutMapping("updateInstitutionChannelPymMethodPsc")
+    public ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> updateInstitutionChannelPymMethodPsc(@RequestBody UpdateInstitutionChnlPymMthdPscRequest request) throws MicroException {
+        UpdateInstitutionChnlPymMthdPscRequestDTO requestDTO=institutionChnnlPymMthdPscMapper.toRequestDTO(request);
+        InstitutionChnnlPymMthdPscDTO dto = institutionChnlPymMthdPscService.updateInstitutionChnlPymMthdPsc(requestDTO);
+        InstitutionChnlPymMthdPscWebDTO webDTO = institutionChnnlPymMthdPscMapper.toWebDTO(dto);
+        DataResult<InstitutionChnlPymMthdPscWebDTO> resultDTO = new DataResult<>
+                (ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), webDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
+
+
+
+
 }
