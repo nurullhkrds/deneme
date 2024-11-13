@@ -1,60 +1,41 @@
 package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
+
+import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminProcessMapper;
-import com.ykb.payments.bill.transaction.institution.dto.ProcessDTO;
-import com.ykb.payments.bill.transaction.institution.domain.Process;
-import com.ykb.payments.bill.transaction.institution.repository.ProcessRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import com.ykb.payments.bill.common.exception.BillExceptionsUI;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminProductMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminProductService;
+import com.ykb.payments.bill.transaction.institution.domain.Product;
+import com.ykb.payments.bill.transaction.institution.dto.ProductDTO;
+import com.ykb.payments.bill.transaction.institution.repository.ProductRepository;
+import org.springframework.stereotype.Service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+@Service
+public class AdminProductServiceImpl implements AdminProductService {
 
-public class AdminProcessServiceTest {
 
-    @InjectMocks
-    private AdminProcessServiceImpl adminProcessService;
+    private final ProductRepository productRepository;
+    private final AdminProductMapper productMapper;
 
-    @Mock
-    private ProcessRepository processRepository;
 
-    @Mock
-    private AdminProcessMapper processMapper;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminProductServiceImpl(ProductRepository productRepository, AdminProductMapper productMapper) {
+        this.productRepository = productRepository;
+        this.productMapper = productMapper;
     }
 
-    @Test
-    void getProcessByCode_WhenFound_ShouldReturnDTO() throws MicroException {
-        String code = "PROCESS123";
-        Process processEntity = new Process();
-        ProcessDTO processDTO = new ProcessDTO();
 
-        when(processRepository.findByCode(code)).thenReturn(processEntity);
-        when(processMapper.toDTO(processEntity)).thenReturn(processDTO);
 
-        ProcessDTO result = adminProcessService.getProcessByCode(code);
 
-        assertNotNull(result);
-        verify(processRepository, times(1)).findByCode(code);
-        verify(processMapper, times(1)).toDTO(processEntity);
-    }
+    @Override
+    public ProductDTO getProductByCode(String code) throws MicroException{
 
-    @Test
-    void getProcessByCode_WhenNotFound_ShouldReturnNull() throws MicroException {
-        String code = "PROCESS123";
+        Product entity= productRepository.findByCode(code);
+        if (entity == null){
+           throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PRODUCT_NOT_FOUND);
+        }
+        ProductDTO dto= productMapper.toProductDTO(entity);
+        return dto;
 
-        when(processRepository.findByCode(code)).thenReturn(null);
-
-        ProcessDTO result = adminProcessService.getProcessByCode(code);
-
-        assertNull(result);
-        verify(processRepository, times(1)).findByCode(code);
     }
 }
