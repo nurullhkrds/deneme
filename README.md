@@ -2,9 +2,6 @@ package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
 import com.ykb.architecture.micro.error.exception.DataConflictException;
 import com.ykb.architecture.micro.error.exception.DataNotFoundException;
-import com.ykb.architecture.micro.error.exception.MicroException;
-import com.ykb.payments.bill.common.exception.BillExceptionsUI;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionPymMethodService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminPaymentMethodService;
 import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionPymMethodRequestDTO;
@@ -15,108 +12,124 @@ import com.ykb.payments.bill.transaction.institution.dto.InstitutionPymMethodDTO
 import com.ykb.payments.bill.transaction.institution.dto.PaymentMethodDTO;
 import com.ykb.payments.bill.transaction.institution.mapper.InstitutionPymMethodMapper;
 import com.ykb.payments.bill.transaction.institution.repository.InstitutionPymMethodRepository;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Service
-public class AdminInstitutionPymMethodServiceImpl implements AdminInstitutionPymMethodService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final InstitutionPymMethodRepository institutionPymMethodRepository;
-    private final InstitutionPymMethodMapper institutionPymMethodMapper;
-    private final AdminInstitutionService institutionService;
-    private final AdminPaymentMethodService paymentMethodService;
+public class AdminInstitutionPymMethodServiceImplTest {
 
-    public AdminInstitutionPymMethodServiceImpl(InstitutionPymMethodRepository institutionPymMethodRepository, InstitutionPymMethodMapper institutionPymMethodMapper, AdminInstitutionService institutionService, AdminPaymentMethodService paymentMethodService) {
-        this.institutionPymMethodRepository = institutionPymMethodRepository;
-        this.institutionPymMethodMapper = institutionPymMethodMapper;
-        this.institutionService = institutionService;
-        this.paymentMethodService = paymentMethodService;
+    @InjectMocks
+    private AdminInstitutionPymMethodServiceImpl adminInstitutionPymMethodService;
+
+    @Mock
+    private InstitutionPymMethodRepository institutionPymMethodRepository;
+
+    @Mock
+    private InstitutionPymMethodMapper institutionPymMethodMapper;
+
+    @Mock
+    private AdminInstitutionService institutionService;
+
+    @Mock
+    private AdminPaymentMethodService paymentMethodService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getAllInstitutionPymMethods_ShouldReturnAllMethods() {
+        List<InstitutionPymMethod> pymMethods = List.of(new InstitutionPymMethod());
+        when(institutionPymMethodRepository.findAll()).thenReturn(pymMethods);
+        when(institutionPymMethodMapper.toDTOList(pymMethods)).thenReturn(List.of(new InstitutionPymMethodDTO()));
 
-    @Override
-    public List<InstitutionPymMethodDTO> getAllInstitutionPymMethods() {
-        List<InstitutionPymMethod> institutionPymMethods=institutionPymMethodRepository.findAll();
-        return institutionPymMethodMapper.toDTOList(institutionPymMethods);
+        List<InstitutionPymMethodDTO> result = adminInstitutionPymMethodService.getAllInstitutionPymMethods();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(institutionPymMethodRepository, times(1)).findAll();
+        verify(institutionPymMethodMapper, times(1)).toDTOList(pymMethods);
     }
 
-    @Override
-    public InstitutionPymMethodDTO getInstitutionPymMethodById(Long id) {
-        InstitutionPymMethod institutionPymMethod=institutionPymMethodRepository.findById(id).orElse(null);
-        if(institutionPymMethod!=null){
-            return institutionPymMethodMapper.toDTO(institutionPymMethod);
-        }
+    @Test
+    void getInstitutionPymMethodById_WhenFound_ShouldReturnDTO() {
+        InstitutionPymMethod pymMethod = new InstitutionPymMethod();
+        when(institutionPymMethodRepository.findById(1L)).thenReturn(Optional.of(pymMethod));
+        when(institutionPymMethodMapper.toDTO(pymMethod)).thenReturn(new InstitutionPymMethodDTO());
 
-        return null;
+        InstitutionPymMethodDTO result = adminInstitutionPymMethodService.getInstitutionPymMethodById(1L);
+
+        assertNotNull(result);
+        verify(institutionPymMethodRepository, times(1)).findById(1L);
+        verify(institutionPymMethodMapper, times(1)).toDTO(pymMethod);
     }
 
-    @Override
-    public InstitutionPymMethodDTO createInstitutionPymMethod(CreateInstitutionPymMethodRequestDTO requestDTO) throws MicroException {
-        Optional<InstitutionPymMethod> existingInstitutionPymMethod= institutionPymMethodRepository
-                .findByInstitutionIdAndPymMethod(requestDTO.getInstitutionId(),requestDTO.getPaymentMethod().getValue());
+    @Test
+    void getInstitutionPymMethodById_WhenNotFound_ShouldReturnNull() {
+        when(institutionPymMethodRepository.findById(1L)).thenReturn(Optional.empty());
 
-        if (existingInstitutionPymMethod.isPresent()){
-            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PYM_METHOD);
-        }
+        InstitutionPymMethodDTO result = adminInstitutionPymMethodService.getInstitutionPymMethodById(1L);
 
-        InstitutionDTO institutionDTO= institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-
-        if (institutionDTO == null) {
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
-        }
-
-        PaymentMethodDTO paymentMethodDTO= paymentMethodService.getPaymentMethodByMethod(requestDTO.getPaymentMethod());
-
-        InstitutionPymMethodDTO institutionPymMethodDTO=institutionPymMethodMapper.toDTO(requestDTO);
-        institutionPymMethodDTO.setInstitution(institutionDTO);
-        institutionPymMethodDTO.setPaymentMethod(paymentMethodDTO);
-        institutionPymMethodDTO.setCreateDate(LocalDateTime.now());
-        InstitutionPymMethod institutionPymMethod=institutionPymMethodMapper.toInstitutionPymMethod(institutionPymMethodDTO);
-        institutionPymMethod=institutionPymMethodRepository.save(institutionPymMethod);
-        return institutionPymMethodMapper.toDTO(institutionPymMethod);
+        assertNull(result);
+        verify(institutionPymMethodRepository, times(1)).findById(1L);
     }
 
+    @Test
+    void createInstitutionPymMethod_WhenDuplicate_ShouldThrowException() {
+        CreateInstitutionPymMethodRequestDTO requestDTO = new CreateInstitutionPymMethodRequestDTO();
+        requestDTO.setInstitutionId(1L);
+        requestDTO.setPaymentMethod(new PaymentMethodDTO());
 
-    @Override
-    public InstitutionPymMethodDTO updateInstitutionPymMethod(UpdateInstitutionPymMethodRequestDTO requestDTO) throws MicroException {
+        when(institutionPymMethodRepository.findByInstitutionIdAndPymMethod(any(), any())).thenReturn(Optional.of(new InstitutionPymMethod()));
 
-        InstitutionPymMethodDTO institutionPymMethodDTO = getInstitutionPymMethodById(requestDTO.getId());
-        if (institutionPymMethodDTO == null) {
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_PYM_METHOD_NOT_FOUND);
-        }
-
-        Optional<InstitutionPymMethod> existingInstitutionPymMethod = institutionPymMethodRepository
-                .findByInstitutionIdAndPymMethod(requestDTO.getInstitutionId(), requestDTO.getPaymentMethod().getValue());
-
-        if (existingInstitutionPymMethod.isPresent() && !existingInstitutionPymMethod.get().getId().equals(requestDTO.getId())) {
-            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PYM_METHOD);
-        }
-
-        InstitutionDTO institutionDTO = institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-
-        if (institutionDTO == null) {
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
-        }
-
-        PaymentMethodDTO paymentMethodDTO = paymentMethodService.getPaymentMethodByMethod(requestDTO.getPaymentMethod());
-
-        institutionPymMethodDTO.setInstitution(institutionDTO);
-        institutionPymMethodDTO.setPaymentMethod(paymentMethodDTO);
-        institutionPymMethodDTO.setUpdateDate(LocalDateTime.now());
-        institutionPymMethodDTO.setExpenseCode(requestDTO.getExpenseCode());
-        institutionPymMethodDTO.setIsActive(requestDTO.getIsActive());
-        institutionPymMethodDTO.setUpdatedBy(requestDTO.getUpdateUser());
-
-        InstitutionPymMethod institutionPymMethod = institutionPymMethodMapper.toInstitutionPymMethod(institutionPymMethodDTO);
-        institutionPymMethod = institutionPymMethodRepository.save(institutionPymMethod);
-
-        return institutionPymMethodMapper.toDTO(institutionPymMethod);
-
+        assertThrows(DataConflictException.class, () -> adminInstitutionPymMethodService.createInstitutionPymMethod(requestDTO));
+        verify(institutionPymMethodRepository, times(1)).findByInstitutionIdAndPymMethod(any(), any());
     }
 
+    @Test
+    void updateInstitutionPymMethod_WhenNotFound_ShouldThrowException() {
+        UpdateInstitutionPymMethodRequestDTO requestDTO = new UpdateInstitutionPymMethodRequestDTO();
+        requestDTO.setId(1L);
 
+        when(institutionPymMethodRepository.findById(1L)).thenReturn(Optional.empty());
 
+        assertThrows(DataNotFoundException.class, () -> adminInstitutionPymMethodService.updateInstitutionPymMethod(requestDTO));
+        verify(institutionPymMethodRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void createInstitutionPymMethod_WhenValid_ShouldReturnDTO() throws MicroException {
+        CreateInstitutionPymMethodRequestDTO requestDTO = new CreateInstitutionPymMethodRequestDTO();
+        InstitutionDTO institutionDTO = new InstitutionDTO();
+        PaymentMethodDTO paymentMethodDTO = new PaymentMethodDTO();
+        InstitutionPymMethodDTO pymMethodDTO = new InstitutionPymMethodDTO();
+        InstitutionPymMethod pymMethod = new InstitutionPymMethod();
+
+        when(institutionPymMethodRepository.findByInstitutionIdAndPymMethod(any(), any())).thenReturn(Optional.empty());
+        when(institutionService.getInstitutionByIdTypeSecond(anyLong())).thenReturn(institutionDTO);
+        when(paymentMethodService.getPaymentMethodByMethod(any())).thenReturn(paymentMethodDTO);
+        when(institutionPymMethodMapper.toDTO(any())).thenReturn(pymMethodDTO);
+        when(institutionPymMethodMapper.toInstitutionPymMethod(any())).thenReturn(pymMethod);
+        when(institutionPymMethodRepository.save(any())).thenReturn(pymMethod);
+        when(institutionPymMethodMapper.toDTO(pymMethod)).thenReturn(pymMethodDTO);
+
+        InstitutionPymMethodDTO result = adminInstitutionPymMethodService.createInstitutionPymMethod(requestDTO);
+
+        assertNotNull(result);
+        verify(institutionPymMethodRepository, times(1)).findByInstitutionIdAndPymMethod(any(), any());
+        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(anyLong());
+        verify(paymentMethodService, times(1)).getPaymentMethodByMethod(any());
+        verify(institutionPymMethodRepository, times(1)).save(any());
+    }
 }
