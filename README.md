@@ -5,7 +5,6 @@ import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
 import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminOwnerDepartmentService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminProductService;
 import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionRequestDTO;
@@ -15,102 +14,156 @@ import com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO;
 import com.ykb.payments.bill.transaction.institution.dto.OwnerDepartmentDTO;
 import com.ykb.payments.bill.transaction.institution.dto.ProductDTO;
 import com.ykb.payments.bill.transaction.institution.repository.InstitutionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Service
-@RequiredArgsConstructor
-public class AdminInstitutionServiceImpl implements AdminInstitutionService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+public class AdminInstitutionServiceImplTest {
 
-	private final InstitutionRepository institutionRepository;
-	private final AdminInstitutionMapper institutionMapper;
-	private final AdminProductService productService;
-	private final AdminOwnerDepartmentService ownerDepartmentService;
+    @InjectMocks
+    private AdminInstitutionServiceImpl adminInstitutionService;
 
+    @Mock
+    private InstitutionRepository institutionRepository;
 
-	@Override
-	public List<InstitutionDTO> getAllInstitutions() {
-		List<Institution> institutionList = institutionRepository.findAll();
-		return institutionMapper.toInstitutionDTOList(institutionList);
-	}
+    @Mock
+    private AdminInstitutionMapper institutionMapper;
 
-	@Override
-	public InstitutionDTO getInstitutionByIdTypeSecond(Long id) {
-		Optional<Institution> institution = institutionRepository.findById(id);
-        return institution.map(institutionMapper::toInstitutionDTO).orElse(null);
+    @Mock
+    private AdminProductService productService;
+
+    @Mock
+    private AdminOwnerDepartmentService ownerDepartmentService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-	@Override
-	public InstitutionDTO createInstitution(CreateInstitutionRequestDTO requestDTO) throws MicroException {
-		Optional<Institution> existingInstitution = institutionRepository
-				.findByProductCodeAndInstitutionCode(requestDTO.getProductCode()
-						, requestDTO.getInstitutionCode());
-		if (existingInstitution.isPresent()) {
-			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PRODUCT);
-		}
+    @Test
+    void getAllInstitutions_ShouldReturnAllInstitutions() {
+        List<Institution> institutionList = List.of(new Institution());
+        when(institutionRepository.findAll()).thenReturn(institutionList);
+        when(institutionMapper.toInstitutionDTOList(institutionList)).thenReturn(List.of(new InstitutionDTO()));
 
-		ProductDTO productDTO = productService.getProductByCode(requestDTO.getProductCode());
-		OwnerDepartmentDTO ownerDepartmentDTO = ownerDepartmentService.getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode());
+        List<InstitutionDTO> result = adminInstitutionService.getAllInstitutions();
 
-		InstitutionDTO institutionDTO = institutionMapper.toInstitutionDTO(requestDTO);
-		institutionDTO.setCreateDate(LocalDateTime.now());
-		institutionDTO.setProduct(productDTO);
-		institutionDTO.setOwnerDepartment(ownerDepartmentDTO);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(institutionRepository, times(1)).findAll();
+        verify(institutionMapper, times(1)).toInstitutionDTOList(institutionList);
+    }
 
-		Institution institution = institutionMapper.toInstitution(institutionDTO);
+    @Test
+    void getInstitutionByIdTypeSecond_WhenFound_ShouldReturnDTO() {
+        Institution institution = new Institution();
+        when(institutionRepository.findById(1L)).thenReturn(Optional.of(institution));
+        when(institutionMapper.toInstitutionDTO(institution)).thenReturn(new InstitutionDTO());
 
-		institutionRepository.save(institution);
+        InstitutionDTO result = adminInstitutionService.getInstitutionByIdTypeSecond(1L);
 
-		return  institutionMapper.toInstitutionDTO(institution);
-	}
+        assertNotNull(result);
+        verify(institutionRepository, times(1)).findById(1L);
+        verify(institutionMapper, times(1)).toInstitutionDTO(institution);
+    }
 
-	@Override
-	public InstitutionDTO updateInstitution(UpdateInstitutionRequestDTO requestDTO) throws MicroException {
+    @Test
+    void getInstitutionByIdTypeSecond_WhenNotFound_ShouldReturnNull() {
+        when(institutionRepository.findById(1L)).thenReturn(Optional.empty());
 
-		InstitutionDTO existingInstitutionDTO = getInstitutionByIdTypeSecond(requestDTO.getId());
-		if (existingInstitutionDTO == null) {
-			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
-		}
+        InstitutionDTO result = adminInstitutionService.getInstitutionByIdTypeSecond(1L);
 
-		Optional<Institution> duplicateInstitution = institutionRepository.findByProductCodeAndInstitutionCode(requestDTO.getProductCode(), requestDTO.getInstitutionCode());
-		if (duplicateInstitution.isPresent() && !duplicateInstitution.get().getId().equals(requestDTO.getId())) {
-			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PRODUCT);
+        assertNull(result);
+        verify(institutionRepository, times(1)).findById(1L);
+    }
 
-		}
+    @Test
+    void createInstitution_WhenDuplicate_ShouldThrowException() {
+        CreateInstitutionRequestDTO requestDTO = new CreateInstitutionRequestDTO();
+        requestDTO.setProductCode("PROD123");
+        requestDTO.setInstitutionCode("INST123");
 
-		ProductDTO productDTO = productService.getProductByCode(requestDTO.getProductCode());
-		OwnerDepartmentDTO ownerDepartmentDTO = ownerDepartmentService.getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode());
+        when(institutionRepository.findByProductCodeAndInstitutionCode(any(), any())).thenReturn(Optional.of(new Institution()));
 
-		existingInstitutionDTO.setInstitutionCode(requestDTO.getInstitutionCode());
-		existingInstitutionDTO.setProduct(productDTO);
-		existingInstitutionDTO.setCustomerNo(requestDTO.getCustomerNo());
-		existingInstitutionDTO.setName(requestDTO.getName());
-		existingInstitutionDTO.setExplanation(requestDTO.getExplanation());
-		existingInstitutionDTO.setOwnerDepartment(ownerDepartmentDTO);
-		existingInstitutionDTO.setProtocolStartDate(requestDTO.getProtocolStartDate());
-		existingInstitutionDTO.setProtocolEndDate(requestDTO.getProtocolEndDate());
-		existingInstitutionDTO.setIsReverseAllowed(requestDTO.getIsReverseAllowed());
-		existingInstitutionDTO.setIsOrderAllowed(requestDTO.getIsOrderAllowed());
-		existingInstitutionDTO.setHasDebtType(requestDTO.getHasDebtType());
-		existingInstitutionDTO.setIconText(requestDTO.getIconText());
-		existingInstitutionDTO.setIsActive(requestDTO.getIsActive());
+        assertThrows(DataConflictException.class, () -> adminInstitutionService.createInstitution(requestDTO));
+        verify(institutionRepository, times(1)).findByProductCodeAndInstitutionCode(any(), any());
+    }
 
-		existingInstitutionDTO.setUpdateDate(LocalDateTime.now());
-		existingInstitutionDTO.setUpdatedBy(requestDTO.getUpdateUser());
+    @Test
+    void createInstitution_WhenValid_ShouldReturnDTO() throws MicroException {
+        CreateInstitutionRequestDTO requestDTO = new CreateInstitutionRequestDTO();
+        requestDTO.setProductCode("PROD123");
+        requestDTO.setInstitutionCode("INST123");
+        ProductDTO productDTO = new ProductDTO();
+        OwnerDepartmentDTO ownerDepartmentDTO = new OwnerDepartmentDTO();
+        InstitutionDTO institutionDTO = new InstitutionDTO();
+        Institution institution = new Institution();
 
+        when(institutionRepository.findByProductCodeAndInstitutionCode(any(), any())).thenReturn(Optional.empty());
+        when(productService.getProductByCode(requestDTO.getProductCode())).thenReturn(productDTO);
+        when(ownerDepartmentService.getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode())).thenReturn(ownerDepartmentDTO);
+        when(institutionMapper.toInstitutionDTO(requestDTO)).thenReturn(institutionDTO);
+        when(institutionMapper.toInstitution(institutionDTO)).thenReturn(institution);
+        when(institutionRepository.save(institution)).thenReturn(institution);
+        when(institutionMapper.toInstitutionDTO(institution)).thenReturn(institutionDTO);
 
-		Institution updatedInstitution = institutionMapper.toInstitution(existingInstitutionDTO);
-		institutionRepository.save(updatedInstitution);
+        InstitutionDTO result = adminInstitutionService.createInstitution(requestDTO);
 
-		return institutionMapper.toInstitutionDTO(updatedInstitution);
-	}
+        assertNotNull(result);
+        verify(institutionRepository, times(1)).findByProductCodeAndInstitutionCode(any(), any());
+        verify(productService, times(1)).getProductByCode(requestDTO.getProductCode());
+        verify(ownerDepartmentService, times(1)).getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode());
+        verify(institutionRepository, times(1)).save(institution);
+    }
 
+    @Test
+    void updateInstitution_WhenNotFound_ShouldThrowException() {
+        UpdateInstitutionRequestDTO requestDTO = new UpdateInstitutionRequestDTO();
+        requestDTO.setId(1L);
 
+        when(institutionRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
 
+        assertThrows(DataNotFoundException.class, () -> adminInstitutionService.updateInstitution(requestDTO));
+        verify(institutionRepository, times(1)).findById(requestDTO.getId());
+    }
 
+    @Test
+    void updateInstitution_WhenValid_ShouldReturnDTO() throws MicroException {
+        UpdateInstitutionRequestDTO requestDTO = new UpdateInstitutionRequestDTO();
+        requestDTO.setId(1L);
+        requestDTO.setProductCode("PROD123");
+        requestDTO.setInstitutionCode("INST123");
+        ProductDTO productDTO = new ProductDTO();
+        OwnerDepartmentDTO ownerDepartmentDTO = new OwnerDepartmentDTO();
+        InstitutionDTO existingInstitutionDTO = new InstitutionDTO();
+        Institution updatedInstitution = new Institution();
+
+        when(institutionRepository.findById(requestDTO.getId())).thenReturn(Optional.of(new Institution()));
+        when(institutionRepository.findByProductCodeAndInstitutionCode(requestDTO.getProductCode(), requestDTO.getInstitutionCode())).thenReturn(Optional.empty());
+        when(productService.getProductByCode(requestDTO.getProductCode())).thenReturn(productDTO);
+        when(ownerDepartmentService.getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode())).thenReturn(ownerDepartmentDTO);
+        when(institutionMapper.toInstitutionDTO(any())).thenReturn(existingInstitutionDTO);
+        when(institutionMapper.toInstitution(any())).thenReturn(updatedInstitution);
+        when(institutionRepository.save(any())).thenReturn(updatedInstitution);
+        when(institutionMapper.toInstitutionDTO(updatedInstitution)).thenReturn(existingInstitutionDTO);
+
+        InstitutionDTO result = adminInstitutionService.updateInstitution(requestDTO);
+
+        assertNotNull(result);
+        verify(institutionRepository, times(1)).findById(requestDTO.getId());
+        verify(institutionRepository, times(1)).findByProductCodeAndInstitutionCode(requestDTO.getProductCode(), requestDTO.getInstitutionCode());
+        verify(productService, times(1)).getProductByCode(requestDTO.getProductCode());
+        verify(ownerDepartmentService, times(1)).getOwnerDepartmentByCode(requestDTO.getOwnerDepartmentCode());
+        verify(institutionRepository, times(1)).save(updatedInstitution);
+    }
 }
