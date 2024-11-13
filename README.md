@@ -3,58 +3,37 @@ package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminOwnerDepartmentMapper;
-import com.ykb.payments.bill.transaction.institution.domain.OwnerDepartment;
-import com.ykb.payments.bill.transaction.institution.dto.OwnerDepartmentDTO;
-import com.ykb.payments.bill.transaction.institution.repository.OwnerDepartmentRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminPaymentMethodService;
+import com.ykb.payments.bill.transaction.institution.domain.PaymentMethod;
+import com.ykb.payments.bill.transaction.institution.dto.PaymentMethodDTO;
+import com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod;
+import com.ykb.payments.bill.transaction.institution.mapper.PaymentMethodMapper;
+import com.ykb.payments.bill.transaction.institution.repository.PaymentMethodRepository;
+import org.springframework.stereotype.Service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+@Service
+public class AdminPaymentMethodServiceImpl implements AdminPaymentMethodService {
 
-public class AdminOwnerDepartmentServiceTest {
+    private final PaymentMethodRepository paymentMethodRepository;
+    private final PaymentMethodMapper paymentMethodMapper;
 
-    @InjectMocks
-    private AdminOwnerDepartmentImpl adminOwnerDepartmentService;
-
-    @Mock
-    private OwnerDepartmentRepository ownerDepartmentRepository;
-
-    @Mock
-    private AdminOwnerDepartmentMapper ownerDepartmentMapper;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminPaymentMethodServiceImpl(PaymentMethodRepository paymentMethodRepository, PaymentMethodMapper paymentMethodMapper) {
+        this.paymentMethodRepository = paymentMethodRepository;
+        this.paymentMethodMapper = paymentMethodMapper;
     }
 
-    @Test
-    void getOwnerDepartmentByCode_WhenFound_ShouldReturnDTO() throws MicroException {
-        String code = "DEPT123";
-        OwnerDepartment ownerDepartment = new OwnerDepartment();
-        OwnerDepartmentDTO ownerDepartmentDTO = new OwnerDepartmentDTO();
 
-        when(ownerDepartmentRepository.findByCode(code)).thenReturn(ownerDepartment);
-        when(ownerDepartmentMapper.toOwnerDepartmentDTO(ownerDepartment)).thenReturn(ownerDepartmentDTO);
 
-        OwnerDepartmentDTO result = adminOwnerDepartmentService.getOwnerDepartmentByCode(code);
+    @Override
+    public PaymentMethodDTO getPaymentMethodByMethod(EnumPaymentMethod paymentMethod) throws MicroException {
+        PaymentMethod entity= paymentMethodRepository.findByCode(paymentMethod);
+        if (entity == null ){
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PAYMENT_METHOD_NOT_FOUND);
+        }
+        PaymentMethodDTO dto= paymentMethodMapper.toDTO(entity);
+        return dto;
 
-        assertNotNull(result);
-        verify(ownerDepartmentRepository, times(1)).findByCode(code);
-        verify(ownerDepartmentMapper, times(1)).toOwnerDepartmentDTO(ownerDepartment);
-    }
 
-    @Test
-    void getOwnerDepartmentByCode_WhenNotFound_ShouldThrowException() {
-        String code = "DEPT123";
 
-        when(ownerDepartmentRepository.findByCode(code)).thenReturn(null);
-
-        assertThrows(DataNotFoundException.class, () -> adminOwnerDepartmentService.getOwnerDepartmentByCode(code));
-        verify(ownerDepartmentRepository, times(1)).findByCode(code);
     }
 }
