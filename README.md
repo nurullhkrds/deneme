@@ -1,203 +1,126 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
 import com.ykb.architecture.micro.error.exception.DataConflictException;
-import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionFeatureMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminFeatureService;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionProcessMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionProcessService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionFeatureRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionFeatureRequestDTO;
-import com.ykb.payments.bill.transaction.institution.domain.InstitutionFeature;
-import com.ykb.payments.bill.transaction.institution.dto.FeatureDTO;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminProcessService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionProcessRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionProcessRequestDTO;
+import com.ykb.payments.bill.transaction.institution.domain.InstitutionProcess;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionFeatureDTO;
-import com.ykb.payments.bill.transaction.institution.repository.InstitutionFeatureRepository;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionProcessDTO;
+import com.ykb.payments.bill.transaction.institution.dto.ProcessDTO;
+import com.ykb.payments.bill.transaction.institution.repository.InstitutionProcessRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Arrays;
 
-class AdminInstitutionFeatureServiceImplTest {
+@Service
+public class AdminInstitutionProcessServiceImpl implements AdminInstitutionProcessService {
 
-    @Mock
-    private InstitutionFeatureRepository institutionFeatureRepository;
+    private final InstitutionProcessRepository institutionProcessRepository;
+    private final AdminInstitutionProcessMapper institutionProcessMapper;
+    private final AdminInstitutionService institutionService;
+    private final AdminProcessService processService;
 
-    @Mock
-    private AdminInstitutionFeatureMapper institutionFeatureMapper;
 
-    @Mock
-    private AdminInstitutionService institutionService;
 
-    @Mock
-    private AdminFeatureService featureService;
 
-    @InjectMocks
-    private AdminInstitutionFeatureServiceImpl adminInstitutionFeatureService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminInstitutionProcessServiceImpl(InstitutionProcessRepository institutionProcessRepository, AdminInstitutionProcessMapper institutionProcessMapper, AdminInstitutionService institutionService, AdminProcessService processService) {
+        this.institutionProcessRepository = institutionProcessRepository;
+        this.institutionProcessMapper = institutionProcessMapper;
+        this.institutionService = institutionService;
+        this.processService = processService;
     }
 
-    @Test
-    void getAllInstitutionFeatures_shouldReturnListOfInstitutionFeatureDTO() {
-        List<InstitutionFeature> institutionFeatureList = Arrays.asList(new InstitutionFeature(), new InstitutionFeature());
-        List<InstitutionFeatureDTO> expectedDTOs = Arrays.asList(new InstitutionFeatureDTO(), new InstitutionFeatureDTO());
-
-        when(institutionFeatureRepository.findAll()).thenReturn(institutionFeatureList);
-        when(institutionFeatureMapper.toInstitutionFeatureDTOList(institutionFeatureList)).thenReturn(expectedDTOs);
-
-        List<InstitutionFeatureDTO> result = adminInstitutionFeatureService.getAllInstitutionFeatures();
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(institutionFeatureRepository, times(1)).findAll();
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeatureDTOList(institutionFeatureList);
+    @Override
+    public List<InstitutionProcessDTO> getAllInstitutionProcess() {
+        List<InstitutionProcess> institutionProcessList=institutionProcessRepository.findAll();
+        return institutionProcessMapper.toDTOList(institutionProcessList);
     }
 
-    @Test
-    void getInstitutionFeatureById_shouldReturnInstitutionFeatureDTO_whenFound() throws MicroException {
-        Long id = 1L;
-        InstitutionFeature institutionFeature = new InstitutionFeature();
-        InstitutionFeatureDTO expectedDTO = new InstitutionFeatureDTO();
-
-        when(institutionFeatureRepository.findById(id)).thenReturn(Optional.of(institutionFeature));
-        when(institutionFeatureMapper.toInstitutionFeatureDTO(institutionFeature)).thenReturn(expectedDTO);
-
-        InstitutionFeatureDTO result = adminInstitutionFeatureService.getInstitutionFeatureById(id);
-
-        assertNotNull(result);
-        assertEquals(expectedDTO, result);
-        verify(institutionFeatureRepository, times(1)).findById(id);
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeatureDTO(institutionFeature);
+    @Override
+    public InstitutionProcessDTO getInstitutionProcessById(Long id) {
+        Optional<InstitutionProcess> institutionProcess= institutionProcessRepository.findById(id);
+        return institutionProcess.map(institutionProcessMapper::toDTO).orElse(null);
     }
 
-    @Test
-    void getInstitutionFeatureById_shouldReturnNull_whenNotFound() throws MicroException {
-        Long id = 1L;
+    @Override
+    public InstitutionProcessDTO createInstitutionProcess(CreateInstitutionProcessRequestDTO requestDTO) throws MicroException {
 
-        when(institutionFeatureRepository.findById(id)).thenReturn(Optional.empty());
+        boolean existsInstitutionProcess= institutionProcessRepository
+                .existsByInstitutionIdAndProcessCode(requestDTO.getInstitutionId(),requestDTO.getProcess());
 
-        InstitutionFeatureDTO result = adminInstitutionFeatureService.getInstitutionFeatureById(id);
+        if(existsInstitutionProcess){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PROCESS);
+        }
 
-        assertNull(result);
-        verify(institutionFeatureRepository, times(1)).findById(id);
+
+        InstitutionDTO institutionDTO=institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
+
+        if (institutionDTO == null){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
+        }
+
+        ProcessDTO processDTO=processService.getProcessByCode(requestDTO.getProcess());
+
+        if (processDTO == null){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.PROCESS_NOT_FOUND);
+        }
+
+        InstitutionProcessDTO dto= institutionProcessMapper.toDTO(requestDTO);
+        dto.setProcess(processDTO);
+        dto.setInstitution(institutionDTO);
+        dto.setCreateDate(LocalDateTime.now());
+        InstitutionProcess institutionProcess=institutionProcessMapper.toEntity(dto);
+        institutionProcess=institutionProcessRepository.save(institutionProcess);
+        return institutionProcessMapper.toDTO(institutionProcess);
     }
 
-    @Test
-    void createInstitutionFeature_shouldThrowDataConflictException_whenInstitutionFeatureAlreadyExists() {
-        CreateInstitutionFeatureRequestDTO requestDTO = new CreateInstitutionFeatureRequestDTO();
-        requestDTO.setInstitutionId(1L);
-        requestDTO.setFeatureCode(() -> "FEATURE_CODE");
+    @Override
+    public InstitutionProcessDTO updateInstitutionProcess(UpdateInstitutionProcessRequestDTO requestDTO)
+            throws MicroException {
+        InstitutionProcessDTO institutionProcessDTO=getInstitutionProcessById(requestDTO.getId());
 
-        when(institutionFeatureRepository.findByInstitutionIdAndFeatureCode(requestDTO.getInstitutionId(), requestDTO.getFeatureCode().getValue()))
-                .thenReturn(Optional.of(new InstitutionFeature()));
+        if (institutionProcessDTO == null){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.INSTITUTION_PROCESS_NOT_FOUND);
+        }
 
-        assertThrows(DataConflictException.class, () -> adminInstitutionFeatureService.createInstitutionFeature(requestDTO));
-        verify(institutionFeatureRepository, times(1)).findByInstitutionIdAndFeatureCode(requestDTO.getInstitutionId(), requestDTO.getFeatureCode().getValue());
-    }
+        boolean existsInstitutionProcess= institutionProcessRepository
+                .existsByInstitutionIdAndProcessCode(requestDTO.getInstitutionId(),requestDTO.getProcess());
 
-    @Test
-    void createInstitutionFeature_shouldThrowDataNotFoundException_whenInstitutionNotFound() throws MicroException {
-        CreateInstitutionFeatureRequestDTO requestDTO = new CreateInstitutionFeatureRequestDTO();
-        requestDTO.setInstitutionId(1L);
+        if ((existsInstitutionProcess && !institutionProcessDTO.getId().equals(requestDTO.getId()))){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_PROCESS);
+        }
 
-        when(institutionFeatureRepository.findByInstitutionIdAndFeatureCode(requestDTO.getInstitutionId(), requestDTO.getFeatureCode().getValue()))
-                .thenReturn(Optional.empty());
-        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(null);
+        InstitutionDTO institutionDTO=institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
 
-        assertThrows(DataNotFoundException.class, () -> adminInstitutionFeatureService.createInstitutionFeature(requestDTO));
-        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-    }
+        if (institutionDTO == null){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
+        }
 
-    @Test
-    void createInstitutionFeature_shouldReturnInstitutionFeatureDTO_whenSuccessful() throws MicroException {
-        CreateInstitutionFeatureRequestDTO requestDTO = new CreateInstitutionFeatureRequestDTO();
-        requestDTO.setInstitutionId(1L);
-        requestDTO.setFeatureCode(() -> "FEATURE_CODE");
-        InstitutionDTO institutionDTO = new InstitutionDTO();
-        FeatureDTO featureDTO = new FeatureDTO();
-        InstitutionFeatureDTO institutionFeatureDTO = new InstitutionFeatureDTO();
-        InstitutionFeature institutionFeature = new InstitutionFeature();
+        ProcessDTO processDTO=processService.getProcessByCode(requestDTO.getProcess());
 
-        when(institutionFeatureRepository.findByInstitutionIdAndFeatureCode(requestDTO.getInstitutionId(), requestDTO.getFeatureCode().getValue()))
-                .thenReturn(Optional.empty());
-        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(institutionDTO);
-        when(featureService.getFeatureByCode(requestDTO.getFeatureCode())).thenReturn(featureDTO);
-        when(institutionFeatureMapper.toInstitutionFeatureDTO(requestDTO)).thenReturn(institutionFeatureDTO);
-        when(institutionFeatureMapper.toInstitutionFeature(institutionFeatureDTO)).thenReturn(institutionFeature);
-        when(institutionFeatureRepository.save(institutionFeature)).thenReturn(institutionFeature);
-        when(institutionFeatureMapper.toInstitutionFeatureDTO(institutionFeature)).thenReturn(institutionFeatureDTO);
+        if (processDTO == null){
+            throw new DataConflictException(BillExceptionsUI.ValidationExceptions.PROCESS_NOT_FOUND);
+        }
 
-        InstitutionFeatureDTO result = adminInstitutionFeatureService.createInstitutionFeature(requestDTO);
+        institutionProcessDTO.setInstitution(institutionDTO);
+        institutionProcessDTO.setProcess(processDTO);
+        institutionProcessDTO.setIsOnline(requestDTO.getIsOnline());
+        institutionProcessDTO.setClassName(requestDTO.getClassName());
+        institutionProcessDTO.setIsActive(requestDTO.getIsActive());
+        institutionProcessDTO.setUpdateDate(LocalDateTime.now());
+        institutionProcessDTO.setUpdatedBy(requestDTO.getUpdateUser());
 
-        assertNotNull(result);
-        assertEquals(institutionFeatureDTO, result);
-        verify(institutionFeatureRepository, times(1)).findByInstitutionIdAndFeatureCode(requestDTO.getInstitutionId(), requestDTO.getFeatureCode().getValue());
-        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-        verify(featureService, times(1)).getFeatureByCode(requestDTO.getFeatureCode());
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeatureDTO(requestDTO);
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeature(institutionFeatureDTO);
-        verify(institutionFeatureRepository, times(1)).save(institutionFeature);
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeatureDTO(institutionFeature);
-    }
+        InstitutionProcess institutionProcess=institutionProcessMapper.toEntity(institutionProcessDTO);
+        institutionProcess=institutionProcessRepository.save(institutionProcess);
+        return institutionProcessMapper.toDTO(institutionProcess);
 
-    @Test
-    void updateInstitutionFeature_shouldThrowDataNotFoundException_whenInstitutionFeatureNotFound() throws MicroException {
-        UpdateInstitutionFeatureRequestDTO requestDTO = new UpdateInstitutionFeatureRequestDTO();
-        requestDTO.setId(1L);
-
-        when(institutionFeatureRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
-
-        assertThrows(DataNotFoundException.class, () -> adminInstitutionFeatureService.updateInstitutionFeature(requestDTO));
-        verify(institutionFeatureRepository, times(1)).findById(requestDTO.getId());
-    }
-
-    @Test
-    void updateInstitutionFeature_shouldReturnUpdatedInstitutionFeatureDTO_whenSuccessful() throws MicroException {
-        UpdateInstitutionFeatureRequestDTO requestDTO = new UpdateInstitutionFeatureRequestDTO();
-        requestDTO.setId(1L);
-        requestDTO.setInstitutionId(1L);
-        requestDTO.setFeatureCode(() -> "FEATURE_CODE");
-        requestDTO.setFeatureValue("FeatureValue");
-        requestDTO.setIsActive(true);
-        requestDTO.setUpdateUser("user");
-
-        InstitutionFeature existingInstitutionFeature = new InstitutionFeature();
-        InstitutionFeatureDTO existingInstitutionFeatureDTO = new InstitutionFeatureDTO();
-        InstitutionDTO institutionDTO = new InstitutionDTO();
-        FeatureDTO featureDTO = new FeatureDTO();
-        InstitutionFeature updatedInstitutionFeature = new InstitutionFeature();
-        InstitutionFeatureDTO updatedInstitutionFeatureDTO = new InstitutionFeatureDTO();
-
-        when(institutionFeatureRepository.findById(requestDTO.getId())).thenReturn(Optional.of(existingInstitutionFeature));
-        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(institutionDTO);
-        when(featureService.getFeatureByCode(requestDTO.getFeatureCode())).thenReturn(featureDTO);
-        when(institutionFeatureMapper.toInstitutionFeatureDTO(existingInstitutionFeature)).thenReturn(existingInstitutionFeatureDTO);
-        when(institutionFeatureMapper.toInstitutionFeature(existingInstitutionFeatureDTO)).thenReturn(updatedInstitutionFeature);
-        when(institutionFeatureRepository.save(updatedInstitutionFeature)).thenReturn(updatedInstitutionFeature);
-        when(institutionFeatureMapper.toInstitutionFeatureDTO(updatedInstitutionFeature)).thenReturn(updatedInstitutionFeatureDTO);
-
-        InstitutionFeatureDTO result = adminInstitutionFeatureService.updateInstitutionFeature(requestDTO);
-
-        assertNotNull(result);
-        assertEquals(updatedInstitutionFeatureDTO, result);
-        verify(institutionFeatureRepository, times(1)).findById(requestDTO.getId());
-        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-        verify(featureService, times(1)).getFeatureByCode(requestDTO.getFeatureCode());
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeatureDTO(existingInstitutionFeature);
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeature(existingInstitutionFeatureDTO);
-        verify(institutionFeatureRepository, times(1)).save(updatedInstitutionFeature);
-        verify(institutionFeatureMapper, times(1)).toInstitutionFeatureDTO(updatedInstitutionFeature);
     }
 }
