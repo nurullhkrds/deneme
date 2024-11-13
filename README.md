@@ -1,202 +1,107 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
 import com.ykb.architecture.micro.error.exception.DataConflictException;
+import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionCityMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminCityService;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionDebtTypeMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionDebtTypeService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionCityRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionCityRequestDTO;
-import com.ykb.payments.bill.transaction.institution.domain.InstitutionCity;
-import com.ykb.payments.bill.transaction.institution.dto.CityDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionCityDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionDebtTypeRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionDebtTypeRequestDTO;
+import com.ykb.payments.bill.transaction.institution.domain.InstitutionDebtType;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO;
-import com.ykb.payments.bill.transaction.institution.repository.InstitutionCityRepository;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO;
+import com.ykb.payments.bill.transaction.institution.repository.InstitutionDebtTypeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Arrays;
 
-class AdminInstitutionCityServiceImplTest {
+@Service
+@RequiredArgsConstructor
+public class AdminInstitutionDebtTypeServiceImpl implements AdminInstitutionDebtTypeService {
 
-    @Mock
-    private InstitutionCityRepository institutionCityRepository;
+	private final InstitutionDebtTypeRepository institutionDebtTypeRepository;
+	private final AdminInstitutionDebtTypeMapper institutionDebtTypeMapper;
+	private final AdminInstitutionService institutionService;
 
-    @Mock
-    private AdminInstitutionCityMapper institutionCityMapper;
 
-    @Mock
-    private AdminInstitutionService institutionService;
+	@Override
+	public List<InstitutionDebtTypeDTO> getAllInstitutionDebtTypes() {
+		List<InstitutionDebtType> institutionDebtTypeList=institutionDebtTypeRepository.findAll();
+		return institutionDebtTypeMapper.toDTOList(institutionDebtTypeList);
+	}
 
-    @Mock
-    private AdminCityService cityService;
+	@Override
+	public InstitutionDebtTypeDTO getInstitutionDebtTypeById(Long id) throws MicroException {
+		Optional <InstitutionDebtType> optionalInstitutionDebtType=institutionDebtTypeRepository.findById(id);
 
-    @InjectMocks
-    private AdminInstitutionCityServiceImpl adminInstitutionCityService;
+        return optionalInstitutionDebtType.map(institutionDebtTypeMapper::toDTO).orElse(null);
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        adminInstitutionCityService = new AdminInstitutionCityServiceImpl(institutionCityRepository, institutionCityMapper, institutionService, cityService);
     }
 
-    @Test
-    void getAllInstitutionCities_shouldReturnListOfInstitutionCityDTO() {
-        List<InstitutionCity> institutionCityList = Arrays.asList(new InstitutionCity(), new InstitutionCity());
-        List<InstitutionCityDTO> expectedDTOs = Arrays.asList(new InstitutionCityDTO(), new InstitutionCityDTO());
+	@Override
+	public InstitutionDebtTypeDTO createInstitutionDebtType(CreateInstitutionDebtTypeRequestDTO requestDTO) throws MicroException {
+		Optional<InstitutionDebtType> existingInstitutionDebtType = institutionDebtTypeRepository
+				.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType());
+		if (existingInstitutionDebtType.isPresent()) {
+			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_DEBT_TYPE);
+		}
 
-        when(institutionCityRepository.findAll()).thenReturn(institutionCityList);
-        when(institutionCityMapper.toDTOList(institutionCityList)).thenReturn(expectedDTOs);
+		InstitutionDTO institutionDTO = institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
 
-        List<InstitutionCityDTO> result = adminInstitutionCityService.getAllInstitutionCities();
+		if(institutionDTO == null) {
+			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
+		}
 
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(institutionCityRepository, times(1)).findAll();
-        verify(institutionCityMapper, times(1)).toDTOList(institutionCityList);
-    }
+		InstitutionDebtTypeDTO dto = institutionDebtTypeMapper.toDTO(requestDTO);
+		dto.setInstitution(institutionDTO);
+		dto.setCreateDate(LocalDateTime.now());
 
-    @Test
-    void getInstitutionCityById_shouldReturnInstitutionCityDTO_whenFound() {
-        Long id = 1L;
-        InstitutionCity institutionCity = new InstitutionCity();
-        InstitutionCityDTO expectedDTO = new InstitutionCityDTO();
+		InstitutionDebtType entity = institutionDebtTypeMapper.toEntity(dto);
+		entity = institutionDebtTypeRepository.save(entity);
 
-        when(institutionCityRepository.findById(id)).thenReturn(Optional.of(institutionCity));
-        when(institutionCityMapper.toInstitutionCityDTO(institutionCity)).thenReturn(expectedDTO);
+		return institutionDebtTypeMapper.toDTO(entity);
 
-        InstitutionCityDTO result = adminInstitutionCityService.getInstitutionCityById(id);
+	}
 
-        assertNotNull(result);
-        assertEquals(expectedDTO, result);
-        verify(institutionCityRepository, times(1)).findById(id);
-        verify(institutionCityMapper, times(1)).toInstitutionCityDTO(institutionCity);
-    }
+	@Override
+	public InstitutionDebtTypeDTO updateInstitutionDebtType(UpdateInstitutionDebtTypeRequestDTO requestDTO) throws MicroException {
+		InstitutionDebtTypeDTO existingDebtTypeDTO = getInstitutionDebtTypeById(requestDTO.getId());
 
-    @Test
-    void getInstitutionCityById_shouldReturnNull_whenNotFound() {
-        Long id = 1L;
+		if (existingDebtTypeDTO == null) {
+			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_DEBT_TYPE_NOT_FOUND);
+		}
 
-        when(institutionCityRepository.findById(id)).thenReturn(Optional.empty());
 
-        InstitutionCityDTO result = adminInstitutionCityService.getInstitutionCityById(id);
+		Optional<InstitutionDebtType> duplicateDebtType = institutionDebtTypeRepository
+				.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType());
+		if (duplicateDebtType.isPresent() && !duplicateDebtType.get().getId().equals(requestDTO.getId())) {
+			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_DEBT_TYPE);
 
-        assertNull(result);
-        verify(institutionCityRepository, times(1)).findById(id);
-    }
+		}
 
-    @Test
-    void createInstitutionCity_shouldThrowDataConflictException_whenInstitutionCityAlreadyExists() {
-        CreateInstitutionCityRequestDTO requestDTO = new CreateInstitutionCityRequestDTO();
-        requestDTO.setInstitutionId(1L);
-        requestDTO.setCode("CITY_CODE");
+		InstitutionDTO institutionDTO = institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
+		if (institutionDTO == null) {
+			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
 
-        when(institutionCityRepository.findByInstitutionIdAndCityCode(requestDTO.getInstitutionId(), requestDTO.getCode()))
-                .thenReturn(Optional.of(new InstitutionCity()));
+		}
 
-        assertThrows(DataConflictException.class, () -> adminInstitutionCityService.createInstitutionCity(requestDTO));
-        verify(institutionCityRepository, times(1)).findByInstitutionIdAndCityCode(requestDTO.getInstitutionId(), requestDTO.getCode());
-    }
+		existingDebtTypeDTO.setInstitution(institutionDTO);
+		existingDebtTypeDTO.setUpdatedBy(requestDTO.getUpdateUser());
+		existingDebtTypeDTO.setUpdateDate(LocalDateTime.now());
+		existingDebtTypeDTO.setExplanation(requestDTO.getExplanation());
+		existingDebtTypeDTO.setIsActive(requestDTO.getIsActive());
 
-    @Test
-    void createInstitutionCity_shouldThrowDataConflictException_whenInstitutionNotFound() throws MicroException {
-        CreateInstitutionCityRequestDTO requestDTO = new CreateInstitutionCityRequestDTO();
-        requestDTO.setInstitutionId(1L);
+		InstitutionDebtType updatedDebtType = institutionDebtTypeMapper.toEntity(existingDebtTypeDTO);
+		updatedDebtType = institutionDebtTypeRepository.save(updatedDebtType);
 
-        when(institutionCityRepository.findByInstitutionIdAndCityCode(requestDTO.getInstitutionId(), requestDTO.getCode()))
-                .thenReturn(Optional.empty());
-        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(null);
+		return institutionDebtTypeMapper.toDTO(updatedDebtType);
+	}
 
-        assertThrows(DataConflictException.class, () -> adminInstitutionCityService.createInstitutionCity(requestDTO));
-        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-    }
 
-    @Test
-    void createInstitutionCity_shouldReturnInstitutionCityDTO_whenSuccessful() throws MicroException {
-        CreateInstitutionCityRequestDTO requestDTO = new CreateInstitutionCityRequestDTO();
-        requestDTO.setInstitutionId(1L);
-        requestDTO.setCode("CITY_CODE");
-        InstitutionDTO institutionDTO = new InstitutionDTO();
-        CityDTO cityDTO = new CityDTO();
-        InstitutionCityDTO institutionCityDTO = new InstitutionCityDTO();
-        InstitutionCity institutionCity = new InstitutionCity();
 
-        when(institutionCityRepository.findByInstitutionIdAndCityCode(requestDTO.getInstitutionId(), requestDTO.getCode()))
-                .thenReturn(Optional.empty());
-        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(institutionDTO);
-        when(cityService.getCityByCode(requestDTO.getCode())).thenReturn(cityDTO);
-        when(institutionCityMapper.toDTO(requestDTO)).thenReturn(institutionCityDTO);
-        when(institutionCityMapper.toInstitutionCity(institutionCityDTO)).thenReturn(institutionCity);
-        when(institutionCityRepository.save(institutionCity)).thenReturn(institutionCity);
-        when(institutionCityMapper.toInstitutionCityDTO(institutionCity)).thenReturn(institutionCityDTO);
-
-        InstitutionCityDTO result = adminInstitutionCityService.createInstitutionCity(requestDTO);
-
-        assertNotNull(result);
-        assertEquals(institutionCityDTO, result);
-        verify(institutionCityRepository, times(1)).findByInstitutionIdAndCityCode(requestDTO.getInstitutionId(), requestDTO.getCode());
-        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-        verify(cityService, times(1)).getCityByCode(requestDTO.getCode());
-        verify(institutionCityMapper, times(1)).toDTO(requestDTO);
-        verify(institutionCityMapper, times(1)).toInstitutionCity(institutionCityDTO);
-        verify(institutionCityRepository, times(1)).save(institutionCity);
-        verify(institutionCityMapper, times(1)).toInstitutionCityDTO(institutionCity);
-    }
-
-    @Test
-    void updateInstitutionCity_shouldThrowDataConflictException_whenInstitutionCityNotFound() {
-        UpdateInstitutionCityRequestDTO requestDTO = new UpdateInstitutionCityRequestDTO();
-        requestDTO.setId(1L);
-
-        when(institutionCityRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
-
-        assertThrows(DataConflictException.class, () -> adminInstitutionCityService.updateInstitutionCity(requestDTO));
-        verify(institutionCityRepository, times(1)).findById(requestDTO.getId());
-    }
-
-    @Test
-    void updateInstitutionCity_shouldReturnUpdatedInstitutionCityDTO_whenSuccessful() throws MicroException {
-        UpdateInstitutionCityRequestDTO requestDTO = new UpdateInstitutionCityRequestDTO();
-        requestDTO.setId(1L);
-        requestDTO.setInstitutionId(1L);
-        requestDTO.setCode("CITY_CODE");
-        requestDTO.setUpdateUser("user");
-        requestDTO.setIsActive(true);
-
-        InstitutionCity existingInstitutionCity = new InstitutionCity();
-        InstitutionCityDTO existingInstitutionCityDTO = new InstitutionCityDTO();
-        InstitutionDTO institutionDTO = new InstitutionDTO();
-        CityDTO cityDTO = new CityDTO();
-        InstitutionCity updatedInstitutionCity = new InstitutionCity();
-        InstitutionCityDTO updatedInstitutionCityDTO = new InstitutionCityDTO();
-
-        when(institutionCityRepository.findById(requestDTO.getId())).thenReturn(Optional.of(existingInstitutionCity));
-        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(institutionDTO);
-        when(cityService.getCityByCode(requestDTO.getCode())).thenReturn(cityDTO);
-        when(institutionCityMapper.toInstitutionCityDTO(existingInstitutionCity)).thenReturn(existingInstitutionCityDTO);
-        when(institutionCityMapper.toInstitutionCity(existingInstitutionCityDTO)).thenReturn(updatedInstitutionCity);
-        when(institutionCityRepository.save(updatedInstitutionCity)).thenReturn(updatedInstitutionCity);
-        when(institutionCityMapper.toInstitutionCityDTO(updatedInstitutionCity)).thenReturn(updatedInstitutionCityDTO);
-
-        InstitutionCityDTO result = adminInstitutionCityService.updateInstitutionCity(requestDTO);
-
-        assertNotNull(result);
-        assertEquals(updatedInstitutionCityDTO, result);
-        verify(institutionCityRepository, times(1)).findById(requestDTO.getId());
-        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-        verify(cityService, times(1)).getCityByCode(requestDTO.getCode());
-        verify(institutionCityMapper, times(1)).toInstitutionCityDTO(existingInstitutionCity);
-        verify(institutionCityMapper, times(1)).toInstitutionCity(existingInstitutionCityDTO);
-        verify(institutionCityRepository, times(1)).save(updatedInstitutionCity);
-        verify(institutionCityMapper, times(1)).toInstitutionCityDTO(updatedInstitutionCity);
-    }
 }
