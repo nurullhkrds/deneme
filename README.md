@@ -11,64 +11,111 @@ import com.ykb.payments.bill.transaction.institution.admin.web.request.create.Cr
 import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionChnlPymMthdPscRequest;
 import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChnlPymMthdPscWebDTO;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionChnnlPymMthdPscDTO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/admin/institutionChannelPymMethodsPsc")
-public class AdminInstitutionChnlPymMthdPscController {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-    private final AdminInstitutionChnlPymMthdAPscService institutionChnlPymMthdPscService;
-    private final AdminInstitutionChnnlPymMthdPscMapper institutionChnnlPymMthdPscMapper;
+public class AdminInstitutionChnlPymMthdPscControllerTest {
 
-    public AdminInstitutionChnlPymMthdPscController(AdminInstitutionChnlPymMthdAPscService institutionChnlPymMthdPscService, AdminInstitutionChnnlPymMthdPscMapper institutionChnnlPymMthdPscMapper) {
-        this.institutionChnlPymMthdPscService = institutionChnlPymMthdPscService;
-        this.institutionChnnlPymMthdPscMapper = institutionChnnlPymMthdPscMapper;
+    @InjectMocks
+    private AdminInstitutionChnlPymMthdPscController adminInstitutionChnlPymMthdPscController;
+
+    @Mock
+    private AdminInstitutionChnlPymMthdAPscService institutionChnlPymMthdPscService;
+
+    @Mock
+    private AdminInstitutionChnnlPymMthdPscMapper institutionChnnlPymMthdPscMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getAllInstitutionChannelPymMethodsPsc_ShouldReturnListOfInstitutionChnlPymMthdPscWebDTO() {
+        List<InstitutionChnlPymMthdPscWebDTO> institutionChnlPymMthdPscWebDTOList = List.of(new InstitutionChnlPymMthdPscWebDTO());
 
-    @GetMapping("getAllInstitutionChannelPymMethodsPsc")
-    public ResponseEntity<DataResult<List<InstitutionChnlPymMthdPscWebDTO>>> getAllInstitutionChannelPymMethodsPsc() {
-        List<InstitutionChnlPymMthdPscWebDTO> webDTOList = institutionChnlPymMthdPscService.getAllInstitutionChnlPymMthdAPsc();
-        DataResult<List<InstitutionChnlPymMthdPscWebDTO>> resultDTO = new DataResult<>
-                (ResultConstant.DATA_LISTED.getMessage(), webDTOList);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+        when(institutionChnlPymMthdPscService.getAllInstitutionChnlPymMthdAPsc()).thenReturn(institutionChnlPymMthdPscWebDTOList);
+
+        ResponseEntity<DataResult<List<InstitutionChnlPymMthdPscWebDTO>>> response = adminInstitutionChnlPymMthdPscController.getAllInstitutionChannelPymMethodsPsc();
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChnlPymMthdPscWebDTOList, response.getBody().getData());
+        verify(institutionChnlPymMthdPscService, times(1)).getAllInstitutionChnlPymMthdAPsc();
     }
 
-    @GetMapping("getInstitutionChannelPymMethodPscById")
-    public ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> getInstitutionChannelPymMethodPscById(Long id) {
-        InstitutionChnnlPymMthdPscDTO dto = institutionChnlPymMthdPscService.getInstitutionChnlPymMthdAPscById(id);
-        InstitutionChnlPymMthdPscWebDTO webDTO = institutionChnnlPymMthdPscMapper.toWebDTO(dto);
-        DataResult<InstitutionChnlPymMthdPscWebDTO> resultDTO = new DataResult<>
-                (ResultConstant.DATA_RETRIEVED.getMessage(), webDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    @Test
+    void getInstitutionChannelPymMethodPscById_ShouldReturnInstitutionChnlPymMthdPscWebDTO() {
+        Long id = 1L;
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+        InstitutionChnlPymMthdPscWebDTO institutionChnlPymMthdPscWebDTO = new InstitutionChnlPymMthdPscWebDTO();
+
+        when(institutionChnlPymMthdPscService.getInstitutionChnlPymMthdAPscById(id)).thenReturn(institutionChnnlPymMthdPscDTO);
+        when(institutionChnnlPymMthdPscMapper.toWebDTO(institutionChnnlPymMthdPscDTO)).thenReturn(institutionChnlPymMthdPscWebDTO);
+
+        ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> response = adminInstitutionChnlPymMthdPscController.getInstitutionChannelPymMethodPscById(id);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_RETRIEVED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChnlPymMthdPscWebDTO, response.getBody().getData());
+        verify(institutionChnlPymMthdPscService, times(1)).getInstitutionChnlPymMthdAPscById(id);
+        verify(institutionChnnlPymMthdPscMapper, times(1)).toWebDTO(institutionChnnlPymMthdPscDTO);
     }
 
-    @PostMapping("createInstitutionChannelPymMethodPsc")
-    public ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> createInstitutionChannelPymMethodPsc(@RequestBody CreateInstitutionChnlPymMthdPscRequest request) throws MicroException {
+    @Test
+    void createInstitutionChannelPymMethodPsc_ShouldReturnCreatedInstitutionChnlPymMthdPscWebDTO() throws MicroException {
+        CreateInstitutionChnlPymMthdPscRequest request = new CreateInstitutionChnlPymMthdPscRequest();
+        CreateInstitutionChnlPymMthdPscRequestDTO requestDTO = new CreateInstitutionChnlPymMthdPscRequestDTO();
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+        InstitutionChnlPymMthdPscWebDTO institutionChnlPymMthdPscWebDTO = new InstitutionChnlPymMthdPscWebDTO();
 
-        CreateInstitutionChnlPymMthdPscRequestDTO requestDTO=institutionChnnlPymMthdPscMapper.toRequestDTO(request);
-        InstitutionChnnlPymMthdPscDTO dto = institutionChnlPymMthdPscService.createInstitutionChnlPymMthdPsc(requestDTO);
-        InstitutionChnlPymMthdPscWebDTO webDTO =institutionChnnlPymMthdPscMapper.toWebDTO(dto);
-        DataResult<InstitutionChnlPymMthdPscWebDTO> resultDTO = new DataResult<>
-                (ResultConstant.SUCCESSFULLY_ADDED.getMessage(), webDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
+        when(institutionChnnlPymMthdPscMapper.toRequestDTO(request)).thenReturn(requestDTO);
+        when(institutionChnlPymMthdPscService.createInstitutionChnlPymMthdPsc(requestDTO)).thenReturn(institutionChnnlPymMthdPscDTO);
+        when(institutionChnnlPymMthdPscMapper.toWebDTO(institutionChnnlPymMthdPscDTO)).thenReturn(institutionChnlPymMthdPscWebDTO);
+
+        ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> response = adminInstitutionChnlPymMthdPscController.createInstitutionChannelPymMethodPsc(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChnlPymMthdPscWebDTO, response.getBody().getData());
+        verify(institutionChnnlPymMthdPscMapper, times(1)).toRequestDTO(request);
+        verify(institutionChnlPymMthdPscService, times(1)).createInstitutionChnlPymMthdPsc(requestDTO);
+        verify(institutionChnnlPymMthdPscMapper, times(1)).toWebDTO(institutionChnnlPymMthdPscDTO);
     }
 
-    @PutMapping("updateInstitutionChannelPymMethodPsc")
-    public ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> updateInstitutionChannelPymMethodPsc(@RequestBody UpdateInstitutionChnlPymMthdPscRequest request) throws MicroException {
-        UpdateInstitutionChnlPymMthdPscRequestDTO requestDTO=institutionChnnlPymMthdPscMapper.toRequestDTO(request);
-        InstitutionChnnlPymMthdPscDTO dto = institutionChnlPymMthdPscService.updateInstitutionChnlPymMthdPsc(requestDTO);
-        InstitutionChnlPymMthdPscWebDTO webDTO = institutionChnnlPymMthdPscMapper.toWebDTO(dto);
-        DataResult<InstitutionChnlPymMthdPscWebDTO> resultDTO = new DataResult<>
-                (ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), webDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    @Test
+    void updateInstitutionChannelPymMethodPsc_ShouldReturnUpdatedInstitutionChnlPymMthdPscWebDTO() throws MicroException {
+        UpdateInstitutionChnlPymMthdPscRequest request = new UpdateInstitutionChnlPymMthdPscRequest();
+        UpdateInstitutionChnlPymMthdPscRequestDTO requestDTO = new UpdateInstitutionChnlPymMthdPscRequestDTO();
+        InstitutionChnnlPymMthdPscDTO institutionChnnlPymMthdPscDTO = new InstitutionChnnlPymMthdPscDTO();
+        InstitutionChnlPymMthdPscWebDTO institutionChnlPymMthdPscWebDTO = new InstitutionChnlPymMthdPscWebDTO();
+
+        when(institutionChnnlPymMthdPscMapper.toRequestDTO(request)).thenReturn(requestDTO);
+        when(institutionChnlPymMthdPscService.updateInstitutionChnlPymMthdPsc(requestDTO)).thenReturn(institutionChnnlPymMthdPscDTO);
+        when(institutionChnnlPymMthdPscMapper.toWebDTO(institutionChnnlPymMthdPscDTO)).thenReturn(institutionChnlPymMthdPscWebDTO);
+
+        ResponseEntity<DataResult<InstitutionChnlPymMthdPscWebDTO>> response = adminInstitutionChnlPymMthdPscController.updateInstitutionChannelPymMethodPsc(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionChnlPymMthdPscWebDTO, response.getBody().getData());
+        verify(institutionChnnlPymMthdPscMapper, times(1)).toRequestDTO(request);
+        verify(institutionChnlPymMthdPscService, times(1)).updateInstitutionChnlPymMthdPsc(requestDTO);
+        verify(institutionChnnlPymMthdPscMapper, times(1)).toWebDTO(institutionChnnlPymMthdPscDTO);
     }
-
-
-
-
 }
