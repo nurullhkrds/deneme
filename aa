@@ -3,14 +3,14 @@ package com.ykb.payments.bill.transaction.institution.admin.web;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionDebtTypeMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionDebtTypeService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionDebtTypeRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionDebtTypeRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionDebtTypeRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionDebtTypeRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionDebtTypeWebDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionFeatureMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionFeatureService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionFeatureRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionFeatureRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionFeatureRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionFeatureRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionFeatureWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionFeatureDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -25,16 +25,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class AdminInstitutionDebtTypeControllerTest {
+public class AdminInstitutionFeatureControllerTest {
 
     @InjectMocks
-    private AdminInstitutionDebtTypeController adminInstitutionDebtTypeController;
+    private AdminInstitutionFeatureController adminInstitutionFeatureController;
 
     @Mock
-    private AdminInstitutionDebtTypeService institutionDebtTypeService;
+    private AdminInstitutionFeatureService institutionFeatureService;
 
     @Mock
-    private AdminInstitutionDebtTypeMapper institutionDebtTypeMapper;
+    private AdminInstitutionFeatureMapper institutionFeatureMapper;
 
     @BeforeEach
     void setUp() {
@@ -42,83 +42,83 @@ public class AdminInstitutionDebtTypeControllerTest {
     }
 
     @Test
-    void getAllInstitutionDebtTypes_ShouldReturnListOfInstitutionDebtTypeWebDTO() {
-        List<InstitutionDebtTypeDTO> institutionDebtTypeDTOList = List.of(new InstitutionDebtTypeDTO());
-        List<InstitutionDebtTypeWebDTO> institutionDebtTypeWebDTOList = List.of(new InstitutionDebtTypeWebDTO());
+    void getAllInstitutionFeatures_ShouldReturnListOfInstitutionFeatureWebDTO() {
+        List<InstitutionFeatureDTO> institutionFeatureDTOList = List.of(new InstitutionFeatureDTO());
+        List<InstitutionFeatureWebDTO> institutionFeatureWebDTOList = List.of(new InstitutionFeatureWebDTO());
 
-        when(institutionDebtTypeService.getAllInstitutionDebtTypes()).thenReturn(institutionDebtTypeDTOList);
-        when(institutionDebtTypeMapper.toWebDTOList(institutionDebtTypeDTOList)).thenReturn(institutionDebtTypeWebDTOList);
+        when(institutionFeatureService.getAllInstitutionFeatures()).thenReturn(institutionFeatureDTOList);
+        when(institutionFeatureMapper.toWebDTOList(institutionFeatureDTOList)).thenReturn(institutionFeatureWebDTOList);
 
-        ResponseEntity<DataResult<List<InstitutionDebtTypeWebDTO>>> response = adminInstitutionDebtTypeController.getAllInstitutionDebtTypes();
+        ResponseEntity<DataResult<List<InstitutionFeatureWebDTO>>> response = adminInstitutionFeatureController.getAllInstitutionFeatures();
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionDebtTypeWebDTOList, response.getBody().getData());
-        verify(institutionDebtTypeService, times(1)).getAllInstitutionDebtTypes();
-        verify(institutionDebtTypeMapper, times(1)).toWebDTOList(institutionDebtTypeDTOList);
+        assertEquals(institutionFeatureWebDTOList, response.getBody().getData());
+        verify(institutionFeatureService, times(1)).getAllInstitutionFeatures();
+        verify(institutionFeatureMapper, times(1)).toWebDTOList(institutionFeatureDTOList);
     }
 
     @Test
-    void getInstitutionDebtTypeById_ShouldReturnInstitutionDebtTypeWebDTO() throws MicroException {
+    void getInstitutionFeatureById_ShouldReturnInstitutionFeatureWebDTO() throws MicroException {
         Long id = 1L;
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
-        InstitutionDebtTypeWebDTO institutionDebtTypeWebDTO = new InstitutionDebtTypeWebDTO();
+        InstitutionFeatureDTO institutionFeatureDTO = new InstitutionFeatureDTO();
+        InstitutionFeatureWebDTO institutionFeatureWebDTO = new InstitutionFeatureWebDTO();
 
-        when(institutionDebtTypeService.getInstitutionDebtTypeById(id)).thenReturn(institutionDebtTypeDTO);
-        when(institutionDebtTypeMapper.toWebDTO(institutionDebtTypeDTO)).thenReturn(institutionDebtTypeWebDTO);
+        when(institutionFeatureService.getInstitutionFeatureById(id)).thenReturn(institutionFeatureDTO);
+        when(institutionFeatureMapper.toWebDTO(institutionFeatureDTO)).thenReturn(institutionFeatureWebDTO);
 
-        ResponseEntity<DataResult<InstitutionDebtTypeWebDTO>> response = adminInstitutionDebtTypeController.getInstitutionDebtTypeById(id);
+        ResponseEntity<DataResult<InstitutionFeatureWebDTO>> response = adminInstitutionFeatureController.getInstitutionFeatureById(id);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(ResultConstant.DATA_RETRIEVED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionDebtTypeWebDTO, response.getBody().getData());
-        verify(institutionDebtTypeService, times(1)).getInstitutionDebtTypeById(id);
-        verify(institutionDebtTypeMapper, times(1)).toWebDTO(institutionDebtTypeDTO);
+        assertEquals(institutionFeatureWebDTO, response.getBody().getData());
+        verify(institutionFeatureService, times(1)).getInstitutionFeatureById(id);
+        verify(institutionFeatureMapper, times(1)).toWebDTO(institutionFeatureDTO);
     }
 
     @Test
-    void createInstitutionDebtType_ShouldReturnCreatedInstitutionDebtTypeWebDTO() throws MicroException {
-        CreateInstitutionDebtTypeRequest request = new CreateInstitutionDebtTypeRequest();
-        CreateInstitutionDebtTypeRequestDTO requestDTO = new CreateInstitutionDebtTypeRequestDTO();
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
-        InstitutionDebtTypeWebDTO institutionDebtTypeWebDTO = new InstitutionDebtTypeWebDTO();
+    void createInstitutionFeature_ShouldReturnCreatedInstitutionFeatureWebDTO() throws MicroException {
+        CreateInstitutionFeatureRequest request = new CreateInstitutionFeatureRequest();
+        CreateInstitutionFeatureRequestDTO requestDTO = new CreateInstitutionFeatureRequestDTO();
+        InstitutionFeatureDTO institutionFeatureDTO = new InstitutionFeatureDTO();
+        InstitutionFeatureWebDTO institutionFeatureWebDTO = new InstitutionFeatureWebDTO();
 
-        when(institutionDebtTypeMapper.toCreateInstitutionDebtTypeRequestDTO(request)).thenReturn(requestDTO);
-        when(institutionDebtTypeService.createInstitutionDebtType(requestDTO)).thenReturn(institutionDebtTypeDTO);
-        when(institutionDebtTypeMapper.toWebDTO(institutionDebtTypeDTO)).thenReturn(institutionDebtTypeWebDTO);
+        when(institutionFeatureMapper.toCreateInstitutionFeatureRequestDTO(request)).thenReturn(requestDTO);
+        when(institutionFeatureService.createInstitutionFeature(requestDTO)).thenReturn(institutionFeatureDTO);
+        when(institutionFeatureMapper.toWebDTO(institutionFeatureDTO)).thenReturn(institutionFeatureWebDTO);
 
-        ResponseEntity<DataResult<InstitutionDebtTypeWebDTO>> response = adminInstitutionDebtTypeController.createInstitutionDebtType(request);
+        ResponseEntity<DataResult<InstitutionFeatureWebDTO>> response = adminInstitutionFeatureController.createInstitutionFeature(request);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.INSTITUTION_DEBT_TYPE_CREATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionDebtTypeWebDTO, response.getBody().getData());
-        verify(institutionDebtTypeMapper, times(1)).toCreateInstitutionDebtTypeRequestDTO(request);
-        verify(institutionDebtTypeService, times(1)).createInstitutionDebtType(requestDTO);
-        verify(institutionDebtTypeMapper, times(1)).toWebDTO(institutionDebtTypeDTO);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(ResultConstant.INSTITUTION_FEATURE_CREATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionFeatureWebDTO, response.getBody().getData());
+        verify(institutionFeatureMapper, times(1)).toCreateInstitutionFeatureRequestDTO(request);
+        verify(institutionFeatureService, times(1)).createInstitutionFeature(requestDTO);
+        verify(institutionFeatureMapper, times(1)).toWebDTO(institutionFeatureDTO);
     }
 
     @Test
-    void updateInstitutionDebtType_ShouldReturnUpdatedInstitutionDebtTypeWebDTO() throws MicroException {
-        UpdateInstitutionDebtTypeRequest request = new UpdateInstitutionDebtTypeRequest();
-        UpdateInstitutionDebtTypeRequestDTO requestDTO = new UpdateInstitutionDebtTypeRequestDTO();
-        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
-        InstitutionDebtTypeWebDTO institutionDebtTypeWebDTO = new InstitutionDebtTypeWebDTO();
+    void updateInstitutionFeature_ShouldReturnUpdatedInstitutionFeatureWebDTO() throws MicroException {
+        UpdateInstitutionFeatureRequest request = new UpdateInstitutionFeatureRequest();
+        UpdateInstitutionFeatureRequestDTO requestDTO = new UpdateInstitutionFeatureRequestDTO();
+        InstitutionFeatureDTO institutionFeatureDTO = new InstitutionFeatureDTO();
+        InstitutionFeatureWebDTO institutionFeatureWebDTO = new InstitutionFeatureWebDTO();
 
-        when(institutionDebtTypeMapper.toUpdateInstitutionDebtTypeRequestDTO(request)).thenReturn(requestDTO);
-        when(institutionDebtTypeService.updateInstitutionDebtType(requestDTO)).thenReturn(institutionDebtTypeDTO);
-        when(institutionDebtTypeMapper.toWebDTO(institutionDebtTypeDTO)).thenReturn(institutionDebtTypeWebDTO);
+        when(institutionFeatureMapper.toUpdateInstitutionFeatureRequestDTO(request)).thenReturn(requestDTO);
+        when(institutionFeatureService.updateInstitutionFeature(requestDTO)).thenReturn(institutionFeatureDTO);
+        when(institutionFeatureMapper.toWebDTO(institutionFeatureDTO)).thenReturn(institutionFeatureWebDTO);
 
-        ResponseEntity<DataResult<InstitutionDebtTypeWebDTO>> response = adminInstitutionDebtTypeController.updateInstitutionDebtType(request);
+        ResponseEntity<DataResult<InstitutionFeatureWebDTO>> response = adminInstitutionFeatureController.updateInstitutionFeature(request);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.INSTITUTION_DEBT_TYPE_UPDATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionDebtTypeWebDTO, response.getBody().getData());
-        verify(institutionDebtTypeMapper, times(1)).toUpdateInstitutionDebtTypeRequestDTO(request);
-        verify(institutionDebtTypeService, times(1)).updateInstitutionDebtType(requestDTO);
-        verify(institutionDebtTypeMapper, times(1)).toWebDTO(institutionDebtTypeDTO);
+        assertEquals(ResultConstant.INSTITUTION_FEATURE_UPDATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionFeatureWebDTO, response.getBody().getData());
+        verify(institutionFeatureMapper, times(1)).toUpdateInstitutionFeatureRequestDTO(request);
+        verify(institutionFeatureService, times(1)).updateInstitutionFeature(requestDTO);
+        verify(institutionFeatureMapper, times(1)).toWebDTO(institutionFeatureDTO);
     }
 }
