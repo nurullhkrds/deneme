@@ -1,63 +1,24 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+@Service
+public class AdminCityServiceImpl implements AdminCityService {
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.util.StringUtils;
+    private final CityRepository cityRepository;
+    private final AdminCityMapper cityMapper;
 
-class AdminChannelServiceImplTest {
-
-    @Mock
-    private ChannelRepository channelRepository;
-
-    @Mock
-    private AdminChannelMapper mapper;
-
-    @InjectMocks
-    private AdminChannelServiceImpl adminChannelService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminCityServiceImpl(CityRepository cityRepository, AdminCityMapper cityMapper) {
+        this.cityRepository = cityRepository;
+        this.cityMapper = cityMapper;
     }
 
-    @Test
-    void findChannelByChannelCode_shouldReturnNull_whenChannelCodeIsEmpty() {
-        String channelCode = "";
-        ChannelDTO result = adminChannelService.findChannelByChannelCode(channelCode);
-        assertNull(result);
+
+    @Override
+    public CityDTO getCityByCode(String code) throws MicroException{
+        City city = cityRepository.findByCode(code);
+        if (city == null){
+            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.CITY_NOT_FOUND);
+
+        }
+        CityDTO dto= cityMapper.toCityDTO(city);
+        return dto;
     }
 
-    @Test
-    void findChannelByChannelCode_shouldReturnChannelDTO_whenChannelCodeIsValid() {
-        String channelCode = "validChannelCode";
-        Channel channel = new Channel();
-        ChannelDTO channelDTO = new ChannelDTO();
-
-        when(channelRepository.findByCode(channelCode)).thenReturn(channel);
-        when(mapper.toDto(channel)).thenReturn(channelDTO);
-
-        ChannelDTO result = adminChannelService.findChannelByChannelCode(channelCode);
-        assertNotNull(result);
-        assertEquals(channelDTO, result);
-
-        verify(channelRepository, times(1)).findByCode(channelCode);
-        verify(mapper, times(1)).toDto(channel);
-    }
-
-    @Test
-    void findChannelByChannelCode_shouldReturnNull_whenChannelNotFound() {
-        String channelCode = "nonExistentChannelCode";
-
-        when(channelRepository.findByCode(channelCode)).thenReturn(null);
-
-        ChannelDTO result = adminChannelService.findChannelByChannelCode(channelCode);
-        assertNull(result);
-
-        verify(channelRepository, times(1)).findByCode(channelCode);
-        verify(mapper, never()).toDto(any());
-    }
-} 
+}
