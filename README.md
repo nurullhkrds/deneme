@@ -1,41 +1,59 @@
 package com.ykb.payments.bill.transaction.institution.admin.service.impl;
 
-
 import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
-import com.ykb.payments.bill.common.exception.BillExceptionsUI;
 import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminProductMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminProductService;
 import com.ykb.payments.bill.transaction.institution.domain.Product;
 import com.ykb.payments.bill.transaction.institution.dto.ProductDTO;
 import com.ykb.payments.bill.transaction.institution.repository.ProductRepository;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@Service
-public class AdminProductServiceImpl implements AdminProductService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+public class AdminProductServiceTest {
 
-    private final ProductRepository productRepository;
-    private final AdminProductMapper productMapper;
+    @InjectMocks
+    private AdminProductServiceImpl adminProductService;
 
+    @Mock
+    private ProductRepository productRepository;
 
-    public AdminProductServiceImpl(ProductRepository productRepository, AdminProductMapper productMapper) {
-        this.productRepository = productRepository;
-        this.productMapper = productMapper;
+    @Mock
+    private AdminProductMapper productMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getProductByCode_WhenFound_ShouldReturnDTO() throws MicroException {
+        String code = "PROD123";
+        Product productEntity = new Product();
+        ProductDTO productDTO = new ProductDTO();
 
+        when(productRepository.findByCode(code)).thenReturn(productEntity);
+        when(productMapper.toProductDTO(productEntity)).thenReturn(productDTO);
 
+        ProductDTO result = adminProductService.getProductByCode(code);
 
-    @Override
-    public ProductDTO getProductByCode(String code) throws MicroException{
+        assertNotNull(result);
+        verify(productRepository, times(1)).findByCode(code);
+        verify(productMapper, times(1)).toProductDTO(productEntity);
+    }
 
-        Product entity= productRepository.findByCode(code);
-        if (entity == null){
-           throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PRODUCT_NOT_FOUND);
-        }
-        ProductDTO dto= productMapper.toProductDTO(entity);
-        return dto;
+    @Test
+    void getProductByCode_WhenNotFound_ShouldThrowException() {
+        String code = "PROD123";
 
+        when(productRepository.findByCode(code)).thenReturn(null);
+
+        assertThrows(DataNotFoundException.class, () -> adminProductService.getProductByCode(code));
+        verify(productRepository, times(1)).findByCode(code);
     }
 }
