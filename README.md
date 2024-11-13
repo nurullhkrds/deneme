@@ -4,35 +4,57 @@ import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
 import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminOwnerDepartmentMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminOwnerDepartmentService;
 import com.ykb.payments.bill.transaction.institution.domain.OwnerDepartment;
 import com.ykb.payments.bill.transaction.institution.dto.OwnerDepartmentDTO;
 import com.ykb.payments.bill.transaction.institution.repository.OwnerDepartmentRepository;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@Service
-public class AdminOwnerDepartmentImpl implements AdminOwnerDepartmentService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+public class AdminOwnerDepartmentServiceTest {
 
-    private final OwnerDepartmentRepository ownerDepartmentRepository;
+    @InjectMocks
+    private AdminOwnerDepartmentImpl adminOwnerDepartmentService;
 
-    private final AdminOwnerDepartmentMapper ownerDepartmentMapper;
+    @Mock
+    private OwnerDepartmentRepository ownerDepartmentRepository;
 
-    public AdminOwnerDepartmentImpl(OwnerDepartmentRepository ownerDepartmentRepository, AdminOwnerDepartmentMapper ownerDepartmentMapper) {
-        this.ownerDepartmentRepository = ownerDepartmentRepository;
-        this.ownerDepartmentMapper = ownerDepartmentMapper;
+    @Mock
+    private AdminOwnerDepartmentMapper ownerDepartmentMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getOwnerDepartmentByCode_WhenFound_ShouldReturnDTO() throws MicroException {
+        String code = "DEPT123";
+        OwnerDepartment ownerDepartment = new OwnerDepartment();
+        OwnerDepartmentDTO ownerDepartmentDTO = new OwnerDepartmentDTO();
 
+        when(ownerDepartmentRepository.findByCode(code)).thenReturn(ownerDepartment);
+        when(ownerDepartmentMapper.toOwnerDepartmentDTO(ownerDepartment)).thenReturn(ownerDepartmentDTO);
 
-    @Override
-    public OwnerDepartmentDTO getOwnerDepartmentByCode(String code) throws MicroException {
-        OwnerDepartment entity= ownerDepartmentRepository.findByCode(code);
-        if (entity == null){
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.OWNER_DEPARTMENT_NOT_FOUND);
-        }
-        OwnerDepartmentDTO dto= ownerDepartmentMapper.toOwnerDepartmentDTO(entity);
-        return dto;
+        OwnerDepartmentDTO result = adminOwnerDepartmentService.getOwnerDepartmentByCode(code);
 
+        assertNotNull(result);
+        verify(ownerDepartmentRepository, times(1)).findByCode(code);
+        verify(ownerDepartmentMapper, times(1)).toOwnerDepartmentDTO(ownerDepartment);
+    }
+
+    @Test
+    void getOwnerDepartmentByCode_WhenNotFound_ShouldThrowException() {
+        String code = "DEPT123";
+
+        when(ownerDepartmentRepository.findByCode(code)).thenReturn(null);
+
+        assertThrows(DataNotFoundException.class, () -> adminOwnerDepartmentService.getOwnerDepartmentByCode(code));
+        verify(ownerDepartmentRepository, times(1)).findByCode(code);
     }
 }
