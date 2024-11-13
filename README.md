@@ -3,122 +3,67 @@ package com.ykb.payments.bill.transaction.institution.admin.web;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionCityMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionCityService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionCityRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionCityRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionCityRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionCityRequest;
-import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionCityWebDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionCityDTO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionChannelMapper;
+import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionChannelService;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionChannelRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionChannelRequestDTO;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.create.CreateInstitutionChannelRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionChannelRequest;
+import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionChannelWebDTO;
+import com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+@RestController
+@RequestMapping("/admin/institutionChannels")
+public class AdminInstitutionChannelController {
 
-public class AdminInstitutionCityControllerTest {
+    private final AdminInstitutionChannelService institutionChannelService;
+    private final AdminInstitutionChannelMapper institutionChannelMapper;
 
-    @InjectMocks
-    private AdminInsitutionCityController adminInstitutionCityController;
-
-    @Mock
-    private AdminInstitutionCityService institutionCityService;
-
-    @Mock
-    private AdminInstitutionCityMapper institutionCityMapper;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public AdminInstitutionChannelController(AdminInstitutionChannelService institutionChannelService, AdminInstitutionChannelMapper institutionChannelMapper) {
+        this.institutionChannelService = institutionChannelService;
+        this.institutionChannelMapper = institutionChannelMapper;
     }
 
-    @Test
-    void getAllInstitutionCities_ShouldReturnListOfInstitutionCityWebDTO() {
-        List<InstitutionCityDTO> institutionCityDTOList = List.of(new InstitutionCityDTO());
-        List<InstitutionCityWebDTO> institutionCityWebDTOList = List.of(new InstitutionCityWebDTO());
 
-        when(institutionCityService.getAllInstitutionCities()).thenReturn(institutionCityDTOList);
-        when(institutionCityMapper.toWebDTOList(institutionCityDTOList)).thenReturn(institutionCityWebDTOList);
+    @GetMapping("getAllInstitutionChannels")
+    public ResponseEntity<DataResult<List<InstitutionChannelWebDTO>>> getAllInstitutionChannels() {
+        List<InstitutionChannelDTO> institutionChannelDTOS = institutionChannelService.getAllInstitutionChannels();
+        List<InstitutionChannelWebDTO> institutionChannelWebDTOList = institutionChannelMapper.toWebDTOList(institutionChannelDTOS);
+        DataResult<List<InstitutionChannelWebDTO>> resultDTO = new DataResult<>
+                (ResultConstant.DATA_LISTED.getMessage(), institutionChannelWebDTOList);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
 
-        ResponseEntity<DataResult<List<InstitutionCityWebDTO>>> response = adminInstitutionCityController.getAllInstitutionCities();
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionCityWebDTOList, response.getBody().getData());
-        verify(institutionCityService, times(1)).getAllInstitutionCities();
-        verify(institutionCityMapper, times(1)).toWebDTOList(institutionCityDTOList);
     }
 
-    @Test
-    void getInstitutionCityById_ShouldReturnInstitutionCityWebDTO() {
-        Long institutionCityId = 1L;
-        InstitutionCityDTO institutionCityDTO = new InstitutionCityDTO();
-        InstitutionCityWebDTO institutionCityWebDTO = new InstitutionCityWebDTO();
 
-        when(institutionCityService.getInstitutionCityById(institutionCityId)).thenReturn(institutionCityDTO);
-        when(institutionCityMapper.toWebDTO(institutionCityDTO)).thenReturn(institutionCityWebDTO);
-
-        ResponseEntity<DataResult<InstitutionCityWebDTO>> response = adminInstitutionCityController.getInstitutionCityById(institutionCityId);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.DATA_RETRIEVED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionCityWebDTO, response.getBody().getData());
-        verify(institutionCityService, times(1)).getInstitutionCityById(institutionCityId);
-        verify(institutionCityMapper, times(1)).toWebDTO(institutionCityDTO);
+    @GetMapping("getInstitutionChannelById")
+    public ResponseEntity<DataResult<InstitutionChannelWebDTO>> getInstitutionChannelById(@RequestParam Long id) {
+        InstitutionChannelDTO institutionChannelDTO = institutionChannelService.getInstitutionChannelById( id);
+        InstitutionChannelWebDTO institutionChannelWebDTO = institutionChannelMapper.toWebDTO(institutionChannelDTO);
+        DataResult<InstitutionChannelWebDTO> resultDTO = new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(), institutionChannelWebDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 
-    @Test
-    void createInstitutionCity_ShouldReturnCreatedInstitutionCityWebDTO() throws MicroException {
-        CreateInstitutionCityRequest request = new CreateInstitutionCityRequest();
-        CreateInstitutionCityRequestDTO requestDTO = new CreateInstitutionCityRequestDTO();
-        InstitutionCityDTO institutionCityDTO = new InstitutionCityDTO();
-        InstitutionCityWebDTO institutionCityWebDTO = new InstitutionCityWebDTO();
-
-        when(institutionCityMapper.toCreateDTO(request)).thenReturn(requestDTO);
-        when(institutionCityService.createInstitutionCity(requestDTO)).thenReturn(institutionCityDTO);
-        when(institutionCityMapper.toWebDTO(institutionCityDTO)).thenReturn(institutionCityWebDTO);
-
-        ResponseEntity<DataResult<InstitutionCityWebDTO>> response = adminInstitutionCityController.createInstitutionCity(request);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(ResultConstant.INSTITUTION_CITY_CREATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionCityWebDTO, response.getBody().getData());
-        verify(institutionCityMapper, times(1)).toCreateDTO(request);
-        verify(institutionCityService, times(1)).createInstitutionCity(requestDTO);
-        verify(institutionCityMapper, times(1)).toWebDTO(institutionCityDTO);
+    @PostMapping("createInstitutionChannel")
+    public ResponseEntity<DataResult<InstitutionChannelWebDTO>> createInstitutionChannel(@RequestBody CreateInstitutionChannelRequest request) throws MicroException {
+        CreateInstitutionChannelRequestDTO requestDTO = institutionChannelMapper.toRequestDTO(request);
+        InstitutionChannelDTO institutionChannelDTO = institutionChannelService.createInstitutionChannel(requestDTO);
+        InstitutionChannelWebDTO institutionChannelWebDTO = institutionChannelMapper.toWebDTO(institutionChannelDTO);
+        DataResult<InstitutionChannelWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_CHANNEL_CREATED.getMessage(), institutionChannelWebDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
     }
 
-    @Test
-    void updateInstitutionCity_ShouldReturnUpdatedInstitutionCityWebDTO() throws MicroException {
-        UpdateInstitutionCityRequest request = new UpdateInstitutionCityRequest();
-        UpdateInstitutionCityRequestDTO requestDTO = new UpdateInstitutionCityRequestDTO();
-        InstitutionCityDTO institutionCityDTO = new InstitutionCityDTO();
-        InstitutionCityWebDTO institutionCityWebDTO = new InstitutionCityWebDTO();
-
-        when(institutionCityMapper.toUpdateDTO(request)).thenReturn(requestDTO);
-        when(institutionCityService.updateInstitutionCity(requestDTO)).thenReturn(institutionCityDTO);
-        when(institutionCityMapper.toWebDTO(institutionCityDTO)).thenReturn(institutionCityWebDTO);
-
-        ResponseEntity<DataResult<InstitutionCityWebDTO>> response = adminInstitutionCityController.updateInstitutionCity(request);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(ResultConstant.INSTITUTION_CITY_UPDATED.getMessage(), response.getBody().getMessage());
-        assertEquals(institutionCityWebDTO, response.getBody().getData());
-        verify(institutionCityMapper, times(1)).toUpdateDTO(request);
-        verify(institutionCityService, times(1)).updateInstitutionCity(requestDTO);
-        verify(institutionCityMapper, times(1)).toWebDTO(institutionCityDTO);
+    @PutMapping("updateInstitutionChannel")
+    public ResponseEntity<DataResult<InstitutionChannelWebDTO>> updateInstitutionChannel(@RequestBody UpdateInstitutionChannelRequest request) throws MicroException {
+        UpdateInstitutionChannelRequestDTO requestDTO = institutionChannelMapper.toRequestDTO(request);
+        InstitutionChannelDTO institutionChannelDTO = institutionChannelService.updateInstitutionChannel(requestDTO);
+        InstitutionChannelWebDTO institutionChannelWebDTO = institutionChannelMapper.toWebDTO(institutionChannelDTO);
+        DataResult<InstitutionChannelWebDTO> resultDTO = new DataResult<>(ResultConstant.INSTITUTION_CHANNEL_UPDATED.getMessage(), institutionChannelWebDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
     }
 }
