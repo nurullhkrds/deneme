@@ -1,39 +1,62 @@
-package com.ykb.payments.bill.transaction.institution.admin.service.impl;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
 import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminFeatureMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminFeatureService;
 import com.ykb.payments.bill.transaction.institution.domain.Feature;
 import com.ykb.payments.bill.transaction.institution.dto.FeatureDTO;
 import com.ykb.payments.bill.transaction.institution.enums.EnumFeatureCode;
 import com.ykb.payments.bill.transaction.institution.repository.FeatureRepository;
-import org.springframework.stereotype.Service;
 
-@Service
-public class AdminFeatureServiceImpl implements AdminFeatureService {
+class AdminFeatureServiceImplTest {
 
+    @Mock
+    private FeatureRepository featureRepository;
 
-    private final FeatureRepository featureRepository;
-    private final AdminFeatureMapper featureMapper;
+    @Mock
+    private AdminFeatureMapper featureMapper;
 
-    public AdminFeatureServiceImpl(FeatureRepository featureRepository, AdminFeatureMapper featureMapper) {
-        this.featureRepository = featureRepository;
-        this.featureMapper = featureMapper;
+    @InjectMocks
+    private AdminFeatureServiceImpl adminFeatureService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getFeatureByCode_shouldReturnFeatureDTO_whenFeatureExists() throws MicroException {
+        EnumFeatureCode code = EnumFeatureCode.SOME_VALID_CODE;
+        Feature feature = new Feature();
+        FeatureDTO featureDTO = new FeatureDTO();
 
-    @Override
-    public FeatureDTO getFeatureByCode(EnumFeatureCode code) throws MicroException {
+        when(featureRepository.findByCode(code)).thenReturn(feature);
+        when(featureMapper.toFeatureDTO(feature)).thenReturn(featureDTO);
 
-        Feature entity= featureRepository.findByCode(code);
-        if (entity == null){
-            throw new  DataNotFoundException(BillExceptionsUI.ValidationExceptions.FEATURE_NOT_FOUND);
-        }
-        FeatureDTO dto = featureMapper.toFeatureDTO(entity);
-        return dto;
+        FeatureDTO result = adminFeatureService.getFeatureByCode(code);
 
-
+        assertNotNull(result);
+        assertEquals(featureDTO, result);
+        verify(featureRepository, times(1)).findByCode(code);
+        verify(featureMapper, times(1)).toFeatureDTO(feature);
     }
-}
+
+    @Test
+    void getFeatureByCode_shouldThrowDataNotFoundException_whenFeatureDoesNotExist() {
+        EnumFeatureCode code = EnumFeatureCode.SOME_INVALID_CODE;
+
+        when(featureRepository.findByCode(code)).thenReturn(null);
+
+        assertThrows(DataNotFoundException.class, () -> adminFeatureService.getFeatureByCode(code));
+        verify(featureRepository, times(1)).findByCode(code);
+        verify(featureMapper, never()).toFeatureDTO(any());
+    }
+} 
