@@ -1,11 +1,17 @@
-package com.ykb.payments.bill.transaction.institution.admin.service.impl;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.ykb.architecture.micro.error.exception.DataConflictException;
 import com.ykb.architecture.micro.error.exception.DataNotFoundException;
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.common.exception.BillExceptionsUI;
 import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionDebtTypeMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionDebtTypeService;
 import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionService;
 import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionDebtTypeRequestDTO;
 import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionDebtTypeRequestDTO;
@@ -13,95 +19,174 @@ import com.ykb.payments.bill.transaction.institution.domain.InstitutionDebtType;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionDTO;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO;
 import com.ykb.payments.bill.transaction.institution.repository.InstitutionDebtTypeRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
 
-@Service
-@RequiredArgsConstructor
-public class AdminInstitutionDebtTypeServiceImpl implements AdminInstitutionDebtTypeService {
+class AdminInstitutionDebtTypeServiceImplTest {
 
-	private final InstitutionDebtTypeRepository institutionDebtTypeRepository;
-	private final AdminInstitutionDebtTypeMapper institutionDebtTypeMapper;
-	private final AdminInstitutionService institutionService;
+    @Mock
+    private InstitutionDebtTypeRepository institutionDebtTypeRepository;
 
+    @Mock
+    private AdminInstitutionDebtTypeMapper institutionDebtTypeMapper;
 
-	@Override
-	public List<InstitutionDebtTypeDTO> getAllInstitutionDebtTypes() {
-		List<InstitutionDebtType> institutionDebtTypeList=institutionDebtTypeRepository.findAll();
-		return institutionDebtTypeMapper.toDTOList(institutionDebtTypeList);
-	}
+    @Mock
+    private AdminInstitutionService institutionService;
 
-	@Override
-	public InstitutionDebtTypeDTO getInstitutionDebtTypeById(Long id) throws MicroException {
-		Optional <InstitutionDebtType> optionalInstitutionDebtType=institutionDebtTypeRepository.findById(id);
+    @InjectMocks
+    private AdminInstitutionDebtTypeServiceImpl adminInstitutionDebtTypeService;
 
-        return optionalInstitutionDebtType.map(institutionDebtTypeMapper::toDTO).orElse(null);
-
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-	@Override
-	public InstitutionDebtTypeDTO createInstitutionDebtType(CreateInstitutionDebtTypeRequestDTO requestDTO) throws MicroException {
-		Optional<InstitutionDebtType> existingInstitutionDebtType = institutionDebtTypeRepository
-				.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType());
-		if (existingInstitutionDebtType.isPresent()) {
-			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_DEBT_TYPE);
-		}
+    @Test
+    void getAllInstitutionDebtTypes_shouldReturnListOfInstitutionDebtTypeDTO() {
+        List<InstitutionDebtType> institutionDebtTypeList = Arrays.asList(new InstitutionDebtType(), new InstitutionDebtType());
+        List<InstitutionDebtTypeDTO> expectedDTOs = Arrays.asList(new InstitutionDebtTypeDTO(), new InstitutionDebtTypeDTO());
 
-		InstitutionDTO institutionDTO = institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
+        when(institutionDebtTypeRepository.findAll()).thenReturn(institutionDebtTypeList);
+        when(institutionDebtTypeMapper.toDTOList(institutionDebtTypeList)).thenReturn(expectedDTOs);
 
-		if(institutionDTO == null) {
-			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
-		}
+        List<InstitutionDebtTypeDTO> result = adminInstitutionDebtTypeService.getAllInstitutionDebtTypes();
 
-		InstitutionDebtTypeDTO dto = institutionDebtTypeMapper.toDTO(requestDTO);
-		dto.setInstitution(institutionDTO);
-		dto.setCreateDate(LocalDateTime.now());
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(institutionDebtTypeRepository, times(1)).findAll();
+        verify(institutionDebtTypeMapper, times(1)).toDTOList(institutionDebtTypeList);
+    }
 
-		InstitutionDebtType entity = institutionDebtTypeMapper.toEntity(dto);
-		entity = institutionDebtTypeRepository.save(entity);
+    @Test
+    void getInstitutionDebtTypeById_shouldReturnInstitutionDebtTypeDTO_whenFound() throws MicroException {
+        Long id = 1L;
+        InstitutionDebtType institutionDebtType = new InstitutionDebtType();
+        InstitutionDebtTypeDTO expectedDTO = new InstitutionDebtTypeDTO();
 
-		return institutionDebtTypeMapper.toDTO(entity);
+        when(institutionDebtTypeRepository.findById(id)).thenReturn(Optional.of(institutionDebtType));
+        when(institutionDebtTypeMapper.toDTO(institutionDebtType)).thenReturn(expectedDTO);
 
-	}
+        InstitutionDebtTypeDTO result = adminInstitutionDebtTypeService.getInstitutionDebtTypeById(id);
 
-	@Override
-	public InstitutionDebtTypeDTO updateInstitutionDebtType(UpdateInstitutionDebtTypeRequestDTO requestDTO) throws MicroException {
-		InstitutionDebtTypeDTO existingDebtTypeDTO = getInstitutionDebtTypeById(requestDTO.getId());
+        assertNotNull(result);
+        assertEquals(expectedDTO, result);
+        verify(institutionDebtTypeRepository, times(1)).findById(id);
+        verify(institutionDebtTypeMapper, times(1)).toDTO(institutionDebtType);
+    }
 
-		if (existingDebtTypeDTO == null) {
-			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_DEBT_TYPE_NOT_FOUND);
-		}
+    @Test
+    void getInstitutionDebtTypeById_shouldReturnNull_whenNotFound() throws MicroException {
+        Long id = 1L;
 
+        when(institutionDebtTypeRepository.findById(id)).thenReturn(Optional.empty());
 
-		Optional<InstitutionDebtType> duplicateDebtType = institutionDebtTypeRepository
-				.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType());
-		if (duplicateDebtType.isPresent() && !duplicateDebtType.get().getId().equals(requestDTO.getId())) {
-			throw new DataConflictException(BillExceptionsUI.ValidationExceptions.DUPLICATE_INSTITUTION_DEBT_TYPE);
+        InstitutionDebtTypeDTO result = adminInstitutionDebtTypeService.getInstitutionDebtTypeById(id);
 
-		}
+        assertNull(result);
+        verify(institutionDebtTypeRepository, times(1)).findById(id);
+    }
 
-		InstitutionDTO institutionDTO = institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
-		if (institutionDTO == null) {
-			throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.INSTITUTION_NOT_FOUND);
+    @Test
+    void createInstitutionDebtType_shouldThrowDataConflictException_whenInstitutionDebtTypeAlreadyExists() {
+        CreateInstitutionDebtTypeRequestDTO requestDTO = new CreateInstitutionDebtTypeRequestDTO();
+        requestDTO.setInstitutionId(1L);
+        requestDTO.setDebtType("DEBT_TYPE");
 
-		}
+        when(institutionDebtTypeRepository.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType()))
+                .thenReturn(Optional.of(new InstitutionDebtType()));
 
-		existingDebtTypeDTO.setInstitution(institutionDTO);
-		existingDebtTypeDTO.setUpdatedBy(requestDTO.getUpdateUser());
-		existingDebtTypeDTO.setUpdateDate(LocalDateTime.now());
-		existingDebtTypeDTO.setExplanation(requestDTO.getExplanation());
-		existingDebtTypeDTO.setIsActive(requestDTO.getIsActive());
+        assertThrows(DataConflictException.class, () -> adminInstitutionDebtTypeService.createInstitutionDebtType(requestDTO));
+        verify(institutionDebtTypeRepository, times(1)).findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType());
+    }
 
-		InstitutionDebtType updatedDebtType = institutionDebtTypeMapper.toEntity(existingDebtTypeDTO);
-		updatedDebtType = institutionDebtTypeRepository.save(updatedDebtType);
+    @Test
+    void createInstitutionDebtType_shouldThrowDataNotFoundException_whenInstitutionNotFound() throws MicroException {
+        CreateInstitutionDebtTypeRequestDTO requestDTO = new CreateInstitutionDebtTypeRequestDTO();
+        requestDTO.setInstitutionId(1L);
 
-		return institutionDebtTypeMapper.toDTO(updatedDebtType);
-	}
+        when(institutionDebtTypeRepository.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType()))
+                .thenReturn(Optional.empty());
+        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(null);
 
+        assertThrows(DataNotFoundException.class, () -> adminInstitutionDebtTypeService.createInstitutionDebtType(requestDTO));
+        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
+    }
 
+    @Test
+    void createInstitutionDebtType_shouldReturnInstitutionDebtTypeDTO_whenSuccessful() throws MicroException {
+        CreateInstitutionDebtTypeRequestDTO requestDTO = new CreateInstitutionDebtTypeRequestDTO();
+        requestDTO.setInstitutionId(1L);
+        requestDTO.setDebtType("DEBT_TYPE");
+        InstitutionDTO institutionDTO = new InstitutionDTO();
+        InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+        InstitutionDebtType institutionDebtType = new InstitutionDebtType();
 
+        when(institutionDebtTypeRepository.findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType()))
+                .thenReturn(Optional.empty());
+        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(institutionDTO);
+        when(institutionDebtTypeMapper.toDTO(requestDTO)).thenReturn(institutionDebtTypeDTO);
+        when(institutionDebtTypeMapper.toEntity(institutionDebtTypeDTO)).thenReturn(institutionDebtType);
+        when(institutionDebtTypeRepository.save(institutionDebtType)).thenReturn(institutionDebtType);
+        when(institutionDebtTypeMapper.toDTO(institutionDebtType)).thenReturn(institutionDebtTypeDTO);
+
+        InstitutionDebtTypeDTO result = adminInstitutionDebtTypeService.createInstitutionDebtType(requestDTO);
+
+        assertNotNull(result);
+        assertEquals(institutionDebtTypeDTO, result);
+        verify(institutionDebtTypeRepository, times(1)).findByInstitutionIdAndDebtTypeCode(requestDTO.getInstitutionId(), requestDTO.getDebtType());
+        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
+        verify(institutionDebtTypeMapper, times(1)).toDTO(requestDTO);
+        verify(institutionDebtTypeMapper, times(1)).toEntity(institutionDebtTypeDTO);
+        verify(institutionDebtTypeRepository, times(1)).save(institutionDebtType);
+        verify(institutionDebtTypeMapper, times(1)).toDTO(institutionDebtType);
+    }
+
+    @Test
+    void updateInstitutionDebtType_shouldThrowDataNotFoundException_whenInstitutionDebtTypeNotFound() throws MicroException {
+        UpdateInstitutionDebtTypeRequestDTO requestDTO = new UpdateInstitutionDebtTypeRequestDTO();
+        requestDTO.setId(1L);
+
+        when(institutionDebtTypeRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
+
+        assertThrows(DataNotFoundException.class, () -> adminInstitutionDebtTypeService.updateInstitutionDebtType(requestDTO));
+        verify(institutionDebtTypeRepository, times(1)).findById(requestDTO.getId());
+    }
+
+    @Test
+    void updateInstitutionDebtType_shouldReturnUpdatedInstitutionDebtTypeDTO_whenSuccessful() throws MicroException {
+        UpdateInstitutionDebtTypeRequestDTO requestDTO = new UpdateInstitutionDebtTypeRequestDTO();
+        requestDTO.setId(1L);
+        requestDTO.setInstitutionId(1L);
+        requestDTO.setDebtType("DEBT_TYPE");
+        requestDTO.setUpdateUser("user");
+        requestDTO.setIsActive(true);
+        requestDTO.setExplanation("Explanation");
+
+        InstitutionDebtType existingInstitutionDebtType = new InstitutionDebtType();
+        InstitutionDebtTypeDTO existingInstitutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+        InstitutionDTO institutionDTO = new InstitutionDTO();
+        InstitutionDebtType updatedInstitutionDebtType = new InstitutionDebtType();
+        InstitutionDebtTypeDTO updatedInstitutionDebtTypeDTO = new InstitutionDebtTypeDTO();
+
+        when(institutionDebtTypeRepository.findById(requestDTO.getId())).thenReturn(Optional.of(existingInstitutionDebtType));
+        when(institutionService.getInstitutionByIdTypeSecond(requestDTO.getInstitutionId())).thenReturn(institutionDTO);
+        when(institutionDebtTypeMapper.toDTO(existingInstitutionDebtType)).thenReturn(existingInstitutionDebtTypeDTO);
+        when(institutionDebtTypeMapper.toEntity(existingInstitutionDebtTypeDTO)).thenReturn(updatedInstitutionDebtType);
+        when(institutionDebtTypeRepository.save(updatedInstitutionDebtType)).thenReturn(updatedInstitutionDebtType);
+        when(institutionDebtTypeMapper.toDTO(updatedInstitutionDebtType)).thenReturn(updatedInstitutionDebtTypeDTO);
+
+        InstitutionDebtTypeDTO result = adminInstitutionDebtTypeService.updateInstitutionDebtType(requestDTO);
+
+        assertNotNull(result);
+        assertEquals(updatedInstitutionDebtTypeDTO, result);
+        verify(institutionDebtTypeRepository, times(1)).findById(requestDTO.getId());
+        verify(institutionService, times(1)).getInstitutionByIdTypeSecond(requestDTO.getInstitutionId());
+        verify(institutionDebtTypeMapper, times(1)).toDTO(existingInstitutionDebtType);
+        verify(institutionDebtTypeMapper, times(1)).toEntity(existingInstitutionDebtTypeDTO);
+        verify(institutionDebtTypeRepository, times(1)).save(updatedInstitutionDebtType);
+        verify(institutionDebtTypeMapper, times(1)).toDTO(updatedInstitutionDebtType);
+    }
 }
