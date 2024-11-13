@@ -9,31 +9,54 @@ import com.ykb.payments.bill.transaction.institution.dto.PaymentMethodDTO;
 import com.ykb.payments.bill.transaction.institution.enums.EnumPaymentMethod;
 import com.ykb.payments.bill.transaction.institution.mapper.PaymentMethodMapper;
 import com.ykb.payments.bill.transaction.institution.repository.PaymentMethodRepository;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@Service
-public class AdminPaymentMethodServiceImpl implements AdminPaymentMethodService {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    private final PaymentMethodRepository paymentMethodRepository;
-    private final PaymentMethodMapper paymentMethodMapper;
+public class AdminPaymentMethodServiceTest {
 
-    public AdminPaymentMethodServiceImpl(PaymentMethodRepository paymentMethodRepository, PaymentMethodMapper paymentMethodMapper) {
-        this.paymentMethodRepository = paymentMethodRepository;
-        this.paymentMethodMapper = paymentMethodMapper;
+    @InjectMocks
+    private AdminPaymentMethodServiceImpl adminPaymentMethodService;
+
+    @Mock
+    private PaymentMethodRepository paymentMethodRepository;
+
+    @Mock
+    private PaymentMethodMapper paymentMethodMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getPaymentMethodByMethod_WhenFound_ShouldReturnDTO() throws MicroException {
+        EnumPaymentMethod paymentMethod = EnumPaymentMethod.CARD;
+        PaymentMethod paymentMethodEntity = new PaymentMethod();
+        PaymentMethodDTO paymentMethodDTO = new PaymentMethodDTO();
 
+        when(paymentMethodRepository.findByCode(paymentMethod)).thenReturn(paymentMethodEntity);
+        when(paymentMethodMapper.toDTO(paymentMethodEntity)).thenReturn(paymentMethodDTO);
 
-    @Override
-    public PaymentMethodDTO getPaymentMethodByMethod(EnumPaymentMethod paymentMethod) throws MicroException {
-        PaymentMethod entity= paymentMethodRepository.findByCode(paymentMethod);
-        if (entity == null ){
-            throw new DataNotFoundException(BillExceptionsUI.ValidationExceptions.PAYMENT_METHOD_NOT_FOUND);
-        }
-        PaymentMethodDTO dto= paymentMethodMapper.toDTO(entity);
-        return dto;
+        PaymentMethodDTO result = adminPaymentMethodService.getPaymentMethodByMethod(paymentMethod);
 
+        assertNotNull(result);
+        verify(paymentMethodRepository, times(1)).findByCode(paymentMethod);
+        verify(paymentMethodMapper, times(1)).toDTO(paymentMethodEntity);
+    }
 
+    @Test
+    void getPaymentMethodByMethod_WhenNotFound_ShouldThrowException() {
+        EnumPaymentMethod paymentMethod = EnumPaymentMethod.CARD;
 
+        when(paymentMethodRepository.findByCode(paymentMethod)).thenReturn(null);
+
+        assertThrows(DataNotFoundException.class, () -> adminPaymentMethodService.getPaymentMethodByMethod(paymentMethod));
+        verify(paymentMethodRepository, times(1)).findByCode(paymentMethod);
     }
 }
