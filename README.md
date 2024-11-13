@@ -1,158 +1,69 @@
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+  @Test
+    void updateInstitutionChannel_shouldThrowDataNotFoundException_whenInstitutionChannelDoesNotExist() {
+        UpdateInstitutionChannelRequestDTO requestDTO = new UpdateInstitutionChannelRequestDTO();
+        requestDTO.setId(1L);
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+        when(institutionChannelRepository.findById(requestDTO.getId())).thenReturn(Optional.empty());
 
-import com.ykb.architecture.micro.error.exception.DataConflictException;
-import com.ykb.architecture.micro.error.exception.DataNotFoundException;
-import com.ykb.architecture.micro.error.exception.MicroException;
-import com.ykb.payments.bill.common.exception.BillExceptionsUI;
-import com.ykb.payments.bill.transaction.institution.admin.mapper.AdminInstitutionChannelMapper;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminChannelService;
-import com.ykb.payments.bill.transaction.institution.admin.service.intf.AdminInstitutionDebtTypeService;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.create.CreateInstitutionChannelRequestDTO;
-import com.ykb.payments.bill.transaction.institution.admin.web.dto.update.UpdateInstitutionChannelRequestDTO;
-import com.ykb.payments.bill.transaction.institution.domain.InstitutionChannel;
-import com.ykb.payments.bill.transaction.institution.dto.ChannelDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionChannelDTO;
-import com.ykb.payments.bill.transaction.institution.dto.InstitutionDebtTypeDTO;
-import com.ykb.payments.bill.transaction.institution.enums.EnumFeatureCode;
-import com.ykb.payments.bill.transaction.institution.repository.InstitutionChannelRepository;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.List;
-import java.util.Arrays;
-
-class AdminInstitutionChannelServiceImplTest {
-
-    @Mock
-    private InstitutionChannelRepository institutionChannelRepository;
-
-    @Mock
-    private AdminInstitutionChannelMapper institutionChannelMapper;
-
-    @Mock
-    private AdminInstitutionDebtTypeService institutionDebtTypeService;
-
-    @Mock
-    private AdminChannelService channelService;
-
-    @InjectMocks
-    private AdminInstitutionChannelServiceImpl adminInstitutionChannelService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+        assertThrows(DataNotFoundException.class, () -> adminInstitutionChannelService.updateInstitutionChannel(requestDTO));
+        verify(institutionChannelRepository, times(1)).findById(requestDTO.getId());
     }
 
     @Test
-    void getAllInstitutionChannels_shouldReturnListOfInstitutionChannelDTOs() {
-        List<InstitutionChannel> institutionChannels = Arrays.asList(new InstitutionChannel(), new InstitutionChannel());
-        List<InstitutionChannelDTO> institutionChannelDTOs = Arrays.asList(new InstitutionChannelDTO(), new InstitutionChannelDTO());
-
-        when(institutionChannelRepository.findAll()).thenReturn(institutionChannels);
-        when(institutionChannelMapper.toDTOList(institutionChannels)).thenReturn(institutionChannelDTOs);
-
-        List<InstitutionChannelDTO> result = adminInstitutionChannelService.getAllInstitutionChannels();
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(institutionChannelRepository, times(1)).findAll();
-        verify(institutionChannelMapper, times(1)).toDTOList(institutionChannels);
-    }
-
-    @Test
-    void getInstitutionChannelById_shouldReturnInstitutionChannelDTO_whenFound() {
-        Long id = 1L;
-        InstitutionChannel institutionChannel = new InstitutionChannel();
-        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
-
-        when(institutionChannelRepository.findById(id)).thenReturn(Optional.of(institutionChannel));
-        when(institutionChannelMapper.toDTO(institutionChannel)).thenReturn(institutionChannelDTO);
-
-        InstitutionChannelDTO result = adminInstitutionChannelService.getInstitutionChannelById(id);
-
-        assertNotNull(result);
-        assertEquals(institutionChannelDTO, result);
-        verify(institutionChannelRepository, times(1)).findById(id);
-        verify(institutionChannelMapper, times(1)).toDTO(institutionChannel);
-    }
-
-    @Test
-    void getInstitutionChannelById_shouldReturnNull_whenNotFound() {
-        Long id = 1L;
-
-        when(institutionChannelRepository.findById(id)).thenReturn(Optional.empty());
-
-        InstitutionChannelDTO result = adminInstitutionChannelService.getInstitutionChannelById(id);
-
-        assertNull(result);
-        verify(institutionChannelRepository, times(1)).findById(id);
-        verify(institutionChannelMapper, never()).toDTO(any());
-    }
-
-    @Test
-    void createInstitutionChannel_shouldThrowDataConflictException_whenInstitutionChannelAlreadyExists() {
-        CreateInstitutionChannelRequestDTO requestDTO = new CreateInstitutionChannelRequestDTO();
-        requestDTO.setInstitutionDebtTypeId(1L);
+    void updateInstitutionChannel_shouldThrowDataConflictException_whenDuplicateInstitutionChannelExists() {
+        UpdateInstitutionChannelRequestDTO requestDTO = new UpdateInstitutionChannelRequestDTO();
+        requestDTO.setId(1L);
+        requestDTO.setInstitutionDebtTypeId(2L);
         requestDTO.setChannelCode("CHANNEL_CODE");
+        InstitutionChannel existingInstitutionChannel = new InstitutionChannel();
+        existingInstitutionChannel.setId(2L);
 
+        when(institutionChannelRepository.findById(requestDTO.getId())).thenReturn(Optional.of(new InstitutionChannel()));
         when(institutionChannelRepository.findByInstitutionDebtTypeIdAndChannelCode(requestDTO.getInstitutionDebtTypeId(), requestDTO.getChannelCode()))
-                .thenReturn(Optional.of(new InstitutionChannel()));
+                .thenReturn(Optional.of(existingInstitutionChannel));
 
-        assertThrows(DataConflictException.class, () -> adminInstitutionChannelService.createInstitutionChannel(requestDTO));
+        assertThrows(DataConflictException.class, () -> adminInstitutionChannelService.updateInstitutionChannel(requestDTO));
+        verify(institutionChannelRepository, times(1)).findById(requestDTO.getId());
         verify(institutionChannelRepository, times(1)).findByInstitutionDebtTypeIdAndChannelCode(requestDTO.getInstitutionDebtTypeId(), requestDTO.getChannelCode());
     }
 
     @Test
-    void createInstitutionChannel_shouldThrowDataConflictException_whenInstitutionDebtTypeNotFound() throws MicroException {
-        CreateInstitutionChannelRequestDTO requestDTO = new CreateInstitutionChannelRequestDTO();
-        requestDTO.setInstitutionDebtTypeId(1L);
+    void updateInstitutionChannel_shouldReturnUpdatedInstitutionChannelDTO_whenSuccessful() throws MicroException {
+        UpdateInstitutionChannelRequestDTO requestDTO = new UpdateInstitutionChannelRequestDTO();
+        requestDTO.setId(1L);
+        requestDTO.setInstitutionDebtTypeId(2L);
         requestDTO.setChannelCode("CHANNEL_CODE");
+        requestDTO.setIsNewBillNeeded(true);
+        requestDTO.setIsOverPaymentAllowed(true);
+        requestDTO.setIsPartialPaymentAllowed(true);
+        requestDTO.setWorkingStartTime("09:00");
+        requestDTO.setWorkingFinishTime("18:00");
+        requestDTO.setIsActive(true);
 
-        when(institutionChannelRepository.findByInstitutionDebtTypeIdAndChannelCode(requestDTO.getInstitutionDebtTypeId(), requestDTO.getChannelCode()))
-                .thenReturn(Optional.empty());
-        when(institutionDebtTypeService.getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId())).thenReturn(null);
-
-        assertThrows(DataConflictException.class, () -> adminInstitutionChannelService.createInstitutionChannel(requestDTO));
-        verify(institutionChannelRepository, times(1)).findByInstitutionDebtTypeIdAndChannelCode(requestDTO.getInstitutionDebtTypeId(), requestDTO.getChannelCode());
-        verify(institutionDebtTypeService, times(1)).getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId());
-    }
-
-    @Test
-    void createInstitutionChannel_shouldReturnInstitutionChannelDTO_whenSuccessful() throws MicroException {
-        CreateInstitutionChannelRequestDTO requestDTO = new CreateInstitutionChannelRequestDTO();
-        requestDTO.setInstitutionDebtTypeId(1L);
-        requestDTO.setChannelCode("CHANNEL_CODE");
-        ChannelDTO channelDTO = new ChannelDTO();
+        InstitutionChannel existingInstitutionChannel = new InstitutionChannel();
+        InstitutionChannelDTO existingInstitutionChannelDTO = new InstitutionChannelDTO();
         InstitutionDebtTypeDTO institutionDebtTypeDTO = new InstitutionDebtTypeDTO();
-        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
-        InstitutionChannel institutionChannel = new InstitutionChannel();
+        ChannelDTO channelDTO = new ChannelDTO();
+        InstitutionChannel updatedInstitutionChannel = new InstitutionChannel();
+        InstitutionChannelDTO updatedInstitutionChannelDTO = new InstitutionChannelDTO();
 
-        when(institutionChannelRepository.findByInstitutionDebtTypeIdAndChannelCode(requestDTO.getInstitutionDebtTypeId(), requestDTO.getChannelCode()))
-                .thenReturn(Optional.empty());
+        when(institutionChannelRepository.findById(requestDTO.getId())).thenReturn(Optional.of(existingInstitutionChannel));
         when(institutionDebtTypeService.getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId())).thenReturn(institutionDebtTypeDTO);
         when(channelService.findChannelByChannelCode(requestDTO.getChannelCode())).thenReturn(channelDTO);
-        when(institutionChannelMapper.toDTO(requestDTO)).thenReturn(institutionChannelDTO);
-        when(institutionChannelMapper.toEntity(institutionChannelDTO)).thenReturn(institutionChannel);
-        when(institutionChannelRepository.save(institutionChannel)).thenReturn(institutionChannel);
-        when(institutionChannelMapper.toDTO(institutionChannel)).thenReturn(institutionChannelDTO);
+        when(institutionChannelMapper.toDTO(existingInstitutionChannel)).thenReturn(existingInstitutionChannelDTO);
+        when(institutionChannelMapper.toEntity(existingInstitutionChannelDTO)).thenReturn(updatedInstitutionChannel);
+        when(institutionChannelRepository.save(updatedInstitutionChannel)).thenReturn(updatedInstitutionChannel);
+        when(institutionChannelMapper.toDTO(updatedInstitutionChannel)).thenReturn(updatedInstitutionChannelDTO);
 
-        InstitutionChannelDTO result = adminInstitutionChannelService.createInstitutionChannel(requestDTO);
+        InstitutionChannelDTO result = adminInstitutionChannelService.updateInstitutionChannel(requestDTO);
 
         assertNotNull(result);
-        assertEquals(institutionChannelDTO, result);
-        verify(institutionChannelRepository, times(1)).findByInstitutionDebtTypeIdAndChannelCode(requestDTO.getInstitutionDebtTypeId(), requestDTO.getChannelCode());
+        assertEquals(updatedInstitutionChannelDTO, result);
+        verify(institutionChannelRepository, times(1)).findById(requestDTO.getId());
         verify(institutionDebtTypeService, times(1)).getInstitutionDebtTypeById(requestDTO.getInstitutionDebtTypeId());
         verify(channelService, times(1)).findChannelByChannelCode(requestDTO.getChannelCode());
-        verify(institutionChannelMapper, times(1)).toDTO(requestDTO);
-        verify(institutionChannelMapper, times(1)).toEntity(institutionChannelDTO);
-        verify(institutionChannelRepository, times(1)).save(institutionChannel);
-        verify(institutionChannelMapper, times(1)).toDTO(institutionChannel);
+        verify(institutionChannelMapper, times(1)).toDTO(existingInstitutionChannel);
+        verify(institutionChannelMapper, times(1)).toEntity(existingInstitutionChannelDTO);
+        verify(institutionChannelRepository, times(1)).save(updatedInstitutionChannel);
+        verify(institutionChannelMapper, times(1)).toDTO(updatedInstitutionChannel);
     }
-} 
