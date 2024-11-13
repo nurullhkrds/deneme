@@ -1,6 +1,5 @@
 package com.ykb.payments.bill.transaction.institution.admin.web;
 
-
 import com.ykb.architecture.micro.error.exception.MicroException;
 import com.ykb.payments.bill.transaction.adapter.constant.ResultConstant;
 import com.ykb.payments.bill.transaction.adapter.core.utilities.DataResult;
@@ -12,63 +11,113 @@ import com.ykb.payments.bill.transaction.institution.admin.web.request.update.Up
 import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionPymMethodWebDTO;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionPymMethodDTO;
 import com.ykb.payments.bill.transaction.institution.mapper.InstitutionPymMethodMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/admin/institutionPymMethod")
-public class AdminInstitutionPymMethodController {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    private final AdminInstitutionPymMethodService adminInstitutionPymMethodService;
-    private final InstitutionPymMethodMapper institutionPymMethodMapper;
+public class AdminInstitutionPymMethodControllerTest {
 
-    public AdminInstitutionPymMethodController(AdminInstitutionPymMethodService adminInstitutionPymMethodService, InstitutionPymMethodMapper institutionPymMethodMapper) {
-        this.adminInstitutionPymMethodService = adminInstitutionPymMethodService;
-        this.institutionPymMethodMapper = institutionPymMethodMapper;
+    @InjectMocks
+    private AdminInstitutionPymMethodController adminInstitutionPymMethodController;
+
+    @Mock
+    private AdminInstitutionPymMethodService adminInstitutionPymMethodService;
+
+    @Mock
+    private InstitutionPymMethodMapper institutionPymMethodMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    @GetMapping("getAllInstitutionPymMethods")
-    public ResponseEntity<DataResult<List<InstitutionPymMethodWebDTO>>> getAllInstitutionPymMethods() {
-        List<InstitutionPymMethodDTO> dtoList= adminInstitutionPymMethodService.getAllInstitutionPymMethods();
-        List<InstitutionPymMethodWebDTO> webDTOList= institutionPymMethodMapper.toWebDTOList(dtoList);
-        DataResult<List<InstitutionPymMethodWebDTO>> resultDTO=
-                new DataResult<>
-                        (ResultConstant.DATA_LISTED.getMessage(),webDTOList);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    @Test
+    void getAllInstitutionPymMethods_ShouldReturnListOfInstitutionPymMethodWebDTO() {
+        List<InstitutionPymMethodDTO> institutionPymMethodDTOList = List.of(new InstitutionPymMethodDTO());
+        List<InstitutionPymMethodWebDTO> institutionPymMethodWebDTOList = List.of(new InstitutionPymMethodWebDTO());
+
+        when(adminInstitutionPymMethodService.getAllInstitutionPymMethods()).thenReturn(institutionPymMethodDTOList);
+        when(institutionPymMethodMapper.toWebDTOList(institutionPymMethodDTOList)).thenReturn(institutionPymMethodWebDTOList);
+
+        ResponseEntity<DataResult<List<InstitutionPymMethodWebDTO>>> response = adminInstitutionPymMethodController.getAllInstitutionPymMethods();
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionPymMethodWebDTOList, response.getBody().getData());
+        verify(adminInstitutionPymMethodService, times(1)).getAllInstitutionPymMethods();
+        verify(institutionPymMethodMapper, times(1)).toWebDTOList(institutionPymMethodDTOList);
     }
 
-    @GetMapping("getInstitutionPymMethodById")
-    public ResponseEntity<DataResult<InstitutionPymMethodWebDTO>> getInstitutionPymMethodById(@RequestParam Long id){
-        InstitutionPymMethodDTO dto= adminInstitutionPymMethodService.getInstitutionPymMethodById(id);
-        InstitutionPymMethodWebDTO webDTO = institutionPymMethodMapper.toWebDTO(dto);
-        DataResult<InstitutionPymMethodWebDTO> resultDTO= new DataResult<>(ResultConstant.DATA_RETRIEVED.getMessage(),webDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+    @Test
+    void getInstitutionPymMethodById_ShouldReturnInstitutionPymMethodWebDTO() {
+        Long id = 1L;
+        InstitutionPymMethodDTO institutionPymMethodDTO = new InstitutionPymMethodDTO();
+        InstitutionPymMethodWebDTO institutionPymMethodWebDTO = new InstitutionPymMethodWebDTO();
+
+        when(adminInstitutionPymMethodService.getInstitutionPymMethodById(id)).thenReturn(institutionPymMethodDTO);
+        when(institutionPymMethodMapper.toWebDTO(institutionPymMethodDTO)).thenReturn(institutionPymMethodWebDTO);
+
+        ResponseEntity<DataResult<InstitutionPymMethodWebDTO>> response = adminInstitutionPymMethodController.getInstitutionPymMethodById(id);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_RETRIEVED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionPymMethodWebDTO, response.getBody().getData());
+        verify(adminInstitutionPymMethodService, times(1)).getInstitutionPymMethodById(id);
+        verify(institutionPymMethodMapper, times(1)).toWebDTO(institutionPymMethodDTO);
     }
 
+    @Test
+    void createInstitutionPymMethod_ShouldReturnCreatedInstitutionPymMethodWebDTO() throws MicroException {
+        CreateInstitutionPymMethodRequest request = new CreateInstitutionPymMethodRequest();
+        CreateInstitutionPymMethodRequestDTO requestDTO = new CreateInstitutionPymMethodRequestDTO();
+        InstitutionPymMethodDTO institutionPymMethodDTO = new InstitutionPymMethodDTO();
+        InstitutionPymMethodWebDTO institutionPymMethodWebDTO = new InstitutionPymMethodWebDTO();
 
-    @PostMapping("createInstitutionPymMethod")
-    public ResponseEntity<DataResult<InstitutionPymMethodWebDTO>> createInstitutionPymMethod(@RequestBody CreateInstitutionPymMethodRequest request) throws MicroException {
-        CreateInstitutionPymMethodRequestDTO requestDTO= institutionPymMethodMapper.toRequestDTO(request);
-        InstitutionPymMethodDTO dto= adminInstitutionPymMethodService.createInstitutionPymMethod(requestDTO);
-        InstitutionPymMethodWebDTO webDTO= institutionPymMethodMapper.toWebDTO(dto);
-        DataResult<InstitutionPymMethodWebDTO> resultDTO= new DataResult<>(ResultConstant.INSTITUTION_PYM_METHOD_CREATED.getMessage(),webDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
+        when(institutionPymMethodMapper.toRequestDTO(request)).thenReturn(requestDTO);
+        when(adminInstitutionPymMethodService.createInstitutionPymMethod(requestDTO)).thenReturn(institutionPymMethodDTO);
+        when(institutionPymMethodMapper.toWebDTO(institutionPymMethodDTO)).thenReturn(institutionPymMethodWebDTO);
 
+        ResponseEntity<DataResult<InstitutionPymMethodWebDTO>> response = adminInstitutionPymMethodController.createInstitutionPymMethod(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(ResultConstant.INSTITUTION_PYM_METHOD_CREATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionPymMethodWebDTO, response.getBody().getData());
+        verify(institutionPymMethodMapper, times(1)).toRequestDTO(request);
+        verify(adminInstitutionPymMethodService, times(1)).createInstitutionPymMethod(requestDTO);
+        verify(institutionPymMethodMapper, times(1)).toWebDTO(institutionPymMethodDTO);
     }
 
-    @PutMapping("updateInstitutionPymMethod")
-    public ResponseEntity<DataResult<InstitutionPymMethodWebDTO>> updateInstitutionPymMethod(@RequestBody UpdateInstitutionPymMethodRequest request) throws MicroException {
+    @Test
+    void updateInstitutionPymMethod_ShouldReturnUpdatedInstitutionPymMethodWebDTO() throws MicroException {
+        UpdateInstitutionPymMethodRequest request = new UpdateInstitutionPymMethodRequest();
+        UpdateInstitutionPymMethodRequestDTO requestDTO = new UpdateInstitutionPymMethodRequestDTO();
+        InstitutionPymMethodDTO institutionPymMethodDTO = new InstitutionPymMethodDTO();
+        InstitutionPymMethodWebDTO institutionPymMethodWebDTO = new InstitutionPymMethodWebDTO();
 
-        UpdateInstitutionPymMethodRequestDTO requestDTO= institutionPymMethodMapper.toRequestDTO(request);
-        InstitutionPymMethodDTO dto= adminInstitutionPymMethodService.updateInstitutionPymMethod(requestDTO);
-        InstitutionPymMethodWebDTO webDTO= institutionPymMethodMapper.toWebDTO(dto);
-        DataResult<InstitutionPymMethodWebDTO> resultDTO= new DataResult<>(ResultConstant.INSTITUTION_PYM_METHOD_UPDATED.getMessage(),webDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(resultDTO);
+        when(institutionPymMethodMapper.toRequestDTO(request)).thenReturn(requestDTO);
+        when(adminInstitutionPymMethodService.updateInstitutionPymMethod(requestDTO)).thenReturn(institutionPymMethodDTO);
+        when(institutionPymMethodMapper.toWebDTO(institutionPymMethodDTO)).thenReturn(institutionPymMethodWebDTO);
 
+        ResponseEntity<DataResult<InstitutionPymMethodWebDTO>> response = adminInstitutionPymMethodController.updateInstitutionPymMethod(request);
 
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.INSTITUTION_PYM_METHOD_UPDATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionPymMethodWebDTO, response.getBody().getData());
+        verify(institutionPymMethodMapper, times(1)).toRequestDTO(request);
+        verify(adminInstitutionPymMethodService, times(1)).updateInstitutionPymMethod(requestDTO);
+        verify(institutionPymMethodMapper, times(1)).toWebDTO(institutionPymMethodDTO);
     }
-
 }
