@@ -11,61 +11,110 @@ import com.ykb.payments.bill.transaction.institution.admin.web.request.create.Cr
 import com.ykb.payments.bill.transaction.institution.admin.web.request.update.UpdateInstitutionUserIntfRequest;
 import com.ykb.payments.bill.transaction.institution.admin.web.response.InstitutionUserIntfWebDTO;
 import com.ykb.payments.bill.transaction.institution.dto.InstitutionUserIntfDTO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/admin/InstitutionUserIntf")
-public class AdminInstitutionUserIntfController {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+public class AdminInstitutionUserIntfControllerTest {
 
-    private final AdminInstitutionUserIntfService institutionUserIntfService;
+    @InjectMocks
+    private AdminInstitutionUserIntfController adminInstitutionUserIntfController;
 
-    private final AdminInstitutionUserIntfMapper institutionUserIntfMapper;
+    @Mock
+    private AdminInstitutionUserIntfService institutionUserIntfService;
 
+    @Mock
+    private AdminInstitutionUserIntfMapper institutionUserIntfMapper;
 
-    public AdminInstitutionUserIntfController(AdminInstitutionUserIntfService institutionUserIntfService, AdminInstitutionUserIntfMapper institutionUserIntfMapper) {
-        this.institutionUserIntfService = institutionUserIntfService;
-        this.institutionUserIntfMapper = institutionUserIntfMapper;
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
+    @Test
+    void getAllInstitutionUserIntfs_ShouldReturnListOfInstitutionUserIntfWebDTO() {
+        List<InstitutionUserIntfWebDTO> institutionUserIntfWebDTOList = List.of(new InstitutionUserIntfWebDTO());
 
-    @GetMapping("getAllInstitutionUserIntfs")
-    public ResponseEntity<DataResult<List<InstitutionUserIntfWebDTO>>> getAllInstitutionUserIntfs(){
-        List<InstitutionUserIntfWebDTO> webDTO = institutionUserIntfService.getAllInstitutionUserIntfs();
-        DataResult<List<InstitutionUserIntfWebDTO>> resultDTO= new DataResult<>(ResultConstant.DATA_LISTED.getMessage(),webDTO);
-        return ResponseEntity.ok(resultDTO);
+        when(institutionUserIntfService.getAllInstitutionUserIntfs()).thenReturn(institutionUserIntfWebDTOList);
+
+        ResponseEntity<DataResult<List<InstitutionUserIntfWebDTO>>> response = adminInstitutionUserIntfController.getAllInstitutionUserIntfs();
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionUserIntfWebDTOList, response.getBody().getData());
+        verify(institutionUserIntfService, times(1)).getAllInstitutionUserIntfs();
     }
 
+    @Test
+    void getInstitutionUserIntfById_ShouldReturnInstitutionUserIntfWebDTO() {
+        Long id = 1L;
+        InstitutionUserIntfDTO institutionUserIntfDTO = new InstitutionUserIntfDTO();
+        InstitutionUserIntfWebDTO institutionUserIntfWebDTO = new InstitutionUserIntfWebDTO();
 
-    @GetMapping("getInstitutionUserIntfById")
-    public ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> getInstitutionUserIntfById(@RequestParam Long id){
-        InstitutionUserIntfDTO dto= institutionUserIntfService.getInstitutionUserIntfById(id);
-        InstitutionUserIntfWebDTO webDTO = institutionUserIntfMapper.toWebDTO(dto);
-        DataResult<InstitutionUserIntfWebDTO> resultDTO= new DataResult<>(ResultConstant.DATA_LISTED.getMessage(),webDTO);
-        return ResponseEntity.ok(resultDTO);
+        when(institutionUserIntfService.getInstitutionUserIntfById(id)).thenReturn(institutionUserIntfDTO);
+        when(institutionUserIntfMapper.toWebDTO(institutionUserIntfDTO)).thenReturn(institutionUserIntfWebDTO);
+
+        ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> response = adminInstitutionUserIntfController.getInstitutionUserIntfById(id);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.DATA_LISTED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionUserIntfWebDTO, response.getBody().getData());
+        verify(institutionUserIntfService, times(1)).getInstitutionUserIntfById(id);
+        verify(institutionUserIntfMapper, times(1)).toWebDTO(institutionUserIntfDTO);
     }
 
-    @PostMapping("createInstitutionUserIntf")
-    public ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> createInstitutionUserIntf(@RequestBody CreateInstitutionUserIntfRequest request) throws MicroException {
-        CreateInstitutionUserIntfRequestDTO requestDTO = institutionUserIntfMapper.toCreateDTO(request);
-        InstitutionUserIntfDTO dto= institutionUserIntfService.createInstitutionUserIntf(requestDTO);
-        InstitutionUserIntfWebDTO webDTO = institutionUserIntfMapper.toWebDTO(dto);
-        DataResult<InstitutionUserIntfWebDTO> resultDTO= new DataResult<>(ResultConstant.SUCCESSFULLY_ADDED.getMessage(),webDTO);
-        return ResponseEntity.ok(resultDTO);
+    @Test
+    void createInstitutionUserIntf_ShouldReturnCreatedInstitutionUserIntfWebDTO() throws MicroException {
+        CreateInstitutionUserIntfRequest request = new CreateInstitutionUserIntfRequest();
+        CreateInstitutionUserIntfRequestDTO requestDTO = new CreateInstitutionUserIntfRequestDTO();
+        InstitutionUserIntfDTO institutionUserIntfDTO = new InstitutionUserIntfDTO();
+        InstitutionUserIntfWebDTO institutionUserIntfWebDTO = new InstitutionUserIntfWebDTO();
+
+        when(institutionUserIntfMapper.toCreateDTO(request)).thenReturn(requestDTO);
+        when(institutionUserIntfService.createInstitutionUserIntf(requestDTO)).thenReturn(institutionUserIntfDTO);
+        when(institutionUserIntfMapper.toWebDTO(institutionUserIntfDTO)).thenReturn(institutionUserIntfWebDTO);
+
+        ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> response = adminInstitutionUserIntfController.createInstitutionUserIntf(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.SUCCESSFULLY_ADDED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionUserIntfWebDTO, response.getBody().getData());
+        verify(institutionUserIntfMapper, times(1)).toCreateDTO(request);
+        verify(institutionUserIntfService, times(1)).createInstitutionUserIntf(requestDTO);
+        verify(institutionUserIntfMapper, times(1)).toWebDTO(institutionUserIntfDTO);
     }
 
+    @Test
+    void updateInstitutionUserIntf_ShouldReturnUpdatedInstitutionUserIntfWebDTO() throws MicroException {
+        UpdateInstitutionUserIntfRequest request = new UpdateInstitutionUserIntfRequest();
+        UpdateInstitutionUserIntfRequestDTO requestDTO = new UpdateInstitutionUserIntfRequestDTO();
+        InstitutionUserIntfDTO institutionUserIntfDTO = new InstitutionUserIntfDTO();
+        InstitutionUserIntfWebDTO institutionUserIntfWebDTO = new InstitutionUserIntfWebDTO();
 
-    @PutMapping("updateInstitutionUserIntf")
-    public ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> updateInstitutionUserIntf(@RequestBody UpdateInstitutionUserIntfRequest request) throws MicroException{
-        UpdateInstitutionUserIntfRequestDTO requestDTO = institutionUserIntfMapper.toUpdateDTO(request);
-        InstitutionUserIntfDTO dto= institutionUserIntfService.updateInstitutionUserIntf(requestDTO);
-        InstitutionUserIntfWebDTO webDTO = institutionUserIntfMapper.toWebDTO(dto);
-        DataResult<InstitutionUserIntfWebDTO> resultDTO= new DataResult<>(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(),webDTO);
-        return ResponseEntity.ok(resultDTO);
+        when(institutionUserIntfMapper.toUpdateDTO(request)).thenReturn(requestDTO);
+        when(institutionUserIntfService.updateInstitutionUserIntf(requestDTO)).thenReturn(institutionUserIntfDTO);
+        when(institutionUserIntfMapper.toWebDTO(institutionUserIntfDTO)).thenReturn(institutionUserIntfWebDTO);
+
+        ResponseEntity<DataResult<InstitutionUserIntfWebDTO>> response = adminInstitutionUserIntfController.updateInstitutionUserIntf(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(ResultConstant.SUCCESSFULLY_UPDATED.getMessage(), response.getBody().getMessage());
+        assertEquals(institutionUserIntfWebDTO, response.getBody().getData());
+        verify(institutionUserIntfMapper, times(1)).toUpdateDTO(request);
+        verify(institutionUserIntfService, times(1)).updateInstitutionUserIntf(requestDTO);
+        verify(institutionUserIntfMapper, times(1)).toWebDTO(institutionUserIntfDTO);
     }
-
-
 }
