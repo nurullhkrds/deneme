@@ -1,15 +1,25 @@
-	@Override
-	public String publishGiveOrderEvent(String event) throws HmnServiceException {
-		IEventhubAdapterService eventhubAdapter = (IEventhubAdapterService) ServiceRegistry.getInstance().getServiceInstance(INF_EVENTHUB_ADAPTER_SERVICE_NAME);
-		JsonObject eventData = eventhubAdapter.createBuilder(EnumEventHubCodes.BILLPAYMENT_GIVEORDER_EVENT.getValue()).build();
-		
-		String header = eventData.toString();
-		String headerWithBody = header.replace("\"PAYLOAD\":{}", "\"PAYLOAD\":" + event);
-		
-		JsonReader reader = Json.createReader(new StringReader(headerWithBody));
+	private static HmnEventhubDBUtil instance = new HmnEventhubDBUtil();
 
-		String globalEventId = eventhubAdapter.createEvent(reader.readObject());
-		eventhubAdapter.publishEvent(globalEventId);
-
+	public static synchronized HmnEventhubDBUtil getInstance() {
+		return instance;
+	}
+	
+	public String create(ProduceEvent event) throws HmnException {
+		String globalEventId = null;
+		Query insert = getInsertQueryFromSession(HmnProcessUtil.getClientService(), HmnProcessUtil.getClientOperation());
+		insert.setString(ProduceEventConstants.GLOBAL_EVENT_ID, event.getGlobalEventId());
+		insert.setString(ProduceEventConstants.EVENT_CODE, event.getEventCode());
+		insert.setString(ProduceEventConstants.APPLICATION_INSTANCE_ID, event.getApplicationInstanceId());
+//		insert.setDate(ProduceEventConstants.PUBLISH_DATE, event.getPublishDate());
+		insert.setDate(ProduceEventConstants.SEND_DATE, event.getSendDate());
+		insert.setInteger(ProduceEventConstants.STATUS, event.getStatus().getStateNumber());
+		insert.setInteger(ProduceEventConstants.TRY_COUNT, event.getTryCount());
+		insert.setString(ProduceEventConstants.HEADER, event.getHeader());
+		insert.setString(ProduceEventConstants.PAYLOAD, event.getPayload());
+		insert.setString(ProduceEventConstants.CONTENT_TYPE, event.getContentType());
+		insert.setString(ProduceEventConstants.ERROR_MESSAGE, event.getErrorMessage());
+		insert.executeUpdate();
+		HmnProcessUtil.getClientSession().flush();
+		globalEventId = String.valueOf(event.getGlobalEventId());
 		return globalEventId;
 	}
