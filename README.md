@@ -9,8 +9,9 @@ public void onPopupConfirmClicked(EventData events, DisplayContext dc, Conversat
     }
 
     // ALAN sütunundaki gerekli değerlerin varlığı kontrol ediliyor
-    if (!validateRequiredValuesInColumn((AbstractListViewController) controller, "ALAN", cc)) {
-        showValidationErrorMessage("ALAN sütununda gerekli değerlerden biri eksik: DOVIZ, ISLEMTUTAR, KKMASRAF, BSMV, TOPLAMTUTAR", dc);
+    List<String> missingValues = getMissingValuesInColumn((AbstractListViewController) controller, "ALAN", cc);
+    if (!missingValues.isEmpty()) {
+        showValidationErrorMessage("ALAN sütununda eksik değerler var: " + String.join(", ", missingValues), dc);
         return; // Eksik değerler nedeniyle işlem kesiliyor
     }
 
@@ -31,9 +32,9 @@ public void onPopupConfirmClicked(EventData events, DisplayContext dc, Conversat
 }
 
 /**
- * Belirli bir sütunda gerekli değerlerin varlığını kontrol eder.
+ * Belirli bir sütunda eksik olan gerekli değerleri kontrol eder ve döndürür.
  */
-private boolean validateRequiredValuesInColumn(AbstractListViewController<?> controller, String columnName, ConversationContextManager cc) {
+private List<String> getMissingValuesInColumn(AbstractListViewController<?> controller, String columnName, ConversationContextManager cc) {
     ITable listView = controller.getListView();
     List<String> requiredValues = new ArrayList<String>();
     requiredValues.add("DOVIZ");
@@ -54,7 +55,7 @@ private boolean validateRequiredValuesInColumn(AbstractListViewController<?> con
     }
 
     if (columnIndex == -1) {
-        return false; // ALAN sütunu bulunamadı
+        return requiredValues; // ALAN sütunu bulunamadıysa tüm değerler eksik sayılır
     }
 
     // ALAN sütunundaki değerleri kontrol et
@@ -66,8 +67,11 @@ private boolean validateRequiredValuesInColumn(AbstractListViewController<?> con
         }
     }
 
-    // Gerekli tüm değerler bulundu mu?
-    return foundValues.containsAll(requiredValues);
+    // Eksik değerleri bul
+    List<String> missingValues = new ArrayList<String>(requiredValues);
+    missingValues.removeAll(foundValues);
+
+    return missingValues;
 }
 
 /**
