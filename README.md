@@ -1,2 +1,1 @@
-onPopupConfirmClicked
-onPopupAddClicked
+btnPG1111TransactionReceiptPopupAdd
