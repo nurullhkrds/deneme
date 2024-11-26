@@ -1,213 +1,42 @@
-public void onChangeListViewCellValue(EventData events, DisplayContext dc, ConversationContextManager cc) {
-    try {
-        Integer mainRow = ObjectUtils.objToInteger(getLstvMIPG1112(dc).getValue());
-        Integer lastRow = Session.CORPORATE_DETAILS_LAST_UPDATED_ROW.getSessionValue(cc, Integer.class);
-        if (events.getUserEventWidgetID().equals(DCKEY_LSTVMIPG1112)) {
-            // main list edited
-            String data = getLstvMIPG1112(dc).getLastUpdatedCellNumber();
-            String[] selectedCellDetail = data.split(",");
-            int cellRow = Integer.parseInt(selectedCellDetail[0]);
-            int cellColumn = Integer.parseInt(selectedCellDetail[1]);
-
-            // Seçili olmayan bir satırda, seç kolonu haricinde bir değeri değiştirirse hata verip,
-            // kullanıcının değiştirdiği datayı eski haline almamız gerekiyor
-            if (((lastRow != null && cellRow != lastRow) || cellRow != mainRow) && cellColumn != 1) {
-                MessagesUtil.addError("Değişiklik yapmadan önce, değişiklik yapılacak satır seçilmelidir!", events);
-                String columnOldValue = getColumnValueFromSession(cellRow, cellColumn, events, cc);
-                getLstvMIPG1112(dc).setCell(cellRow, cellColumn, columnOldValue); // kolon değerini eski haline aldık
-                getLstvMIPG1112(dc).setValue(lastRow == null ? String.valueOf(lastRow) : lastRow.toString());
-                return;
-            }
-
-            validateMainListCell(events, dc, cc);
-        } else if (events.getUserEventWidgetID().equals(DCKEY_LSTVCAPG1112)) {
-            // account number list edited
-            validateAccountNumberListCell(events, dc, cc);
-            Session.ACCOUNT_NUMBERS_CHANGED.setValue(true, cc);
-            Session.ACCOUNT_NUMBERS_CHANGED_ROW.setValue(mainRow, cc);
-        } else if (events.getUserEventWidgetID().equals(DCKEY_LSTVATPG1112)) {
-            // account type list edited
-            validateAccountTypeListCell(events, dc, cc);
-            Session.ACCOUNT_TYPE_CHANGED.setValue(true, cc);
-            Session.ACCOUNT_TYPE_CHANGED_ROW.setValue(mainRow, cc);
-        } else if (events.getUserEventWidgetID().equals(DCKEY_LSTVSCPG1112)) {
-            // scan list edited
-            validateScanListCell(events, dc, cc);
-            Session.SCAN_INFO_CHANGED.setValue(true, cc);
-            Session.SCAN_INFO_CHANGED_ROW.setValue(mainRow, cc);
-        }
-    } catch (Exception e) {
-        MessagesUtil.showExceptionMessage(dc, events, e);
-    }
-}
-
-private Boolean validateMainListCell(EventData events, DisplayContext dc, ConversationContextManager cc) throws FWScopeException, InstantiationException, IllegalAccessException {
-    Boolean retval = true;
-
-    Integer statusColumn = MainListviewColumns.STATU.getColoumnVal();
-    Integer[] length = { 100000, 100000, 100000, 100000, 100000, 100000, 4, 3, 100000, 5, 5, 100, 100000, 100000, 100000, 100000, 100000 }; // kolonların maxlengthleri
-    Integer[] negativeIntColoumns = { MainListviewColumns.ONTARAMA.getColoumnVal() };
-    Integer[] intColoumns = { MainListviewColumns.SONTARAMA.getColoumnVal() };
-    Integer[] requiredColoumns = { MainListviewColumns.CTYPE.getColoumnVal(), MainListviewColumns.DTYPE.getColoumnVal(), MainListviewColumns.ODMTIP.getColoumnVal(),
-            MainListviewColumns.ONTARAMA.getColoumnVal(), MainListviewColumns.SONTARAMA.getColoumnVal(), MainListviewColumns.TEXT.getColoumnVal() };
-
-    ITable lstCurrent = getLstvMIPG1112(dc);
-    if (!validateListCell(statusColumn, requiredColoumns, length, intColoumns, negativeIntColoumns, lstCurrent, null, events, dc, cc)) {
-        return false;
-    }
-
-    // Extra Controls
-    String data = lstCurrent.getLastUpdatedCellNumber();
-    String[] str = data.split(",");
-    int cellRow = Integer.parseInt(str[0]);
-    int cellColumn = Integer.parseInt(str[1]);
-    try {
-        if (cellColumn == MainListviewColumns.ODMTIP.getColoumnVal()) {
-            String pymType = getPymTypeComboKeyByComboValue(cc, getLstvMIPG1112(dc).getCell(cellRow, cellColumn));
-            setMainPageEnable(events, dc, cc, cellRow);
-            String active = getLstvMIPG1112(dc).getCell(cellRow, MainListviewColumns.AKTIF.getColoumnVal());
-            active = "Evet".equals(active) ? "A" : "H";
-            if ("E".equals(Session.AUTO_CORPORATE_DTO.getSessionValue(cc, AutoCorporateModelDTO.class).getMultipleAccount())) {
-                if (pymType.matches("\\d")) {
-                    lstCurrent.setCellEnabled(cellRow, MainListviewColumns.BIREYSEL.getColoumnVal());
-                } else {
-                    lstCurrent.setCellDisabled(cellRow, MainListviewColumns.BIREYSEL.getColoumnVal());
-                }
-            }
-            if (!checkWebService(pymType, active, events, dc, cc)) {
-                retval = false;
-                int rowNum = ObjectUtils.objToInteger(lstCurrent.getCell(cellRow, MainListviewColumns.Line.getColoumnVal()));
-                String oldPayment = getPymTypeComboKeys(cc).get(getAutoCorporateDetailDtoByRowNum(cc, rowNum).getPartialPayment());
-                lstCurrent.setCell(cellRow, cellColumn, oldPayment);
-            }
-
-            if ("X,Y,Z".contains(pymType)) {
-                if (!isCreditCard(events, dc, cc)) {
-                    retval = false;
-                    lstCurrent.setCell(cellRow, cellColumn, "");
-                }
-            }
-        } else if (cellColumn == MainListviewColumns.AKTIF.getColoumnVal()) {
-            String pymType = getPymTypeComboKeyByComboValue(cc, getLstvMIPG1112(dc).getCell(cellRow, cellColumn));
-            setMainPageEnable(events, dc, cc, cellRow);
-            String active = getLstvMIPG1112(dc).getCell(cellRow, MainListviewColumns.AKTIF.getColoumnVal());
-            active = "Evet".equals(active) ? "A" : "H";
-
-            // Yeni Uyarı Mesajı Ekleme
-            if ("A".equals(active)) {
-                // Dekont tablosunda kontrol yap
-                ParamModelDTO[] slipFields = Session.SLIP_FIELDS.getSessionValue(cc, ParamModelDTO[].class);
-                if (slipFields == null) {
-                    MessagesUtil.addError("DEKONT tablosunda herhangi bir tanımınız yoktur.", events);
-                    retval = false;
-                } else {
-                    boolean bsmvExists = false;
-                    boolean totalAmountExists = false;
-                    boolean kgfAccountExists = false;
-                    for (ParamModelDTO field : slipFields) {
-                        if ("BSMV".equals(field.getFieldName())) {
-                            bsmvExists = true;
-                        } else if ("TOPLAMTUTAR".equals(field.getFieldName())) {
-                            totalAmountExists = true;
-                        } else if ("KGFACCOUNT".equals(field.getFieldName())) {
-                            kgfAccountExists = true;
-                        }
-                    }
-                    if (!bsmvExists || !totalAmountExists || !kgfAccountExists) {
-                        MessagesUtil.addError("BSMV, TOPLAMTUTAR, KGFACCOUNT alanları zorunludur.", events);
-                        retval = false;
-                    }
-                }
-
-                MessagesUtil.addWarning("Aktif kolonunu 'Evet' olarak değiştirdiniz. Bu değişikliğin sonuçlarını kontrol ediniz.", events);
-            }
-
-            if (!checkWebService(pymType, active, events, dc, cc)) {
-                retval = false;
-                lstCurrent.setCell(cellRow, cellColumn, "0");
-            }
-        }
-    } catch (Exception e) {
-        MessagesUtil.showExceptionMessage(dc, events, e);
-        retval = false;
-        lstCurrent.setCell(cellRow, cellColumn, "");
-    }
-
-    if (retval) {
-        Integer rowNum = ObjectUtils.objToInteger(getLstvMIPG1112(dc).getCell(cellRow, MainListviewColumns.Line.getColoumnVal()));
-        AutoCorporateDetailDTO dto = mainScreen2AutoCorporateDetailDTO(rowNum, dc, cc);
-        updateSessionCorporateDetailList(cc, dto);
-    }
-
-    return retval;
-}
-
-private Boolean validateListCell(Integer statusColumnNo, Integer[] requiredColoumns, Integer[] columnLengths, Integer[] intColumns, Integer[] negativeIntColoumns, ITable lstCurrent,
-        Map<Integer, String> caseType, EventData events, DisplayContext dc, ConversationContextManager cc) {
-    Boolean retval = true;
-    String data = lstCurrent.getLastUpdatedCellNumber();
-    String[] str = data.split(",");
-    int cellRow = Integer.parseInt(str[0]);
-    int cellColumn = Integer.parseInt(str[1]);
-
-    String cellStatus = lstCurrent.getCell(cellRow, statusColumnNo);
-    String cellValue = lstCurrent.getCell(cellRow, cellColumn);
-
-    if (caseType != null) {
-        if (caseType.containsKey(cellColumn)) {
-            if (caseType.get(cellColumn).equals("U"))
-                lstCurrent.setCell(cellRow, cellColumn, cellValue.toUpperCase(new Locale("TR")));
-            else if (caseType.get(cellColumn).equals("L"))
-                lstCurrent.setCell(cellRow, cellColumn, cellValue.toLowerCase(new Locale("TR")));
-        }
-    }
-
-    if (requiredColoumns != null) {
-        for (int i = 0; i < requiredColoumns.length; i++) {
-            if (cellColumn == requiredColoumns[i]) {
-                if (StringUtils.hasNotText(cellValue)) {
-                    lstCurrent.setCell(cellRow, cellColumn, "");
-                    String message = Property.REQUIRED_FIELD.getValue(this, cc);
-                    message = String.format(message, lstCurrent.getLocalizedTitle(cellColumn, cc));
-                    MessagesUtil.addError(message, events);
-                    return false;
-                }
-            }
-        }
-    }
-
-    if (intColumns != null) {
-        for (int i = 0; i < intColumns.length; i++) {
-            if (cellColumn == intColumns[i]) {
-                if (!isNumeric(cellValue, events, dc, cc)) {
-                    lstCurrent.setCell(cellRow, cellColumn, "");
-                    retval = false;
-                }
-            }
-        }
-    }
-
-    if (negativeIntColoumns != null) {
-        for (int i = 0; i < negativeIntColoumns.length; i++) {
-            if (cellColumn == negativeIntColoumns[i]) {
-                if (!isNumeric(cellValue, events, dc, cc)) {
-                    lstCurrent.setCell(cellRow, cellColumn, "");
-                    retval = false;
-                } else if (ObjectUtils.objToInteger(cellValue).compareTo(0) > 0) {
-                    lstCurrent.setCell(cellRow, cellColumn, "");
-                    retval = false;
-                    String message = Property.ONLY_NEGATIVE_NUMBER.getValue(this, cc);
-                    MessagesUtil.addError(message, events);
-                }
-            }
-        }
-    }
-
-    if (cellValue.length() > columnLengths[cellColumn]) {
-        lstCurrent.setCell(cellRow, cellColumn, "");
-        MessagesUtil.addError(lstCurrent.getLocalizedTitle(cellColumn, cc) + " alanına en fazla " + columnLengths[cellColumn] + " karakter girebilirsiniz.", events);
-        retval = false;
-    }
-
-    if (cellStatus.contains(Constants.INSERTED_CELL.toString())) { // sonradan eklenen bir cell mi
-        lstCurrent.setCell(cellRow, statusColumnNo, Cons
+[
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 444, id: ABONENO1, text: ABONENO1, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 445, id: ABONENO2, text: ABONENO2, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 446, id: ADSOYAD, text: ADSOYAD, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 845, id: ANAFATNO, text: ANAFATNO, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 447, id: BILGI1, text: BILGI1, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 448, id: BILGI2, text: BILGI2, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 449, id: BILGI3, text: BILGI3, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 450, id: BILGI4, text: BILGI4, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 451, id: BILGI5, text: BILGI5, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 452, id: BILGI6, text: BILGI6, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 453, id: BILGI7, text: BILGI7, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 454, id: BILGI8, text: BILGI8, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 455, id: BILGI9, text: BILGI9, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 1065080, id: BSMV, text: BSMV, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 456, id: DONEM, text: DONEM, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 457, id: DOVIZ, text: DOVIZ, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 458, id: FARKTUTAR, text: FARKTUTAR, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 462, id: FATTUTAR, text: FATTUTAR, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 463, id: FATURANO, text: FATURANO, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 464, id: HESAP/KART, text: HESAP/KART, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 593, id: ISLEMTUTAR, text: ISLEMTUTAR, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 465, id: KKMASRAF, text: KKMASRAF, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 466, id: KURUMADI, text: KURUMADI, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 467, id: KURUMHESAP, text: KURUMHESAP, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 468, id: ODNTUTAR, text: ODNTUTAR, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 469, id: OZELBILGI, text: OZELBILGI, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 470, id: OZELTUTAR, text: OZELTUTAR, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 471, id: REFERANS, text: REFERANS, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 472, id: SGR_ADI, text: SGR_ADI, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 473, id: SGR_AKREDITIF, text: SGR_AKREDITIF, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 474, id: SGR_ETTIREN, text: SGR_ETTIREN, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 475, id: SGR_POLICENO, text: SGR_POLICENO, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 476, id: SONODMTARIH, text: SONODMTARIH, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 477, id: SRVADI, text: SRVADI, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 478, id: SRVTIP, text: SRVTIP, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 655, id: TOPLAMTUTAR, text: TOPLAMTUTAR, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 479, id: URUN, text: URUN, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 741, id: UYEISYERI, text: UYEISYERI, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 743, id: YKEBASLAFON, text: YKEBASLAFON, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 740, id: YKEGIRAIDAT, text: YKEGIRAIDAT, paramCode: DEKONTALAN, ], 
+[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 742, id: YKEKATKIPAY, text: YKEKATKIPAY, paramCode: DEKONTALAN, ]]
