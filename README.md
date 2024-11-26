@@ -1,32 +1,32 @@
-   
-                // Yeni Uyarı Mesajı Ekleme
-                if ("A".equals(active)) {
-                    // Dekont tablosunda kontrol yap
-                    ParamModelDTO[] slipFields = Session.SLIP_FIELDS.getSessionValue(cc, ParamModelDTO[].class);
-                    if (slipFields == null) {
-                        MessagesUtil.addError("DEKONT tablosunda herhangi bir tanımınız yoktur.", events);
-                        retval = false;
-                    } else {
-                    	List<String> requiredValues = new ArrayList<String>();
-                	    requiredValues.add("DOVIZ");
-                	    requiredValues.add("ISLEMTUTAR");
-                	    requiredValues.add("KKMASRAF");
-                	    requiredValues.add("BSMV");
-                	    requiredValues.add("TOPLAMTUTAR");
-                	    List<String> foundValues =  new ArrayList<String>();
+@SuppressWarnings({ "rawtypes" })
+	private IBasicFormActions getListViewController(String listViewName, EventData events, DisplayContext dc, ConversationContextManager cc) throws Exception {
+		AutoCorporateModelDTO screen = screen2DTO(events, dc, cc);
+		CorporateInquiryDTO dto = new CorporateInquiryDTO();
+		dto.setCorporate(screen.getCorporate());
+		dto.setProduct(screen.getProduct());
+		// Factory?!
+		String btnName = BUTTON_PREFIX + listViewName;
 
-                        for (ParamModelDTO field : slipFields) {
-                            if (requiredValues.contains(field.getId())) {
-                                foundValues.add(field.getId());
-                            }
-                        }
+		if (btnName.equals(DCKEY_BTNPG1111TRANSACTIONRECEIPT)) {// Transaction Receipt aka Dekont
+			ParamModelDTO[] fieldList = Session.SLIP_FIELDS.getSessionValue(cc, ParamModelDTO[].class);
+			return new TransactionReceiptListController(listViewName, this, getListViewByID(listViewName, events, dc, cc), dto, fieldList);
 
-                        requiredValues.removeAll(foundValues);
-                        if (!requiredValues.isEmpty()) {
-                            MessagesUtil.addError(String.join(", ", requiredValues) + " alanları zorunludur.", events);
-                            retval = false;
-                        }
-                    }
 
-                    MessagesUtil.addWarning("Aktif kolonunu 'Evet' olarak değiştirdiniz. Bu değişikliğin sonuçlarını kontrol ediniz.", events);
-                }
+
+
+public TransactionReceiptListController(String dialogID,PG1111_CorporateDefinition page,ITable listView,CorporateInquiryDTO inquiryDTO,ParamModelDTO[] fieldList) throws Exception {
+		super(page, listView,dialogID);
+		this.corporateInfo=inquiryDTO;
+}
+
+
+	protected List<AutoTransactionReceiptModelDTO> listData() throws Exception {
+		RequestListCorporateDetails request=new RequestListCorporateDetails();
+		request.setCorporateInfo(corporateInfo);
+		return JABSSupport.getJABS().getRemote(IFrmCorporateDefinitionFacade.class).listTransactionReceipts(request).getTransactionReceiptList();
+	}
+
+
+BU ŞEKİLDE DBDEN VERİYİ ÇEKMİŞ ÖRNEK ...
+
+
