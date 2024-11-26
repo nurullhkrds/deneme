@@ -1,42 +1,29 @@
-[
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 444, id: ABONENO1, text: ABONENO1, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 445, id: ABONENO2, text: ABONENO2, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 446, id: ADSOYAD, text: ADSOYAD, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 845, id: ANAFATNO, text: ANAFATNO, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 447, id: BILGI1, text: BILGI1, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 448, id: BILGI2, text: BILGI2, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 449, id: BILGI3, text: BILGI3, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 450, id: BILGI4, text: BILGI4, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 451, id: BILGI5, text: BILGI5, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 452, id: BILGI6, text: BILGI6, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 453, id: BILGI7, text: BILGI7, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 454, id: BILGI8, text: BILGI8, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 455, id: BILGI9, text: BILGI9, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 1065080, id: BSMV, text: BSMV, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 456, id: DONEM, text: DONEM, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 457, id: DOVIZ, text: DOVIZ, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 458, id: FARKTUTAR, text: FARKTUTAR, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 462, id: FATTUTAR, text: FATTUTAR, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 463, id: FATURANO, text: FATURANO, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 464, id: HESAP/KART, text: HESAP/KART, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 593, id: ISLEMTUTAR, text: ISLEMTUTAR, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 465, id: KKMASRAF, text: KKMASRAF, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 466, id: KURUMADI, text: KURUMADI, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 467, id: KURUMHESAP, text: KURUMHESAP, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 468, id: ODNTUTAR, text: ODNTUTAR, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 469, id: OZELBILGI, text: OZELBILGI, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 470, id: OZELTUTAR, text: OZELTUTAR, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 471, id: REFERANS, text: REFERANS, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 472, id: SGR_ADI, text: SGR_ADI, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 473, id: SGR_AKREDITIF, text: SGR_AKREDITIF, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 474, id: SGR_ETTIREN, text: SGR_ETTIREN, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 475, id: SGR_POLICENO, text: SGR_POLICENO, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 476, id: SONODMTARIH, text: SONODMTARIH, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 477, id: SRVADI, text: SRVADI, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 478, id: SRVTIP, text: SRVTIP, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 655, id: TOPLAMTUTAR, text: TOPLAMTUTAR, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 479, id: URUN, text: URUN, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 741, id: UYEISYERI, text: UYEISYERI, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 743, id: YKEBASLAFON, text: YKEBASLAFON, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 740, id: YKEGIRAIDAT, text: YKEGIRAIDAT, paramCode: DEKONTALAN, ], 
-[com.ykb.hmn.pym.param.dto.ParamModelDTO:  oid: 742, id: YKEKATKIPAY, text: YKEKATKIPAY, paramCode: DEKONTALAN, ]]
+if ("A".equals(active)) {
+    // Dekont tablosunda kontrol yap
+    ParamModelDTO[] slipFields = Session.SLIP_FIELDS.getSessionValue(cc, ParamModelDTO[].class);
+    if (slipFields == null) {
+        MessagesUtil.addError("DEKONT tablosunda herhangi bir tanımınız yoktur.", events);
+        retval = false;
+    } else {
+        boolean bsmvExists = false;
+        boolean totalAmountExists = false;
+        boolean kgfAccountExists = false;
+        
+        for (ParamModelDTO field : slipFields) {
+            if ("BSMV".equals(field.getId())) {
+                bsmvExists = true;
+            } else if ("TOPLAMTUTAR".equals(field.getId())) {
+                totalAmountExists = true;
+            } else if ("KGFACCOUNT".equals(field.getId())) {
+                kgfAccountExists = true;
+            }
+        }
+        
+        if (!bsmvExists || !totalAmountExists || !kgfAccountExists) {
+            MessagesUtil.addError("BSMV, TOPLAMTUTAR, KGFACCOUNT alanları zorunludur.", events);
+            retval = false;
+        }
+    }
+
+    MessagesUtil.addWarning("Aktif kolonunu 'Evet' olarak değiştirdiniz. Bu değişikliğin sonuçlarını kontrol ediniz.", events);
+}
