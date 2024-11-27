@@ -1,24 +1,29 @@
-@SuppressWarnings({ "rawtypes" })
-public void onPopupDeleteClicked(EventData events, DisplayContext dc, ConversationContextManager cc) {
-    try {
-        AbstractListViewController controller = (AbstractListViewController) getLastListController(cc);
-        String selectedIndex = controller.getListView().getValue();
+	@Override
+	public boolean validate(EventData events, DisplayContext dc, ConversationContextManager cc) {
+		
+	    // Önce üst sınıftaki validasyonları uygular ona göre döner
+	    boolean isValidated = super.validate(events, dc, cc);
 
-        if (StringUtils.hasText(selectedIndex) && !selectedIndex.equals("-1")) {
-            MyRowObject selectedRow = controller.getRowData(Integer.parseInt(selectedIndex));
-            if (selectedRow.getField("Döviz") != null) { // Döviz Cinsi alanını kontrol ediyor
-                MessagesUtil.addError("Döviz Cinsi alanı silinemez!", events);
-                return;
-            }
+	    if (!isValidated) {
+	        return false;
+	    }
 
-            String confirmMsg = "Kaydı silmek istediğinizden emin misiniz?";
-            if (!MessagesUtil.showApprovalMessage(confirmMsg, "onPopupDeleteConfirm", "onPopupDeleteConfirm", events, dc, cc))
-                return;
-            controller.deleteRow(Integer.parseInt(selectedIndex));
-        } else {
-            MessagesUtil.addError("Önce listeden bir kayıt seçiniz.", events);
-        }
-    } catch (Exception e) {
-        MessagesUtil.showExceptionMessage(dc, events, e);
-    }
-}
+	    // EventData üzerinden buton idsini alarak button bazlı knotol sağlıyoruz..
+	    String buttonId = events.getUserEventWidgetID();
+	    
+	    if ("btnPG1111TransactionReceiptPopupConfirm".equals(buttonId)) {
+	        ITable listView = getListView();
+	        if (listView == null) {
+	            return false;
+	        }
+
+	        List<String> missingValues = getMissingValuesInColumn(listView, "ALAN", cc);
+	        if (!missingValues.isEmpty()) {
+	            showValidationErrorMessage("ALAN sütununda zorunlu değerlerden biri veya birden fazlası eksik: " + String.join(", ", missingValues), events);
+	            return false; // Eksik değerler nedeniyle validasyon başarısız olur..
+	        }
+	    }
+
+	    // Eğer tüm validasyonlar başarılıysa true döneriz
+	    return true;
+	}
