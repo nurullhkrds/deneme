@@ -1,47 +1,74 @@
-@Override
-public boolean validate(EventData events, DisplayContext dc, ConversationContextManager cc) {
-    boolean isValidated = super.validate(events, dc, cc);
-    if (!isValidated) {
-        return false;
-    }
+	@Override
+	public boolean validate(EventData events, DisplayContext dc, ConversationContextManager cc) {
+		
+	    // EventData üzerinden buton idsini alarak button bazlı knotol sağlıyoruz..
+	    String buttonId = events.getUserEventWidgetID();
 
-    String buttonId = events.getUserEventWidgetID();
-    // Sil butonu için özel kontrol ekleniyor
-    if ("btnPG1111TransactionReceiptPopupDelete".equals(buttonId)) {
-        ITable listView = getListView();
-        if (listView == null) {
-            return false;
-        }
-
-        String selectedIndex = listView.getValue();
-        if (StringUtils.hasText(selectedIndex) && !selectedIndex.equals("-1")) {
-            int columnIndex = findColumnIndex(listView, "ALAN", cc);
-            if (columnIndex == -1) {
-                showValidationErrorMessage("ALAN sütunu bulunamadı.", events);
+		
+	    if ("btnPG1111TransactionReceiptPopupDelete".equals(buttonId)) {
+	    	boolean isDeleted = validateDelete(events,dc,cc,buttonId);
+	    	
+	    	if (!isDeleted){
                 return false;
-            }
 
-            String cellValue = StringUtils.suppressNull(listView.getCell(Integer.parseInt(selectedIndex), columnIndex));
-            if ("DÖVİZ".equals(cellValue) || "TOPLAMALAN".equals(cellValue)) {
-                showValidationErrorMessage("Döviz veya Toplam Alan sütunları silinemez!", events);
-                return false; // Silme işlemi durdurulur
-            }
-        } else {
-            showValidationErrorMessage("Önce listeden bir kayıt seçiniz.", events);
-            return false;
-        }
-    }
-    return true;
-}
+	    	}
+	    }
+		
+		
+		
+	    // Önce üst sınıftaki validasyonları uygular ona göre döner
+	    boolean isValidated = super.validate(events, dc, cc);
+
+	    if (!isValidated) {
+	        return false;
+	    }
+
+	    
+	    if ("btnPG1111TransactionReceiptPopupConfirm".equals(buttonId)) {
+	        ITable listView = getListView();
+	        if (listView == null) {
+	            return false;
+	        }
+
+	        List<String> missingValues = getMissingValuesInColumn(listView, "ALAN", cc);
+	        if (!missingValues.isEmpty()) {
+	            showValidationErrorMessage("ALAN sütununda zorunlu değerlerden biri veya birden fazlası eksik: " + String.join(", ", missingValues), events);
+	            return false; // Eksik değerler nedeniyle validasyon başarısız olur..
+	        }
+	    }
+
+	    // Eğer tüm validasyonlar başarılıysa true döneriz
+	    return true;
+	}
 
 
 
-private int findColumnIndex(ITable listView, String columnName, ConversationContextManager cc) {
-    String[] columnFormats = listView.getFormat().split(";");
-    for (int i = 0; i < columnFormats.length; i++) {
-        if (listView.getLocalizedTitle(i, cc).equalsIgnoreCase(columnName)) {
-            return i;
-        }
-    }
-    return -1; // Sütun bulunamadı
-}
+	@SuppressWarnings({ "rawtypes" })
+	public void onPopupDeleteClicked(EventData events, DisplayContext dc, ConversationContextManager cc) {
+		try {
+			AbstractListViewController controller = ((AbstractListViewController) getLastListController(cc));
+			String selectedIndex = controller.getListView().getValue();
+		    String buttonId = events.getUserEventWidgetID();
+
+			if (StringUtils.hasText(selectedIndex) && selectedIndex.equals("-1") == false) {
+				
+			    if ("btnPG1111TransactionReceiptPopupDelete".equals(buttonId)) {
+			    	boolean isValidated=controller.validate(events, dc, cc);
+			    	if(!isValidated){
+			    		MessagesUtil.addError("TOPLAMTUTAR veya KKMASRAF Alan sütunları silinemez!", events);
+			    		return;
+
+			    	}
+			    }
+				
+				String confirmMsg = "Kaydı silmek istediğinizden emin misiniz ?";
+				if (MessagesUtil.showApprovalMessage(confirmMsg, "onPopupDeleteConfirm", "onPopupDeleteConfirm", events, dc, cc) == false)
+					return;
+				((AbstractListViewController) getLastListController(cc)).deleteRow(Integer.parseInt(selectedIndex));
+			} else {
+				MessagesUtil.addError("Önce listeden bir kayıt seçiniz.", events);
+			}
+		} catch (Exception e) {
+			MessagesUtil.showExceptionMessage(dc, events, e);
+		}
+	}
