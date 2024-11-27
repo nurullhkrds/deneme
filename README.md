@@ -1,4 +1,1 @@
-git remote add origin https://github.com/kullanici_adi/repo_adi.git
-git remote -v
-origin  https://github.com/kullanici_adi/repo_adi.git (fetch)
-origin  https://github.com/kullanici_adi/repo_adi.git (push)
+![image](https://github.com/user-attachments/assets/9c8265ac-33f5-4447-a4b5-c969cd7ba91d)
