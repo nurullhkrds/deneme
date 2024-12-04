@@ -1,10 +1,6 @@
-
-                                billDTO.setBillDueDate(aboneBorc.getSonOdemeTarih() != null ? aboneBorc.getSonOdemeTarih().toGregorianCalendar().getTime() : null);
-
-
-Required type:
-LocalDate
-Provided:
-Date
-
-
+private LocalDate convertToLocalDate(Calendar calendar) {
+    if (calendar == null) {
+        return null;
+    }
+    return calendar.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+}
