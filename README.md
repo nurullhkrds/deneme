@@ -1,1 +1,4 @@
-![image](https://github.com/user-attachments/assets/1a4ccd82-2038-4a7d-a26c-6013367f9280)
+ public static <T> JAXBElement<T> createJAXBElement(String localPart, T value) {
+        QName qname = new QName("", localPart);  // Namespace URI olarak boş string kullanılıyor
+        return new JAXBElement<>(qname, (Class<T>) value.getClass(), value);
+    }
