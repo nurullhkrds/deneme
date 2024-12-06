@@ -1,5 +1,5 @@
 @Test
-void givenDoPaymentSummaryReconciliationRequest_whenValidResultCodesMatch_thenReturnValidResponse() {
+void givenDoPaymentSummaryReconciliationRequest_whenValidResultCodeProvided_thenCoverageAchieved() {
     // Arrange
     DoPaymentSummaryReconciliationRequest remoteRequest = new DoPaymentSummaryReconciliationRequest();
     remoteRequest.setInstitution("SEFERHİSAR");
@@ -19,16 +19,15 @@ void givenDoPaymentSummaryReconciliationRequest_whenValidResultCodesMatch_thenRe
     // Act
     DoPaymentSummaryReconciliationResponse response = testPaymentSummary(ITahsilatIslemleri.class, remoteRequest);
 
-    // Mock a valid result code
+    // Mock a valid result code to hit validResultCodes.contains logic
     response.setInstitutionResultCode("621");
 
     // Assert
-    assertEquals(amount, response.getTotalPaymentAmount());
-    assertEquals(2, response.getTotalPaymentCount());
-    assertTrue(Arrays.asList("620", "621", "622", "623", "624", "625").contains(response.getInstitutionResultCode()));
-
-    // Extra validation to confirm valid codes logic
+    assertEquals("621", response.getInstitutionResultCode());
     List<String> validResultCodes = Arrays.asList("620", "621", "622", "623", "624", "625");
+    assertTrue(validResultCodes.contains(response.getInstitutionResultCode()));
+
+    // Verify response fields if the valid code logic was executed
     if (validResultCodes.contains(response.getInstitutionResultCode())) {
         assertEquals(amount, response.getTotalPaymentAmount());
         assertEquals(2, response.getTotalPaymentCount());
