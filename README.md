@@ -1,19 +1,21 @@
 SELECT 
-    pslog.SUBSCRIBER_NO AS SUBSCRIBER_NO,
-    pslog.LOG_DATE AS LOG_DATE,
-    pslog.RESULT_CODE AS RESULT_CODE,
-    pslog.INSTITUTION AS INSTITUTION,
-    pslog.PRODUCT AS PRODUCT,
-    prm.INSTITUTION_RETURN_TEXT AS INSTITUTION_RETURN_TEXT,
-    t_fatura.FATURANO AS BILL_NO,
-    t_fatura.TUTAR AS TOTAL_AMOUNT,
-    t_fatura.ODNTUTAR AS PAID_AMOUNT,
-    t_fatura.SONODMTARIH AS DUE_DATE,
-    t_fatura.ODMTARIH AS PAYMENT_DATE,
-    t_fatura.ODMTIP AS PAYMENT_TYPE
-    t
+    pslog.PRODUCT AS PRODUCT,                               -- Ürün Bilgisi
+    pslog.INSTITUTION AS INSTITUTION,                       -- Kurum Bilgisi
+    pslog.LOG_DATE || ' ' || pslog.LOG_TIME AS LOG_DATE,    -- Log Tarihi
+    pslog.DP_TRANSACTION_ID || ' ' || rsl.ADDITIONAL_INFO AS LOG_RECORD_NO, -- Log Kayıt Numarası
+    pslog.SUBSCRIBER_NO AS SUBSCRIBER_NO,                   -- Abone Numarası
+    t_fatura.FATURANO AS BILL_NO,                           -- Fatura Numarası
+    t_fatura.TUTAR AS TOTAL_AMOUNT,                         -- Fatura Tutarı
+    t_fatura.ODNTUTAR AS PAID_AMOUNT,                       -- Ödenen Tutar
+    t_fatura.SONODMTARIH AS DUE_DATE,                       -- Son Ödeme Tarihi
+    t_fatura.ODMTARIH AS PAYMENT_DATE,                      -- Ödeme Tarihi
+    t_fatura.ODMTIP AS PAYMENT_TYPE,                        -- Ödeme Tipi
+    t_fatura.REFERANS AS REFERENCE_NO                       -- Referans Numarası
 FROM 
     PYM_ONLINE_SERVICE_LOG pslog
+LEFT JOIN 
+    REMOTE_SERVICE_LOG rsl 
+    ON pslog.DP_TRANSACTION_ID = rsl.DP_TRANSACTION_ID      -- Log kaydı eşleşmesi
 JOIN 
     PYM_ONLINE_RETURN_MAP prm 
     ON pslog.RESULT_CODE = prm.INSTITUTION_RETURN_CODE 
