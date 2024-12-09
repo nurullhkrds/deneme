@@ -1,31 +1,10 @@
-SELECT 
-    pslog.SUBSCRIBER_NO AS Abone_No,
-    pslog.LOG_DATE AS Log_Tarihi,
-    pslog.RESULT_CODE AS Hata_Kodu,
-    prm.INSTITUTION_RETURN_TEXT AS Kurum_Hata_Mesajı,
-    t_fatura.FATURANO AS Fatura_No,
-    t_fatura.TUTAR AS Fatura_Tutarı,
-    t_fatura.ODNTUTAR AS Ödenen_Tutar,
-    t_fatura.SONODMTARIH AS Son_Ödeme_Tarihi,
-    t_fatura.ODMTARIH AS Ödeme_Tarihi,
-    t_fatura.ODMTIP AS Ödeme_Tipi
-FROM 
-    PYM_ONLINE_SERVICE_LOG pslog
-JOIN 
-    PYM_ONLINE_RETURN_MAP prm 
-    ON pslog.RESULT_CODE = prm.INSTITUTION_RETURN_CODE 
-    AND pslog.INSTITUTION = prm.INSTITUTION
-JOIN 
-    t_oto_fatura t_fatura 
-    ON pslog.SUBSCRIBER_NO = t_fatura.ABONENO 
-    AND pslog.PRODUCT = t_fatura.URUN
-    AND pslog.INSTITUTION = t_fatura.KURUM
-WHERE 
-    pslog.INSTITUTION = :p_institution -- Kurum Filtresi
-    AND pslog.PRODUCT = :p_product -- Ürün Filtresi
-    AND pslog.SUBSCRIBER_NO IN (:p_subscriber_list) -- Abone No Filtresi
-    AND pslog.PROCESS_CODE LIKE :p_process_code -- Ödeme Bildirimi Filtresi
-    AND pslog.LOG_DATE BETWEEN :p_start_date AND :p_end_date -- Bildirim Tarih Filtresi
-    AND pslog.ERROR != :p_error -- Hata Filtresi
-    AND t_fatura.ODMTARIH = :p_odmtarih -- Ödeme Tarihi Filtresi
-    AND t_fatura.ODMTIP IN (:p_odmtip_list); -- Ödeme Tipi Filtresi
+    private String subscriberNo;         // Abone No
+    private LocalDate logDate;           // Log Tarihi
+    private String resultCode;           // Hata Kodu
+    private String institutionReturnText; // Kurum Hata Mesajı
+    private String billNo;               // Fatura No
+    private BigDecimal totalAmount;      // Fatura Tutarı
+    private BigDecimal paidAmount;       // Ödenen Tutar
+    private LocalDate dueDate;           // Son Ödeme Tarihi
+    private LocalDate paymentDate;       // Ödeme Tarihi
+    private String paymentType;  
