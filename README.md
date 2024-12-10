@@ -1,36 +1,14 @@
-SELECT 
-    pslog.PRODUCT AS PRODUCT,                               -- Ürün Bilgisi
-    pslog.INSTITUTION AS INSTITUTION,                       -- Kurum Bilgisi
-    pslog.LOG_DATE || ' ' || pslog.LOG_TIME AS LOG_DATE,    -- Log Tarihi
-    pslog.DP_TRANSACTION_ID || ' ' || rsl.ADDITIONAL_INFO AS LOG_RECORD_NO, -- Log Kayıt Numarası
-    pslog.SUBSCRIBER_NO AS SUBSCRIBER_NO,                   -- Abone Numarası
-    t_fatura.FATURANO AS BILL_NO,                           -- Fatura Numarası
-    t_fatura.TUTAR AS TOTAL_AMOUNT,                         -- Fatura Tutarı
-    t_fatura.ODNTUTAR AS PAID_AMOUNT,                       -- Ödenen Tutar
-    t_fatura.SONODMTARIH AS DUE_DATE,                       -- Son Ödeme Tarihi
-    t_fatura.ODMTARIH AS PAYMENT_DATE,                      -- Ödeme Tarihi
-    t_fatura.ODMTIP AS PAYMENT_TYPE,                        -- Ödeme Tipi
-    t_fatura.REFERANS AS REFERENCE_NO                       -- Referans Numarası
-FROM 
-    PYM_ONLINE_SERVICE_LOG pslog
-LEFT JOIN 
-    REMOTE_SERVICE_LOG rsl 
-    ON pslog.DP_TRANSACTION_ID = rsl.DP_TRANSACTION_ID      -- Log kaydı eşleşmesi
-JOIN 
-    PYM_ONLINE_RETURN_MAP prm 
-    ON pslog.RESULT_CODE = prm.INSTITUTION_RETURN_CODE 
-    AND pslog.INSTITUTION = prm.INSTITUTION
-JOIN 
-    t_oto_fatura t_fatura 
-    ON pslog.SUBSCRIBER_NO = t_fatura.ABONENO 
-    AND pslog.PRODUCT = t_fatura.URUN
-    AND pslog.INSTITUTION = t_fatura.KURUM
-WHERE 
-    pslog.INSTITUTION = :P_INSTITUTION -- Kurum Filtresi
-    AND pslog.PRODUCT = :P_PRODUCT -- Ürün Filtresi
-    AND pslog.SUBSCRIBER_NO IN (:P_SUBSCRIBER_LIST) -- Abone No Filtresi
-    AND pslog.PROCESS_CODE LIKE :P_PROCESS_CODE -- Ödeme Bildirimi Filtresi
-    AND pslog.LOG_DATE BETWEEN :P_START_DATE AND :P_END_DATE -- Bildirim Tarih Filtresi
-    AND pslog.ERROR = :P_ERROR -- Hata Filtresi
-    AND t_fatura.ODMTARIH = :P_ODMTARIH -- Ödeme Tarihi Filtresi
-    AND t_fatura.ODMTIP IN (:P_ODMTIP_LIST); -- Ödeme Tipi Filtresi
+private String product;               // Ürün Bilgisi
+    private String institution;           // Kurum Bilgisi
+    private LocalDateTime logDate;        // Log Tarihi (Tarih ve Saat birleştirilmiş)
+    private String logRecordNo;           // Log Kayıt Numarası
+    private String subscriberNo;          // Abone Numarası
+    private String billNo;                // Fatura Numarası
+    private BigDecimal totalAmount;       // Fatura Tutarı
+    private BigDecimal paidAmount;        // Ödenen Tutar
+    private LocalDate dueDate;            // Son Ödeme Tarihi
+    private LocalDate paymentDate;        // Ödeme Tarihi
+    private String paymentType;           // Ödeme Tipi
+    private String referenceNo; 
+
+TO_DATE('21.08.2024', 'DD.MM.YYYY') AND TO_DATE('23.08.2024', 'DD.MM.YYYY') 
