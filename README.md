@@ -1,4 +1,5 @@
-SELECT 
+ 
+ SELECT 
     pslog.PRODUCT AS PRODUCT,
     pslog.INSTITUTION AS INSTITUTION,
     pslog.LOG_DATE || ' ' || pslog.LOG_TIME AS LOG_DATE,
@@ -26,11 +27,12 @@ JOIN
     AND pslog.PRODUCT = t_fatura.URUN
     AND pslog.INSTITUTION = t_fatura.KURUM
 WHERE 
+
     pslog.INSTITUTION = :P_INSTITUTION
     AND pslog.PRODUCT = :P_PRODUCT
-    @dynamic[ P_SUBSCRIBER_LIST, AND pslog.SUBSCRIBER_NO IN (:P_SUBSCRIBER_LIST) ] -- Dinamik Abone Filtresi
     AND pslog.PROCESS_CODE = 'NOTIFY_PAYMENT'
-    AND TRUNC(TO_DATE(pslog.LOG_DATE, 'YYYY-MM-DD')) BETWEEN :P_START_DATE AND :P_END_DATE
-    @dynamic[ P_ODMTARIH, AND TRUNC(t_fatura.ODMTARIH) = :P_ODMTARIH ] -- Dinamik Ödeme Tarihi Filtresi
+    AND TRUNC(TO_DATE(pslog.LOG_DATE, 'DD.MM.YYYY')) BETWEEN :P_START_DATE AND :P_END_DATE
+    @dynamic[ P_ODMTARIH, AND TRUNC(TO_DATE(t_fatura.ODMTARIH, 'DD.MM.YYYY')) = :P_ODMTARIH ] -- Dinamik Ödeme Tarihi Filtresi
     @dynamic[ P_BILL_NO, AND t_fatura.FATURANO = :P_BILL_NO ] -- Dinamik Fatura No Filtresi
+    @dynamic[ P_SUBSCRIBER_LIST, AND pslog.SUBSCRIBER_NO IN (:P_SUBSCRIBER_LIST) ] -- Dinamik Abone Filtresi
     AND t_fatura.ODMTIP IN (:P_ODMTIP_LIST);
