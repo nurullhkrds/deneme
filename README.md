@@ -74,3 +74,8 @@ WHERE
     AND t_fatura.faturano :P_BILL_NO
     AND t_fatura.processed: P_PROCESSED
     AND t_fatura.ODMTIP IN (:P_ODMTIP_LIST); 
+
+
+
+
+P_SUBSCRIBER_LIST,P_ODMTARIH,P_BILL_NO
