@@ -1,24 +1,26 @@
-@Test
-void givenFetchPaymentOrderedBillsRequest_whenFetchPaymentOrderedBills_thenReturnFetchPaymentOrderedBillsResponse() throws Exception {
-    // Sabit bir Clock: 15.12.2024
-    Clock fixedClock = Clock.fixed(Instant.parse("2024-12-15T00:00:00Z"), ZoneId.systemDefault());
+ @Test
+    void givenFetchPaymentOrderedBillsRequest_whenFetchPaymentOrderedBills_thenReturnFetchPaymentOrderedBillsResponse() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        FetchPaymentOrderedBillsRequest remoteRequest = new FetchPaymentOrderedBillsRequest();
+        remoteRequest.setInstitution("ARMADAŞ");
+        remoteRequest.setProduct("DOĞALGAZ");
+        remoteRequest.setDueDate(LocalDate.of(2024,11,15));
+        insertReturnMap();
+        insertParams("OTLYKB");
 
-    // Test edilecek sınıf
-    YourClass yourClass = new YourClass(fixedClock);
+        FetchPaymentOrderedBillsResponse response = testFetchPaymentOrderedBills(BankaService.class, remoteRequest);
+        assertEquals(3, response.getBills().size());
+    }
 
-    // Request nesnesi oluştur
-    FetchPaymentOrderedBillsRequest remoteRequest = new FetchPaymentOrderedBillsRequest();
-    remoteRequest.setInstitution("ARMADAŞ");
-    remoteRequest.setProduct("DOĞALGAZ");
-    remoteRequest.setDueDate(LocalDate.of(2024, 11, 15)); // 15 Kasım 2024
 
-    // Gerekli setup
-    insertReturnMap();
-    insertParams("OTLYKB");
 
-    // Test edilen metodun çağrısı
-    FetchPaymentOrderedBillsResponse response = testFetchPaymentOrderedBills(BankaService.class, remoteRequest);
+if (aboneBorc != null && aboneBorc.getBelgeNo() != null && isDueDateValid(aboneBorc.getSonOdemeTarih())) {
 
-    // Doğrulama
-    assertEquals(3, response.getBills().size());
-}
+
+    private boolean isDueDateValid(XMLGregorianCalendar dueDate) {
+        if (dueDate == null) {
+            return false;
+        }
+        LocalDate todayDate = LocalDate.now();
+        LocalDate dueLocalDate = dueDate.toGregorianCalendar().toZonedDateTime().toLocalDate();
+        return !dueLocalDate.isBefore(todayDate);
+    }
