@@ -1,10 +1,11 @@
-public CoreServiceResultDTO<List<PaidBillLogDTO>> getPaymentLogsByParameters(
-    String institution, 
-    String product, 
-    List<String> subscriberList, 
-    LocalDate startDate, 
-    LocalDate endDate, 
-    LocalDate paymentDate, 
-    String billNo, 
-    List<String> paymentTypeList
-) throws HmnServiceException;
+  private boolean isDueDateValid(XMLGregorianCalendar dueDate) {
+        if (dueDate == null) {
+            return false;
+        }
+
+        long todayTime = System.currentTimeMillis();
+
+        long dueDateTime = dueDate.toGregorianCalendar().getTimeInMillis();
+
+        return dueDateTime >= todayTime;
+    }
