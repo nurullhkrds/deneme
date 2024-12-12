@@ -1,4 +1,2 @@
-UPDATE bill.service
-SET RETURN_MAP_CODE = 'SAMSUN_DOGALGAZ_CANCEL_ORDER'
-WHERE name = 'DOĞALGAZ_SAMSUN_CANCEL_ORDER'
-  AND SERVICE_TYPE = 'CANCEL_ORDER';
+                reconRecord.setOperationDate(LocalDate.from(remoteRequest.getRequestDate()));
+java.lang.NullPointerException: temporal
