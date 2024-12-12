@@ -1,18 +1,7 @@
-  @Test
-    void givenFetchPaymentOrderedBillsRequest_whenFetchPaymentOrderedBills_thenReturnFetchPaymentOrderedBillsResponse() throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        // Sabit bir tarih için LocalDate.now() mock'lanıyor
-        try (MockedStatic<LocalDate> mocked = mockStatic(LocalDate.class)) {
-            LocalDate fixedDate = LocalDate.of(2024, 11, 15);
-            mocked.when(LocalDate::now).thenReturn(fixedDate);
 
-            FetchPaymentOrderedBillsRequest remoteRequest = new FetchPaymentOrderedBillsRequest();
-            remoteRequest.setInstitution("ARMADAŞ");
-            remoteRequest.setProduct("DOĞALGAZ");
-            remoteRequest.setDueDate(LocalDate.of(2024, 11, 15));
-            insertReturnMap();
-            insertParams("OTLYKB");
+org.mockito.exceptions.base.MockitoException: 
+The used MockMaker SubclassByteBuddyMockMaker does not support the creation of static mocks
 
-            FetchPaymentOrderedBillsResponse response = testFetchPaymentOrderedBills(BankaService.class, remoteRequest);
-            assertEquals(3, response.getBills().size());
-        }
-    }
+Mockito's inline mock maker supports static mocks based on the Instrumentation API.
+You can simply enable this mock mode, by placing the 'mockito-inline' artifact where you are currently using 'mockito-core'.
+Note that Mockito's inline mock maker is not supported on Android.
