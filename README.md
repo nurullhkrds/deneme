@@ -10,3 +10,4 @@
         FetchPaymentOrderedBillsResponse response = testFetchPaymentOrderedBills(BankaService.class, remoteRequest);
         assertEquals(3, response.getBills().size());
     }
+ if (aboneBorc != null && aboneBorc.getBelgeNo() != null && isDueDateValid(aboneBorc.getSonOdemeTarih())) {
