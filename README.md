@@ -1,14 +1,6 @@
-private String lpadWithZeros(String input, int totalLength) {
-    if (input == null) {
-        return null;
-    }
-    if (input.length() > totalLength) {
-        return input.substring(0, totalLength);
-    }
-    try {
-        return String.format("%0" + totalLength + "d", Long.parseLong(input));
-    } catch (NumberFormatException e) {
-        // Hatalı bir giriş varsa olduğu gibi geri döndür
-        return input;
-    }
-}
+    private final static String OPERATION_TYPE="Hepsi";
+Reorder the modifiers to comply with the Java Language Specification.
+
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+Define a constant instead of duplicating this literal "dd.MM.yyyy" 8 times.
