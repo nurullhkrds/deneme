@@ -1,2 +1,9 @@
-String.format("%0" + totalLength + "d", Long.parseLong(input));
-Format specifiers should be used instead of string concatenation.
+    private String lpadWithZeros(String input, int totalLength) {
+        if (input == null) {
+            return null;
+        }
+        if (input.length() > totalLength) {
+            return input.substring(0, totalLength);
+        }
+        return String.format("%0" + totalLength + "d", Long.parseLong(input));
+    }
