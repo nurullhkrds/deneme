@@ -1,10 +1,34 @@
-    private final static String OPERATION_TYPE="Hepsi";
-Reorder the modifiers to comply with the Java Language Specification.
-
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-private static final String OPERATION_TYPE = "Hepsi";
-
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-Define a constant instead of duplicating this literal "dd.MM.yyyy" 8 times.
+java.util.concurrent.ExecutionException: com.sun.xml.ws.client.ClientTransportException: HTTP transport error: java.net.ConnectException: Connection refused
+	at com.sun.xml.ws.util.CompletedFuture.get(CompletedFuture.java:46)
+	at com.sun.xml.ws.util.CompletedFuture.get(CompletedFuture.java:52)
+	at com.ykb.digital.callcenter.autoconfigure.external.jaxws.MonoSinkAsyncHandler.lambda$new$0(MonoSinkAsyncHandler.java:35)
+	at com.ykb.digital.callcenter.autoconfigure.external.jaxws.MonoSinkAsyncHandler.handleResponse(MonoSinkAsyncHandler.java:51)
+	at com.sun.xml.ws.client.AsyncResponseImpl.set(AsyncResponseImpl.java:101)
+	at com.sun.xml.ws.client.sei.AsyncMethodHandler$SEIAsyncInvoker$1.onCompletion(AsyncMethodHandler.java:184)
+	at com.sun.xml.ws.client.Stub$1.onCompletion(Stub.java:537)
+	at com.sun.xml.ws.api.pipe.Fiber.completionCheck(Fiber.java:895)
+	at com.sun.xml.ws.api.pipe.Fiber.run(Fiber.java:793)
+	at com.sun.xml.ws.api.server.ThreadLocalContainerResolver$2$1.run(ThreadLocalContainerResolver.java:82)
+	at com.ykb.digital.callcenter.autoconfigure.external.jaxws.JaxWsAsyncTask.run(JaxWsAsyncTask.java:22)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.Thread.run(Unknown Source)
+Caused by: com.sun.xml.ws.client.ClientTransportException: HTTP transport error: java.net.ConnectException: Connection refused
+	at com.sun.xml.ws.transport.http.client.HttpClientTransport.getOutput(HttpClientTransport.java:102)
+	at com.sun.xml.ws.transport.http.client.HttpTransportPipe.process(HttpTransportPipe.java:193)
+	at com.sun.xml.ws.transport.http.client.HttpTransportPipe.processRequest(HttpTransportPipe.java:115)
+	at com.sun.xml.ws.transport.DeferredTransportPipe.processRequest(DeferredTransportPipe.java:109)
+	at com.sun.xml.ws.api.pipe.Fiber.__doRun(Fiber.java:1106)
+	at com.sun.xml.ws.api.pipe.Fiber._doRun(Fiber.java:1020)
+	at com.sun.xml.ws.api.pipe.Fiber.doRun(Fiber.java:989)
+	at com.sun.xml.ws.api.pipe.Fiber.run(Fiber.java:783)
+	... 5 more
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.SocksSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.security.ssl.SSLSocketImpl.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
