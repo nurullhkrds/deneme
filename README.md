@@ -1,13 +1,9 @@
-
-insert into syspar.hmn_inf_named_sql_queries (QUERY_NAME, DATASOURCE, QUERY_DEFINITION, COMPONENT_NAME, TYPE)
-values ('GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL', 'CBS', '<CLOB>', 'HMN_PYM_BillPayments', '0');
-
-
-
-SELECT
+UPDATE syspar.hmn_inf_named_sql_queries
+SET QUERY_DEFINITION = '
+    SELECT
         pslog.PRODUCT AS PRODUCT,
         pslog.INSTITUTION AS INSTITUTION,
-        pslog.LOG_DATE || ' ' || pslog.LOG_TIME AS LOG_DATE,
+        pslog.LOG_DATE || '' '' || pslog.LOG_TIME AS LOG_DATE,
         pslog.DP_TRANSACTION_ID AS LOG_RECORD_NO,
         pslog.SUBSCRIBER_NO AS SUBSCRIBER_NO,
         pslog.RESULT_CODE AS INSTITUTION_RETURN_CODE,
@@ -34,9 +30,11 @@ SELECT
     WHERE
         pslog.INSTITUTION = :P_INSTITUTION
         AND pslog.PRODUCT = :P_PRODUCT
-        AND pslog.PROCESS_CODE = 'NOTIFY_PAYMENT'
-        AND TRUNC(TO_DATE(pslog.LOG_DATE, 'DD.MM.YYYY')) BETWEEN :P_START_DATE AND :P_END_DATE
-        @dynamic[ P_ODMTARIH, AND TRUNC(TO_DATE(t_fatura.ODMTARIH, 'DD.MM.YYYY')) = :P_ODMTARIH ]
+        AND pslog.PROCESS_CODE = ''NOTIFY_PAYMENT''
+        AND TRUNC(TO_DATE(pslog.LOG_DATE, ''DD.MM.YYYY'')) BETWEEN :P_START_DATE AND :P_END_DATE
+        @dynamic[ P_ODMTARIH, AND TRUNC(TO_DATE(t_fatura.ODMTARIH, ''DD.MM.YYYY'')) = :P_ODMTARIH ]
         @dynamic[ P_BILL_NO, AND t_fatura.FATURANO = :P_BILL_NO ]
         @dynamic[ P_SUBSCRIBER_LIST, AND pslog.SUBSCRIBER_NO IN (:P_SUBSCRIBER_LIST) ]
         AND t_fatura.ODMTIP IN (:P_ODMTIP_LIST);
+'
+WHERE QUERY_NAME = 'GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL';
