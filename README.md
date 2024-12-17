@@ -1,41 +1,92 @@
+public class GetPaymentLogsTransformer implements DynamicQueryTransformer<PaidBillLogDTO> {
+    
+    String institution;
+    String product;
+    List<String> subscriberList;
+    Date startDate;
+    Date endDate; 
+    Date paymentDate; 
+    String billNo; 
+    List<String> paymentTypeList;
+    
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-    SELECT
-        pslog.PRODUCT AS PRODUCT,
-        pslog.INSTITUTION AS INSTITUTION,
-        pslog.LOG_DATE || ' ' || pslog.LOG_TIME AS LOG_DATE,
-        pslog.DP_TRANSACTION_ID AS LOG_RECORD_NO,
-        pslog.SUBSCRIBER_NO AS SUBSCRIBER_NO,
-        pslog.RESULT_CODE AS INSTITUTION_RETURN_CODE,
-        prm.INSTITUTION_RETURN_TEXT AS INSTITUTION_RETURN_TEXT,
-        t_fatura.FATURANO AS BILL_NO,
-        t_fatura.TUTAR AS TOTAL_AMOUNT,
-        t_fatura.ODNTUTAR AS PAID_AMOUNT,
-        t_fatura.SONODMTARIH AS DUE_DATE,
-        t_fatura.ODMTARIH AS PAYMENT_DATE,
-        t_fatura.ODMTIP AS PAYMENT_TYPE,
-        t_fatura.REFERANS AS REFERENCE_NO
-    FROM
-        OTOLIVE.PYM_ONLINE_SERVICE_LOG pslog
-    JOIN
-        OTOLIVE.PYM_ONLINE_RETURN_MAP prm
-        ON pslog.RESULT_CODE = prm.INSTITUTION_RETURN_CODE
-        AND pslog.INSTITUTION = prm.INSTITUTION
-        AND pslog.PRODUCT = prm.PRODUCT
-    JOIN
-        OTOLIVE.t_oto_fatura t_fatura
-        ON pslog.SUBSCRIBER_NO = t_fatura.ABONENO
-        AND pslog.PRODUCT = t_fatura.URUN
-        AND pslog.INSTITUTION = t_fatura.KURUM
-    WHERE
-        pslog.INSTITUTION = :P_INSTITUTION
-        AND pslog.PRODUCT = :P_PRODUCT
-        AND pslog.PROCESS_CODE = 'NOTIFY_PAYMENT'
-        AND pslog.LOG_DATE BETWEEN TO_DATE(:P_START_DATE, 'DD.MM.YYYY') AND TO_DATE(:P_END_DATE, 'DD.MM.YYYY')
-        @dynamic[ P_ODMTARIH, AND t_fatura.ODMTARIH = TO_DATE(:P_ODMTARIH, 'DD.MM.YYYY') ]
-        @dynamic[ P_BILL_NO, AND t_fatura.FATURANO = :P_BILL_NO ]
-        @dynamic[ P_SUBSCRIBER_LIST, AND pslog.SUBSCRIBER_NO IN (:P_SUBSCRIBER_LIST) ]
-        AND t_fatura.ODMTIP IN (:P_ODMTIP_LIST)
+    public GetPaymentLogsTransformer(String institution, String product, Date startDate,
+            Date endDate, List<String> paymentTypeList) {
+        super();
+        this.institution = institution;
+        this.product = product;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.paymentTypeList = paymentTypeList;
+    }
 
+    public GetPaymentLogsTransformer(String institution, String product, List<String> subscriberList, Date startDate,
+            Date endDate, Date paymentDate, String billNo, List<String> paymentTypeList) {
+        super();
+        this.institution = institution;
+        this.product = product;
+        this.subscriberList = subscriberList;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.paymentDate = paymentDate;
+        this.billNo = billNo;
+        this.paymentTypeList = paymentTypeList;
+    }
 
+    @Override
+    public PaidBillLogDTO convert(Map<String, Object> map) throws HmnServiceException {
+        PaidBillLogDTO dto= new PaidBillLogDTO();
+        
+        dto.setInstitution(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_INSITUTION), String.class));
+        dto.setProduct(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_PRODUCT), String.class));
+        dto.setBillNo(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_BILL_NO), String.class));
+        dto.setLogRecordNo(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_LOG_RECORD_NO), String.class));
+        dto.setLogDate(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_LOG_DATE), String.class));
+        dto.setSubscriberNo(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_SUBSCRIBER_NO), String.class));
+        dto.setInstitutionReturnCode(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_INSTITUTION_RETURN_CODE), String.class));
+        dto.setInstitutionReturnText(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_INSTITUTION_RETURN_TEXT), String.class));
+        dto.setTotalAmount(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_TOTAL_AMOUNT), BigDecimal.class));
+        dto.setPaidAmount(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_PAID_AMOUNT), BigDecimal.class));
+        dto.setDueDate(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_DUE_DATE), Date.class));
+        dto.setPaymentDate(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_PAYMENT_DATE), Date.class));
+        dto.setPaymentType(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_PAYMENT_TYPE), String.class));
+        dto.setReferenceNo(ObjectUtils.objToTargetType(map.get(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.OUT_REFERENCE_NO), String.class));
 
-{P_END_DATE=Sat Feb 10 00:00:00 TRT 2024, P_INSTITUTION=GÜLLÜK, P_START_DATE=Thu Feb 01 00:00:00 TRT 2024, P_PRODUCT=SU, P_ODMTIP_LIST=[I,V]}
+        return dto;
+    }
+
+    @Override
+    public DynamicQueryTransformerDTO prepare() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        List<String> flagList = new ArrayList<String>();
+
+        map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_END_DATE, dateFormat.format(endDate));
+        map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_START_DATE, dateFormat.format(startDate));
+        map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_INSTITUTION, institution);
+        map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_PRODUCT, product);
+        map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_ODMTIP_LIST, paymentTypeList);
+
+        if(StringUtils.hasText(billNo)){
+            map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_BILL_NO, billNo);
+            flagList.add(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_BILL_NO);
+        }
+
+        if(paymentDate != null){
+            map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_ODMTARIH, dateFormat.format(paymentDate));
+            flagList.add(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_ODMTARIH);
+        }
+
+        if(subscriberList !=null && subscriberList.size() > 0){
+            map.put(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_SUBSCRIBER_LIST, subscriberList);
+            flagList.add(NQConsts.GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL.IN_SUBSCRIBER_LIST);
+        }
+
+        DynamicQueryTransformerDTO dynamicQueryTransformerDto = new DynamicQueryTransformerDTO();
+
+        dynamicQueryTransformerDto.setMap(map);
+        dynamicQueryTransformerDto.setFlagList(flagList);
+
+        return dynamicQueryTransformerDto;
+    }
+}
