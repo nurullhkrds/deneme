@@ -1,34 +1,55 @@
+ public Long getInstitutionChannelPymMethodId() {
+        return institutionChannelPymMethodId;
+    }
 
-    @NotNull
-    @Schema(description = "ID of the institution channel pym method", example = "52145", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long institutionChannelPymMethodId;
+    public void setInstitutionChannelPymMethodId(Long institutionChannelPymMethodId) {
+        this.institutionChannelPymMethodId = institutionChannelPymMethodId;
+    }
 
-    @NotNull
-    @Schema(description = "Collection account number", example = "50623427", requiredMode = Schema.RequiredMode.REQUIRED)
-    @Size( max = 9)
-    private String collectionAccountNo;
+    public String getCollectionAccountNo() {
+        return collectionAccountNo;
+    }
 
-    @NotNull
-    @Schema(description = "Institution account number", example = "50623427", requiredMode = Schema.RequiredMode.REQUIRED)
-    @Size( max = 9)
-    private String institutionAccountNo;
+    public void setCollectionAccountNo(String collectionAccountNo) {
+        this.collectionAccountNo = collectionAccountNo;
+    }
 
-    @NotNull
-    @Schema(description = "Currency", example = "YTL", requiredMode = Schema.RequiredMode.REQUIRED)
-    @Size( max = 4)
-    private String currency;
+    public String getInstitutionAccountNo() {
+        return institutionAccountNo;
+    }
 
+    public void setInstitutionAccountNo(String institutionAccountNo) {
+        this.institutionAccountNo = institutionAccountNo;
+    }
 
-    @NotNull
-    @Schema(description = "Expense type", example = "CUST", requiredMode = Schema.RequiredMode.REQUIRED)
-    private EnumExpenseType expenseType;
+    public String getCurrency() {
+        return currency;
+    }
 
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
 
-    @NotNull
-    @Schema(description = "Expense account number", example = "50623427", requiredMode = Schema.RequiredMode.REQUIRED)
-    @Size( max = 9)
-    private String expenseAccountNo;
+    public EnumExpenseType getExpenseType() {
+        return expenseType;
+    }
 
-    @NotNull
-    @Schema(description = "Is active", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean isActive;
+    public void setExpenseType(EnumExpenseType expenseType) {
+        this.expenseType = expenseType;
+    }
+
+    public String getExpenseAccountNo() {
+        return expenseAccountNo;
+    }
+
+    public void setExpenseAccountNo(String expenseAccountNo) {
+        this.expenseAccountNo = expenseAccountNo;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
