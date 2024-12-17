@@ -1,19 +1,15 @@
-
-	public String [] getSubscriberList() {
-		return subscriberList;
-	}
-
-	public void setSubscriberList(String [] subscriberList) {
-		this.subscriberList = subscriberList;
-	}
-
-
-	public String [] getPaymentTypeList() {
-		return paymentTypeList;
-	}
-
-	public void setPaymentTypeList(String [] paymentTypeList) {
-		this.paymentTypeList = paymentTypeList;
-	}
-		private String [] paymentTypeList;
+	private String institution;
+	
+	private String product;
+	
 	private String [] subscriberList;
+	
+	private Date startDate;
+	
+	private Date endDate;
+	
+	private Date paymentDate;
+	
+	private String billNo;
+	
+	private String [] paymentTypeList;
