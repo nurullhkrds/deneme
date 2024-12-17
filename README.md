@@ -17,3 +17,8 @@ WHERE
     @dynamic[ P_BILL_NO, AND t_fatura.FATURANO = :P_BILL_NO ]
     @dynamic[ P_SUBSCRIBER_LIST, AND t_fatura.ABONENO IN (:P_SUBSCRIBER_LIST) ]
     @dynamic[ P_ODMTARIH, AND t_fatura.ODMTARIH = TO_DATE(:P_ODMTARIH, 'DD.MM.YYYY')]
+
+
+
+insert into syspar.hmn_inf_named_sql_queries (QUERY_NAME, DATASOURCE, QUERY_DEFINITION, COMPONENT_NAME, TYPE)
+values ('GET_PAID_ONLINE_SERVICE_LOG_WITH_PAYMENT_DETAIL', 'CBS', '<CLOB>', 'HMN_PYM_BillPayments', '2');
