@@ -1,27 +1,7 @@
-InstitutionChannelProcessDTO dto = new InstitutionChannelProcessDTO();
+Merhaba,
 
-        dto.setId(((BigDecimal) row[0]).longValue());
+Live geçiş süreçlerinde kullanmayı planladığımız scriptler, presign of ortamında testler sırasında hata vermektedir. Yapılan incelemeler sonucunda, sorunların çoğunlukla presign of ortamından kaynaklandığı tespit edilmiştir.
 
-        // Yeni InstitutionChannelDTO oluştur ve id'yi ayarla
-        InstitutionChannelDTO institutionChannelDTO = new InstitutionChannelDTO();
-        institutionChannelDTO.setId(((BigDecimal) row[1]).longValue());
-        dto.setInstitutionChannel(institutionChannelDTO);
+Bu sorunun çözümüne yönelik olarak, live ve presign of ortamlarındaki Metadata'nın eşitlenmesi gerektiğini düşünmekteyiz. Bu sürecin gerçekleştirilmesi için gerekli destek ve iş birliğinizi rica ederiz.
 
-        // Yeni InstitutionProcessDTO oluştur ve id'yi ayarla
-        InstitutionProcessDTO institutionProcessDTO = new InstitutionProcessDTO();
-        institutionProcessDTO.setId(((BigDecimal) row[2]).longValue());
-        dto.setInstitutionProcess(institutionProcessDTO);
-
-        dto.setWorkingStartTime(LocalTime.parse((String) row[3]));
-        dto.setWorkingFinishTime(LocalTime.parse((String) row[4]));
-        dto.setIsActive(((BigDecimal) row[5]).intValue() == 1);
-
-        // createdBy, createDate, updatedBy, updateDate alanlarını ayarla
-        dto.setCreatedBy((String) row[8]);
-        dto.setCreateDate(((Date) row[9]).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-        dto.setUpdatedBy((String) row[10]);
-        if (row[11] != null) {
-            dto.setUpdateDate(((Date) row[11]).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-        }
-
-        return dto;
+Konu hakkında en kısa sürede geri dönüş yapmanızı bekliyor olacağız
