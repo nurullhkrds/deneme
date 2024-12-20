@@ -1,1 +1,1 @@
-git push origin --delete <branch-name>
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
