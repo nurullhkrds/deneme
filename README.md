@@ -1,37 +1,46 @@
-@Service
-@RequiredArgsConstructor
-public class PaidBillLogService implements IPaidBillLogService {
+private List<PaidBillLogDTO> matchBillsWithLogs(List<PaidBillDTO> billDTOS, List<LogRecordDTO> logRecords) {
+    List<PaidBillLogDTO> result = new ArrayList<>();
 
-    private final BillPaymentRestFacade facade;
-    private final BillLogMapper mapper;
-    private final RemoteServiceLogRepository repository;
+    // LogRecordDTO listesini bir Map'e dönüştürelim (SubscriberNo + Institution + Product anahtar olarak kullanılacak)
+    Map<String, LogRecordDTO> logRecordMap = logRecords.stream()
+            .collect(Collectors.toMap(
+                    log -> log.getSubscriberNo() + "|" + log.getInstitutionCode() + "|" + log.getProductCode(),
+                    log -> log
+            ));
 
-
-
-    @Override
-    public List<PaidBillLogDTO> getPaymentLogsByParameters(RequestPaidBillLogDTO requestDTO) {
-        //micro ise gir içine ve işlemleri yapıp return et
-        if (requestDTO.getIsMicro()){
-            RequestPaidBillDTO billRequestDTO= mapper.toRequestDTO(requestDTO);
-            List<PaidBillDTO> billDTOS=getPaymentsByParameters(billRequestDTO);
-
-            if (!billDTOS.isEmpty()){
-                
-
-            }
-
+    // Faturalarla logları eşleştir
+    for (PaidBillDTO bill : billDTOS) {
+        String key = bill.getSubscriberNo() + "|" + bill.getInstitution() + "|" + bill.getProduct();
+        if (logRecordMap.containsKey(key)) {
+            LogRecordDTO log = logRecordMap.get(key);
+            // Eşleşme durumunda DTO oluştur ve sonuç listesine ekle
+            PaidBillLogDTO paidBillLogDTO = new PaidBillLogDTO();
+            paidBillLogDTO.setBillNo(bill.getBillNo());
+            paidBillLogDTO.setLogDate(log.getLogDate());
+            // Diğer gerekli atamalar
+            result.add(paidBillLogDTO);
         }
-        // harmoni ise if bloğuna girmez harmoni servisini çağırır ve direk gelen yanıtı return eder.
-        return facade.getPaymentLogsByParameters(requestDTO).getPaidBillLogList();
     }
 
-    @Override
-    public List<PaidBillDTO> getPaymentsByParameters(RequestPaidBillDTO requestDTO) {
-        return facade.getPaymentsByParameters(requestDTO).getPaidBilList();
+    return result;
+}
+@Override
+public List<PaidBillLogDTO> getPaymentLogsByParameters(RequestPaidBillLogDTO requestDTO) {
+    if (requestDTO.getIsMicro()) {
+        RequestPaidBillDTO billRequestDTO = mapper.toRequestDTO(requestDTO);
+        List<PaidBillDTO> billDTOS = getPaymentsByParameters(billRequestDTO);
+        List<LogRecordDTO> logRecords = getFilteredLogRecords(
+                requestDTO.getInstitutionCode(),
+                requestDTO.getProductCode(),
+                requestDTO.getReturnMapCode(),
+                requestDTO.getStartDate(),
+                requestDTO.getEndDate()
+        );
+
+        // Yeni metod ile eşleştirme yap
+        return matchBillsWithLogs(billDTOS, logRecords);
     }
 
-    @Override
-    public List<LogRecordDTO> getFilteredLogRecords(String institutionCode, String productCode, String returnMapCode, LocalDate startDate, LocalDate endDate) {
-        return repository.findLogsByCriteria(institutionCode,productCode,returnMapCode,startDate,endDate);
-    }
+    // Harmoni ise doğrudan harmoni servisinden gelen yanıtı return et
+    return facade.getPaymentLogsByParameters(requestDTO).getPaidBillLogList();
 }
