@@ -1,19 +1,37 @@
-SELECT 
-    rsl.SUBSCRIBER_NO, 
-    rsl.CREATE_DATE AS LOG_DATE, 
-    rsl.RECEIVED_DATA, 
-    rsl.SEND_DATA,
-    rsl.INSTITUTION_RETURN_CODE , 
-    rm.RETURN_MAP_CODE, 
-    rm.INSTITUTION_RETURN_TEXT,
-    rm.bank_return_code,
-    inst.INSTITUTION_CODE AS INSTITUTION ,
-    inst.PRODUCT_CODE AS PRODUCT
-FROM REMOTE_SERVICE_LOG rsl
-JOIN RETURN_MAP rm ON rsl.INSTITUTION_RETURN_CODE = rm.INSTITUTION_RETURN_CODE AND rsl.BANK_RETURN_CODE = rm.BANK_RETURN_CODE
-JOIN INSTITUTION inst ON rsl.INSTITUTION_ID = inst.ID
-WHERE rsl.SERVICE_TYPE = 'NOTIFY_PAYMENT'
-AND inst.INSTITUTION_CODE = 'ARMADAŞ'
-AND inst.PRODUCT_CODE = 'DOĞALGAZ'
-AND rm.RETURN_MAP_CODE = 'ARMADAS_DOGALGAZ_ALL'
-AND rsl.LOG_DATE BETWEEN TO_DATE('17.12.2024', 'DD.MM.YYYY') AND TO_DATE('18.12.2024', 'DD.MM.YYYY');
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.util.List;
+
+public interface RemoteServiceLogRepository extends JpaRepository<RemoteServiceLog, Long> {
+    @Query(value = "SELECT new LogRecordDTO(rsl.subscriberNo, rsl.createDate, rsl.receivedData, rsl.sendData, rsl.institutionReturnCode, rm.returnMapCode, rm.institutionReturnText, rm.bankReturnCode, inst.institutionCode, inst.productCode) " +
+                   "FROM RemoteServiceLog rsl " +
+                   "JOIN ReturnMap rm ON rsl.institutionReturnCode = rm.institutionReturnCode AND rsl.bankReturnCode = rm.bankReturnCode " +
+                   "JOIN Institution inst ON rsl.institutionId = inst.id " +
+                   "WHERE rsl.serviceType = 'NOTIFY_PAYMENT' " +
+                   "AND inst.institutionCode = :institutionCode " +
+                   "AND inst.productCode = :productCode " +
+                   "AND rm.returnMapCode = :returnMapCode " +
+                   "AND rsl.logDate BETWEEN :startDate AND :endDate", nativeQuery = false)
+    List<LogRecordDTO> findLogsByCriteria(@Param("institutionCode") String institutionCode,
+                                          @Param("productCode") String productCode,
+                                          @Param("returnMapCode") String returnMapCode,
+                                          @Param("startDate") LocalDate startDate,
+                                          @Param("endDate") LocalDate endDate);
+}
+import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.util.List;
+
+@Service
+public class LogRecordService {
+    private final RemoteServiceLogRepository remoteServiceLogRepository;
+
+    public LogRecordService(RemoteServiceLogRepository remoteServiceLogRepository) {
+        this.remoteServiceLogRepository = remoteServiceLogRepository;
+    }
+
+    public List<LogRecordDTO> getFilteredLogRecords(String institutionCode, String productCode, String returnMapCode, LocalDate startDate, LocalDate endDate) {
+        return remoteServiceLogRepository.findLogsByCriteria(institutionCode, productCode, returnMapCode, startDate, endDate);
+    }
+}
