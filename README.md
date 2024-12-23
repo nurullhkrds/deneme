@@ -1,27 +1,22 @@
-   default LogRecordDTO mapToLogRecordDTO(Object[] row) {
-        if (row == null) {
-            return null;
-        }
+@Repository
+public interface RemoteServiceLogRepository extends JpaRepository<RemoteServiceLog, Long> {
 
-        LogRecordDTO dto = new LogRecordDTO();
-        dto.setSubscriberNo((String) row[0]);
-        dto.setLogDate(convertToLocalDate(row[1]));
-        dto.setReceivedData((String) row[2]);
-        dto.setSendData((String) row[3]);
-        dto.setInstitutionReturnCode((String) row[4]);
-        dto.setReturnMapCode((String) row[5]);
-        dto.setInstitutionReturnText((String) row[6]);
-        dto.setBankReturnCode((String) row[7]);
-        dto.setInstitutionCode((String) row[8]);
-        dto.setProductCode((String) row[9]);
-
-        return dto;
-    }
-
-    // Object'ten LocalDate'e dönüşüm için yardımcı metod
-    default LocalDate convertToLocalDate(Object date) {
-        if (date instanceof Timestamp) {
-            return ((Timestamp) date).toLocalDateTime().toLocalDate();
-        }
-        return null;
-    }
+    @Query(value = "SELECT rsl.subscriber_no, rsl.create_date, rsl.received_data, rsl.send_data, " +
+                   "rsl.institution_return_code, rm.return_map_code, rm.institution_return_text, " +
+                   "rm.bank_return_code, inst.institution_code, inst.product_code " +
+                   "FROM REMOTE_SERVICE_LOG rsl " +
+                   "JOIN RETURN_MAP rm ON rsl.institution_return_code = rm.institution_return_code " +
+                   "AND rsl.bank_return_code = rm.bank_return_code " +
+                   "JOIN INSTITUTION inst ON rsl.institution_id = inst.id " +
+                   "WHERE rsl.service_type = 'NOTIFY_PAYMENT' " +
+                   "AND inst.institution_code = :institutionCode " +
+                   "AND inst.product_code = :productCode " +
+                   "AND rm.return_map_code = :returnMapCode " +
+                   "AND rsl.log_date BETWEEN :startDate AND :endDate", 
+           nativeQuery = true)
+    List<Object[]> findLogsByCriteriaNative(@Param("institutionCode") String institutionCode,
+                                            @Param("productCode") String productCode,
+                                            @Param("returnMapCode") String returnMapCode,
+                                            @Param("startDate") LocalDate startDate,
+                                            @Param("endDate") LocalDate endDate);
+}
