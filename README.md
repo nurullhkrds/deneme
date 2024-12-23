@@ -1,40 +1,8 @@
-private List<PaidBillLogDTO> matchBillsWithLogs(List<PaidBillDTO> billDTOS, List<LogRecordDTO> logRecords) {
-    List<PaidBillLogDTO> result = new ArrayList<>();
 
-    // LogRecordDTO listesini bir Map'e dönüştürelim (SubscriberNo + Institution + Product anahtar olarak kullanılacak)
-    Map<String, LogRecordDTO> logRecordMap = logRecords.stream()
-            .collect(Collectors.toMap(
-                    log -> log.getSubscriberNo() + "|" + log.getInstitutionCode() + "|" + log.getProductCode(),
-                    log -> log
-            ));
-
-    // Faturalarla logları eşleştir ve PaidBillLogDTO'yu doldur
-    for (PaidBillDTO bill : billDTOS) {
-        String key = bill.getSubscriberNo() + "|" + bill.getInstitution() + "|" + bill.getProduct();
-        if (logRecordMap.containsKey(key)) {
-            LogRecordDTO log = logRecordMap.get(key);
-
-            // PaidBillLogDTO oluştur ve alanları doldur
-            PaidBillLogDTO paidBillLogDTO = new PaidBillLogDTO();
-            paidBillLogDTO.setProduct(bill.getProduct());
-            paidBillLogDTO.setInstitution(bill.getInstitution());
-            paidBillLogDTO.setLogDate(log.getLogDate().toString());
-            paidBillLogDTO.setLogRecordNo(log.getReturnMapCode());
-            paidBillLogDTO.setSubscriberNo(bill.getSubscriberNo());
-            paidBillLogDTO.setBillNo(bill.getBillNo());
-            paidBillLogDTO.setTotalAmount(bill.getTotalAmount());
-            paidBillLogDTO.setPaidAmount(bill.getPaidAmount());
-            paidBillLogDTO.setDueDate(bill.getDueDate());
-            paidBillLogDTO.setPaymentDate(bill.getPaymentDate());
-            paidBillLogDTO.setPaymentType(bill.getPaymentType());
-            paidBillLogDTO.setReferenceNo(bill.getReferenceNo());
-            paidBillLogDTO.setInstitutionReturnCode(log.getInstitutionReturnCode());
-            paidBillLogDTO.setInstitutionReturnText(log.getInstitutionReturnText());
-            paidBillLogDTO.setProcessed("YES"); // İşlenmiş olarak setle (Örnek)
-
-            result.add(paidBillLogDTO);
-        }
-    }
-
-    return result;
-}
+Caused by: org.hibernate.hql.internal.ast.QuerySyntaxException: REMOTE_SERVICE_LOG is not mapped [SELECT new LogRecordDTO(rsl.subscriberNo, rsl.createDate, rsl.receivedData, rsl.sendData, rsl.institutionReturnCode, rm.returnMapCode, rm.institutionReturnText, rm.bankReturnCode, inst.institutionCode, inst.productCode) FROM REMOTE_SERVICE_LOG rsl JOIN RETURN_MAP rm ON rsl.institutionReturnCode = rm.institutionReturnCode AND rsl.bankReturnCode = rm.bankReturnCode JOIN INSTITUTION inst ON rsl.institutionId = inst.id WHERE rsl.serviceType = 'NOTIFY_PAYMENT' AND inst.institutionCode = :institutionCode AND inst.productCode = :productCode AND rm.returnMapCode = :returnMapCode AND rsl.logDate BETWEEN :startDate AND :endDate]
+	at org.hibernate.hql.internal.ast.QuerySyntaxException.generateQueryException(QuerySyntaxException.java:79) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.QueryException.wrapWithQueryString(QueryException.java:103) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.hql.internal.ast.QueryTranslatorImpl.doCompile(QueryTranslatorImpl.java:220) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.hql.internal.ast.QueryTranslatorImpl.compile(QueryTranslatorImpl.java:144) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.engine.query.spi.HQLQueryPlan.<init>(HQLQueryPlan.java:112) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
+	at org.hibernate.engine.query.spi.HQLQueryPlan.<init>(HQLQueryPlan.java:73) ~[hibernate-core-5.6.15.Final.jar:5.6.15.Final]
