@@ -1,11 +1,30 @@
-import org.springframework.stereotype.Component;
+package com.ykb.payments.bill.transaction.adapter.mapper;
+
+
+import com.ykb.payments.bill.transaction.adapter.dto.LogRecordDTO;
+import com.ykb.payments.bill.transaction.adapter.web.request.billLog.PaidBillLogRequest;
+import com.ykb.payments.bill.transaction.adapter.web.response.PaidBillLogWebDTO;
+import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.dto.PaidBillLogDTO;
+import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.request.RequestPaidBillDTO;
+import com.ykb.payments.bill.transaction.external.harmoni.billpayment.rest.request.RequestPaidBillLogDTO;
+import org.mapstruct.Mapper;
+
 import java.time.LocalDate;
-import java.sql.Timestamp;
+import java.util.List;
 
-@Component
-public class LogRecordMapper {
+@Mapper(componentModel = "spring")
+public interface BillLogMapper {
 
-    public LogRecordDTO mapToLogRecordDTO(Object[] row) {
+
+    RequestPaidBillLogDTO toRequestDTO(PaidBillLogRequest request);
+    RequestPaidBillDTO toRequestDTO(RequestPaidBillLogDTO requestDTO);
+
+    PaidBillLogWebDTO toWebDTO(PaidBillLogDTO dto);
+
+    List<PaidBillLogWebDTO> toWebDTOList(List<PaidBillLogDTO> dtoList);
+
+
+     LogRecordDTO mapToLogRecordDTO(Object[] row) {
         LogRecordDTO dto = new LogRecordDTO();
 
         // Sorgudan gelen sütunları sırasıyla set et
@@ -23,33 +42,12 @@ public class LogRecordMapper {
         return dto;
     }
 
-    // Yardımcı metod: Object'i LocalDate'e dönüştür
     private LocalDate convertToLocalDate(Object date) {
         if (date instanceof Timestamp) {
             return ((Timestamp) date).toLocalDateTime().toLocalDate();
         }
         return null;
     }
-}
-@Service
-@RequiredArgsConstructor
-public class PaidBillLogService implements IPaidBillLogService {
 
-    private final BillPaymentRestFacade facade;
-    private final BillLogMapper billLogMapper;
-    private final RemoteServiceLogRepository repository;
-    private final LogRecordMapper logRecordMapper;
 
-    @Override
-    public List<LogRecordDTO> getFilteredLogRecords(String institutionCode, String productCode, String returnMapCode, LocalDate startDate, LocalDate endDate) {
-        // Native query'den gelen Object[] listesini al
-        List<Object[]> rows = repository.findLogsByCriteriaNative(institutionCode, productCode, returnMapCode, startDate, endDate);
-
-        // Object[] listesini LogRecordDTO'ya map et
-        List<LogRecordDTO> logRecords = rows.stream()
-                .map(logRecordMapper::mapToLogRecordDTO)
-                .toList();
-
-        return logRecords;
-    }
 }
