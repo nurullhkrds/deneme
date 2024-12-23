@@ -35,3 +35,14 @@ public class LogRecordService {
         return remoteServiceLogRepository.findLogsByCriteria(institutionCode, productCode, returnMapCode, startDate, endDate);
     }
 }
+
+private String subscriberNo;
+    private LocalDate logDate;
+    private String receivedData;
+    private String sendData;
+    private String institutionReturnCode;
+    private String returnMapCode;
+    private String institutionReturnText;
+    private String bankReturnCode;
+    private String institutionCode;
+    private String productCode;
