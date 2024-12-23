@@ -1,56 +1,42 @@
-@Entity
 @Getter
 @Setter
-public class RemoteServiceLog {
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
+public class PaidBillLogRequest {
 
-    @Id
-    @Column(nullable = false, length = 16)
-    @SequenceGenerator(name = "REMOTESERVICELOG_ID_GENERATOR", sequenceName = "SEQ_REMOTE_SERVICE_LOG", allocationSize = 100)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "REMOTESERVICELOG_ID_GENERATOR")
-    private Long id;
-
-    @Column(length = 16)
-    private Long institutionId;
-
-    @Column(length = 50)
-    private String serviceType;
-
-    @Column(length = 50)
-    private String subscriberNo;
-
-    @Column(nullable = false)
-    private LocalDate logDate;
-
-    @Column(nullable = false)
-    private Long duration;
-
-    @Column(nullable = false)
-    private String sendData;
-
-    @Column(nullable = false)
-    private String receivedData;
-
-    @Column(length = 255)
-    private String institutionReturnCode;
-
-    @Column(length = 10)
-    private String bankReturnCode;
-
-    @Column(length = 100)
-    private String additionalInfo;
-
-    @Column(length = 16)
-    private Long dataPowerTransactionId;
-
-    @Column(length = 4)
+    private String requestDate;
+    private String reference;
     private String channelCode;
+    private String agentCode;
+    private String operatingBranchCode;
+    private String clientUniqueReference;
 
-    @Column(length = 4)
-    private String branchCode;
+    @NotNull
+    @Schema(description = "Institution Code", example = "GÜLLÜK", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String institution;
 
-    @Column(length = 50)
-    private String channelTransactionId;
+    @NotNull
+    @Schema(description = "Product Code", example = "su", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String product;
 
-    @Column(length = 100)
-    private String channelSessionId;
+    private String [] subscriberList;
+
+    @NotNull
+    @Schema(description = "Log Date Start", example = "02.03.2024", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Date startDate;
+
+    @NotNull
+    @Schema(description = "Log Date Finish", example = "10.03.2024", requiredMode = Schema.RequiredMode.REQUIRED)
+    private Date endDate;
+
+    private Date paymentDate;
+
+    private String billNo;
+
+    @NotNull
+    @Schema(description = "Payment Type", example = "I,V,L,K", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String [] paymentTypeList;
+
+    @NotNull
+    @Schema(description = "Process status", example = "E,H", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String processed;
 }
