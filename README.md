@@ -1,16 +1,24 @@
-java: Can't generate mapping method from iterable type from java stdlib to non-iterable type.
- @Mapping(target = "subscriberNo", expression = "java((String) row[0])")
-    @Mapping(target = "logDate", expression = "java(convertToLocalDate(row[1]))")
-    @Mapping(target = "receivedData", expression = "java((String) row[2])")
-    @Mapping(target = "sendData", expression = "java((String) row[3])")
-    @Mapping(target = "institutionReturnCode", expression = "java((String) row[4])")
-    @Mapping(target = "returnMapCode", expression = "java((String) row[5])")
-    @Mapping(target = "institutionReturnText", expression = "java((String) row[6])")
-    @Mapping(target = "bankReturnCode", expression = "java((String) row[7])")
-    @Mapping(target = "institutionCode", expression = "java((String) row[8])")
-    @Mapping(target = "productCode", expression = "java((String) row[9])")
-    LogRecordDTO mapToLogRecordDTO(Object[] row);
+   default LogRecordDTO mapToLogRecordDTO(Object[] row) {
+        if (row == null) {
+            return null;
+        }
 
+        LogRecordDTO dto = new LogRecordDTO();
+        dto.setSubscriberNo((String) row[0]);
+        dto.setLogDate(convertToLocalDate(row[1]));
+        dto.setReceivedData((String) row[2]);
+        dto.setSendData((String) row[3]);
+        dto.setInstitutionReturnCode((String) row[4]);
+        dto.setReturnMapCode((String) row[5]);
+        dto.setInstitutionReturnText((String) row[6]);
+        dto.setBankReturnCode((String) row[7]);
+        dto.setInstitutionCode((String) row[8]);
+        dto.setProductCode((String) row[9]);
+
+        return dto;
+    }
+
+    // Object'ten LocalDate'e dönüşüm için yardımcı metod
     default LocalDate convertToLocalDate(Object date) {
         if (date instanceof Timestamp) {
             return ((Timestamp) date).toLocalDateTime().toLocalDate();
