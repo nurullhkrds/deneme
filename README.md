@@ -1,1 +1,1 @@
-"errorMessage": "class jdk.proxy2.$Proxy390 cannot be cast to class java.lang.String (jdk.proxy2.$Proxy390 is in module jdk.proxy2 of loader 'app'; java.lang.String is in module java.base of loader 'bootstrap')",
+![image](https://github.com/user-attachments/assets/5b35bf79-bc81-44eb-8464-1b5a896c7c07)
