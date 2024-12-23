@@ -1,53 +1,40 @@
-@Getter
-@Setter
-public class PaidBillLogDTO {
+private List<PaidBillLogDTO> matchBillsWithLogs(List<PaidBillDTO> billDTOS, List<LogRecordDTO> logRecords) {
+    List<PaidBillLogDTO> result = new ArrayList<>();
 
-    private String product;
+    // LogRecordDTO listesini bir Map'e dönüştürelim (SubscriberNo + Institution + Product anahtar olarak kullanılacak)
+    Map<String, LogRecordDTO> logRecordMap = logRecords.stream()
+            .collect(Collectors.toMap(
+                    log -> log.getSubscriberNo() + "|" + log.getInstitutionCode() + "|" + log.getProductCode(),
+                    log -> log
+            ));
 
-    private String institution;
+    // Faturalarla logları eşleştir ve PaidBillLogDTO'yu doldur
+    for (PaidBillDTO bill : billDTOS) {
+        String key = bill.getSubscriberNo() + "|" + bill.getInstitution() + "|" + bill.getProduct();
+        if (logRecordMap.containsKey(key)) {
+            LogRecordDTO log = logRecordMap.get(key);
 
-    private String logDate;
+            // PaidBillLogDTO oluştur ve alanları doldur
+            PaidBillLogDTO paidBillLogDTO = new PaidBillLogDTO();
+            paidBillLogDTO.setProduct(bill.getProduct());
+            paidBillLogDTO.setInstitution(bill.getInstitution());
+            paidBillLogDTO.setLogDate(log.getLogDate().toString());
+            paidBillLogDTO.setLogRecordNo(log.getReturnMapCode());
+            paidBillLogDTO.setSubscriberNo(bill.getSubscriberNo());
+            paidBillLogDTO.setBillNo(bill.getBillNo());
+            paidBillLogDTO.setTotalAmount(bill.getTotalAmount());
+            paidBillLogDTO.setPaidAmount(bill.getPaidAmount());
+            paidBillLogDTO.setDueDate(bill.getDueDate());
+            paidBillLogDTO.setPaymentDate(bill.getPaymentDate());
+            paidBillLogDTO.setPaymentType(bill.getPaymentType());
+            paidBillLogDTO.setReferenceNo(bill.getReferenceNo());
+            paidBillLogDTO.setInstitutionReturnCode(log.getInstitutionReturnCode());
+            paidBillLogDTO.setInstitutionReturnText(log.getInstitutionReturnText());
+            paidBillLogDTO.setProcessed("YES"); // İşlenmiş olarak setle (Örnek)
 
-    private String logRecordNo;
+            result.add(paidBillLogDTO);
+        }
+    }
 
-    private String subscriberNo;
-
-    private String billNo;
-
-    private BigDecimal totalAmount;
-
-    private BigDecimal paidAmount;
-
-    private String dueDate;
-
-    private String paymentDate;
-
-    private String paymentType;
-
-    private String referenceNo;
-
-    private String institutionReturnCode;
-
-    private String institutionReturnText;
-
-    private String processed;
-
-}
-
-
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class LogRecordDTO {
-
-    private String subscriberNo;
-    private LocalDate logDate;
-    private String receivedData;
-    private String sendData;
-    private String institutionReturnCode;
-    private String returnMapCode;
-    private String institutionReturnText;
-    private String bankReturnCode;
-    private String institutionCode;
-    private String productCode;
+    return result;
 }
