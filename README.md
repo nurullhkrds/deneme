@@ -1,76 +1,90 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Form, Select, CheckboxGroup, Checkbox, TextInput, DatePicker } from 'ykb-ui';
-import { formFieldsConfig } from './formFieldsConfig';
+import React, { useState } from 'react';
 
-const FormItem = Form.Item;
+// Dummy data and components - Gerçek UI kütüphanenize göre değiştirin
+const DummySelect = ({ options, onChange, value }) => (
+  <select onChange={e => onChange(e.target.value)} value={value}>
+    {options.map(opt => (
+      <option key={opt.value} value={opt.value}>{opt.label}</option>
+    ))}
+  </select>
+);
+
+const DummyTextInput = ({ onChange, value }) => (
+  <input type="text" onChange={e => onChange(e.target.value)} value={value} />
+);
+
+const DummyCheckboxGroup = ({ options, onChange, values }) => (
+  <div>
+    {options.map(opt => (
+      <label key={opt.value}>
+        <input
+          type="checkbox"
+          checked={values.includes(opt.value)}
+          onChange={e => onChange(e.target.checked ? opt.value : null)}
+        />
+        {opt.label}
+      </label>
+    ))}
+  </div>
+);
+
+const formFieldsConfig = [
+  { name: 'urun', label: 'Ürün Türü', type: 'select', options: [{ value: 'dogalgaz', label: 'Doğalgaz' }, { value: 'igdas', label: 'İGDAŞ' }]},
+  { name: 'kurum', label: 'Kurum', type: 'select', options: [{ value: '1000001', label: '1000001' }, { value: '1000002', label: '1000002' }]},
+  { name: 'odemeTipi', label: 'Fatura Ödeme Tipi', type: 'checkbox', options: [{ value: 'krediKarti', label: 'Kredi Kartı' }, { value: 'hesap', label: 'Hesap' }]},
+  { name: 'faturaNo', label: 'Fatura No', type: 'text'},
+];
 
 function BillLogMonitoring() {
   const [formData, setFormData] = useState({});
-  const [formOptions, setFormOptions] = useState({});
 
-  // API'den seçenekleri dinamik olarak yükleme
-  useEffect(() => {
-    async function fetchOptions() {
-      const optionsData = {};
-      await Promise.all(
-        Object.entries(formFieldsConfig).map(async ([key, { optionsEndPoint }]) => {
-          if (optionsEndPoint) {
-            const response = await fetch(optionsEndPoint);
-            optionsData[key] = await response.json();
-          }
-        })
-      );
-      setFormOptions(optionsData);
-    }
-
-    fetchOptions();
-  }, []);
-
-  // Form elemanlarındaki değişiklikleri işleme
-  const handleChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
+  const handleFieldChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Formu gönderme
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form Data:', formData);
-  };
-
-  // Formu sıfırlama
-  const handleReset = () => {
-    setFormData({});
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log('Submitted Data:', formData);
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
-      {Object.entries(formFieldsConfig).map(([key, config]) => {
-        const Component = config.type === 'select' ? Select : config.type === 'textInput' ? TextInput : config.type === 'datePicker' ? DatePicker : CheckboxGroup;
-        const options = formOptions[key] || config.options;
-
-        return (
-          <FormItem label={config.label} key={key} required={config.required}>
-            {Component === CheckboxGroup ? (
-              <CheckboxGroup name={key} onChange={(e) => handleChange(key, e.target.value)}>
-                {options.map(option => (
-                  <Checkbox key={option.value} value={option.value}>{option.label}</Checkbox>
-                ))}
-              </CheckboxGroup>
-            ) : (
-              <Component name={key} onChange={(value) => handleChange(key, value)}>
-                {options && Component !== CheckboxGroup && options.map(option => (
-                  <Component.Option key={option.value} value={option.value}>{option.label}</Component.Option>
-                ))}
-              </Component>
-            )}
-          </FormItem>
-        );
-      })}
-      <FormItem>
-        <Button onClick={handleReset} type="secondary">Reset</Button>
-        <Button type="submit" type="primary">Submit</Button>
-      </FormItem>
-    </Form>
+    <form onSubmit={handleSubmit}>
+      {formFieldsConfig.map(field => (
+        <div key={field.name}>
+          <label>{field.label}</label>
+          {field.type === 'select' && (
+            <DummySelect
+              options={field.options}
+              onChange={value => handleFieldChange(field.name, value)}
+              value={formData[field.name] || ''}
+            />
+          )}
+          {field.type === 'text' && (
+            <DummyTextInput
+              onChange={value => handleFieldChange(field.name, value)}
+              value={formData[field.name] || ''}
+            />
+          )}
+          {field.type === 'checkbox' && (
+            <DummyCheckboxGroup
+              options={field.options}
+              onChange={value => {
+                const newValues = formData[field.name] ? [...formData[field.name]] : [];
+                if (newValues.includes(value)) {
+                  const index = newValues.indexOf(value);
+                  newValues.splice(index, 1);
+                } else if (value) {
+                  newValues.push(value);
+                }
+                handleFieldChange(field.name, newValues);
+              }}
+              values={formData[field.name] || []}
+            />
+          )}
+        </div>
+      ))}
+      <button type="submit">Submit</button>
+    </form>
   );
 }
 
