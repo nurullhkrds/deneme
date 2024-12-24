@@ -1,49 +1,100 @@
-@Getter
-@Setter
-@JsonInclude(value = JsonInclude.Include.NON_NULL)
-public class PaidBillLogRequest {
+import React, { useEffect } from 'react';
+import { Row, Col, Button, Modal, Form, Select, Notification, Checkbox, Icon, Message, DatePicker, Textarea, CheckboxGroup, NumberInput, TextInput } from 'ykb-ui';
+const FormItem = Form.Item;
 
-    private String requestDate;
-    private String reference;
-    private String channelCode;
-    private String agentCode;
-    private String operatingBranchCode;
-    private String clientUniqueReference;
 
-    @NotNull
-    @Schema(description = "Institution Code", example = "GÜLLÜK", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String institution;
+const initData = {
+  textinput: 'Rasit',
+  numberinput: 10,
+  select: 'rasit',
+  checkboxGroupTest: ['b'],
+  // eslint-disable-next-line no-undef
+  datepicker: moment(),
+};
+function BillLogMonitoring() {
+  const formRef = React.useRef(null);
 
-    @NotNull
-    @Schema(description = "Product Code", example = "su", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String product;
 
-    private String [] subscriberList;
+  useEffect(() => {
+    if (formRef.current) {
+      formRef.current.setFieldsValue(initData);
+    }
+  }, []);
+  const reset = e => {
+    e.preventDefault();
+    formRef.current.resetFields();
+  };
 
-    @NotNull
-    @Schema(description = "Log Date Start", example = "02.03.2024", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Date startDate;
+  const onSubmit = (e, errors, values) => {
+    if (!errors) {
+      console.log('ok', 'test submit', values);
+    } else {
+      console.log('error', 'test submit', errors, values);
+    }
+  };
 
-    @NotNull
-    @Schema(description = "Log Date Finish", example = "10.03.2024", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Date endDate;
 
-    private Date paymentDate;
+  return (
+    <Form ref={formRef} onSubmit={onSubmit} colSpan={{ span: 12 }}>
+      <FormItem label="TextInput">
+        <TextInput name="textinput" />
+      </FormItem>
 
-    private String billNo;
+      <FormItem label="Number">
+        <NumberInput name="numberinput" mobile={true} />
+      </FormItem>
 
-    @NotNull
-    @Schema(description = "Payment Type", example = "I,V,L,K", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String [] paymentTypeList;
+      <FormItem label="Select">
+        <Select
+          name="select"
+          data={[
+            {
+              value: 'rasit',
+              label: 'Rasit',
+            },
+            {
+              value: 'enis',
+              label: 'Enis',
+            },
+            {
+              value: 'ebru',
+              label: 'Ebru',
+            },
+          ]}
+        />
+      </FormItem>
 
-    @NotNull
-    @Schema(description = "Process status", example = "E,H", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String processed;
+      <FormItem label="Checkbox Group">
+        <CheckboxGroup
+          onChange={data => {
+            console.log(data);
+          }}
+          name="checkboxGroupTest"
+          items={[
+            { value: 'a', textLabel: 'Option 1' },
+            { value: 'b', textLabel: 'Option 2' },
+          ]}
+        />
+      </FormItem>
 
-    @NotNull
-    @Schema(description = "Micro status", example = "Y,N", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean isMicro;
+      <Form.Item label="Date">
+        <DatePicker name="datepicker" validation={[{ required: true }]} />
+      </Form.Item>
 
-    @Schema(description = "Micro status", example = "Y,N", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String returnMapCode;
+      <FormItem label="Textarea">
+        <Textarea name="textarea" />
+      </FormItem>
+
+      <FormItem colSpan={{ span: 24 }}>
+        <Button onClick={reset} type="secondary">
+          Reset
+        </Button>
+        <Button htmlType="submit" type="primary">
+          Submit
+        </Button>
+      </FormItem>
+    </Form>
+  );
 }
+
+export default BillLogMonitoring;
