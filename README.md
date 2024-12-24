@@ -1,4 +1,3 @@
- 
 import React, { useEffect } from 'react';
 import { Button, Form, Select, CheckboxGroup, TextInput, DatePicker } from 'ykb-ui';
 const FormItem = Form.Item;
@@ -13,14 +12,13 @@ function BillLogMonitoring() {
         kurum: '1000001',
         odemeTipi: ['Kredi Kartı'],
         bildirimDurumu: 'Evet',
-        // eslint-disable-next-line no-undef
         bildirimBaslangicTarihi: moment(),
-        // eslint-disable-next-line no-undef
         bildirimBitisTarihi: moment().add(7, 'days'),
-        // eslint-disable-next-line no-undef
         odemeTarihi: moment(),
         faturaNo: '',
-        aboneNo: ''
+        aboneNo: '',
+        isMicro: 'false', // Default as string to match Select option values
+        returnMapCode: ''
       });
     }
   }, []);
@@ -31,6 +29,9 @@ function BillLogMonitoring() {
   };
 
   const onSubmit = (e, errors, values) => {
+    e.preventDefault();
+    // Convert isMicro back to boolean before submitting or processing
+    values.isMicro = values.isMicro === 'true';
     if (!errors) {
       console.log('Form Submitted', values);
     } else {
@@ -41,28 +42,32 @@ function BillLogMonitoring() {
   return (
     <Form ref={formRef} onSubmit={onSubmit}>
       <FormItem label="Ürün Türü">
-        <Select name="urun"
-          data={[{ value: 'DOĞALGAZ', label: 'Doğalgaz' },
-          { value: 'İGDAŞ', label: 'İGDAŞ' }]} validation={[{ required: true }]} />
+        <Select name="urun" validation={[{ required: true }]}>
+          <Select.Option value="DOĞALGAZ">Doğalgaz</Select.Option>
+          <Select.Option value="İGDAŞ">İGDAŞ</Select.Option>
+        </Select>
       </FormItem>
 
       <FormItem label="Kurum">
-        <Select name="kurum"
-          data={[{ value: '1000001', label: '1000001' },
-          { value: '1000002', label: '1000002' }]} validation={[{ required: true }]}/>
+        <Select name="kurum" validation={[{ required: true }]}>
+          <Select.Option value="1000001">1000001</Select.Option>
+          <Select.Option value="1000002">1000002</Select.Option>
+        </Select>
       </FormItem>
 
       <FormItem label="Fatura Ödeme Tipi">
-        <CheckboxGroup name="odemeTipi"
-          items={[{ value: 'Kredi Kartı', textLabel: 'Kredi Kartı' },
-          { value: 'Hesap', textLabel: 'Hesap' },
-          { value: 'Vezne', textLabel: 'Vezne' }]} validation={[{ required: true }]}/>
+        <CheckboxGroup name="odemeTipi" validation={[{ required: true }]}>
+          <CheckboxGroup.Item value="Kredi Kartı" label="Kredi Kartı" />
+          <CheckboxGroup.Item value="Hesap" label="Hesap" />
+          <CheckboxGroup.Item value="Vezne" label="Vezne" />
+        </CheckboxGroup>
       </FormItem>
 
       <FormItem label="Fatura Ödeme Bildirim Durumu">
-        <Select name="bildirimDurumu" 
-        data={[{ value: 'Evet', label: 'Evet' },
-           { value: 'Hayır', label: 'Hayır' }]} validation={[{ required: true }]}/>
+        <Select name="bildirimDurumu" validation={[{ required: true }]}>
+          <Select.Option value="Evet">Evet</Select.Option>
+          <Select.Option value="Hayır">Hayır</Select.Option>
+        </Select>
       </FormItem>
 
       <FormItem label="Ödeme Bildirim Başlangıç Tarihi">
@@ -85,6 +90,17 @@ function BillLogMonitoring() {
         <DatePicker name="odemeTarihi" format="DD/MM/YYYY" />
       </FormItem>
 
+      <FormItem label="Micro Status">
+        <Select name="isMicro" validation={[{ required: true }]}>
+          <Select.Option value="true">Evet</Select.Option>
+          <Select.Option value="false">Hayır</Select.Option>
+        </Select>
+      </FormItem>
+
+      <FormItem label="Return Map Code">
+        <TextInput name="returnMapCode" validation={[{ required: true }]}/>
+      </FormItem>
+
       <FormItem>
         <Button onClick={reset} type="secondary">Reset</Button>
         <Button htmlType="submit" type="primary">Submit</Button>
@@ -94,11 +110,3 @@ function BillLogMonitoring() {
 }
 
 export default BillLogMonitoring;
-
-
-  @NotNull
-    @Schema(description = "Micro status", example = "Y,N", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Boolean isMicro;
-
-    @Schema(description = "Micro status", example = "Y,N", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String returnMapCode;
