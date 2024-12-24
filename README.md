@@ -72,3 +72,68 @@ export const formFieldsConfig = {
     required: true
   }
 };
+
+
+import React, { useState } from 'react';
+import { Button, Form, Select, CheckboxGroup, TextInput, DatePicker } from 'ykb-ui';
+import { formFieldsConfig } from './formConfig';
+const FormItem = Form.Item;
+
+function BillLogMonitoring() {
+  const [formData, setFormData] = useState({});
+  const [isMicro, setIsMicro] = useState('false');
+
+  const handleChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'isMicro') {
+      setIsMicro(value);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Submitted Form Data:', formData);
+  };
+
+  const resetForm = () => {
+    setFormData({});
+    setIsMicro('false');
+  };
+
+  return (
+    <Form onSubmit={handleSubmit}>
+      {Object.entries(formFieldsConfig).map(([key, config]) => (
+        <FormItem label={config.label} key={key} required={config.required}>
+          {config.type === 'select' && (
+            <Select name={key} onChange={(value) => handleChange(key, value)}>
+              {config.options.map(option => (
+                <Select.Option key={option.value} value={option.value}>{option.label}</Select.Option>
+              ))}
+            </Select>
+          )}
+          {config.type === 'checkboxGroup' && (
+            <CheckboxGroup name={key} onChange={(value) => handleChange(key, value)}>
+              {config.options.map(item => (
+                <CheckboxGroup.Item key={item.value} value={item.value} label={item.label} />
+              ))}
+            </CheckboxGroup>
+          )}
+          {config.type === 'datePicker' && (
+            <DatePicker name={key} onChange={(value) => handleChange(key, value)} />
+          )}
+          {config.type === 'textInput' && (
+            <TextInput name={key} onChange={(value) => handleChange(key, value)} />
+          )}
+          {config.dependentOn === 'isMicro' && isMicro === 'true' && (
+            <TextInput name={key} required={config.required} onChange={(value) => handleChange(key, value)} />
+          )}
+        </FormItem>
+      ))}
+      <Button onClick={resetForm} type="secondary">Reset</Button>
+      <Button type="submit" type="primary">Submit</Button>
+    </Form>
+  );
+}
+
+export default BillLogMonitoring;
+
