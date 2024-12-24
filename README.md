@@ -1,50 +1,115 @@
+// formConfig.js
+export const formFieldsConfig = {
+  urun: {
+    type: 'select',
+    label: 'Ürün Türü',
+    required: true,
+    optionsEndPoint: '/api/urun-options'
+  },
+  kurum: {
+    type: 'select',
+    label: 'Kurum',
+    required: true,
+    optionsEndPoint: '/api/kurum-options'
+  },
+  odemeTipi: {
+    type: 'checkboxGroup',
+    label: 'Fatura Ödeme Tipi',
+    required: true,
+    optionsEndPoint: '/api/odeme-tipi-options'
+  },
+  bildirimDurumu: {
+    type: 'select',
+    label: 'Fatura Ödeme Bildirim Durumu',
+    required: true,
+    optionsEndPoint: '/api/bildirim-durumu-options'
+  },
+  bildirimBaslangicTarihi: {
+    type: 'datePicker',
+    label: 'Ödeme Bildirim Başlangıç Tarihi',
+    required: true
+  },
+  bildirimBitisTarihi: {
+    type: 'datePicker',
+    label: 'Ödeme Bildirim Bitiş Tarihi',
+    required: true
+  },
+  faturaNo: {
+    type: 'textInput',
+    label: 'Fatura No'
+  },
+  aboneNo: {
+    type: 'textInput',
+    label: 'Abone No'
+  },
+  odemeTarihi: {
+    type: 'datePicker',
+    label: 'Ödeme Tarihi'
+  },
+  isMicro: {
+    type: 'select',
+    label: 'Micro Status',
+    required: true,
+    options: [
+      { value: 'true', label: 'Evet' },
+      { value: 'false', label: 'Hayır' }
+    ]
+  },
+  returnMapCode: {
+    type: 'textInput',
+    label: 'Return Map Code',
+    requiredDependent: 'isMicro',
+    required: false
+  }
+};
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Select, CheckboxGroup, TextInput, DatePicker } from 'ykb-ui';
 import { formFieldsConfig } from './formConfig';
 const FormItem = Form.Item;
 
 function BillLogMonitoring() {
+  const formRef = React.useRef(null);
   const [formOptions, setFormOptions] = useState({});
   const [formData, setFormData] = useState({});
-  const formRef = React.useRef(null);
+  const [isMicro, setIsMicro] = useState(false);
 
-  // Form yapılandırmasına göre API'den seçenekleri çekme
   useEffect(() => {
     async function fetchOptions() {
-      const fetchedOptions = {};
+      const optionsData = {};
       for (const field in formFieldsConfig) {
-        const config = formFieldsConfig[field];
-        if (config.optionsEndPoint) {
-          const response = await fetch(config.optionsEndPoint);
-          fetchedOptions[field] = await response.json();
+        if (formFieldsConfig[field].optionsEndPoint) {
+          const response = await fetch(formFieldsConfig[field].optionsEndPoint);
+          optionsData[field] = await response.json();
         }
       }
-      setFormOptions(fetchedOptions);
+      setFormOptions(optionsData);
     }
 
     fetchOptions();
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleChange = (name, value) => {
+    if (name === 'isMicro') {
+      setIsMicro(value === 'true');
+    }
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const values = formRef.current.getValues();
-    // Submit logic here
-    console.log(values);
+    // Process form submission here
+    console.log(formData);
   };
 
   return (
     <Form ref={formRef} onSubmit={handleSubmit}>
       {Object.entries(formFieldsConfig).map(([key, config]) => {
-        const Component = config.type === 'select' ? Select : config.type === 'checkboxGroup' ? CheckboxGroup : TextInput;
+        const Component = config.type === 'select' ? Select : config.type === 'checkboxGroup' ? CheckboxGroup : config.type === 'datePicker' ? DatePicker : TextInput;
         const options = formOptions[key] || config.options;
-        
+
         return (
           <FormItem label={config.label} key={key} required={config.required}>
-            <Component
-              name={key}
-              options={options}
-              onChange={value => config.requiredDependent && setFormData({...formData, [config.requiredDependent]: value === 'true'})}
-            >
+            <Component name={key} options={options} onChange={(value) => handleChange(key, value)} validation={config.validation}>
               {options && options.map(option => <Component.Option key={option.value} value={option.value}>{option.label}</Component.Option>)}
             </Component>
           </FormItem>
