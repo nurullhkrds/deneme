@@ -1,130 +1,104 @@
-arning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?
+import React, { useEffect, useState } from 'react';
+import { Button, Form, Select, CheckboxGroup, TextInput, DatePicker } from 'antd'; // UI library; burada antd varsayılmıştır
+import axios from 'axios';
+import { formFieldsConfig } from './formConfig'; // yapılandırma dosyasını import ediyoruz
 
-Check the render method of `_class`.
-    in ControlComponent (created by _class)
-    in ExternalDataContextProvider (created by _class)
-    in _class (created by SparxPage)
-    in ShellCommunicatorProvider (created by SparxPage)
-    in PermissionProvider (created by SparxPage)
-    in IntlProvider (created by SparxPage)
-    in SparxPage (created by Route)
-    in Route (created by RouteCreator)
-    in div (created by RouteCreator)
-    in Router (created by MemoryRouter)
-    in MemoryRouter (created by RouteCreator)
-    in div (created by RouteCreator)
-    in RouteCreator
-    in Le (created by YkbUiThemeProvider)
-    in YkbUiThemeProvider
-    in me
-o @ react-dom.development.min.js:1
-react-dom.development.min.js:1 Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?
+const FormItem = Form.Item;
 
-Check the render method of `AsyncComponent`.
-    in BillLogMonitoringWrapper (created by AsyncComponent)
-    in AsyncComponent (created by _class)
-    in ExternalDataContextProvider (created by _class)
-    in _class (created by SparxPage)
-    in ShellCommunicatorProvider (created by SparxPage)
-    in PermissionProvider (created by SparxPage)
-    in IntlProvider (created by SparxPage)
-    in SparxPage (created by Route)
-    in Route (created by RouteCreator)
-    in div (created by RouteCreator)
-    in Router (created by MemoryRouter)
-    in MemoryRouter (created by RouteCreator)
-    in div (created by RouteCreator)
-    in RouteCreator
-    in Le (created by YkbUiThemeProvider)
-    in YkbUiThemeProvider
-    in me
-o @ react-dom.development.min.js:1
-BillLogMonitoring.js:33 Uncaught TypeError: Cannot read properties of undefined (reading 'map')
-    at BillLogMonitoring.js:33:1
-    at Array.map (<anonymous>)
-    at BillLogMonitoring (BillLogMonitoring.js:29:1)
-    at hh (react-dom.development.min.js:1:144147)
-    at react-dom.development.min.js:1:179363
-    at dg (react-dom.development.min.js:1:180257)
-    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
-    at Object.t (react-dom.development.min.js:1:2630)
-    at g (react-dom.development.min.js:1:3531)
-    at gb (react-dom.development.min.js:1:216332)
-react-dom.development.min.js:1 The above error occurred in the <BillLogMonitoring> component:
-    in BillLogMonitoring (at BillLogMonitoringWrapper.js:10)
-    in Provider (at BillLogMonitoringWrapper.js:9)
-    in BillLogMonitoringWrapper (created by AsyncComponent)
-    in AsyncComponent (created by _class)
-    in ExternalDataContextProvider (created by _class)
-    in _class (created by SparxPage)
-    in ShellCommunicatorProvider (created by SparxPage)
-    in PermissionProvider (created by SparxPage)
-    in IntlProvider (created by SparxPage)
-    in SparxPage (created by Route)
-    in Route (created by RouteCreator)
-    in div (created by RouteCreator)
-    in Router (created by MemoryRouter)
-    in MemoryRouter (created by RouteCreator)
-    in div (created by RouteCreator)
-    in RouteCreator
-    in Le (created by YkbUiThemeProvider)
-    in YkbUiThemeProvider
-    in me
+const BillLogMonitoring = () => {
+  const [formData, setFormData] = useState({});
+  const [formOptions, setFormOptions] = useState({});
 
-React will try to recreate this component tree from scratch using the error boundary you provided, _class.
-(anonymous) @ react-dom.development.min.js:1
-PageWrapper.js:210 Uncaught ReferenceError: Raven is not defined
-    at onClick (PageWrapper.js:210:1)
-    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
-    at Object.t (react-dom.development.min.js:1:2630)
-    at g (react-dom.development.min.js:1:3531)
-    at react-dom.development.min.js:1:3888
-    at x (react-dom.development.min.js:1:3938)
-    at react-dom.development.min.js:1:30937
-    at ua (react-dom.development.min.js:1:30998)
-    at ca (react-dom.development.min.js:1:31080)
-    at la (react-dom.development.min.js:1:30744)
-react-dom.development.min.js:1 Uncaught ReferenceError: Raven is not defined
-    at onClick (PageWrapper.js:210:1)
-    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
-    at Object.t (react-dom.development.min.js:1:2630)
-    at g (react-dom.development.min.js:1:3531)
-    at react-dom.development.min.js:1:3888
-    at x (react-dom.development.min.js:1:3938)
-    at react-dom.development.min.js:1:30937
-    at ua (react-dom.development.min.js:1:30998)
-    at ca (react-dom.development.min.js:1:31080)
-    at la (react-dom.development.min.js:1:30744)
-PageWrapper.js:210 Uncaught ReferenceError: Raven is not defined
-    at onClick (PageWrapper.js:210:1)
-    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
-    at Object.t (react-dom.development.min.js:1:2630)
-    at g (react-dom.development.min.js:1:3531)
-    at react-dom.development.min.js:1:3888
-    at x (react-dom.development.min.js:1:3938)
-    at react-dom.development.min.js:1:30937
-    at ua (react-dom.development.min.js:1:30998)
-    at ca (react-dom.development.min.js:1:31080)
-    at la (react-dom.development.min.js:1:30744)
-react-dom.development.min.js:1 Uncaught ReferenceError: Raven is not defined
-    at onClick (PageWrapper.js:210:1)
-    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
-    at Object.t (react-dom.development.min.js:1:2630)
-    at g (react-dom.development.min.js:1:3531)
-    at react-dom.development.min.js:1:3888
-    at x (react-dom.development.min.js:1:3938)
-    at react-dom.development.min.js:1:30937
-    at ua (react-dom.development.min.js:1:30998)
-    at ca (react-dom.development.min.js:1:31080)
-    at la (react-dom.development.min.js:1:30744)
-PageWrapper.js:210 Uncaught ReferenceError: Raven is not defined
-    at onClick (PageWrapper.js:210:1)
-    at HTMLUnknownElement.e (react-dom.development.min.js:1:2586)
-    at Object.t (react-dom.development.min.js:1:2630)
-    at g (react-dom.development.min.js:1:3531)
-    at react-dom.development.min.js:1:3888
-    at x (react-dom.development.min.js:1:3938)
-    at react-dom.development.min.js:1:30937
-    at ua (react-dom.development.min.js:1:30998)
-    at ca (react-dom.development.min.js:1:31080)
-    at la (react-dom.development.min.js:1:30744)
+  // Dinamik veri yüklemek için API çağrıları
+  useEffect(() => {
+    const fetchOptions = async () => {
+      const promises = Object.entries(formFieldsConfig).map(([key, value]) => {
+        if (value.optionsEndPoint) {
+          return axios.get(value.optionsEndPoint).then(res => ({
+            key,
+            options: res.data.map(option => ({ label: option.name, value: option.id })) // API'nin dönüş formatına bağlı olarak ayarlayın
+          }));
+        }
+        return Promise.resolve(null);
+      });
+
+      const results = await Promise.all(promises);
+      const newOptions = results.reduce((acc, curr) => {
+        if (curr) acc[curr.key] = curr.options;
+        return acc;
+      }, {});
+      setFormOptions(newOptions);
+    };
+
+    fetchOptions();
+  }, []);
+
+  const handleInputChange = (value, key) => {
+    setFormData({ ...formData, [key]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form Data:', formData);
+  };
+
+  const handleReset = () => {
+    setFormData({});
+  };
+
+  return (
+    <Form onFinish={handleSubmit}>
+      {Object.entries(formFieldsConfig).map(([key, { type, label, options, required, dependentOn }]) => {
+        let Component;
+        let inputProps = {
+          key: key,
+          label: label,
+          name: key,
+          rules: [{ required }],
+          onChange: (e) => handleInputChange(e.target.value, key)
+        };
+
+        switch (type) {
+          case 'select':
+            Component = Select;
+            inputProps.onChange = (value) => handleInputChange(value, key);
+            break;
+          case 'checkboxGroup':
+            Component = CheckboxGroup;
+            break;
+          case 'textInput':
+            Component = TextInput;
+            break;
+          case 'datePicker':
+            Component = DatePicker;
+            inputProps.onChange = (date, dateString) => handleInputChange(dateString, key);
+            break;
+          default:
+            Component = TextInput;
+        }
+
+        return (
+          (!dependentOn || formData[dependentOn] === 'true') && (
+            <FormItem {...inputProps}>
+              {Component === Select || Component === CheckboxGroup ? (
+                options.map(option => (
+                  <Component.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Component.Option>
+                ))
+              ) : (
+                <Component />
+              )}
+            </FormItem>
+          )
+        );
+      })}
+      <FormItem>
+        <Button type="primary" htmlType="submit">Submit</Button>
+        <Button htmlType="button" onClick={handleReset}>Reset</Button>
+      </FormItem>
+    </Form>
+  );
+};
+
+export default BillLogMonitoring;
