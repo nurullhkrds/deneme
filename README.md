@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, Select, CheckboxGroup, TextInput, DatePicker } from 'ykb-ui';
 const FormItem = Form.Item;
 
 function BillLogMonitoring() {
   const formRef = React.useRef(null);
+  const [isMicro, setIsMicro] = useState('false');  // Initial state as string
 
   useEffect(() => {
     if (formRef.current) {
@@ -17,7 +18,7 @@ function BillLogMonitoring() {
         odemeTarihi: moment(),
         faturaNo: '',
         aboneNo: '',
-        isMicro: 'false', // Default as string to match Select option values
+        isMicro: 'false',  // Default as string to match Select option values
         returnMapCode: ''
       });
     }
@@ -42,40 +43,48 @@ function BillLogMonitoring() {
   return (
     <Form ref={formRef} onSubmit={onSubmit}>
       <FormItem label="Ürün Türü">
-        <Select name="urun" validation={[{ required: true }]}>
-          <Select.Option value="DOĞALGAZ">Doğalgaz</Select.Option>
-          <Select.Option value="İGDAŞ">İGDAŞ</Select.Option>
-        </Select>
+        <Select name="urun"
+          data={[
+            { value: 'DOĞALGAZ', label: 'Doğalgaz' },
+            { value: 'İGDAŞ', label: 'İGDAŞ' }
+          ]}
+          validation={[{ required: true }]} />
       </FormItem>
 
       <FormItem label="Kurum">
-        <Select name="kurum" validation={[{ required: true }]}>
-          <Select.Option value="1000001">1000001</Select.Option>
-          <Select.Option value="1000002">1000002</Select.Option>
-        </Select>
+        <Select name="kurum"
+          data={[
+            { value: '1000001', label: '1000001' },
+            { value: '1000002', label: '1000002' }
+          ]}
+          validation={[{ required: true }]} />
       </FormItem>
 
       <FormItem label="Fatura Ödeme Tipi">
-        <CheckboxGroup name="odemeTipi" validation={[{ required: true }]}>
-          <CheckboxGroup.Item value="Kredi Kartı" label="Kredi Kartı" />
-          <CheckboxGroup.Item value="Hesap" label="Hesap" />
-          <CheckboxGroup.Item value="Vezne" label="Vezne" />
-        </CheckboxGroup>
+        <CheckboxGroup name="odemeTipi"
+          items={[
+            { value: 'Kredi Kartı', textLabel: 'Kredi Kartı' },
+            { value: 'Hesap', textLabel: 'Hesap' },
+            { value: 'Vezne', textLabel: 'Vezne' }
+          ]}
+          validation={[{ required: true }]} />
       </FormItem>
 
       <FormItem label="Fatura Ödeme Bildirim Durumu">
-        <Select name="bildirimDurumu" validation={[{ required: true }]}>
-          <Select.Option value="Evet">Evet</Select.Option>
-          <Select.Option value="Hayır">Hayır</Select.Option>
-        </Select>
+        <Select name="bildirimDurumu"
+          data={[
+            { value: 'Evet', label: 'Evet' },
+            { value: 'Hayır', label: 'Hayır' }
+          ]}
+          validation={[{ required: true }]} />
       </FormItem>
 
       <FormItem label="Ödeme Bildirim Başlangıç Tarihi">
-        <DatePicker name="bildirimBaslangicTarihi" format="DD/MM/YYYY" validation={[{ required: true }]}/>
+        <DatePicker name="bildirimBaslangicTarihi" format="DD/MM/YYYY" validation={[{ required: true }]} />
       </FormItem>
 
       <FormItem label="Ödeme Bildirim Bitiş Tarihi">
-        <DatePicker name="bildirimBitisTarihi" format="DD/MM/YYYY" validation={[{ required: true }]}/>
+        <DatePicker name="bildirimBitisTarihi" format="DD/MM/YYYY" validation={[{ required: true }]} />
       </FormItem>
 
       <FormItem label="Fatura No">
@@ -91,15 +100,17 @@ function BillLogMonitoring() {
       </FormItem>
 
       <FormItem label="Micro Status">
-        <Select name="isMicro" validation={[{ required: true }]}>
+        <Select name="isMicro" onChange={value => setIsMicro(value)} validation={[{ required: true }]}>
           <Select.Option value="true">Evet</Select.Option>
           <Select.Option value="false">Hayır</Select.Option>
         </Select>
       </FormItem>
 
-      <FormItem label="Return Map Code">
-        <TextInput name="returnMapCode" validation={[{ required: true }]}/>
-      </FormItem>
+      {isMicro === 'true' && (
+        <FormItem label="Return Map Code">
+          <TextInput name="returnMapCode" validation={[{ required: true, message: 'Return map code is required when micro status is "Yes".' }]} />
+        </FormItem>
+      )}
 
       <FormItem>
         <Button onClick={reset} type="secondary">Reset</Button>
