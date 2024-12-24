@@ -1,21 +1,19 @@
-  @Override
-    public List<PaidBillLogDTO> getPaymentLogsByParameters(PaidBillLogRequestDTO requestDTO) {
-        List<PaidBillDTO> billDTOS ;
-        List<LogRecordDTO> logRecords;
-        if (Boolean.TRUE.equals(requestDTO.getIsMicro())) {
-            RequestPaidBill billRequestDTO = mapper.prepareRequest(requestDTO);
-            billDTOS = getPaymentsByParameters(billRequestDTO);
-            logRecords = getFilteredLogRecords(
-                    requestDTO.getInstitution(),
-                    requestDTO.getProduct(),
-                    requestDTO.getReturnMapCode(),
-                    requestDTO.getStartDate(),
-                    requestDTO.getEndDate()
-            );
+function BillLogMonitoring() {
+  return (
+    <div>
 
-            return matchBillsWithLogs(billDTOS, logRecords);
-        }
-        RequestPaidBillLog billLogRequestDTO = mapper.prepareRequestSecond(requestDTO);
+    </div>
+  );
+}
 
-        return facade.getPaymentLogsByParameters(billLogRequestDTO).getPaidBillLogList();
-    }
+export default BillLogMonitoring;
+
+
+Compiled with problems:
+×
+ERROR
+[eslint] 
+src\pages\billLogMonitoring\BillLogMonitoring.js
+  Line 3:5:  'React' must be in scope when using JSX  react/react-in-jsx-scope
+
+Search for the keywords to learn more about each error.
