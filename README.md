@@ -1,21 +1,56 @@
+@Entity
+@Getter
+@Setter
+public class RemoteServiceLog extends UpdatableBaseEntity {
 
-    @Query(value = "SELECT rsl.institution_id," +
-            "rsl.subscriber_no, " +
-            "rsl.create_date," +
-            "rsl.institution_return_code," +
-            "rsl.bank_return_code " +
-            " rsl.received_data, rsl.send_data, " +
-            "FROM REMOTE_SERVICE_LOG rsl " +
-            "WHERE rsl.service_type = 'NOTIFY_PAYMENT' " +
-            "AND rsl.institution_id = :institutionId " +
-            "AND rsl.log_date BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD')",
-            nativeQuery = true)
-    List<Object[]> findLogsByParameters(@Param("institutionId") Long institutionId,
-                                            @Param("startDate") String startDate,
-                                            @Param("endDate") String endDate);
+	@Id
+	@Column(nullable = false, length = 16)
+	@SequenceGenerator(name = "REMOTESERVICELOG_ID_GENERATOR", sequenceName = "SEQ_REMOTE_SERVICE_LOG", allocationSize = 100)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "REMOTESERVICELOG_ID_GENERATOR")
+	private Long id;
 
+	@Column(length = 16)
+	private Long institutionId;
 
-    List<RemoteServiceLog> findAllByInstitutionIdAndServiceTypeAndLogDateBetween(Long institutionId,
-                                                                                             String serviceType,
-                                                                                             String startDate,
-                                                                                              String endDate);
+	@Column(length = 50)
+	private String serviceType;
+
+	@Column(length = 50)
+	private String subscriberNo;
+
+	@Column(nullable = false)
+	private LocalDate logDate;
+
+	@Column(nullable = false)
+	private Long duration;
+
+	@Column(nullable = false)
+	private String sendData;
+
+	@Column(nullable = false)
+	private String receivedData;
+
+	@Column(length = 255)
+	private String institutionReturnCode;
+
+	@Column(length = 10)
+	private String bankReturnCode;
+
+	@Column(length = 100)
+	private String additionalInfo;
+
+	@Column(length = 16)
+	private Long dataPowerTransactionId;
+
+	@Column(length = 4)
+	private String channelCode;
+
+	@Column(length = 4)
+	private String branchCode;
+
+	@Column(length = 50)
+	private String channelTransactionId;
+
+	@Column(length = 100)
+	private String channelSessionId;
+}
