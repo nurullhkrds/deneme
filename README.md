@@ -1,28 +1,21 @@
-	@Bean
-	@Primary
-	@ConditionalOnProperty(value = "runtime.platform", havingValue = "pcf")
-	public ConnectionFactory billRabbitPcfConnectionFactory() {
-		//rabbitMQProperties.getServiceByKey(SERVICE_KEY).getName()
-		
-		final CfService rabbitService = new CfEnv()
-				.findServiceByName(rabbitMQProperties.getServiceByKey(SERVICE_KEY).getName());
-		final CfCredentials rabbitCredentials = rabbitService.getCredentials();
 
-		final String plan = rabbitService.getPlan();
+    @Query(value = "SELECT rsl.institution_id," +
+            "rsl.subscriber_no, " +
+            "rsl.create_date," +
+            "rsl.institution_return_code," +
+            "rsl.bank_return_code " +
+            " rsl.received_data, rsl.send_data, " +
+            "FROM REMOTE_SERVICE_LOG rsl " +
+            "WHERE rsl.service_type = 'NOTIFY_PAYMENT' " +
+            "AND rsl.institution_id = :institutionId " +
+            "AND rsl.log_date BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD')",
+            nativeQuery = true)
+    List<Object[]> findLogsByParameters(@Param("institutionId") Long institutionId,
+                                            @Param("startDate") String startDate,
+                                            @Param("endDate") String endDate);
 
-		final String name = rabbitCredentials.getName();
-		final String hostname = rabbitCredentials.getHost();
-		final String username = rabbitCredentials.getUsername();
-		final String password = rabbitCredentials.getPassword();
-		final String virtualHost = rabbitCredentials.getString("vhost");
 
-		final CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-		connectionFactory.setAddresses(hostname);
-		connectionFactory.setUsername(username);
-		connectionFactory.setPassword(password);
-		connectionFactory.setVirtualHost(virtualHost);
-		logger.info(
-				"RabbitConnectionFactory [microPerfLogConnectionFactory] is initialized with Pcf configuration ServiceName: [{}] Name: [{}] Hostname: [{}] VirtualHost: [{}] Username: [{}] Plan: [{}]",
-				rabbitMQProperties.getServiceByKey(SERVICE_KEY).getName(), name, hostname, virtualHost, username, plan);
-		return connectionFactory;
-	}
+    List<RemoteServiceLog> findAllByInstitutionIdAndServiceTypeAndLogDateBetween(Long institutionId,
+                                                                                             String serviceType,
+                                                                                             String startDate,
+                                                                                              String endDate);
