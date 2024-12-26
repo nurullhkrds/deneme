@@ -1,4 +1,1 @@
-  SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yyyy");
-
-        String formattedStartDate = outputFormat.format(startDate);
-        String formattedEndDate = outputFormat.format(endDate);
+"[404 Not Found] during [GET] to [http://PAYMENTS.BILL.bill-adapter-logger/api/v1/adapterLogs/getPaymentLogsByParameters?institutionId=3450029&startDate=17.12.2024&endDate=25.12.2024] [AdapterLoggerServiceClient#getPaymentLogsByParameters(Long,String,String,String)]: []",
