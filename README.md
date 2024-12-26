@@ -1,1 +1,11 @@
-"[404 Not Found] during [GET] to [http://PAYMENTS.BILL.bill-adapter-logger/api/v1/adapterLogs/getPaymentLogsByParameters?institutionId=3450029&startDate=17.12.2024&endDate=25.12.2024] [AdapterLoggerServiceClient#getPaymentLogsByParameters(Long,String,String,String)]: []",
+@Hidden
+@FeignClient(name = "PAYMENTS.BILL.bill-adapter-logger",path ="/api/v1/adapterLogs",configuration = { MicroErrorDecoder.class })
+public interface AdapterLoggerServiceClient {
+
+    @GetMapping(path = "/getPaymentLogsByParameters")
+    List<RemoteServiceLogWebDTO> getPaymentLogsByParameters(
+            @RequestParam Long institutionId,
+            @RequestParam String serviceType,
+            @RequestParam String startDate,
+            @RequestParam String endDate);
+}
