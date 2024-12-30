@@ -1,41 +1,37 @@
 DECLARE
-  v_log_date DATE;
+  v_text VARCHAR2(32767); -- Maximum VARCHAR2 size for local variable
 BEGIN
-  FOR i IN 1..13000 LOOP
-    v_log_date := TRUNC(SYSDATE - DBMS_RANDOM.VALUE(0, 365)); -- Son bir yıl içinde rastgele bir tarih
+  FOR i IN 1..20000 LOOP
+    v_text := 'Example large text for record ' || TO_CHAR(i) || ' ' || RPAD('*', 3000, '*'); -- Creating long text
+
     INSERT INTO BILL."tmp_REMOTE_SERVICE_LOG" (
       ID, VERSION, INSTITUTION_ID, SERVICE_TYPE, SUBSCRIBER_NO, LOG_DATE, DURATION,
       SEND_DATA, RECEIVED_DATA, INSTITUTION_RETURN_CODE, BANK_RETURN_CODE, ADDITIONAL_INFO,
       DATA_POWER_TRANSACTION_ID, CHANNEL_CODE, BRANCH_CODE, CHANNEL_TRANSACTION_ID,
       CHANNEL_SESSION_ID, CREATE_DATE, CREATED_BY, UPDATE_DATE, UPDATED_BY
-    )
-    VALUES (
-      i, -- ID sıralı artan
-      1, -- VERSION sabit
-      MOD(i, 100) + 100, -- INSTITUTION_ID rastgele
-      DBMS_RANDOM.STRING('A', 10), -- SERVICE_TYPE rastgele alfanumerik string
-      'SUB' || LPAD(TO_CHAR(i), 10, '0'), -- SUBSCRIBER_NO örneğin 'SUB0000001234'
-      v_log_date, -- LOG_DATE
-      DBMS_RANDOM.VALUE(1, 120), -- DURATION rastgele dakika
-      DBMS_RANDOM.STRING('A', 50), -- SEND_DATA rastgele alfanumerik string
-      EMPTY_CLOB(), -- RECEIVED_DATA büyük metin için boş CLOB hazırlığı
-      DBMS_RANDOM.STRING('A', 5), -- INSTITUTION_RETURN_CODE
-      DBMS_RANDOM.STRING('A', 5), -- BANK_RETURN_CODE
-      'Info' || TO_CHAR(i), -- ADDITIONAL_INFO
-      i, -- DATA_POWER_TRANSACTION_ID
-      'CH' || LPAD(TO_CHAR(MOD(i, 10) + 1), 2, '0'), -- CHANNEL_CODE
-      'BR' || LPAD(TO_CHAR(MOD(i, 100) + 1), 3, '0'), -- BRANCH_CODE
-      'TXN' || LPAD(TO_CHAR(i), 5, '0'), -- CHANNEL_TRANSACTION_ID
-      'SESSION' || LPAD(TO_CHAR(i), 10, '0'), -- CHANNEL_SESSION_ID
-      SYSDATE, -- CREATE_DATE
-      'User' || TO_CHAR(MOD(i, 10) + 1), -- CREATED_BY
-      SYSDATE, -- UPDATE_DATE
-      'User' || TO_CHAR(MOD(i, 10) + 1) -- UPDATED_BY
+    ) VALUES (
+      i, -- ID
+      5, -- VERSION (sabit değer)
+      500, -- INSTITUTION_ID (sabit değer)
+      'SERVICE', -- SERVICE_TYPE (sabit değer)
+      'SUBSCRIBER', -- SUBSCRIBER_NO (sabit değer)
+      SYSDATE - 100, -- LOG_DATE (sabit değer)
+      60, -- DURATION (sabit değer)
+      'SEND DATA', -- SEND_DATA (sabit değer)
+      TO_CLOB(v_text), -- RECEIVED_DATA CLOB
+      'RET_CODE', -- INSTITUTION_RETURN_CODE (sabit değer)
+      'BANK_CODE', -- BANK_RETURN_CODE (sabit değer)
+      'Additional Info', -- ADDITIONAL_INFO (sabit değer)
+      5000, -- DATA_POWER_TRANSACTION_ID (sabit değer)
+      'CH01', -- CHANNEL_CODE (sabit değer)
+      'BR100', -- BRANCH_CODE (sabit değer)
+      'TXN00001', -- CHANNEL_TRANSACTION_ID (sabit değer)
+      'SESSION0000001', -- CHANNEL_SESSION_ID (sabit değer)
+      SYSDATE, -- CREATE_DATE (sabit değer)
+      'CREATOR', -- CREATED_BY (sabit değer)
+      SYSDATE, -- UPDATE_DATE (sabit değer)
+      'UPDATER' -- UPDATED_BY (sabit değer)
     );
-    -- Ayrı bir işlem olarak CLOB alanına büyük metin ekleme
-    UPDATE BILL."tmp_REMOTE_SERVICE_LOG"
-    SET RECEIVED_DATA = TO_CLOB('Sample large text ' || DBMS_RANDOM.STRING('A', 3000))
-    WHERE ID = i;
   END LOOP;
   COMMIT;
 END;
