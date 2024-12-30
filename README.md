@@ -1,69 +1,19 @@
-drop index BILL.IDX_REMOTE_SERVICE_LOG_02;
-
-drop index BILL.IDX_REMOTE_SERVICE_LOG_01;
-
-alter table BILL.REMOTE_SERVICE_LOG
-drop primary key cascade;
-
-drop table BILL."tmp_REMOTE_SERVICE_LOG" cascade constraints;
-
-rename REMOTE_SERVICE_LOG to "tmp_REMOTE_SERVICE_LOG";
-
-create table BILL.REMOTE_SERVICE_LOG
-(
-ID NUMBER(16) not null,
-VERSION NUMBER(12),
-INSTITUTION_ID NUMBER(16),
-SERVICE_TYPE VARCHAR2(50),
-SUBSCRIBER_NO VARCHAR2(50),
-LOG_DATE DATE,
-DURATION NUMBER(10),
-SEND_DATA VARCHAR2(4000),
-RECEIVED_DATA CLOB,
-INSTITUTION_RETURN_CODE VARCHAR2(255),
-BANK_RETURN_CODE VARCHAR2(10),
-INSTITUTION_RETURN_TEXT VARCHAR2(500),
-BANK_RETURN_TEXT VARCHAR2(250),
-ADDITIONAL_INFO_1 VARCHAR2(100),
-ADDITIONAL_INFO_2 VARCHAR2(100),
-ADDITIONAL_INFO_3 VARCHAR2(100),
-DATAPOWER_GLOBAL_ID VARCHAR2(36),
-DATA_POWER_TRANSACTION_ID NUMBER(16),
-CHANNEL_CODE VARCHAR2(4),
-BRANCH_CODE VARCHAR2(4),
-CHANNEL_TRANSACTION_ID VARCHAR2(50),
-CHANNEL_SESSION_ID VARCHAR2(100),
-CREATE_DATE DATE,
-CREATED_BY VARCHAR2(10),
-UPDATE_DATE DATE,
-UPDATED_BY VARCHAR2(10),
-constraint PK_REMOTE_SERVICE_LOG primary key (ID)
-)
-LOB (RECEIVED_DATA) STORE AS SECUREFILE (
-ENABLE STORAGE IN ROW
-CHUNK 8192
-NOCACHE
-LOGGING
-STORAGE (
-INITIAL 104K
-NEXT 1M
-MINEXTENTS 1
-MAXEXTENTS UNLIMITED
-PCTINCREASE 0
-BUFFER_POOL DEFAULT
-));
-
-insert into BILL.REMOTE_SERVICE_LOG (ID, VERSION, INSTITUTION_ID, SERVICE_TYPE, SUBSCRIBER_NO, LOG_DATE, DURATION, SEND_DATA, RECEIVED_DATA, INSTITUTION_RETURN_CODE, BANK_RETURN_CODE, ADDITIONAL_INFO_1, DATA_POWER_TRANSACTION_ID, CHANNEL_CODE, BRANCH_CODE, CHANNEL_TRANSACTION_ID, CHANNEL_SESSION_ID, CREATE_DATE, CREATED_BY, UPDATE_DATE, UPDATED_BY)
-select ID, VERSION, INSTITUTION_ID, SERVICE_TYPE, SUBSCRIBER_NO, LOG_DATE, DURATION, SEND_DATA, RECEIVED_DATA, INSTITUTION_RETURN_CODE, BANK_RETURN_CODE, ADDITIONAL_INFO, DATA_POWER_TRANSACTION_ID, CHANNEL_CODE, BRANCH_CODE, CHANNEL_TRANSACTION_ID, CHANNEL_SESSION_ID, CREATE_DATE, CREATED_BY, UPDATE_DATE, UPDATED_BY
-from BILL."tmp_REMOTE_SERVICE_LOG";
-
-create index BILL.IDX_REMOTE_SERVICE_LOG_01 on BILL.REMOTE_SERVICE_LOG (
-LOG_DATE ASC,
-INSTITUTION_ID ASC,
-SUBSCRIBER_NO ASC,
-SERVICE_TYPE ASC
-);
-
-create index BILL.IDX_REMOTE_SERVICE_LOG_02 on BILL.REMOTE_SERVICE_LOG (
-CREATE_DATE ASC
-);
+return remoteServiceLogs.stream()
+                .filter(log -> log.getInstitutionId().equals(institution.getId()))
+                .flatMap(log -> returnMaps.stream()
+                        .filter(rm -> rm.getInstitutionReturnCode().equals(log.getInstitutionReturnCode())
+                                && rm.getBankReturnCode().equals(log.getBankReturnCode()))
+                        .map(rm -> new LogRecordDTO(
+                                log.getSubscriberNo(),
+                                log.getLogDate().toString(),
+                                log.getSendData(),
+                                log.getInstitutionReturnCode(),
+                                rm.getReturnMapCode(),
+                                rm.getInstitutionReturnText(),
+                                rm.getBankReturnCode(),
+                                institution.getInstitutionCode(),
+                                institution.getProduct().getCode()
+                        ))
+                )
+                .toList();
+    }
