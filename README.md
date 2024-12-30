@@ -1,52 +1,25 @@
-		for (SubscriberNoPartRequestDTO subscriberNoPart : subscriberNoPartList) {
+DECLARE
+  -- Cursor tanımı
+  CURSOR c_remote_service_log IS
+    SELECT * FROM BILL."tmp_REMOTE_SERVICE_LOG";
+  
+  -- Records tipi tanımlama
+  TYPE t_remote_service_log_tab IS TABLE OF BILL."tmp_REMOTE_SERVICE_LOG"%ROWTYPE;
+  v_remote_service_log_tab t_remote_service_log_tab;
 
-			if (!partNo.equals(subscriberNoPart.getPartNo())) {
-
-				continue;
-
-			}
-
-			for (InstUserIntfSubtypeDTO instUserIntfSubtypeDTO : instUserIntfSubtypeDTOList) {
-
-				if (!instUserIntfSubtypeDTO.getKey().equals(subscriberNoPart.getPartKey())) {
-
-					continue;
-
-				}
-
-				subscriberNoPart.setAdditionalInfo1(instUserIntfSubtypeDTO.getAdditionalInfo1());
-
-				subscriberNoPart.setAdditionalInfo2(instUserIntfSubtypeDTO.getAdditionalInfo2());
-
-				subscriberNoPart.setAdditionalInfo3(instUserIntfSubtypeDTO.getAdditionalInfo3());
-
-			}
-
-		}
- 
-
-
-		subscriberNoPartList.stream()
-
-				.filter(subscriberNoPart -> partNo.equals(subscriberNoPart.getPartNo()))
-
-				.forEach(subscriberNoPart ->
-
-						instUserIntfSubtypeDTOList.stream()
-
-								.filter(instUserIntfSubtypeDTO -> instUserIntfSubtypeDTO.getKey().equals(subscriberNoPart.getPartKey()))
-
-								.findFirst()
-
-								.ifPresent(instUserIntfSubtypeDTO -> {
-
-									subscriberNoPart.setAdditionalInfo1(instUserIntfSubtypeDTO.getAdditionalInfo1());
-
-									subscriberNoPart.setAdditionalInfo2(instUserIntfSubtypeDTO.getAdditionalInfo2());
-
-									subscriberNoPart.setAdditionalInfo3(instUserIntfSubtypeDTO.getAdditionalInfo3());
-
-								})
-
-				);
- 
+BEGIN
+  -- BULK COLLECT ile verileri topluca al
+  OPEN c_remote_service_log;
+  LOOP
+    FETCH c_remote_service_log BULK COLLECT INTO v_remote_service_log_tab LIMIT 10000;
+    
+    EXIT WHEN v_remote_service_log_tab.COUNT = 0;
+    
+    -- FORALL ile hızlı insert
+    FORALL i IN 1..v_remote_service_log_tab.COUNT
+      INSERT INTO BILL.REMOTE_SERVICE_LOG VALUES v_remote_service_log_tab(i);
+    
+    COMMIT;
+  END LOOP;
+  CLOSE c_remote_service_log;
+END;
