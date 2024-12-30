@@ -1,13 +1,11 @@
 DECLARE
-  -- Cursor tanımı
   CURSOR c_remote_service_log IS
-    SELECT ID, VERSION, INSTITUTION_ID, SERVICE_TYPE, SUBSCRIBER_NO, LOG_DATE, DURATION, SEND_DATA, 
-           RECEIVED_DATA, INSTITUTION_RETURN_CODE, BANK_RETURN_CODE, ADDITIONAL_INFO, 
-           DATA_POWER_TRANSACTION_ID, CHANNEL_CODE, BRANCH_CODE, CHANNEL_TRANSACTION_ID, 
+    SELECT ID, VERSION, INSTITUTION_ID, SERVICE_TYPE, SUBSCRIBER_NO, LOG_DATE, DURATION,
+           SEND_DATA, RECEIVED_DATA, INSTITUTION_RETURN_CODE, BANK_RETURN_CODE, ADDITIONAL_INFO AS ADDITIONAL_INFO_1,
+           DATA_POWER_TRANSACTION_ID, CHANNEL_CODE, BRANCH_CODE, CHANNEL_TRANSACTION_ID,
            CHANNEL_SESSION_ID, CREATE_DATE, CREATED_BY, UPDATE_DATE, UPDATED_BY
     FROM BILL."tmp_REMOTE_SERVICE_LOG";
   
-  -- Record tipi tanımlama
   TYPE t_remote_service_log_rec IS RECORD (
     ID BILL.REMOTE_SERVICE_LOG.ID%TYPE,
     VERSION BILL.REMOTE_SERVICE_LOG.VERSION%TYPE,
@@ -32,25 +30,19 @@ DECLARE
     UPDATED_BY BILL.REMOTE_SERVICE_LOG.UPDATED_BY%TYPE
   );
   
-  -- Table tipi tanımlama
   TYPE t_remote_service_log_tab IS TABLE OF t_remote_service_log_rec INDEX BY PLS_INTEGER;
   v_remote_service_log_tab t_remote_service_log_tab;
 
 BEGIN
-  -- BULK COLLECT ile verileri topluca al
   OPEN c_remote_service_log;
   LOOP
     FETCH c_remote_service_log BULK COLLECT INTO v_remote_service_log_tab LIMIT 10000;
-    
     EXIT WHEN v_remote_service_log_tab.COUNT = 0;
     
-    -- FORALL ile hızlı insert
     FORALL i IN 1..v_remote_service_log_tab.COUNT
       INSERT INTO BILL.REMOTE_SERVICE_LOG VALUES v_remote_service_log_tab(i);
     
-    -- Her toplu işlem sonrasında commit yap.
     COMMIT;
   END LOOP;
-  -- Cursor'u kapat.
   CLOSE c_remote_service_log;
 END;
