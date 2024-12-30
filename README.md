@@ -18,7 +18,7 @@ BEGIN
       v_log_date, -- LOG_DATE
       DBMS_RANDOM.VALUE(1, 120), -- DURATION rastgele dakika
       DBMS_RANDOM.STRING('A', 50), -- SEND_DATA rastgele alfanumerik string
-      TO_CLOB('Sample large text ' || DBMS_RANDOM.STRING('A', 4000)), -- RECEIVED_DATA büyük metin
+      EMPTY_CLOB(), -- RECEIVED_DATA büyük metin için boş CLOB hazırlığı
       DBMS_RANDOM.STRING('A', 5), -- INSTITUTION_RETURN_CODE
       DBMS_RANDOM.STRING('A', 5), -- BANK_RETURN_CODE
       'Info' || TO_CHAR(i), -- ADDITIONAL_INFO
@@ -32,6 +32,10 @@ BEGIN
       SYSDATE, -- UPDATE_DATE
       'User' || TO_CHAR(MOD(i, 10) + 1) -- UPDATED_BY
     );
+    -- Ayrı bir işlem olarak CLOB alanına büyük metin ekleme
+    UPDATE BILL."tmp_REMOTE_SERVICE_LOG"
+    SET RECEIVED_DATA = TO_CLOB('Sample large text ' || DBMS_RANDOM.STRING('A', 3000))
+    WHERE ID = i;
   END LOOP;
   COMMIT;
 END;
