@@ -1,14 +1,52 @@
-return remoteServiceLogs.stream()
-    .filter(log -> log.getInstitutionId().equals(institution.getId()))
-    .map(log -> new LogRecordDTO(
-            log.getSubscriberNo(),
-            log.getLogDate().toString(),
-            log.getSendData(),
-            log.getInstitutionReturnCode(),
-            "DefaultReturnMapCode", // Bu alan için varsayılan bir değer
-            "DefaultInstitutionReturnText", // Bu alan için varsayılan bir değer
-            log.getBankReturnCode(),
-            institution.getInstitutionCode(),
-            institution.getProduct().getCode()
-    ))
-    .toList();
+		for (SubscriberNoPartRequestDTO subscriberNoPart : subscriberNoPartList) {
+
+			if (!partNo.equals(subscriberNoPart.getPartNo())) {
+
+				continue;
+
+			}
+
+			for (InstUserIntfSubtypeDTO instUserIntfSubtypeDTO : instUserIntfSubtypeDTOList) {
+
+				if (!instUserIntfSubtypeDTO.getKey().equals(subscriberNoPart.getPartKey())) {
+
+					continue;
+
+				}
+
+				subscriberNoPart.setAdditionalInfo1(instUserIntfSubtypeDTO.getAdditionalInfo1());
+
+				subscriberNoPart.setAdditionalInfo2(instUserIntfSubtypeDTO.getAdditionalInfo2());
+
+				subscriberNoPart.setAdditionalInfo3(instUserIntfSubtypeDTO.getAdditionalInfo3());
+
+			}
+
+		}
+ 
+
+
+		subscriberNoPartList.stream()
+
+				.filter(subscriberNoPart -> partNo.equals(subscriberNoPart.getPartNo()))
+
+				.forEach(subscriberNoPart ->
+
+						instUserIntfSubtypeDTOList.stream()
+
+								.filter(instUserIntfSubtypeDTO -> instUserIntfSubtypeDTO.getKey().equals(subscriberNoPart.getPartKey()))
+
+								.findFirst()
+
+								.ifPresent(instUserIntfSubtypeDTO -> {
+
+									subscriberNoPart.setAdditionalInfo1(instUserIntfSubtypeDTO.getAdditionalInfo1());
+
+									subscriberNoPart.setAdditionalInfo2(instUserIntfSubtypeDTO.getAdditionalInfo2());
+
+									subscriberNoPart.setAdditionalInfo3(instUserIntfSubtypeDTO.getAdditionalInfo3());
+
+								})
+
+				);
+ 
