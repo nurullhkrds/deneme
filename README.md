@@ -1,61 +1,45 @@
-
-
-    private static final DateTimeFormatter INPUT =
-            DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
-    private static final DateTimeFormatter OUTPUT =
-            DateTimeFormatter.ofPattern("yyyyMMdd");
-
     private String createBillNo(String billDueDate,
                                 String subscriberNo,
                                 String debtType,
                                 OdemePlaniDTO odemePlan) {
 
-        if (debtType == null || debtType.trim().isEmpty()) {
-            throw new IllegalArgumentException("DebtType boş olamaz");
-        }
-
         String today = LocalDate.now().format(OUTPUT);
 
         if ("041".equals(debtType)) {
-            // Geçerlilik tarihi parse
-            String dueFormatted = formatDueDate(billDueDate);
-            String aboneno = requireDigits(subscriberNo, "Abone no boş olamaz");
-            return dueFormatted + aboneno + today;
+            String formattedDue = formatDueDate(billDueDate);
+            String aboneno      = requireValue(subscriberNo, "Abone no");
+            return formattedDue + aboneno + today;
 
         } else if ("042".equals(debtType)) {
-            String aboneno = requireDigits(subscriberNo, "Abone no boş olamaz");
+            String aboneno = requireValue(subscriberNo, "Abone no");
             return today + aboneno + "042";
 
         } else if ("13".equals(debtType) || "14".equals(debtType) || "22".equals(debtType)) {
-            return safe(odemePlan, "Ödeme planı boş olamaz").getKrediId()
-                    + safe(odemePlan.getYil(), "Ödeme planı yıl boş olamaz")
-                    + safe(odemePlan.getTahsilatTuru(), "Ödeme planı tahsilat türü boş olamaz");
+            requireNotNull(odemePlan, "Ödeme planı");
+            return odemePlan.getKrediId() + odemePlan.getYil() + odemePlan.getTahsilatTuru();
 
         } else {
-            throw new IllegalArgumentException("Bilinmeyen debtType: " + debtType);
+            throw new IllegalArgumentException("Geçersiz debtType: " + debtType);
         }
     }
 
-    // ---- yardımcılar ----
+    // ---- yardımcı küçük metotlar ----
 
-    private static String formatDueDate(String billDueDate) {
-        if (billDueDate == null || billDueDate.trim().isEmpty()) {
-            throw new IllegalArgumentException("Son ödeme tarihi boş olamaz");
+    private String formatDueDate(String date) {
+        String value = requireValue(date, "Son ödeme tarihi");
+        LocalDate parsed = LocalDate.parse(value, INPUT);   // "14/08/2025"
+        return parsed.format(OUTPUT);                       // "20250814"
+    }
+
+    private String requireValue(String val, String fieldName) {
+        if (val == null || val.trim().isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " boş olamaz");
         }
-        LocalDate d = LocalDate.parse(billDueDate.trim(), INPUT);   // "14/08/2025"
-        return d.format(OUTPUT);                                   // "20250814"
+        return val.trim();
     }
 
-    private static String requireDigits(String s, String msg) {
-        if (s == null || s.trim().isEmpty()) throw new IllegalArgumentException(msg);
-        String t = s.trim();
-        if (!t.matches("\\d+")) {
-            throw new IllegalArgumentException("Abone numarası sadece rakamlardan oluşmalıdır");
+    private void requireNotNull(Object obj, String fieldName) {
+        if (obj == null) {
+            throw new IllegalArgumentException(fieldName + " boş olamaz");
         }
-        return t;
     }
-
-    private static <T> T safe(T val, String msg) {
-        return Objects.requireNonNull(val, msg);
-    }
-}
