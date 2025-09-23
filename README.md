@@ -1,9 +1,1 @@
-try (MockedStatic<SpringUtil> mockedStatic = Mockito.mockStatic(SpringUtil.class)) {
-    DependencyService mockDep = Mockito.mock(DependencyService.class);
-    Mockito.when(SpringUtil.getBean(DependencyService.class)).thenReturn(mockDep);
-    Mockito.when(mockDep.call()).thenReturn("mocked");
-
-    String result = myService.process();
-
-    assertEquals("mocked", result);
-}
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/b526694d-95e7-48fe-8890-9f593a49c5a8" />
