@@ -13,9 +13,8 @@ SELECT
     a.TRANSACTION_CODE
 FROM (
     SELECT
-        -- Müşteri adı soyadı (hangi tablodan tuttuğunuza göre değiştir)
-        -- örneğin PAYMENT içinde CUSTOMER_NAME varsa:
-        MAX(P.CUSTOMER_NAME)                  AS NAME_SURNAME,
+     
+        P.Subscriber_Name                  AS NAME_SURNAME,
 
         P.CUSTOMER_NO                         AS CUSTOMER_NO,
         I.PRODUCT_CODE                        AS PRODUCT,
@@ -33,8 +32,8 @@ FROM (
         COUNT(*)                              AS PAID_COUNT,
 
         -- Eski referans / dekonttip karşılığı olabilecek alanlar
-        MAX(POR.ACCOUNTING_CONTRACT_NO)       AS ACCOUNTING_CONTRACT_NO,
-        MAX(P.TRANSACTION_CODE)               AS TRANSACTION_CODE,
+        p.contract_no       AS ACCOUNTING_CONTRACT_NO,
+        P.Receipt_Code               AS TRANSACTION_CODE,
 
         ROW_NUMBER() OVER (
             PARTITION BY
@@ -62,9 +61,9 @@ FROM (
       AND POR.STATUS    = 'ORDERED'
       AND P.CHANNEL_CODE = '602'
       AND P.BILL_DUE_DATE >= ADD_MONTHS(TRUNC(SYSDATE, 'MM'), -5)
-      AND POR.CUSTOMER_NO = :CUSTOMER_NO  -- veya başka parametrelerin
+      AND POR.CUSTOMER_NO = 38121749  -- veya başka parametrelerin
     GROUP BY
-        P.CUSTOMER_NO,
+        P.subscriber_name,
         I.PRODUCT_CODE,
         I.INSTITUTION_CODE,
         S.SUBSCRIBER_NO,
