@@ -6,18 +6,15 @@ WITH PAID AS (
         I.INSTITUTION_CODE                    AS INSTITUTION,
         S.SUBSCRIBER_NO                       AS SUBSCRIBER_NO,
         P.CURRENCY                            AS CURRENCY_CODE,
-        TO_CHAR(P.BILL_DUE_DATE,'YYYYMM')     AS BILL_MONTH,          -- YYYYMM
+        TO_CHAR(P.BILL_DUE_DATE,'YYYYMM')     AS BILL_MONTH,          
+        MAX(P.BILL_DUE_DATE)                  AS LAST_PAYMENT_DATE,   
+        SUM(P.PAYMENT_AMOUNT)                 AS PAID_AMOUNT,         
+        COUNT(*)                              AS PAID_COUNT,         
 
-        MAX(P.BILL_DUE_DATE)                  AS LAST_PAYMENT_DATE,   -- o ay içindeki son due date
-        SUM(P.PAYMENT_AMOUNT)                 AS PAID_AMOUNT,         -- o ay toplam ödenen
-        COUNT(*)                              AS PAID_COUNT,          -- o ay ödenen fatura sayısı
-
-        -- O ay içindeki EN SON due date’e ait CONTRACT_NO
         MAX(P.CONTRACT_NO) KEEP (
             DENSE_RANK LAST ORDER BY P.BILL_DUE_DATE
         ) AS ACCOUNTING_CONTRACT_NO,
 
-        -- O ay içindeki EN SON due date’e ait RECEIPT_CODE
         MAX(P.RECEIPT_CODE) KEEP (
             DENSE_RANK LAST ORDER BY P.BILL_DUE_DATE
         ) AS TRANSACTION_CODE
@@ -36,7 +33,7 @@ WITH PAID AS (
       AND POR.STATUS      = 'ORDERED'
       AND P.CHANNEL_CODE  = '602'
       AND P.BILL_DUE_DATE >= ADD_MONTHS(TRUNC(SYSDATE, 'MM'), -5)
-      AND POR.CUSTOMER_NO = :CUSTOMER_NO
+      AND POR.CUSTOMER_NO = 38121749
     GROUP BY
         P.CUSTOMER_NO,
         P.SUBSCRIBER_NAME,
@@ -46,11 +43,9 @@ WITH PAID AS (
         P.CURRENCY,
         TO_CHAR(P.BILL_DUE_DATE,'YYYYMM')
 ),
-
--- 2) OVERDUE → NOT_PAID_AMOUNT / NOT_PAID_COUNT (eski "X" mantığı)
 OVERDUE_AGG AS (
     SELECT
-        PB.CUSTOMER_NO                         AS CUSTOMER_NO,
+        POR.CUSTOMER_NO                         AS CUSTOMER_NO,
         I.PRODUCT_CODE                         AS PRODUCT,
         I.INSTITUTION_CODE                     AS INSTITUTION,
         S.SUBSCRIBER_NO                        AS SUBSCRIBER_NO,
@@ -69,32 +64,26 @@ OVERDUE_AGG AS (
      AND S.SUBSCRIBER_NO            = PB.SUBSCRIBER_NO
     JOIN BILL.PAYMENT_ORDER POR
       ON POR.SUBSCRIBER_ID = S.ID
-     AND POR.CUSTOMER_NO   = PB.CUSTOMER_NO
     WHERE PB.STATUS       = 'OVERDUE'
       AND POR.STATUS      = 'ORDERED'
-      -- eski yapıda son 3 ay mantığı vardı, istersen 5 ay da yapabilirsin
-      AND TO_CHAR(PB.BILL_DUE_DATE,'YYYYMM') >= TO_CHAR(ADD_MONTHS(SYSDATE, -3), 'YYYYMM')
-      AND PB.BILL_DUE_DATE <= TRUNC(SYSDATE)
-      AND POR.CUSTOMER_NO = :CUSTOMER_NO
+      AND TO_CHAR(PB.BILL_DUE_DATE,'YYYYMM') >= TO_CHAR(ADD_MONTHS(SYSDATE, -5), 'YYYYMM')
+      AND POR.CUSTOMER_NO = 38121749
     GROUP BY
-        PB.CUSTOMER_NO,
+        POR.CUSTOMER_NO,
         I.PRODUCT_CODE,
         I.INSTITUTION_CODE,
         S.SUBSCRIBER_NO,
         PB.CURRENCY,
         TO_CHAR(PB.BILL_DUE_DATE,'YYYYMM')
 ),
-
--- 3) NOT_PAID → PAYABLE_AMOUNT / PAYABLE_COUNT (eski "N" mantığı)
 PAYABLE_AGG AS (
     SELECT
-        PB.CUSTOMER_NO                         AS CUSTOMER_NO,
+        POR.CUSTOMER_NO                         AS CUSTOMER_NO,
         I.PRODUCT_CODE                         AS PRODUCT,
         I.INSTITUTION_CODE                     AS INSTITUTION,
         S.SUBSCRIBER_NO                        AS SUBSCRIBER_NO,
         PB.CURRENCY                            AS CURRENCY_CODE,
         TO_CHAR(PB.BILL_DUE_DATE,'YYYYMM')     AS BILL_MONTH,
-
         SUM(PB.AMOUNT)                         AS PAYABLE_AMOUNT,
         COUNT(*)                               AS PAYABLE_COUNT
     FROM BILL.PAYABLE_BILL PB
@@ -107,22 +96,18 @@ PAYABLE_AGG AS (
      AND S.SUBSCRIBER_NO            = PB.SUBSCRIBER_NO
     JOIN BILL.PAYMENT_ORDER POR
       ON POR.SUBSCRIBER_ID = S.ID
-     AND POR.CUSTOMER_NO   = PB.CUSTOMER_NO
     WHERE PB.STATUS       = 'NOT_PAID'
       AND POR.STATUS      = 'ORDERED'
-      AND PB.BILL_DUE_DATE >= TRUNC(SYSDATE)   -- bugünden sonrası ödenebilir
       AND TO_CHAR(PB.BILL_DUE_DATE,'YYYYMM') >= TO_CHAR(ADD_MONTHS(SYSDATE, -5), 'YYYYMM')
-      AND POR.CUSTOMER_NO = :CUSTOMER_NO
+      AND POR.CUSTOMER_NO = 38121749
     GROUP BY
-        PB.CUSTOMER_NO,
+        POR.CUSTOMER_NO,
         I.PRODUCT_CODE,
         I.INSTITUTION_CODE,
         S.SUBSCRIBER_NO,
         PB.CURRENCY,
         TO_CHAR(PB.BILL_DUE_DATE,'YYYYMM')
 )
-
--- 4) Hepsini tek satırda birleştir
 SELECT
     P.CUSTOMER_NO,
     P.NAME_SURNAME,
