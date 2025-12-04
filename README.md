@@ -6,11 +6,17 @@ SELECT
     S.SUBSCRIBER_NO                       AS SUBSCRIBER_NO,
     P.CURRENCY                            AS CURRENCY_CODE,
     TO_CHAR(P.BILL_DUE_DATE,'YYYYMM')     AS BILL_MONTH,          -- YYYYMM
+
     MAX(P.BILL_DUE_DATE)                  AS LAST_PAYMENT_DATE,   -- o ay içindeki son due date
     SUM(P.PAYMENT_AMOUNT)                 AS PAID_AMOUNT,         -- o ay toplam ödenen
     COUNT(*)                              AS PAID_COUNT,          -- o ay ödenen fatura sayısı
-    MAX(P.CONTRACT_NO)                    AS ACCOUNTING_CONTRACT_NO,
-    MAX(P.RECEIPT_CODE)                   AS TRANSACTION_CODE
+
+    -- O ay içindeki EN SON due date’e ait CONTRACT_NO
+    MAX(P.CONTRACT_NO) KEEP (DENSE_RANK LAST ORDER BY P.BILL_DUE_DATE)  AS ACCOUNTING_CONTRACT_NO,
+
+    -- O ay içindeki EN SON due date’e ait RECEIPT_CODE
+    MAX(P.RECEIPT_CODE) KEEP (DENSE_RANK LAST ORDER BY P.BILL_DUE_DATE) AS TRANSACTION_CODE
+
 FROM BILL.PAYMENT P
 JOIN BILL.INSTITUTION I
   ON P.INSTITUTION_ID = I.ID
