@@ -1,28 +1,9 @@
-WITH KEY_LIST AS (
-    -- 1) Dışarıdan gelen dinamik liste
-    SELECT COLUMN_VALUE AS INFO_KEY
-      FROM TABLE(SYS.ODCIVARCHAR2LIST(:DYNAMIC_LIST))
-
-    UNION
-
-    -- 2) BILL_INFOLIST parametresinden gelen key'ler
-    SELECT COLUMN_VALUE AS INFO_KEY
-      FROM TABLE(SYS.ODCIVARCHAR2LIST(:BILL_INFOLIST))
-
-    UNION
-
-    -- 3) INSTRUCTION_ID'lerden üretilen key'ler
-    SELECT TO_CHAR(I.PRODUCT_CODE || '#' || I.INSTITUTION_CODE || '#' || S.SUBSCRIBER_NO) AS INFO_KEY
-      FROM BILL.PAYMENT_ORDER PO
-      JOIN BILL.SUBSCRIBER    S ON PO.SUBSCRIBER_ID = S.ID
-      JOIN BILL.INSTITUTION   I ON I.ID             = S.INSTITUTION_ID
-     WHERE PO.ID IN (:INSTRUCTION_ID)
-),
-
-PAID_AND_OVERDUE AS (
+WITH PAID_AND_OVERDUE AS (
     ----------------------------------------------------------------
-    -- Müşterinin ödenmiş (PAID) ve siparişi verilmiş gecikmiş (OVERDUE)
-    -- faturalarını tek yerde topluyoruz.
+    -- Müşterinin:
+    -- 1) Ödenmiş faturaları (PAYMENT - PAID)
+    -- 2) Siparişi verilmiş gecikmiş faturaları (PAYABLE_BILL - OVERDUE & ORDERED)
+    -- tek tabloda topluyoruz.
     ----------------------------------------------------------------
     SELECT 
         CASE
@@ -33,8 +14,7 @@ PAID_AND_OVERDUE AS (
             WHEN I3.PRODUCT_CODE = 'TELEKOM'  THEN 'TELEKOM'
             ELSE 'DİĞER'
         END AS PRODUCT_GROUP,
-        P2.PAYMENT_AMOUNT AS AMOUNT,
-        TO_CHAR(I3.PRODUCT_CODE || '#' || I3.INSTITUTION_CODE || '#' || P2.SUBSCRIBER_NO) AS INFO_KEY
+        P2.PAYMENT_AMOUNT AS AMOUNT
     FROM BILL.PAYMENT       P2
     JOIN BILL.INSTITUTION   I3 ON P2.INSTITUTION_ID = I3.ID
    WHERE P2.CUSTOMER_NO = :CUSTOMER_NO
@@ -54,8 +34,7 @@ PAID_AND_OVERDUE AS (
             WHEN I3.PRODUCT_CODE = 'TELEKOM'  THEN 'TELEKOM'
             ELSE 'DİĞER'
         END AS PRODUCT_GROUP,
-        PB2.AMOUNT AS AMOUNT,
-        TO_CHAR(I3.PRODUCT_CODE || '#' || I3.INSTITUTION_CODE || '#' || S3.SUBSCRIBER_NO) AS INFO_KEY
+        PB2.AMOUNT AS AMOUNT
     FROM BILL.PAYABLE_BILL  PB2
     JOIN BILL.INSTITUTION   I3 ON I3.ID = PB2.INSTITUTION_ID
     JOIN BILL.SUBSCRIBER    S3
@@ -71,21 +50,18 @@ PAID_AND_OVERDUE AS (
 
 AGGREGATED_AMOUNTS AS (
     -------------------------------------------------------------
-    -- Ürün grubuna (PRODUCT_GROUP) göre toplam tutarı hesaplıyoruz
-    -- ve sadece KEY_LIST içinde olan INFO_KEY’leri alıyoruz.
+    -- Ürün grubu bazında toplam tutarları hesaplıyoruz.
     -------------------------------------------------------------
     SELECT
         PRODUCT_GROUP AS PRODUCT,
         NVL(SUM(AMOUNT), 0) AS PRODUCT_BASE_AMOUNT
     FROM PAID_AND_OVERDUE
-   WHERE INFO_KEY IN (SELECT INFO_KEY FROM KEY_LIST)
    GROUP BY PRODUCT_GROUP
 )
 
 SELECT A.*,
        -----------------------------------------------------------------
-       -- Son 30 gündeki, siparişi verilmiş ama ödenmemiş (OVERDUE)
-       -- fatura sayısını hesaplıyoruz.
+       -- Son 30 gündeki siparişi verilmiş ama hala OVERDUE olan fatura sayısı
        -----------------------------------------------------------------
        (
          SELECT COUNT(*)
@@ -112,7 +88,6 @@ SELECT A.*,
                                                 'GENERAL_ACCOUNT')
                       AND IOPM.IS_ACTIVE = 1
                 )
-            AND TO_CHAR(I.PRODUCT_CODE || '#' || I.INSTITUTION_CODE || '#' || S.SUBSCRIBER_NO)
-                IN (SELECT INFO_KEY FROM KEY_LIST)
+            -- BURADA HİÇBİR "KEY_LIST" FİLTRESİ YOK
        ) AS COUNT_OF_NOTPAID_BILLS
 FROM AGGREGATED_AMOUNTS A;
