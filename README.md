@@ -1,14 +1,27 @@
-String vKriter;
+private String normalizeAccountNo(String accountNo) {
+    if (accountNo == null) {
+        return null;
+    }
 
-String rvsFlag = (pRvsFlag == null || pRvsFlag.trim().isEmpty())
-        ? "P"
-        : pRvsFlag.trim();
+    String trimmed = accountNo.trim();
 
-boolean isReverseP = "P".equals(rvsFlag);
-boolean isHsriad = "HSRIAD".equals(pTrxCode);
+    // 8 haneden kısa ise sola sıfır ekle
+    if (trimmed.length() < 8) {
+        String padded = String.format("%08d", Long.parseLong(trimmed));
+        return padded.replaceFirst("^0+", "");
+    }
 
-if (isReverseP) {
-    vKriter = isHsriad ? "C" : "D";
-} else {
-    vKriter = isHsriad ? "D" : "C";
+    return trimmed;
 }
+
+
+String normalizedAccNo = normalizeAccountNo(gPostAccNum);
+
+checkHesapKurum(
+        trxCode,
+        branchCode,
+        reverse,
+        normalizedAccNo,
+        errCode,
+        errText
+);
