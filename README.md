@@ -1,40 +1,19 @@
-public GetOrderedBillsDetailResponse getOrderedBillsDetail(GetOrderedBillsDetailRequest request) {
+UPDATE bill.service s
+SET s.return_map_code = (
+  SELECT rm.return_map_code
+  FROM bill.return_map rm
+  WHERE
+    TRANSLATE(REPLACE(UPPER(s.name), 'BELEDIYE', 'BLD'), 'ÇĞİÖŞÜ', 'CGIOSU')
+      LIKE '%' || TRANSLATE(REPLACE(UPPER(rm.return_map_code), 'BELEDIYE', 'BLD'), 'ÇĞİÖŞÜ', 'CGIOSU') || '%'
+  FETCH FIRST 1 ROW ONLY
+)
+WHERE s.return_map_code IS NULL;
 
-    GetOrderedBillsDetailResponse microResponse =
-            paymentOrderDataService.getOrderedBillsDetail(request);
 
-    GetOrderedBillsDetailResponse response =
-            billPaymentOrderRestService.getOrderedBillsDetail(request);
 
-    return mergeResponses(microResponse, response);
-}
-
-private GetOrderedBillsDetailResponse mergeResponses(GetOrderedBillsDetailResponse micro,
-                                                    GetOrderedBillsDetailResponse other) {
-
-    if (micro == null) return other;
-    if (other == null) return micro;
-
-    GetOrderedBillsDetailResponse merged = new GetOrderedBillsDetailResponse();
-
-    // 1) orderInfoDTO: hangisi doluysa onu al, ikisi doluysa "micro" öncelikli yap (istersen tersini yaparsın)
-    merged.setOrderInfoDTO(firstNonNull(micro.getOrderInfoDTO(), other.getOrderInfoDTO()));
-
-    // 2) Listeleri birleştir (null-safe)
-    merged.setPaymentAnalysisDTOList(mergeList(micro.getPaymentAnalysisDTOList(), other.getPaymentAnalysisDTOList()));
-    merged.setNotPaidBillInfoWebList(mergeList(micro.getNotPaidBillInfoWebList(), other.getNotPaidBillInfoWebList()));
-    merged.setPayableBillInfoDTOList(mergeList(micro.getPayableBillInfoDTOList(), other.getPayableBillInfoDTOList()));
-
-    return merged;
-}
-
-private <T> List<T> mergeList(List<T> a, List<T> b) {
-    List<T> out = new ArrayList<>();
-    if (a != null) out.addAll(a);
-    if (b != null) out.addAll(b);
-    return out;
-}
-
-private <T> T firstNonNull(T a, T b) {
-    return a != null ? a : b;
-}
+SELECT s.id, s.name, rm.return_map_code
+FROM bill.service s
+JOIN bill.return_map rm
+  ON TRANSLATE(REPLACE(UPPER(s.name), 'BELEDIYE', 'BLD'), 'ÇĞİÖŞÜ', 'CGIOSU')
+     LIKE '%' || TRANSLATE(REPLACE(UPPER(rm.return_map_code), 'BELEDIYE', 'BLD'), 'ÇĞİÖŞÜ', 'CGIOSU') || '%'
+WHERE s.return_map_code IS NULL;
