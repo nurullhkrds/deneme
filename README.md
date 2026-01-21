@@ -15,9 +15,10 @@ import java.io.IOException;
 @Component
 public class ChannelHeadersValidationFilter extends OncePerRequestFilter {
 
-    // Sizin header isimleriniz neyse birebir yaz
-    public static final String HEADER_CHANNEL_TRANSACTION_ID = "channelTransactionId"; // veya "x-trace-id"
-    public static final String HEADER_CHANNEL_SESSION_ID = "channelSessionId";         // veya "x-session-id"
+    private static final String APPLICATION_NAME = "PAYMENTS.BILL.bill-transaction";
+
+    private static final String HEADER_CHANNEL_TRANSACTION_ID = "channelTransactionId";
+    private static final String HEADER_CHANNEL_SESSION_ID = "channelSessionId";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -27,25 +28,41 @@ public class ChannelHeadersValidationFilter extends OncePerRequestFilter {
         String channelTransactionId = request.getHeader(HEADER_CHANNEL_TRANSACTION_ID);
         String channelSessionId = request.getHeader(HEADER_CHANNEL_SESSION_ID);
 
-        // ZORUNLU diyorsan:
+        // channelTransactionId ZORUNLU
         if (isBlank(channelTransactionId)) {
-            writeBadRequest(response, "CHANNEL_TRANSACTION_ID_REQUIRED", "channelTransactionId header is required");
-            return;
-        }
-        if (!ValidationPatterns.CHANNEL_TRANSACTION_ID_PATTERN.matcher(channelTransactionId).matches()) {
-            writeBadRequest(response, "CHANNEL_TRANSACTION_ID_INVALID", "Invalid channelTransactionId format");
+            writeValidationError(
+                    response,
+                    "channelTransactionId",
+                    "channelTransactionId is required"
+            );
             return;
         }
 
-        // sessionId zorunlu mu? sizde zorunluysa aynı şekilde required yap.
-        // Opsiyonel olsun istersen: sadece doluysa validate et:
+        if (!ValidationPatterns.CHANNEL_TRANSACTION_ID_PATTERN
+                .matcher(channelTransactionId)
+                .matches()) {
+
+            writeValidationError(
+                    response,
+                    "channelTransactionId",
+                    "channelTransactionId must contain only letters, digits, / and -"
+            );
+            return;
+        }
+
+        // channelSessionId opsiyonel ama doluysa kontrol edelim
         if (!isBlank(channelSessionId) &&
                 !ValidationPatterns.CHANNEL_SESSION_ID_PATTERN.matcher(channelSessionId).matches()) {
-            writeBadRequest(response, "CHANNEL_SESSION_ID_INVALID", "Invalid channelSessionId format");
+
+            writeValidationError(
+                    response,
+                    "channelSessionId",
+                    "channelSessionId has invalid format"
+            );
             return;
         }
 
-        // Log correlation (opsiyonel ama çok faydalı)
+        // MDC (log correlation)
         MDC.put("channelTransactionId", channelTransactionId);
         if (!isBlank(channelSessionId)) {
             MDC.put("channelSessionId", channelSessionId);
@@ -63,15 +80,30 @@ public class ChannelHeadersValidationFilter extends OncePerRequestFilter {
         return s == null || s.trim().isEmpty();
     }
 
-    private void writeBadRequest(HttpServletResponse response, String code, String message) throws IOException {
+    private void writeValidationError(HttpServletResponse response,
+                                      String field,
+                                      String message) throws IOException {
+
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
         response.getWriter().write("""
-                {
-                  "code": "%s",
-                  "message": "%s"
-                }
-                """.formatted(code, message));
+            {
+              "exceptionData": {
+                "applicationName": "%s",
+                "errorCode": -998,
+                "errorMessage": "validation error",
+                "traceId": null,
+                "errors": [
+                  {
+                    "field": "%s",
+                    "message": "%s"
+                  }
+                ]
+              },
+              "parameters": {}
+            }
+            """.formatted(APPLICATION_NAME, field, message));
     }
 }
