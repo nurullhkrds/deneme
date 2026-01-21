@@ -1,32 +1,20 @@
-protected RequestContext requestContext;
 
-@BeforeEach
-void setUp() {
-    if (springUtilMock != null) {
-        springUtilMock.close();
-        springUtilMock = null;
+java.lang.NullPointerException: Cannot invoke "java.util.List.stream()" because "<local4>.returnMapDTOList" is null
+
+
+
+    void insertReturnMap() {
+        ReturnMapDTO returnMapDTO2 = new ReturnMapDTO();
+        returnMapDTO2.setReturnMapCode("NEVSEHIR");
+        returnMapDTO2.setBankReturnCode("00000");
+        returnMapDTO2.setBankReturnText("SUCCESS");
+        returnMapDTO2.setInstitutionReturnText("SUCCESS");
+        returnMapDTO2.setInstitutionReturnCode("0000");
+        returnMapDTO2.setReturnType(EnumReturnType.SUCCESS);
+        addReturnMap(returnMapDTO2);
     }
 
-    institutionRelationService = Mockito.mock(InstitutionRelationService.class);
-    entityManager = Mockito.mock(EntityManager.class);
-    requestContext = Mockito.mock(RequestContext.class);
 
-    springUtilMock = Mockito.mockStatic(SpringUtil.class);
-
-    springUtilMock.when(() -> SpringUtil.getBean(InstitutionRelationService.class))
-            .thenReturn(institutionRelationService);
-
-    springUtilMock.when(() -> SpringUtil.getBean(EntityManager.class))
-            .thenReturn(entityManager);
-
-    // ✅ BUNU EKLE: RequestContext bean gibi dönsün
-    springUtilMock.when(() -> SpringUtil.getBean(RequestContext.class))
-            .thenReturn(requestContext);
-
-    // SequenceUtil için stub (aynı kalsın)
-    Query query = Mockito.mock(Query.class);
-    Mockito.when(entityManager.createNativeQuery(Mockito.anyString()))
-            .thenReturn(query);
-    Mockito.when(query.getSingleResult())
-            .thenReturn(java.math.BigDecimal.valueOf(1L));
-}
+       protected void addReturnMap(ReturnMapDTO returnMapDTO) {
+        returnMapDTOList.add(returnMapDTO);
+    }
