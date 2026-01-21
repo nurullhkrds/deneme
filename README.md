@@ -4,3 +4,4 @@
 		SpringUtil.getBean(RequestContext.class).setDatapowerReferanceId(value);
 		return value;
 	}
+com.ykb.payments.bill.common.dto.RequestContext.setDatapowerReferanceId(String)" because the return value of "com.ykb.payments.bill.common.util.SpringUtil.getBean(java.lang.Class)" is null
