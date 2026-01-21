@@ -1,62 +1,8 @@
-private InstitutionServiceDTO getInstitutionServiceDTO(String serviceType) {
-    // 1) SpringUtil.getBean(...) -> mock InstitutionRelationService dönecek
-    InstitutionRelationService institutionRelationService = Mockito.mock(InstitutionRelationService.class);
-
-    // Not: try bloğunun dışına mockStatic taşma yapmayacak şekilde kullandım.
-    try (MockedStatic<SpringUtil> springUtilMock = Mockito.mockStatic(SpringUtil.class)) {
-
-        springUtilMock
-                .when(() -> SpringUtil.getBean(InstitutionRelationService.class))
-                .thenReturn(institutionRelationService);
-
-        String url = virtualServiceUrl != null ? virtualServiceUrl : virtualServiceUrlList.get(serviceType);
-        InstitutionServiceDTO t = new InstitutionServiceDTO();
-        t.setUrl(url);
-        t.setServiceType(serviceType);
-        t.setServiceTimeoutDTO(new ServiceTimeoutDTO(connectionTimeout, readTimeout));
-        t.setUserName(userName);
-        t.setPword(password);
-        t.setParamaters(paramsList);
-
-        adapter.setInstitutionService(t);
-
-        if (token != null) {
-            TokenDefinitionDTO tokenDefinition = new TokenDefinitionDTO();
-            tokenDefinition.setRunType(tokenRunType);
-            tokenDefinition.setDefinitionKey("key");
-            adapter.setTokenDefinition(tokenDefinition);
-            try {
-                TokenDTO tokenDTO = new TokenDTO();
-                tokenDTO.setTokenDefinition(tokenDefinition);
-                tokenDTO.setTokenData(token);
-                tokenDTO.setId(1L);
-
-                if (tokenRunType.equals(EnumTokenRunType.WITH_LOCK)) {
-                    Mockito.when(tokenService.getTokenByDefinitionKey(ArgumentMatchers.anyString()))
-                           .thenReturn(tokenDTO);
-                } else {
-                    Mockito.when(tokenService.getCurrentLatestActiveToken(ArgumentMatchers.anyString()))
-                           .thenReturn(tokenDTO);
-
-                    if (StringUtils.isEmpty(token)) {
-                        Mockito.when(tokenService.saveToken(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
-                               .thenReturn(tokenDTO);
-                    }
-                }
-            } catch (MicroException e) {
-                e.printStackTrace();
-            }
-        }
-
-        InstitutionDTO institutionDTO = new InstitutionDTO();
-        institutionDTO.setParamaters(paramsList);
-
-        // 2) Artık SpringUtil.getBean(...) patlamaz; mock service döner
-        Mockito.when(institutionRelationService.getInstitution(
-                        ArgumentMatchers.anyString(),
-                        ArgumentMatchers.anyString()))
-               .thenReturn(institutionDTO);
-
-        return t;
-    }
-}
+[ERROR] Some problems were encountered while processing the POMs:
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-ear-plugin is missing. @.pom:root-pom-spring-boot:3.4.5-SNAPSHOT, oot-pom-spring-boot\3.4.5-SNAPSHOT\root-pom-spring-boot-3.4.5-SNAPSHOT.pom, line 318, column 12
+[ERROR] 'dependencies.dependency.version' for org.mockito:mockito-inline:jar is missing. @ line 48, column 21
+ @ 
+[ERROR] The build could not read 1 project -> [Help 1]
+[ERROR]   
+[ERROR]   The project bill:bill-remote:1.0.0 (D:\micro_project\workspace\bill\adapter\bill-remote\pom.xml) has 1 error
+[ERROR]     'dependencies.dependency.version' for org.mockito:mockito-inline:jar is missing. @ line 48, column 21
