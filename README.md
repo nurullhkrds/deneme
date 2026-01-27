@@ -1,230 +1,72 @@
+    @Override
+    public GetNotPaidBillCountWithOrderListResponse getNotPaidBillCountWithOrderList(GetNotPaidBillCountWithOrderListRequest request) {
+        GetNotPaidBillCountWithOrderListResponse response = new GetNotPaidBillCountWithOrderListResponse();
+        response = paymentOrderDataService.getNotPaidBillCountWithOrderList(request);
 
-https://docs.oracle.com/error-help/db/ora-02289/
-2026-01-22 21:44:30,594 ERROR [http-nio-8080-exec-1][ProcessManager] An exception occured
-org.springframework.dao.InvalidDataAccessResourceUsageException: could not extract ResultSet [ORA-02289: sıra mevcut değil
+        if (CollectionUtils.isEmpty(response.getNotPaidBillCountWithOrderList())) {
+            return null;
 
-https://docs.oracle.com/error-help/db/ora-02289/] [select revinfo_seq.nextval from dual]; SQL [select revinfo_seq.nextval from dual]
-	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:281) ~[spring-orm-6.2.6.jar:6.2.6]
-	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:256) ~[spring-orm-6.2.6.jar:6.2.6]
-	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:241) ~[spring-orm-6.2.6.jar:6.2.6]
-	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:566) ~[spring-orm-6.2.6.jar:6.2.6]
-	at org.springframework.transaction.support.AbstractPlatformTransactionManager.processCommit(AbstractPlatformTransactionManager.java:795) ~[spring-tx-6.2.6.jar:6.2.6]
-	at org.springframework.transaction.support.AbstractPlatformTransactionManager.commit(AbstractPlatformTransactionManager.java:758) ~[spring-tx-6.2.6.jar:6.2.6]
-	at org.springframework.transaction.interceptor.TransactionAspectSupport.commitTransactionAfterReturning(TransactionAspectSupport.java:698) ~[spring-tx-6.2.6.jar:6.2.6]
-	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:416) ~[spring-tx-6.2.6.jar:6.2.6]
-	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728) ~[spring-aop-6.2.6.jar:6.2.6]
-	at com.ykb.payments.bill.transaction.payment.service.impl.ProvisionServiceImpl$$SpringCGLIB$$0.invalidateNotPaidProvisions(<generated>) ~[classes/:?]
-	at com.ykb.payments.bill.transaction.process.query.QueryBillsProcess$InvalidateNotPaidProvisions.executeStep(QueryBillsProcess.java:310) ~[classes/:?]
-	at com.ykb.payments.bill.transaction.process.common.AbstractProcess$ProcessStepHandler.executeFlow(AbstractProcess.java:283) ~[classes/:?]
-	at com.ykb.payments.bill.transaction.process.common.AbstractProcess.executeSteps(AbstractProcess.java:302) ~[classes/:?]
-	at com.ykb.payments.bill.transaction.process.query.QueryBillsProcess.executeProcess(QueryBillsProcess.java:97) ~[classes/:?]
-	at com.ykb.payments.bill.transaction.process.manager.ProcessManager.executeProcess(ProcessManager.java:63) [classes/:?]
-	at com.ykb.payments.bill.transaction.payment.service.impl.PaymentServiceImpl.queryBills(PaymentServiceImpl.java:92) [classes/:?]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[?:?]
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728) [spring-aop-6.2.6.jar:6.2.6]
-	at com.ykb.payments.bill.transaction.payment.service.impl.PaymentServiceImpl$$SpringCGLIB$$0.queryBills(<generated>) [classes/:?]
-	at com.ykb.payments.bill.transaction.payment.facade.PaymentFacadeImpl.queryBills(PaymentFacadeImpl.java:32) [classes/:?]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[?:?]
-	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.adapter.MethodBeforeAdviceInterceptor.invoke(MethodBeforeAdviceInterceptor.java:58) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:173) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) [spring-aop-6.2.6.jar:6.2.6]
-	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:728) [spring-aop-6.2.6.jar:6.2.6]
-	at com.ykb.payments.bill.transaction.payment.facade.PaymentFacadeImpl$$SpringCGLIB$$0.queryBills(<generated>) [classes/:?]
-	at com.ykb.payments.bill.transaction.payment.web.PaymentAdkController.queryBills(PaymentAdkController.java:70) [classes/:?]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[?:?]
-	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:258) [spring-web-6.2.6.jar:6.2.6]
-	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:191) [spring-web-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) [spring-webmvc-6.2.6.jar:6.2.6]
-	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914) [spring-webmvc-6.2.6.jar:6.2.6]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590) [tomcat-embed-core-10.1.40.jar:6.0]
-	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) [spring-webmvc-6.2.6.jar:6.2.6]
-	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) [tomcat-embed-core-10.1.40.jar:6.0]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) [tomcat-embed-websocket-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) [spring-web-6.2.6.jar:6.2.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) [spring-web-6.2.6.jar:6.2.6]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) [spring-web-6.2.6.jar:6.2.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) [spring-web-6.2.6.jar:6.2.6]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:114) [spring-web-6.2.6.jar:6.2.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) [spring-web-6.2.6.jar:6.2.6]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) [spring-web-6.2.6.jar:6.2.6]
-	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) [spring-web-6.2.6.jar:6.2.6]
-	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:116) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:398) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1740) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1189) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:658) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) [tomcat-embed-core-10.1.40.jar:10.1.40]
-	at java.base/java.lang.Thread.run(Thread.java:833) [?:?]
-Caused by: org.hibernate.exception.SQLGrammarException: could not extract ResultSet [ORA-02289: sıra mevcut değil
+        }
 
-https://docs.oracle.com/error-help/db/ora-02289/] [select revinfo_seq.nextval from dual]
-	at org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:66) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.extract(ResultSetReturnImpl.java:72) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.SequenceStructure$1.getNextValue(SequenceStructure.java:102) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.PooledOptimizer.generate(PooledOptimizer.java:76) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.SequenceStyleGenerator.generate(SequenceStyleGenerator.java:585) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.IdentifierGenerator.generate(IdentifierGenerator.java:135) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.generateId(AbstractSaveEventListener.java:155) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:126) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:183) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveEventListener.performSaveOrUpdate(DefaultSaveEventListener.java:33) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:82) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.fireSave(SessionImpl.java:663) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.save(SessionImpl.java:655) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator.saveRevisionData(DefaultRevisionInfoGenerator.java:62) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.getCurrentRevisionData(AuditProcess.java:138) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.executeInSession(AuditProcess.java:115) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.doBeforeTransactionCompletion(AuditProcess.java:175) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcessManager$1.doBeforeTransactionCompletion(AuditProcessManager.java:47) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.spi.ActionQueue$BeforeTransactionCompletionProcessQueue.beforeTransactionCompletion(ActionQueue.java:1027) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.spi.ActionQueue.beforeTransactionCompletion(ActionQueue.java:557) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:1979) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:439) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:169) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:267) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:101) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:562) ~[spring-orm-6.2.6.jar:6.2.6]
-	... 94 more
-Caused by: java.sql.SQLSyntaxErrorException: ORA-02289: sıra mevcut değil
 
-https://docs.oracle.com/error-help/db/ora-02289/
-	at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:709) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:609) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4C8Oall.processError(T4C8Oall.java:1347) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:1100) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:408) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4C8Oall.doOALL(T4C8Oall.java:499) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CPreparedStatement.doOall8(T4CPreparedStatement.java:274) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CPreparedStatement.executeForDescribe(T4CPreparedStatement.java:1231) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.prepareDefineBufferAndExecute(OracleStatement.java:1412) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.executeMaybeDescribe(OracleStatement.java:1286) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.executeSQLSelect(OracleStatement.java:1843) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.doExecuteWithTimeout(OracleStatement.java:1619) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OraclePreparedStatement.executeInternal(OraclePreparedStatement.java:3955) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OraclePreparedStatement.executeQuery(OraclePreparedStatement.java:4142) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OraclePreparedStatementWrapper.executeQuery(OraclePreparedStatementWrapper.java:1103) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52) ~[HikariCP-5.1.0.jar:?]
-	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java) ~[HikariCP-5.1.0.jar:?]
-	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.extract(ResultSetReturnImpl.java:61) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.SequenceStructure$1.getNextValue(SequenceStructure.java:102) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.PooledOptimizer.generate(PooledOptimizer.java:76) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.SequenceStyleGenerator.generate(SequenceStyleGenerator.java:585) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.IdentifierGenerator.generate(IdentifierGenerator.java:135) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.generateId(AbstractSaveEventListener.java:155) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:126) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:183) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveEventListener.performSaveOrUpdate(DefaultSaveEventListener.java:33) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:82) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.fireSave(SessionImpl.java:663) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.save(SessionImpl.java:655) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator.saveRevisionData(DefaultRevisionInfoGenerator.java:62) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.getCurrentRevisionData(AuditProcess.java:138) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.executeInSession(AuditProcess.java:115) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.doBeforeTransactionCompletion(AuditProcess.java:175) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcessManager$1.doBeforeTransactionCompletion(AuditProcessManager.java:47) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.spi.ActionQueue$BeforeTransactionCompletionProcessQueue.beforeTransactionCompletion(ActionQueue.java:1027) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.spi.ActionQueue.beforeTransactionCompletion(ActionQueue.java:557) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:1979) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:439) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:169) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:267) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:101) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:562) ~[spring-orm-6.2.6.jar:6.2.6]
-	... 94 more
-Caused by: oracle.jdbc.OracleDatabaseException: ORA-02289: sıra mevcut değil
+        ResponseGetOrderedBillsDetailWithClientNo orderedBillsDetail = client.getOrderedBillsDetailWithClientNo(microToHarmoniMapper.toRequestGetOrderedBillsDetailWithClientNo(request));
 
-	at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:717) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:609) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4C8Oall.processError(T4C8Oall.java:1347) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:1100) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:408) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4C8Oall.doOALL(T4C8Oall.java:499) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CPreparedStatement.doOall8(T4CPreparedStatement.java:274) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.T4CPreparedStatement.executeForDescribe(T4CPreparedStatement.java:1231) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.prepareDefineBufferAndExecute(OracleStatement.java:1412) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.executeMaybeDescribe(OracleStatement.java:1286) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.executeSQLSelect(OracleStatement.java:1843) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OracleStatement.doExecuteWithTimeout(OracleStatement.java:1619) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OraclePreparedStatement.executeInternal(OraclePreparedStatement.java:3955) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OraclePreparedStatement.executeQuery(OraclePreparedStatement.java:4142) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at oracle.jdbc.driver.OraclePreparedStatementWrapper.executeQuery(OraclePreparedStatementWrapper.java:1103) ~[ojdbc11-23.5.0.24.07.jar:23.5.0.24.07]
-	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52) ~[HikariCP-5.1.0.jar:?]
-	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java) ~[HikariCP-5.1.0.jar:?]
-	at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.extract(ResultSetReturnImpl.java:61) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.SequenceStructure$1.getNextValue(SequenceStructure.java:102) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.PooledOptimizer.generate(PooledOptimizer.java:76) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.enhanced.SequenceStyleGenerator.generate(SequenceStyleGenerator.java:585) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.id.IdentifierGenerator.generate(IdentifierGenerator.java:135) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.generateId(AbstractSaveEventListener.java:155) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:126) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:183) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveEventListener.performSaveOrUpdate(DefaultSaveEventListener.java:33) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:82) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.event.service.internal.EventListenerGroupImpl.fireEventOnEachListener(EventListenerGroupImpl.java:127) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.fireSave(SessionImpl.java:663) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.save(SessionImpl.java:655) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator.saveRevisionData(DefaultRevisionInfoGenerator.java:62) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.getCurrentRevisionData(AuditProcess.java:138) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.executeInSession(AuditProcess.java:115) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcess.doBeforeTransactionCompletion(AuditProcess.java:175) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.envers.internal.synchronization.AuditProcessManager$1.doBeforeTransactionCompletion(AuditProcessManager.java:47) ~[hibernate-envers-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.spi.ActionQueue$BeforeTransactionCompletionProcessQueue.beforeTransactionCompletion(ActionQueue.java:1027) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.spi.ActionQueue.beforeTransactionCompletion(ActionQueue.java:557) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:1979) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:439) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:169) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:267) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:101) ~[hibernate-core-6.6.13.Final.jar:6.6.13.Final]
-	at org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:562) ~[spring-orm-6.2.6.jar:6.2.6]
-	... 94 more
+        Integer microNotPaidCount = response.getNotPaidBillCountWithOrderList().get(0).getCountOfNotPaidBills();
+
+        if (!CollectionUtils.isEmpty(orderedBillsDetail.getOrderedBills())){
+            microNotPaidCount += orderedBillsDetail.getOrderedBills().get(0).getCountOfNotPaidBillsOrder();
+
+        }
+
+        for (NotPaidBillCountWithOrderWebDTO list : response.getNotPaidBillCountWithOrderList()) {
+            list.setCountOfNotPaidBills(microNotPaidCount);
+        }
+
+
+        response.setHasNotPaidOrderBills(orderedBillsDetail.isHasNotPaidOrderBills());
+        response.setTotalCount(Long.valueOf(orderedBillsDetail.getNamedQueryRowCount()));
+        response.setNotPaidBillCountWithOrderList(harmoniToMicroMapper.toNotPaidBillCountWithOrderWebDTOList(orderedBillsDetail.getOrderedBills()));
+
+
+        return response;
+    }
+
+
+  @Test
+    void getNotPaidBillCountWithOrderList_mapsAndReturns_whenOrderListIsNotNull() {
+        GetNotPaidBillCountWithOrderListRequest request = new GetNotPaidBillCountWithOrderListRequest();
+        RequestGetOrderedBillsDetailWithClientNo externalReq = new RequestGetOrderedBillsDetailWithClientNo();
+        when(microtoHarmoniMapper.toRequestGetOrderedBillsDetailWithClientNo(request)).thenReturn(externalReq);
+
+        ResponseGetOrderedBillsDetailWithClientNo externalResp = new ResponseGetOrderedBillsDetailWithClientNo();
+        List<OrderedBillDetailDTO> extOrder = List.of(new OrderedBillDetailDTO());
+        externalResp.setOrderedBills(extOrder);
+        externalResp.setNamedQueryRowCount(1);
+
+        GetNotPaidBillCountWithOrderListRequest requestNotPaid = new GetNotPaidBillCountWithOrderListRequest();
+        GetNotPaidBillCountWithOrderListResponse responseNotPaid = new GetNotPaidBillCountWithOrderListResponse();
+
+        List<NotPaidBillCountWithOrderWebDTO> notPaidBillCountWithOrderList = List.of(new NotPaidBillCountWithOrderWebDTO());
+        responseNotPaid.setNotPaidBillCountWithOrderList(notPaidBillCountWithOrderList);
+        responseNotPaid.setTotalCount(1L);
+        when(paymentOrderDataService.getNotPaidBillCountWithOrderList(requestNotPaid)).thenReturn(responseNotPaid);
+
+
+        when(client.getOrderedBillsDetailWithClientNo(externalReq)).thenReturn(externalResp);
+
+        List<NotPaidBillCountWithOrderWebDTO> mapped = List.of(new NotPaidBillCountWithOrderWebDTO());
+        when(harmoniToMicroMapper.toNotPaidBillCountWithOrderWebDTOList(extOrder)).thenReturn(mapped);
+
+        GetNotPaidBillCountWithOrderListResponse response = service.getNotPaidBillCountWithOrderList(request);
+
+        assertNotNull(response);
+
+        assertEquals(mapped, response.getNotPaidBillCountWithOrderList());
+        verify(microtoHarmoniMapper).toRequestGetOrderedBillsDetailWithClientNo(request);
+        verify(client).getOrderedBillsDetailWithClientNo(externalReq);
+        verify(paymentOrderDataService).getNotPaidBillCountWithOrderList(requestNotPaid);
+        verify(harmoniToMicroMapper).toNotPaidBillCountWithOrderWebDTOList(extOrder);
+    }
+
+
+java.lang.NullPointerException: Cannot invoke ".response.GetNotPaidBillCountWithOrderListResponse.getNotPaidBillCountWithOrderList()" because "response" is null
