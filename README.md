@@ -1,1 +1,4 @@
-Caused by: org.springframework.messaging.converter.MessageConversionException: Cannot convert from [[B] to [com.ykb.payments.bill.adapterlogger.log.event.RemoteServiceEvent] for GenericMessage [payload=byte[3543], headers={amqp_receivedDeliveryMode=PERSISTENT, amqp_receivedRoutingKey=remote-log-event, amqp_receivedExchange=bill-direct-exchange, amqp_deliveryTag=1, amqp_consumerQueue=remote-log-queue, amqp_redelivered=false, amqp_retryCount=0, id=90315301-9ed2-5197-a1e7-b774bab17542, amqp_consumerTag=amq.ctag-pUJ-Rk2eRh3RrMU6Q3tWMQ, amqp_lastInBatch=false, contentType=application/x-java-serialized-object, timestamp=1769630089903}]
+jakarta.validation.ConstraintViolationException: Validation failed for classes [com.ykb.payments.bill.adapterlogger.log.domain.RemoteServiceLog] during persist time for groups [jakarta.validation.groups.Default, ]
+List of constraint violations:[
+	ConstraintViolationImpl{interpolatedMessage='size must be between 0 and 10', propertyPath=createdBy, rootBeanClass=class com.ykb.payments.bill.adapterlogger.log.domain.RemoteServiceLog, messageTemplate='{jakarta.validation.constraints.Size.message}'}
+]
