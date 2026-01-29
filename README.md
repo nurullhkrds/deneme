@@ -1,4 +1,21 @@
-jakarta.validation.ConstraintViolationException: Validation failed for classes [com.ykb.payments.bill.adapterlogger.log.domain.RemoteServiceLog] during persist time for groups [jakarta.validation.groups.Default, ]
-List of constraint violations:[
-	ConstraintViolationImpl{interpolatedMessage='size must be between 0 and 10', propertyPath=createdBy, rootBeanClass=class com.ykb.payments.bill.adapterlogger.log.domain.RemoteServiceLog, messageTemplate='{jakarta.validation.constraints.Size.message}'}
-]
+    @Bean
+    @Primary
+    public MessageConverter jsonMessageConverter() {
+        ObjectMapper mapper = new ObjectMapper();
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        mapper.registerModule(javaTimeModule);
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return new Jackson2JsonMessageConverter(mapper);
+    }
+    
+    
+    @Bean
+    @Primary
+    public RabbitTemplate billAdapterRabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate();
+        rabbitTemplate.setConnectionFactory(connectionFactory);
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
+        rabbitTemplate.setChannelTransacted(false);
+        declareQueues(connectionFactory);
+        return rabbitTemplate;
+    }
