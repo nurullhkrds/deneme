@@ -1,21 +1,24 @@
-    @Bean
-    @Primary
-    public MessageConverter jsonMessageConverter() {
-        ObjectMapper mapper = new ObjectMapper();
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        mapper.registerModule(javaTimeModule);
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return new Jackson2JsonMessageConverter(mapper);
-    }
-    
-    
-    @Bean
-    @Primary
-    public RabbitTemplate billAdapterRabbitTemplate(ConnectionFactory connectionFactory) {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate();
-        rabbitTemplate.setConnectionFactory(connectionFactory);
-        rabbitTemplate.setMessageConverter(jsonMessageConverter());
-        rabbitTemplate.setChannelTransacted(false);
-        declareQueues(connectionFactory);
-        return rabbitTemplate;
-    }
+ [main][SpringApplication] Application run failed
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT org.springframework.beans.factory.BeanDefinitionStoreException: Failed to parse configuration class [com.ykb.payments.bill.adapter.BillAdapterApplication]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.annotation.ConfigurationClassParser.parse(ConfigurationClassParser.java:194) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:418) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609) ~[spring-context-6.2.6.jar:6.2.6]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.4.5.jar:3.4.5]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) [spring-boot-3.4.5.jar:3.4.5]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) [spring-boot-3.4.5.jar:3.4.5]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) [spring-boot-3.4.5.jar:3.4.5]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.SpringApplication.run(SpringApplication.java:1362) [spring-boot-3.4.5.jar:3.4.5]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.SpringApplication.run(SpringApplication.java:1351) [spring-boot-3.4.5.jar:3.4.5]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at com.ykb.payments.bill.adapter.BillAdapterApplication.main(BillAdapterApplication.java:19) [classes/:0.0.1-1012]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source) ~[?:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source) ~[?:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[?:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102) [app/:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64) [app/:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT at org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40) [app/:?]
+build	29-Jan-2026 12:29:45	   2026-01-29T12:29:28.79+0300 [APP/PROC/WEB/0] OUT Caused by: org.springframework.context.annotation.ConflictingBeanDefinitionException: Annotation-specified bean name 'rabbitMQConfig' for bean class [com.ykb.payments.bill.remote.logger.config.RabbitMQConfig] conflicts with existing, non-compatible bean definition of same name and class [com.ykb.payments.bill.adapter.config.RabbitMQConfig]
