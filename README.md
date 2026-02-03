@@ -1,2 +1,9 @@
-org.springframework.web.client.RestClientException: Error while extracting response for type [class com.ykb.payments.bill.remote.client.belediye.ankara.v2.QueryBillsAnkaraResponse] and content type [application/json]; nested exception is org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Invalid numeric value: Leading zeroes not allowed; nested exception is com.fasterxml.jackson.databind.JsonMappingException: Invalid numeric value: Leading zeroes not allowed
- at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 7, column: 14] (through reference chain: com.ykb.payments.bill.remote.client.belediye.ankara.v2.QueryBillsAnkaraResponse["body"]->java.util.ArrayList[0])
+  SELECT * FROM BILL.PAYMENT_ORDER POR 
+ JOIN BILL.SUBSCRIBER S ON POR.SUBSCRIBER_ID = POR.SUBSCRIBER_ID
+ JOIN BILL.INSTITUTION I ON S.INSTITUTION_ID = I.ID
+ WHERE  I.INSTITUTION_CODE='BALIKESİR' 
+ AND I.PRODUCT_CODE='SU'  
+ AND S.SUBSCRIBER_NO='1257@/' 
+ AND S.STATUS='ORDERED' 
+ AND POR.STATUS ='ORDERED' 
+ AND POR.CUSTOMER_NO = 6395288;
