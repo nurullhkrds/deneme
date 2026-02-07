@@ -24,3 +24,17 @@ java.lang.IllegalStateException: Service id not legal hostname (${external.accou
 	at org.springframework.util.Assert.state(Assert.java:79) ~[spring-core-6.2.6.jar!/:6.2.6]
 	at org.springframework.cloud.openfeign.FeignClientsRegistrar.getName(FeignClientsRegistrar.java:112) ~[spring-cloud-openfeign-core-4.2.1.jar!/:4.2.1]
 	at org.springframework.cloud.openfeign.FeignClientsRegistrar.getName(FeignClientsRegistrar.java:337) ~[spring-
+
+
+
+
+
+
+
+
+
+
+        <dependency>
+            <groupId>io.pivotal.spring.cloud</groupId>
+            <artifactId>cloudfoundry-certificate-truster</artifactId>
+        </dependency>
