@@ -47,23 +47,37 @@ export default function SearchInstitution() {
         item.il.toLocaleLowerCase("tr").includes(q)
     );
 
-    setOptions(
-      filtered.map((item) => ({
-        value: item.kurumAdi,
-        key: item.id,
-        data: item,
-        label: (
-          <div className="institution-option-row">
-            <div className="institution-option-col kurum-adi">{item.kurumAdi}</div>
-            <div className="institution-option-col kurum-tipi">{item.kurumTipi}</div>
-            <div className="institution-option-col il">{item.il}</div>
-          </div>
-        )
-      }))
-    );
+    const headerOption = {
+      value: "__header__",
+      disabled: true,
+      label: (
+        <div className="institution-dropdown-header-row">
+          <div className="institution-header-col kurum-adi">Kurum Adı</div>
+          <div className="institution-header-col kurum-tipi">Kurum Tipi</div>
+          <div className="institution-header-col il">İl</div>
+        </div>
+      )
+    };
+
+    const dataOptions = filtered.map((item) => ({
+      value: item.kurumAdi,
+      key: item.id,
+      data: item,
+      label: (
+        <div className="institution-option-row">
+          <div className="institution-option-col kurum-adi">{item.kurumAdi}</div>
+          <div className="institution-option-col kurum-tipi">{item.kurumTipi}</div>
+          <div className="institution-option-col il">{item.il}</div>
+        </div>
+      )
+    }));
+
+    setOptions([headerOption, ...dataOptions]);
   };
 
   const onSelect = (val, option) => {
+    if (val === "__header__") return;
+
     setSelected(option.data);
     console.log("Seçilen kurum:", option.data);
   };
@@ -73,21 +87,6 @@ export default function SearchInstitution() {
       setSelected(null);
       setOptions([]);
     }
-  };
-
-  const dropdownRender = (menu) => {
-    return (
-      <div className="institution-dropdown-wrapper">
-        {options.length > 0 && (
-          <div className="institution-dropdown-header">
-            <div className="institution-header-col kurum-adi">Kurum Adı</div>
-            <div className="institution-header-col kurum-tipi">Kurum Tipi</div>
-            <div className="institution-header-col il">İl</div>
-          </div>
-        )}
-        {menu}
-      </div>
-    );
   };
 
   return (
@@ -102,7 +101,6 @@ export default function SearchInstitution() {
         allowClear
         style={{ width: "100%" }}
         notFoundContent="Sonuç bulunamadı"
-        dropdownRender={dropdownRender}
         popupClassName="institution-autocomplete-popup"
       />
 
@@ -118,22 +116,23 @@ export default function SearchInstitution() {
 }
 
 
+
+
+
 .institution-search-container {
   width: 740px;
   position: relative;
 }
 
-.institution-autocomplete-popup {
+.institution-autocomplete-popup .ant-select-item {
   padding: 0 !important;
 }
 
-.institution-dropdown-wrapper {
-  border-radius: 8px;
-  overflow: hidden;
-  background: #fff;
+.institution-autocomplete-popup .ant-select-item-option-content {
+  padding: 0 !important;
 }
 
-.institution-dropdown-header {
+.institution-dropdown-header-row {
   display: grid;
   grid-template-columns: 2.4fr 1.2fr 1fr;
   align-items: center;
@@ -141,12 +140,13 @@ export default function SearchInstitution() {
   color: #fff;
   font-weight: 700;
   font-size: 15px;
-  min-height: 52px;
+  min-height: 56px;
   padding: 0 16px;
+  pointer-events: none;
 }
 
 .institution-header-col {
-  padding: 14px 12px;
+  padding: 16px 12px;
   border-right: 1px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -161,16 +161,11 @@ export default function SearchInstitution() {
   min-height: 56px;
   padding: 0 16px;
   background: #fff;
-  cursor: pointer;
-  border-bottom: 1px solid #edf1f5;
-}
-
-.institution-option-row:hover {
-  background: #f5fbff;
+  transition: background-color 0.2s ease;
 }
 
 .institution-option-col {
-  padding: 14px 12px;
+  padding: 16px 12px;
   font-size: 15px;
   color: #1f1f1f;
   border-right: 1px solid #edf1f5;
@@ -180,8 +175,20 @@ export default function SearchInstitution() {
   border-right: none;
 }
 
-.kurum-adi {
-  word-break: break-word;
+/* hover rengi */
+.institution-autocomplete-popup .ant-select-item-option-active .institution-option-row {
+  background: #e8f4ff !important;
+}
+
+/* seçili satır */
+.institution-autocomplete-popup .ant-select-item-option-selected .institution-option-row {
+  background: #d8eeff !important;
+}
+
+/* header satırı hover almasın */
+.institution-autocomplete-popup .ant-select-item-option-disabled {
+  cursor: default !important;
+  background: transparent !important;
 }
 
 .selected-institution-box {
